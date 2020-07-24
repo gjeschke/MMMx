@@ -1,0 +1,368 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MMMx|atomic &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="MMMx|RigiFlex" href="MMMx_RigiFlex.html" />
+    <link rel="prev" title="Structure representation" href="structure_representation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Ensemble structure</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="functional_entity.html">Functional entity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional_entity.html#the-object-of-interest">The object of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_entity.html#structural-hierarchy">Structural hierarchy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="structure_representation.html">Structure representation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">MMMx|atomic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#topology">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conformation">Conformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#element-assignment-of-atoms">Element assignment of atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conversion-to-pdb-representation">Conversion to PDB representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#conversion-from-pdb-representation">Conversion from PDB representation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_RigiFlex.html">MMMx|RigiFlex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-concept">Open source concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#separation-of-user-interface-from-computation">Separation of user interface from computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#visibility-to-users-and-programmers">Visibility to users and programmers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data.html#entity">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#rotamer-library">Rotamer library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#distance-distribution-restraints">Distance distribution restraints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python.html#remarks">Remarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python.html#current-conclusion">Current conclusion</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>MMMx|atomic</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mmmx-atomic">
+<span id="id1"></span><h1>MMMx|atomic<a class="headerlink" href="#mmmx-atomic" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="basic-considerations">
+<h2>Basic considerations<a class="headerlink" href="#basic-considerations" title="Permalink to this headline">¶</a></h2>
+<p>From a thermodynamic point of view, different conformers have different probability to occur, as they have different free energies. They should thus be assigned populations.</p>
+<p>If modelling is based on restraints in the form of probability density distributions, such as distance distribution restraints, probabilities of conformers are accessible in modelling.</p>
+<p>The reason for alternate atom locations in protein crystal structures is, in most cases, significant population of more than one sidechain rotamer.
+This should be assigned at residue level, not atom level.</p>
+<p>From both a conceptual and data processing point of view, it makes sense to separate topology (fixed and the same for all conformers) from coordinates (variable).</p>
+<p>Coordinates are heterogeneously different, meaning that for some atoms they do differ between conformers, while for others they do not.
+Especially for large ensembles, it makes sense to store only unique coordinates.</p>
+<div class="admonition-coordinate-indices admonition">
+<p class="admonition-title">Coordinate indices</p>
+<p>An atom coordinate is assigned by five indices. Three are <em>topological</em> and designate</p>
+<blockquote>
+<div><ol class="arabic simple">
+<li><p>the molecule, which can be a macromolecular chain</p></li>
+<li><p>the residue in a chain</p></li>
+<li><p>the atom in a residue</p></li>
+</ol>
+<p>The remaining two indices are <em>conformational</em> and designate</p>
+<ol class="arabic simple" start="4">
+<li><p>the conformer of a chain or molecule</p></li>
+<li><p>the rotamer of a sidegroup</p></li>
+</ol>
+</div></blockquote>
+</div>
+<p>The Cartesian coordinate array <img class="math" src="_images/math/91bb7ebe5360f220c5ddca9f8a3cff6379617fe0.svg" alt="\mathbf{C}"/> of an entity is thus supplemented by a coordinate index array <img class="math" src="_images/math/3e96f1d3536f5bc432fbb8d17a3b199f92aacff3.svg" alt="\mathbf{I}_\mathrm{c}"/>.
+In Matlab, <a class="reference external" href="https://blogs.mathworks.com/loren/2013/02/20/logical-indexing-multiple-conditions/">logical indexing</a>, together with the index array, provides a very intuitive and efficient way for extracting required subsets of coordinates and to reassign them after some processing.</p>
+</div>
+<div class="section" id="topology">
+<h2>Topology<a class="headerlink" href="#topology" title="Permalink to this headline">¶</a></h2>
+<p>Topology describes chemical structure and is immutable for an entity. In other words, any chemical reaction, such as posttranslational modification, is a transfer from one entity to another entity.</p>
+<p>Topology is represented in terms of the number of objects (chains, molecules, residues, atoms), their identifiers, and their hierarchical relation.
+Hierarchical relation means that an atom belongs to a residue or molecule and a residue belongs to a chain. The term <em>residue</em> includes amino acid residues, nucleotide residues, and, if someone finds a way to characterize carbohydrates, a sugar residue.</p>
+<p>In Matlab, hierarchy is easily represented by a multi-level structure. By combining this with <a class="reference external" href="https://ch.mathworks.com/help/matlab/matlab_prog/generate-field-names-from-variables.html">dynamic fieldnames</a>, storage and access become very convenient and efficient.</p>
+<p>Further attributes of objects can be stored by extending levels of the topology variable with additional fields.</p>
+<div class="admonition-field-name-conventions admonition">
+<p class="admonition-title">Field name conventions</p>
+<p>All object names start with capital letters. They are:</p>
+<blockquote>
+<div><ul class="simple">
+<li><p><strong>Chain identifiers</strong>. Small letters from PDB files with more than 26 chains are represented by a capital letter with an appended underscore.
+Entities with more than 26 chains can be exchanged with other software only in <img class="math" src="_images/math/5837bc9aa1c36e6270d53a281eb3edbceba7d352.svg" alt="mmCIF"/> format.</p></li>
+<li><p><strong>Residue identifiers</strong>. Capital <img class="math" src="_images/math/04d2325fffa56c70ed7ef25845d117f2daf8f3af.svg" alt="R"/> followed by the residue number.</p></li>
+<li><p><strong>Atom identifiers</strong>. The atom name in PDB or mmCIF syntax.
+If a name staring with a lowercase character is encountered, the first letter is capitalized and an underscore is appended to the atom name.</p></li>
+</ul>
+<p>The fieldname <img class="math" src="_images/math/a3893850e6b021b373a97133f7f522d96944dcc8.svg" alt="index"/> is reserved on all levels. This field holds the topology index per object and level.</p>
+<p>The fieldname <img class="math" src="_images/math/3619ce53a80e4a9c04871f5ceb95f58f2296945e.svg" alt="populations"/> is reserved on chain/molecule level and on residue level.</p>
+<p>Methods can define further lower-case fieldnames for object attributes. These attributes are internal to the method.
+Passing back such attributes to MMMx and saving them in <img class="math" src="_images/math/5837bc9aa1c36e6270d53a281eb3edbceba7d352.svg" alt="mmCIF"/> output files may be enabled in a future release.</p>
+</div></blockquote>
+</div>
+</div>
+<div class="section" id="conformation">
+<h2>Conformation<a class="headerlink" href="#conformation" title="Permalink to this headline">¶</a></h2>
+<p>The only information on conformation that the topology variable needs to hold are population vectors (vide supra) on molecule/chain level and on residue level (rotamers).
+The length of these vectors specifies the number of conformers or rotamers of this object. The topology variable must also hold the topological indices (vide supra).
+With that information, all atom coordinates can be retrieved via the index array from the coordinate array and the associated populations can be computed.</p>
+</div>
+<div class="section" id="element-assignment-of-atoms">
+<h2>Element assignment of atoms<a class="headerlink" href="#element-assignment-of-atoms" title="Permalink to this headline">¶</a></h2>
+<p>The information still missing even for basic computations concerns element assignment of the atoms, as retrieval from the atom name is not safe.
+For ease of access, this information is stored in a separate element vector that matches the coordinate index array, but can be typed <img class="math" src="_images/math/3e500699666decfd91c08603c6f92c088357f12f.svg" alt="int8"/>.</p>
+</div>
+<div class="section" id="conversion-to-pdb-representation">
+<h2>Conversion to PDB representation<a class="headerlink" href="#conversion-to-pdb-representation" title="Permalink to this headline">¶</a></h2>
+<p>In the <img class="math" src="_images/math/716e51206b8e70958a2c5fc12fa230aa3dfc00c3.svg" alt="MMMx|atomic"/> representation, the same atom coordinate can apply in several conformers (<em>models</em> in the PDB representation).
+Upon conversion to PDB, the coordinate array expands. The PDB writer of MMMx expands per conformer during writing to reduce memory requirements.</p>
+<p>Rotameric states are expressed by alternate atom locations. Up to 26 (preferably) or 52 (with lower-case location identifiers) rotamers can be converted.
+Not all external programs may be able to process PDB files with more than 26 locations. By default, only the 26 rotamers with highest populations are converted.
+As an option, 52 rotamers can be converted.</p>
+<p>If an atom coordinate in the <img class="math" src="_images/math/716e51206b8e70958a2c5fc12fa230aa3dfc00c3.svg" alt="MMMx|atomic"/> representation is “not a number”, this atom is ignored.
+This should happen only if the structure originated from an inconsistent PDB file.</p>
+<p>MMMx converts to PDB representation only for two purposes:</p>
+<ul class="simple">
+<li><p>saving structure in a PDB files</p></li>
+<li><p>transmitting structure to ChimeraX for visualization</p></li>
+</ul>
+</div>
+<div class="section" id="conversion-from-pdb-representation">
+<h2>Conversion from PDB representation<a class="headerlink" href="#conversion-from-pdb-representation" title="Permalink to this headline">¶</a></h2>
+<p>MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry.
+Residue numbers are preserved in the about <a class="reference external" href="http://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v40.dic/Items/_atom_site.pdbx_PDB_ins_code.html">96.5% structures that do not use “insertion codes”</a>.</p>
+<p>The number of chain/molecule conformers equals the number of PDB <img class="math" src="_images/math/354040c8d2543d16824654a350170cea0ae971e9.svg" alt="models"/> for all chains and molecules of the entity. Uniform populations are assumed.</p>
+<p>The number of rotamers of a residue is as large as the maximum number of alternate locations among the atoms of this residue.
+Rotamer populations are mean populations over all atoms which have this number of alternate locations.</p>
+<p>In case of topological inconsistency between <em>models</em>, topology is determined by the first model encountered in the PDB file (regardless of its model number).
+Only atom coordinates are read for further models. Surplus atom coordinates are ignored. Missing atom coordinates are assigned “not a number”.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="MMMx_RigiFlex.html" class="btn btn-neutral float-right" title="MMMx|RigiFlex" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="structure_representation.html" class="btn btn-neutral float-left" title="Structure representation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

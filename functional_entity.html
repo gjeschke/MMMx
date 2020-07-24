@@ -1,0 +1,342 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Functional entity &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Structure representation" href="structure_representation.html" />
+    <link rel="prev" title="MMMx 0.0.0 Documentation" href="index.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Ensemble structure</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Functional entity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#the-object-of-interest">The object of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#structural-hierarchy">Structural hierarchy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="structure_representation.html">Structure representation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_atomic.html">MMMx|atomic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_RigiFlex.html">MMMx|RigiFlex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-concept">Open source concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#separation-of-user-interface-from-computation">Separation of user interface from computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#visibility-to-users-and-programmers">Visibility to users and programmers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data.html#entity">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#rotamer-library">Rotamer library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#distance-distribution-restraints">Distance distribution restraints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python.html#remarks">Remarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python.html#current-conclusion">Current conclusion</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Functional entity</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="functional-entity">
+<h1>Functional entity<a class="headerlink" href="#functional-entity" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="the-object-of-interest">
+<h2>The object of interest<a class="headerlink" href="#the-object-of-interest" title="Permalink to this headline">¶</a></h2>
+<p>Structural biology is about macromolecules, such as proteins and nucleic acids, and their complexes with other macromolecules or small ligands.</p>
+<p>Such an object is a functional biological entity, as is assembled for fulfilling a certain task in a cell. In MMMx, we briefly call it <em>entity</em>.</p>
+<p>Only very rarely, entities have structures, where each atom position is defined on a length scale corresponding to a typical bond length. Such high order would conflict with the dynamic nature of their function.</p>
+<p>Usually, an entity is disordered to different extent on different levels of structural hierarchy and along the sequence of a macromolecular chain.</p>
+<p>Description of the structure of an entity must take this into account. This requires an ensemble description.</p>
+</div>
+<div class="section" id="structural-hierarchy">
+<h2>Structural hierarchy<a class="headerlink" href="#structural-hierarchy" title="Permalink to this headline">¶</a></h2>
+<p>An entity has several levels of structure</p>
+<blockquote>
+<div><ul>
+<li><dl>
+<dt>Primary structure</dt><dd><p>Primary structure is fixed within an entity</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>chemical structure of each individual component</p></li>
+<li><p>defines topology of the structure</p></li>
+<li><p>has no explicit relation to three-dimensional structure</p></li>
+<li><p>fixes some aspects of three-dimensional structure with high precision (bond lengths and bond angles)</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Secondary structure</dt><dd><p>Local conformation of a molecule</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>often used as a synonym for the presence of secondary structure elements, such as helices and strands</p></li>
+<li><p>the term is somewhat loose: three-dimensional form of <em>local segments</em> of proteins</p></li>
+<li><p>there are two contributions: local backbone conformation and sidechain rotamers</p></li>
+<li><p>sidechain rotamers are not usually understood as secondary structure</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Tertiary structure</dt><dd><p>Global conformation of a single molecule</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>overall three-dimensional arrangement of a polypeptide or polynucleotide chain</p></li>
+<li><p>conformation of small-molecule ligands is analogous, but not usually considered as tertiary structure</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+<li><dl>
+<dt>Quaternary structure</dt><dd><p>Number and arrangement of the components of a complex</p>
+<blockquote>
+<div><ul class="simple">
+<li><p>while the number of components my be variable, we keep it fixed for an entity</p></li>
+<li><p>different relative arrangements of subunits are usually related to different teriary structure of the subunits</p></li>
+</ul>
+</div></blockquote>
+</dd>
+</dl>
+</li>
+</ul>
+</div></blockquote>
+<hr class="docutils" />
+<p>This hierarchy is useful for understanding some aspects of structure, but not necessarily for representing structure of an entity or analyzing all its aspects.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="structure_representation.html" class="btn btn-neutral float-right" title="Structure representation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="index.html" class="btn btn-neutral float-left" title="MMMx 0.0.0 Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

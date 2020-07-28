@@ -1,11 +1,11 @@
-function [entity,exception] = get_pdb(ident,options)
+function [entity,exceptions] = get_pdb(ident,options)
 %
 % GET_PDB Load structure from PDB server or local file
 %
-%   [entity,exception] = GET_PDB
+%   [entity,exceptions] = GET_PDB
 %   Returns an (entity) structure in MMMx:atomic representation
 %
-%   [entity,exception] = GET_PDB(ident)
+%   [entity,exceptions] = GET_PDB(ident)
 %   Reads topology and Cartesian coordinates of a biological entity
 %   from a PDB file obtained from a server or locally
 %
@@ -16,11 +16,14 @@ function [entity,exception] = get_pdb(ident,options)
 %           .dssp   DSSP (Kabsch/Sanders) secondary structure
 %                   defaults to false, DSSP is not performed if there were
 %                   insertion codes or non-positive residue numbers
+%           .name   optional name for the entity, defaults: PDB identifier
+%                   upon download or if header line exists; MMMx otherwise
 %
 % OUTPUT
-% entity    entity structure in MMMx:atomic representation
-% exception error message if something went wrong, entity is empty for
-%           errors but not for warnings
+% entity       entity structure in MMMx:atomic representation
+% exceptions   error message if something went wrong, entity is empty for
+%              errors but not for warnings, for warnings, only the last one
+%              is reported, cell containing an empty array, if no exception
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -39,7 +42,8 @@ maxwater = 100000;
 
 % initialize empty outputs
 entity = [];
-exception = [];
+exceptions{1} = [];
+warnings = 0; % counter for warnings
 
 if ~exist('options','var') || ~isfield(options,'dssp') || ...
         isempty(options.dssp)
@@ -54,36 +58,41 @@ to_be_deleted = '';
 
 % load file from PDB server if required 
 if isempty(ext) && length(ident) == 4
+    entity.name = ident;
     fname0 = ['pdb' lower(ident) '.ent.gz'];
     % open FTP connection
     try
         ftp_obj = ftp(PDB_server,'anonymous','anonymous');
     catch exception
+        exceptions{1} = exception;
         return;
     end
     % change FTP object to structure directory
     try
     cd(ftp_obj,PDB_structures);
     catch exception
+        exceptions{1} = exception;
         return;
     end
     % switch FTP object to binary mode
     try
         binary(ftp_obj);
     catch exception
-        cd(curr_dir);
+        exceptions{1} = exception;
         return;
     end
     % download zipped PDB structure file 
     try
         mget(ftp_obj,fname0);
     catch exception
+        exceptions{1} = exception;
         return;
     end
     % unzip the downloded file
     try
         gunzip(fname0);
     catch exception
+        exceptions{1} = exception;
         return;
     end
     ident = ['pdb' lower(ident) '.ent'];
@@ -92,6 +101,8 @@ if isempty(ext) && length(ident) == 4
     try
         delete(fname0);
     catch exception
+        warnings = warnings + 1;
+        exceptions{warnings} = exception;
         % if everything else went well, this produces only a warning
     end
 end
@@ -100,6 +111,8 @@ end
 try
     fid = fopen(ident);
 catch exception
+    warnings = warnings + 1;
+    exceptions{warnings} = exception;
     return
 end
 
@@ -124,6 +137,9 @@ while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
         break 
+    end
+    if length(tline) >= 66 && strcmpi(tline(1:6),'HEADER')
+        entity.name = tline(63:66);
     end
     if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL')
         current_model = str2double(tline(7:14));
@@ -253,10 +269,20 @@ entity.water = water_indices(1:water_atoms);
 % add conformer populations
 entity.populations = ones(1,models)/models;
 
+% set entity name, if it was not yet assigned
+if ~isfield(entity,'name')
+    entity.name = 'MMMx';
+end
+if isfield(options,'name') && ~isempty(options.name)
+    entity.name = options.name;
+end
+
 % close the PDB file
 try
     fclose(fid);
 catch exception
+    warnings = warnings + 1;
+    exceptions{warnings} = exception;
 end
 
 if options.dssp && preserve_residue_numbers
@@ -278,6 +304,8 @@ if ~isempty(to_be_deleted)
     try
         delete(to_be_deleted);
     catch exception
+        warnings = warnings + 1;
+        exceptions{warnings} = exception;
     end
 end
 

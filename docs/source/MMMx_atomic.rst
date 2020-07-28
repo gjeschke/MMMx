@@ -66,19 +66,21 @@ Further attributes of objects can be stored by extending levels of the topology 
 	 - **Residue identifiers**. Capital ``R`` followed by the residue number.
 	 
 	 - **Atom identifiers**. The atom name in PDB or mmCIF syntax. Primes are substituted by an underscore.
-	   If a name staring with a lowercase character is encountered, the first letter is capitalized and an underscore is appended to the atom name.
+	   If a name starting with a lowercase character is encountered, the first letter is capitalized and an underscore is appended to the atom name.
 	   
-	 The fieldname ``index`` is reserved on all levels. This field holds the topology index per object and level.
+	 The fieldname ``selected`` is reserved at all levels. At entity level it is a vector of selected conformers, at residue level a vector of selected rotamers, and at atom level a vector of selected locations. At chain level it is a boolean flag.
 	 
-	 The fieldname ``water`` at entity level is reserved for water molecules. This field holds only an index array of all water molecules.
+	 The fieldname ``index`` is reserved at all levels below entity. This field holds the topology index per object and level.
 	 
-	 The fieldnames ``xyz``, `` index_array``, ``elements``, ``occupancies``, and ``original_residue_numbers`` are reserved at entity level
+	 The fieldname ``water`` at entity level is reserved for water molecules. This field holds only an index vector of all water atoms
+	 
+	 The fieldnames ``name``, ``xyz``, ``index_array``, ``elements``, ``occupancies``, and ``original_residue_numbers`` are reserved at entity level
 
-	 The fieldname ``populations`` is reserved on entity level and on residue level.
+	 The fieldname ``populations`` is reserved at entity level and at residue level.
 	 
 	 The fieldnames ``name``, ``locations``, ``dssp``, and ``sheet`` are reserved at residue level
 	 
-	 The fieldnames ``element``, ``charge``, and ``bfactor`` are reserved at residue level
+	 The fieldnames ``element``, ``charge``, and ``bfactor`` are reserved at atom level
 	 
 	 Methods can define further lower-case fieldnames for object attributes. These attributes are internal to the method. 
 	 Passing back such attributes to MMMx and saving them in ``mmCIF`` output files may be enabled in a future release. 
@@ -107,7 +109,7 @@ Rotameric states are expressed by alternate atom locations. Up to 26 (preferably
 Not all external programs may be able to process PDB files with more than 26 locations. By default, only the 26 rotamers with highest populations are converted.
 As an option, 52 rotamers can be converted.
 
-If an atom coordinate in the `MMMx|atomic` representation is "not a number", this atom is ignored. 
+If an atom coordinate in the ``MMMx|atomic`` representation is "not a number", this atom is ignored. 
 This should happen only if the structure originated from an inconsistent PDB file.
 
 MMMx converts to PDB representation only for two purposes:

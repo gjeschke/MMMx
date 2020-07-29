@@ -43,12 +43,13 @@ end
 % initialize invert, if it does not exist
 if ~exist('unselect','var') || isempty(unselect)
     unselect = false;
-elseif invert
+elseif unselect
     overwrite = false;
 end
 
 if overwrite % delete existing selection
-    entity.selected = [];
+    entity.selected = 1;
+    entity.water_selected = false;
     chains = fieldnames(entity);
     for kc = 1:length(chains)
         chain = chains{kc};
@@ -58,12 +59,14 @@ if overwrite % delete existing selection
             for kr = 1:length(residues)
                 residue = residues{kr};
                 if strcmp(residue(1),'R') % these are residue fields
-                    entity.(chain).(residue).selected = [];
+                    entity.(chain).(residue).selected = 0;
+                    entity.(chain).(residue).selected_rotamers = 1;
                     atoms = fieldnames(entity.(chain).(residue));
                     for ka = 1:length(atoms)
                         atom = atoms{ka};
                         if isstrprop(atom(1),'upper') % these are atom fields
-                            entity.(chain).(residue).(atom).selected = [];
+                            entity.(chain).(residue).(atom).selected = 0;
+                            entity.(chain).(residue).(atom).selected_locations = 1;
                         end
                     end
                 end
@@ -72,6 +75,69 @@ if overwrite % delete existing selection
     end
 end
 
+% treat water selection
+if strcmpi(address,'water')
+    entity.water_selected = true;
+    exceptions = {};
+    return
+end
+
+% extract conformer selection if any
+si = strfind(address,'{');
+ei = strfind(address,'}');
+if ~isempty(si) && ~isempty(ei)
+    confstr = address(si+1:ei-1);
+    address = [address(1:si-1) address(ei+1:end)];
+else
+    confstr = '';
+end
+% make conformer vector
+if ~isempty(confstr)
+    conformers = zeros(1,66000);
+    delimited = strfind(confstr,',');
+    delimited = [0 delimited length(confstr)+1];
+    cpoi = 0;
+    for k = 1:length(delimited)-1
+        range = confstr(delimited(k)+1:delimited(k+1)-1);
+        hyphen = strfind(range,'-');
+        if length(hyphen) > 1
+            exceptions = {MException('select:wrong_conformer_range', 'Conformer range contains more than one hyphen')};
+            return
+        end
+        if isempty(hyphen) % single conformer
+            cpoi = cpoi + 1;
+            conformers(cpoi) = str2double(range);
+        else % conformer range
+            crange = str2double(range(1:hyphen-1)):str2double(range(hyphen+1:end));
+            conformers(cpoi+1:cpoi+length(crange)) = crange;
+            cpoi = cpoi + length(crange);
+        end
+    end
+    if unselect
+        old_conformers = entity.selected;
+        new_conformers = old_conformers;
+        ncpoi = 0;
+        for kconf = 1:length(old_conformers)
+            % if it does not match, it remains selected
+            if min(abs(conformers(1:cpoi)-old_conformers(kconf))) > 0
+                ncpoi = ncpoi + 1;
+                new_conformers(ncpoi) = old_conformers(kconf);
+            end
+        end
+        if ncpoi == 0
+            new_conformers = 1; % minimal conformer selection
+        else
+            new_conformers = new_conformers(1:ncpoi); % the ones still selected
+        end
+        entity.selected = new_conformers;
+    elseif overwrite
+        entity.selected = conformers(1:cpoi);
+    else
+        entity.selected = [entity.selected conformers(1:cpoi)];
+    end
+end
+
+level = 0; % initializes selection level to entity
 % expand address
 % separate chain part and divide into single chain tags
 chains = '';
@@ -88,107 +154,149 @@ for k = 1:length(chain_fields)
 end
 % remove part of address that was already processed
 if ~isempty(ei)
-    address = address(ei+1:end);
-end
-
-% separate conformer part and make conformer vector
-conformers = zeros(1,66000);
-si = strfind(address,'{');
-ei = strfind(address,'}');
-if ~isempty(si) && ~isempty(ei)
-    confstr = address(si+1:ei-1);
-end
-delimited = strfind(confstr,',');
-delimited = [0 delimited length(confstr)+1];
-cpoi = 0;
-for k = 1:length(delimited)-1
-    range = confstr(delimited(k)+1:delimited(k+1)-1);
-    hyphen = strfind(range,'-');
-    if length(hyphen) > 1
-        exceptions{1} = MException('select:wrong_conformer_range', 'Conformer range contains more than one hyphen');
-        return
-    end
-    if isempty(hyphen) % single conformer
-        cpoi = cpoi + 1;
-        conformers(cpoi) = str2double(range);
-    else % conformer range
-        crange = str2double(range(1:hyphen-1)):str2double(range(hyphen+1:end));
-        conformers(cpoi+1:cpoi+length(crange)) = crange;
-        cpoi = cpoi + length(crange);
-    end
-end
-conformers = conformers(1:cpoi);
-% remove part of address that was already processed
-if ~isempty(ei)
+    level = 1;
     address = address(ei+1:end);
 end
 
 % separate residues part and make residue vector and residue type
 % cellstring
-residues = zeros(1,66000);
+residue_numbers = zeros(1,66000);
 rpoi = 0;
 residue_types = cell(1,100);
 rtpoi = 0;
+irot = strfind(address,'|'); % check whether there is a rotamer specification
 ei = strfind(address,'.');
+if ~isempty(address) && isempty(ei)
+    ei = length(address)+1;
+end
+rotamer_str = '';
+erot = [];
+if ~isempty(irot)
+    rotamer_str = address(irot+1:ei-1);
+    erot = ei;
+    ei = irot;
+end
 if ~isempty(ei)
     resstr = address(1:ei-1);
-end
-delimited = strfind(resstr,',');
-delimited = [0 delimited length(resstr)+1];
-for k = 1:length(delimited)-1
-    range = resstr(delimited(k)+1:delimited(k+1)-1);
-    hyphen = strfind(range,'-');
-    if length(hyphen) > 1
-        exceptions{1} = MException('select:wrong_conformer_range', 'Conformer range contains more than one hyphen');
-        return
-    end
-    if isempty(hyphen) % single residue number
-        try_numeric = str2double(range);
-        if isnan(try_numeric) % this should be a residue type
-            rtpoi = rtpoi + 1;
-            residue_types{rtpoi} = range;
+    delimited = strfind(resstr,',');
+    delimited = [0 delimited length(resstr)+1];
+    for k = 1:length(delimited)-1
+        range = resstr(delimited(k)+1:delimited(k+1)-1);
+        hyphen = strfind(range,'-');
+        if length(hyphen) > 1
+            exceptions = {MException('select:wrong_residue_range', 'Residue range contains more than one hyphen')};
+            return
+        end
+        if isempty(hyphen) % single residue number
+            try_numeric = str2double(range);
+            if isnan(try_numeric) % this should be a residue type
+                rtpoi = rtpoi + 1;
+                residue_types{rtpoi} = range;
+            else
+                rpoi = rpoi + 1;
+                residue_numbers(rpoi) = try_numeric;
+            end
         else
-            rpoi = rpoi + 1;
-            residues(rpoi) = try_numeric;
-        end
-    else
-        try_num_start = str2double(range(1:hyphen-1));
-        try_num_end = str2double(range(hyphen+1:end));
-        if isnan(try_num_start) || isnan(try_num_end)
-            % should not happen, but allows for residue type names that do
-            % contain a hyphen
-            rtpoi = rtpoi + 1;
-            residue_types{rtpoi} = range;
-        else % residue number range
-            rrange = str2double(range(1:hyphen-1)):str2double(range(hyphen+1:end));
-            residues(rpoi+1:rpoi+length(rrange)) = rrange;
-            rpoi = rpoi + length(rrange);
+            try_num_start = str2double(range(1:hyphen-1));
+            try_num_end = str2double(range(hyphen+1:end));
+            if isnan(try_num_start) || isnan(try_num_end)
+                % should not happen, but allows for residue type names that do
+                % contain a hyphen
+                rtpoi = rtpoi + 1;
+                residue_types{rtpoi} = range;
+            else % residue number range
+                rrange = str2double(range(1:hyphen-1)):str2double(range(hyphen+1:end));
+                residue_numbers(rpoi+1:rpoi+length(rrange)) = rrange;
+                rpoi = rpoi + length(rrange);
+            end
         end
     end
+    residue_numbers = residue_numbers(1:rpoi);
+    residue_types = residue_types(1:rtpoi);
+    level = 2; % selection level residues
+else
+    residue_numbers = [];
+    residue_types = {};
 end
-residues = residues(1:rpoi);
-residue_types = residue_types(1:rtpoi);
 
 % remove part of address that was already processed
 if ~isempty(ei)
     address = address(ei+1:end);
+end
+
+% process rotamer selection if any
+if ~isempty(rotamer_str)
+    rotamers = zeros(1,70000);
+    rotpoi = 0;
+    delimited = strfind(rotamer_str,',');
+    delimited = [0 delimited length(rotamer_str)+1];
+    for k = 1:length(delimited)-1
+        range = rotamer_str(delimited(k)+1:delimited(k+1)-1);
+        hyphen = strfind(range,'-');
+        if length(hyphen) > 1
+            exceptions = {MException('select:wrong_rotamer_range', 'Rotamer range contains more than one hyphen')};
+            return
+        end
+        if isempty(hyphen) % single residue number
+            try_numeric = str2double(range);
+            if isnan(try_numeric) % wrong rotamer selection
+                exceptions = {MException('select:wrong_rotamer_identifier', 'Rotamer identifier %s is not numeric', range)};
+                return
+            else
+                rotpoi = rotpoi + 1;
+                rotamers(rotpoi) = try_numeric;
+            end
+        else
+            try_num_start = str2double(range(1:hyphen-1));
+            try_num_end = str2double(range(hyphen+1:end));
+            if isnan(try_num_start) || isnan(try_num_end)
+                exceptions = {MException('select:wrong_rotamer_identifier', 'Rotamer identifier %s is not numeric', range)};
+                return
+            else % rotamer number range
+                rotrange = try_num_start:try_num_end;
+                rotamers(rotpoi+1:rotpoi+length(rotrange)) = rotrange;
+                rotpoi = rotpoi + length(rotrange);
+            end
+        end
+    end
+    rotamers = rotamers(1:rotpoi);
+else
+    rotamers = 1; % if no rotamers are specified, rotamer 1 is selected by default
+end
+if ~isempty(erot)
+    address = address(erot+1:end);
 end
 
 % separate atoms part and make atom type cellstring
 ei = strfind(address,':');
+if isempty(ei) && ~isempty(address)
+    ei = length(address) + 1;
+end
 if ~isempty(ei)
     atomstr = address(1:ei-1);
-end
-delimited = strfind(atomstr,',');
-atom_fields = cell(1,length(delimited)+1);
-delimited = [0 delimited length(atomstr)+1];
-for k = 1:length(atom_fields)
-    atom_fields{k} = atomstr(delimited(k)+1:delimited(k+1)-1);
-end
-
-% remove part of address that was already processed
-if ~isempty(ei)
-    address = address(ei+1:end);
+    delimited = strfind(atomstr,',');
+    atom_fields = cell(1,length(delimited)+4);
+    delimited = [0 delimited length(atomstr)+1];
+    apoi = 0;
+    for k = 1:length(delimited)-1
+        atom_type = atomstr(delimited(k)+1:delimited(k+1)-1);
+        if strcmpi(atom_type,'backbone')
+            atom_fields{apoi+1} = 'N';
+            atom_fields{apoi+2} = 'CA';
+            atom_fields{apoi+3} = 'C';
+            atom_fields{apoi+4} = 'O';
+            apoi = apoi + 4;
+        else
+            apoi = apoi + 1;
+            atom_fields{apoi} = atom_type;
+        end
+    end
+    atom_fields = atom_fields(1:apoi);
+    % remove part of address that was already processed
+    if ~isempty(ei)
+        level = 3; % selection level atoms
+        address = address(ei+1:end);
+    end
 end
 
 % make location string
@@ -204,4 +312,122 @@ end
 
 exceptions = exceptions(1:warnings);
 
+if level == 0 % nothing was selected
+    return
+end
+
+% selection is set in entity
+
+chains = fieldnames(entity);
+for kc = 1:length(chains)
+    chain = chains{kc};
+    if isstrprop(chain(1),'upper') % chain fields start with a capital
+        if level == 1
+            selected = entity.(chain).selected; % current selection state
+            assignment = ~unselect; % select or unselect
+            for ksel = 1:length(chain_fields)
+                if strcmp(chain_fields{ksel},chain) % new selection matches?
+                    selected = assignment;
+                end
+            end
+            entity.(chain).selected = selected;
+        else
+            active = isempty(chain_fields{1});
+            for ksel = 1:length(chain_fields)
+                if strcmp(chain_fields{ksel},chain) % new selection matches?
+                    active = true;
+                end
+            end
+            if ~active
+                continue;
+            end
+            residues = fieldnames(entity.(chain));
+            for kr = 1:length(residues)
+                residue = residues{kr};
+                if strcmp(residue(1),'R') % these are residue fields
+                    location_set = entity.(chain).(residue).locations;
+                    if level == 2
+                        selected = entity.(chain).(residue).selected; % current selection state
+                        was_selected = selected; % remember it for rotamer reassignment
+                        assignment = ~unselect; % select or unselect
+                        for ksel = 1:length(residue_numbers)
+                            if residue_numbers(ksel) == str2double(residue(2:end)) % residue number match?
+                                selected = assignment;
+                            end
+                        end
+                        for ksel = 1:length(residue_types)
+                            if strcmpi(residue_types(ksel),entity.(chain).(residue).name) % residue type match?
+                                selected = assignment;
+                            end
+                        end
+                        entity.(chain).(residue).selected = selected;
+                        if selected && ~was_selected % rotamer assignment for new selections
+                            entity.(chain).(residue).selected_rotamers...
+                                = rotamers;
+                        elseif ~selected % remove rotamer assignment if residue is not selected
+                            entity.(chain).(residue).selected_rotamers...
+                                = 1;
+                        end
+                    else
+                        active = isempty(residue_numbers);
+                        if active
+                            active = isempty(residue_types{1});
+                        end
+                        for ksel = 1:length(residue_numbers)
+                            if residue_numbers(ksel) == str2double(residue(2:end)) % residue number match?
+                                active = true;
+                            end
+                        end
+                        for ksel = 1:length(residue_types)
+                            if strcmpi(residue_types(ksel),entity.(chain).(residue).name) % new selection matches?
+                                active = true;
+                            end
+                        end
+                        if ~active
+                            continue;
+                        end
+                        % translate location string to location index vector
+                        location_vector = zeros(1,length(locations));
+                        locpoi = 0;
+                        for kloc = 1:length(locations)
+                            loc = strfind(location_set,locations(kloc));
+                            if ~isempty(loc)
+                                locpoi = locpoi + 1;
+                                location_vector(locpoi) = loc;
+                            end
+                        end
+                        location_vector = location_vector(1:locpoi);
+                        atoms = fieldnames(entity.(chain).(residue));
+                        for ka = 1:length(atoms)
+                            atom = atoms{ka};
+                            if isstrprop(atom(1),'upper') % these are atom fields
+                                selected = entity.(chain).(residue).(atom).selected; % old selection state
+                                was_selected = selected; % memorize for location assignment
+                                assignment = ~unselect; % select or unselect?
+                                for ksel = 1:length(atom_fields)
+                                    if strcmp(atom_fields{ksel},atom) % atom type match?
+                                        selected = assignment;
+                                    end
+                                end
+                                entity.(chain).(residue).(atom).selected...
+                                    = selected;
+                                if selected && ~was_selected % loction assignment for new selection
+                                    entity.(chain).(residue).(atom).selected_locations...
+                                        = location_vector;
+                                elseif ~selected % default location if atom is now unselected
+                                    entity.(chain).(residue).(atom).selected_locations...
+                                        = 1;
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+        end
+    end
+end
+
+
 profile viewer
+
+fprintf(1,'Debug line\n');

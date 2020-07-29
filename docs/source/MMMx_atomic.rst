@@ -32,7 +32,7 @@ Especially for large ensembles, it makes sense to store only unique coordinates.
 	 
 	 4) the conformer
 	 
-	 5) the rotamer of a sidegroup
+	 5) the rotamer of a sidegroup (structures with specified rotamers) or one of the atom locations existing for a residue (crystal structures with locations)
    
 The Cartesian coordinate array :math:`\mathbf{C}` of an entity is thus supplemented by a coordinate index array :math:`\mathbf{I}_\mathrm{c}`. 
 In Matlab, `logical indexing`__, together with the index array, provides a very intuitive and efficient way for extracting required subsets of coordinates and to reassign them after some processing. 
@@ -68,19 +68,19 @@ Further attributes of objects can be stored by extending levels of the topology 
 	 - **Atom identifiers**. The atom name in PDB or mmCIF syntax. Primes are substituted by an underscore.
 	   If a name starting with a lowercase character is encountered, the first letter is capitalized and an underscore is appended to the atom name.
 	   
-	 The fieldname ``selected`` is reserved at all levels. At entity level it is a vector of selected conformers, at residue level a vector of selected rotamers, and at atom level a vector of selected locations. At chain level it is a boolean flag.
+	 The fieldname ``selected`` is reserved at all levels. At entity level it is a vector of selected conformers (default: 1), at other levels a boolean flag.
 	 
 	 The fieldname ``index`` is reserved at all levels below entity. This field holds the topology index per object and level.
 	 
-	 The fieldname ``water`` at entity level is reserved for water molecules. This field holds only an index vector of all water atoms
+	 The fieldnames ``water`` and ``water_selected`` at entity level are reserved for water molecules. They hold an index vector of all water atoms and a flag whether they are selected.
 	 
 	 The fieldnames ``name``, ``xyz``, ``index_array``, ``elements``, ``occupancies``, and ``original_residue_numbers`` are reserved at entity level
 
-	 The fieldname ``populations`` is reserved at entity level and at residue level.
+	 The fieldname ``populations`` is reserved at entity level and at residue level. At residue level, the length of the population vecor specifies the number of rotamers.
 	 
-	 The fieldnames ``name``, ``locations``, ``dssp``, and ``sheet`` are reserved at residue level
+	 The fieldnames ``name``, ``selected_rotamers``, ``locations``, ```dssp``, and ``sheet`` are reserved at residue level
 	 
-	 The fieldnames ``element``, ``charge``, and ``bfactor`` are reserved at atom level
+	 The fieldnames ``element``, ``selected_locations``, ``charge``, and ``bfactor`` are reserved at atom level
 	 
 	 Methods can define further lower-case fieldnames for object attributes. These attributes are internal to the method. 
 	 Passing back such attributes to MMMx and saving them in ``mmCIF`` output files may be enabled in a future release. 
@@ -121,9 +121,9 @@ MMMx converts to PDB representation only for two purposes:
 Conversion from PDB representation
 ----------------------------------
 
-MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry. 
-Residue numbers are preserved in the about `96.5% structures that do not use "insertion codes"`__ and only if all are positive numbers.  
-The entity has a field ``original_element_numbers`` that indicates whether residue numbers were preserved.
+Upon loading a PDB file, MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry. 
+Residue numbers are preserved in the about `96.5% structures that do not use "insertion codes"`__ and only if they all are positive numbers and if, within the same chain, they appear in ascending order in the PDB file.  
+The entity has a field ``original_residue_numbers`` that indicates whether residue numbers were preserved.
 
 .. __: http://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v40.dic/Items/_atom_site.pdbx_PDB_ins_code.html
 

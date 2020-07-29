@@ -157,11 +157,14 @@ while 1
             curr_resnum = 0; % current residue number
         end
         atoms = atoms + 1;
-        atname = strtrim(tline(13:16));
+        atname = strtrim(upper(tline(13:16)));
         for kk = 1:length(atname)
             if atname(kk) == ''''
                 atname(kk) = '_';
             end
+        end
+        if ~isstrprop(atname(1),'alpha')
+            atname = strcat('Z_',atname);
         end
         altloc = tline(17);
         resname = strtrim(tline(18:20));
@@ -240,13 +243,20 @@ while 1
             resfield = sprintf('R%i',trial_resnum);
             % update topology information
             chain_index = strfind(chains,chain);
-            entity.(chainfield).index = chain_index; 
+            entity.(chainfield).index = chain_index;
+            entity.(chainfield).selected = false;
             entity.(chainfield).(resfield).index = trial_resnum;
+            entity.(chainfield).(resfield).selected = 0; 
+            % first rotamer is selected by default
+            entity.(chainfield).(resfield).selected_rotamers = 1;
             entity.(chainfield).(resfield).name = resname;
+            entity.(chainfield).(resfield).locations = altlocs;
             entity.(chainfield).(resfield).populations = 1; % single rotamer
             entity.(chainfield).(resfield).(atname).element = element;
             entity.(chainfield).(resfield).(atname).charge = charge;
             entity.(chainfield).(resfield).(atname).bfactor = Bfactor;
+            entity.(chainfield).(resfield).(atname).selected = 0;
+            entity.(chainfield).(resfield).(atname).selected_locations = 1;
             % determine missing rotamer indices
             rotamer_index = strfind(altlocs,altloc);
             atom_index = strfind(atnames,[':' atname ':']);
@@ -266,8 +276,10 @@ entity.elements = elements(1:atoms);
 entity.occupancies = occupancies(1:atoms);
 entity.index_array = index_array(1:indexed_atoms,:);
 entity.water = water_indices(1:water_atoms);
+entity.water_selected = false;
 % add conformer populations
 entity.populations = ones(1,models)/models;
+entity.selected = 1; % first conformer is selected by default
 
 % set entity name, if it was not yet assigned
 if ~isfield(entity,'name')

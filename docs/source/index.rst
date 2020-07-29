@@ -21,6 +21,7 @@ MMMx 0.0.0 Documentation
 
     ./functional_entity
     ./structure_representation
+    ./MMMx_addresses
     ./MMMx_atomic
     ./MMMx_RigiFlex
 

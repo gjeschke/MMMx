@@ -91,8 +91,18 @@ if ~isempty(si) && ~isempty(ei)
 else
     confstr = '';
 end
+if strcmp(strtrim(confstr),'*')
+    all_conformers = true;
+    if unselect
+        entity.selected = 1;
+    else
+        entity.selected =  1:length(entity.populations);
+    end
+else
+    all_conformers = false;
+end
 % make conformer vector
-if ~isempty(confstr)
+if ~isempty(confstr) && ~all_conformers
     conformers = zeros(1,66000);
     delimited = strfind(confstr,',');
     delimited = [0 delimited length(confstr)+1];
@@ -106,9 +116,34 @@ if ~isempty(confstr)
         end
         if isempty(hyphen) % single conformer
             cpoi = cpoi + 1;
-            conformers(cpoi) = str2double(range);
+            % process start/end syntax
+            if strcmp(strtrim(range),'start')
+                conformers(cpoi) = 1;
+            elseif strcmp(strtrim(range),'end')
+                conformers(cpoi) = length(entity.populations);
+            else
+                conformers(cpoi) = str2double(range);
+            end
         else % conformer range
-            crange = str2double(range(1:hyphen-1)):str2double(range(hyphen+1:end));
+            st_str = range(1:hyphen-1);
+            % process start/end syntax
+            if strcmp(strtrim(st_str),'start')
+                st_val = 1;
+            elseif strcmp(strtrim(st_str),'end')
+                st_val = length(entity.populations);
+            else
+                st_val = str2double(st_str);
+            end
+            en_str = range(hyphen+1:end);
+            % process start/end syntax
+            if strcmp(strtrim(en_str),'start')
+                en_val = 1;
+            elseif strcmp(strtrim(en_str),'end')
+                en_val = length(entity.populations);
+            else
+                en_val = str2double(en_str);
+            end
+            crange = st_val:en_val;
             conformers(cpoi+1:cpoi+length(crange)) = crange;
             cpoi = cpoi + length(crange);
         end
@@ -222,10 +257,16 @@ end
 % remove part of address that was already processed
 if ~isempty(ei)
     address = address(ei+1:end);
+    erot = erot-ei;
 end
 
 % process rotamer selection if any
-if ~isempty(rotamer_str)
+if strcmp(strtrim(rotamer_str),'*') % wildcard selects all rotamers
+    all_rotamers = true;
+else
+    all_rotamers = false;
+end
+if ~isempty(rotamer_str) && ~all_rotamers
     rotamers = zeros(1,70000);
     rotpoi = 0;
     delimited = strfind(rotamer_str,',');
@@ -266,7 +307,6 @@ end
 if ~isempty(erot)
     address = address(erot+1:end);
 end
-
 % separate atoms part and make atom type cellstring
 ei = strfind(address,':');
 if isempty(ei) && ~isempty(address)
@@ -326,7 +366,8 @@ for kc = 1:length(chains)
             selected = entity.(chain).selected; % current selection state
             assignment = ~unselect; % select or unselect
             for ksel = 1:length(chain_fields)
-                if strcmp(chain_fields{ksel},chain) % new selection matches?
+                if strcmp(chain_fields{ksel},chain) ... % new selection matches?
+                        || strcmp(chain_fields{ksel},'*') % wildcard selects all chains
                     selected = assignment;
                 end
             end
@@ -334,7 +375,8 @@ for kc = 1:length(chains)
         else
             active = isempty(chain_fields{1});
             for ksel = 1:length(chain_fields)
-                if strcmp(chain_fields{ksel},chain) % new selection matches?
+                if strcmp(chain_fields{ksel},chain) ... % new selection matches?
+                        || strcmp(chain_fields{ksel},'*') % wildcard selects all chains
                     active = true;
                 end
             end
@@ -345,6 +387,9 @@ for kc = 1:length(chains)
             for kr = 1:length(residues)
                 residue = residues{kr};
                 if strcmp(residue(1),'R') % these are residue fields
+                    if all_rotamers % assign rotamer vector for wildcard
+                        rotamers = 1:length(entity.(chain).(residue).populations);
+                    end
                     location_set = entity.(chain).(residue).locations;
                     if level == 2
                         selected = entity.(chain).(residue).selected; % current selection state
@@ -356,7 +401,8 @@ for kc = 1:length(chains)
                             end
                         end
                         for ksel = 1:length(residue_types)
-                            if strcmpi(residue_types(ksel),entity.(chain).(residue).name) % residue type match?
+                            if strcmpi(residue_types(ksel),entity.(chain).(residue).name) ... % residue type match?
+                                    || strcmp(residue_types{ksel},'*') % wildcard selects all residues
                                 selected = assignment;
                             end
                         end
@@ -379,12 +425,17 @@ for kc = 1:length(chains)
                             end
                         end
                         for ksel = 1:length(residue_types)
-                            if strcmpi(residue_types(ksel),entity.(chain).(residue).name) % new selection matches?
+                            if strcmpi(residue_types(ksel),entity.(chain).(residue).name) ... % new selection matches?
+                                    || strcmp(residue_types{ksel},'*') % wildcard selects all residues
                                 active = true;
                             end
                         end
                         if ~active
                             continue;
+                        end
+                        % process location wildcard
+                        if strcmp(strtrim(locations),'*')
+                            locations = entity.(chain).(residue).locations;
                         end
                         % translate location string to location index vector
                         location_vector = zeros(1,length(locations));
@@ -397,6 +448,15 @@ for kc = 1:length(chains)
                             end
                         end
                         location_vector = location_vector(1:locpoi);
+                        % rotamer selection overrules location selection,
+                        % if both are present
+                        if length(rotamers) > 1 || rotamers(1) ~= 1 
+                            location_vector = rotamers;
+                        end
+                        % at least one location must be selected
+                        if isempty(location_vector)
+                            location_vector = 1;
+                        end
                         atoms = fieldnames(entity.(chain).(residue));
                         for ka = 1:length(atoms)
                             atom = atoms{ka};
@@ -405,7 +465,8 @@ for kc = 1:length(chains)
                                 was_selected = selected; % memorize for location assignment
                                 assignment = ~unselect; % select or unselect?
                                 for ksel = 1:length(atom_fields)
-                                    if strcmp(atom_fields{ksel},atom) % atom type match?
+                                    if strcmp(atom_fields{ksel},atom) ... % atom type match?
+                                            || strcmp(atom_fields{ksel},'*') % wildcard selects all atoms
                                         selected = assignment;
                                     end
                                 end

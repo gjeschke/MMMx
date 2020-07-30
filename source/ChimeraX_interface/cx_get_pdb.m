@@ -2,7 +2,7 @@ function [entity,exception,id] = cx_get_pdb(ident,options)
 %
 % CX_GET_PDB Load PDB structure into ChimeraX and retrieve entity
 %
-%   response = CX_GET_PDB
+%   [entity,exception,id] = CX_GET_PDB
 %   Returns ChimeraX model number and entity in MMMx:atomic representation
 %
 %   [entity,exception,id] = CX_GET_PDB(ident,options)
@@ -11,19 +11,21 @@ function [entity,exception,id] = cx_get_pdb(ident,options)
 %   format, for future reference, the ChimeraX identifier is returned
 %
 % INPUT
-% ident     ChimeraX comman, see: 
-%           https://www.cgl.ucsf.edu/chimerax/docs/user/index.html
-% port      optional port number, defaults to 51051
-%           if you override the default, use a value N in the range 
-%           49152-65535 and make sure that ChimeraX executes at startup:
-%           remotecontrol rest start port N
-% options   optional modifications of connection setup, see Matlab
-%           documentation of 'weboptions'
+% ident     PDB identifier, if four characters without extension, otherwise
+%           file name, can be 'browser' or empty, in that case a ChimeraX
+%           browser window is opened
+% options   structure with requests for extended information, flags
+%           .dssp   DSSP (Kabsch/Sanders) secondary structure
+%                   defaults to false
+%           .name   optional name for the entity, defaults: PDB identifier
+%                   upon download or if header line exists; MMMx otherwise
 %
 % OUTPUT
-% response  ChimeraX response, a single long string that may contain
-%           carriage returns and may be empty, the line after the last
-%           carriage return is empty
+% entity       entity structure in MMMx:atomic representation
+% exceptions   error message if something went wrong, entity is empty for
+%              errors but not for warnings, for warnings, only the last one
+%              is reported, cell containing an empty array, if no exception
+% id           internal identifier of ChimeraX
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -35,6 +37,11 @@ exception = [];
 
 if ~exist('ident','var') || isempty(ident)
     fname = 'browse';
+end
+
+if ~exist('options','var') || ~isfield(options,'dssp') || ...
+        isempty(options.dssp)
+    options.dssp = false;
 end
 
 [path,basname,ext] = fileparts(fname);

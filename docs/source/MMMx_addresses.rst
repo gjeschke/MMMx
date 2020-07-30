@@ -45,6 +45,8 @@ Residue types are three-letter codes for amino acid residues, two-letter codes f
 	 
      ``(C)arg,lys`` addresses all arginine and lysine residues in chain C
 	 
+     ``(B)*`` addresses all residues in chain B
+	 
 
 Atoms
 ------
@@ -61,6 +63,8 @@ A list of atom addresses starts with a dot ``.``.
      ``.CG1,CG2`` addresses all ``CG1`` and ``CG2`` atoms in the entity
 	 
      ``(A)128-135.backbone,CB`` addresses the backbone atoms and the ``CB`` atom in the residue range from 128 to 135 in chain A
+	 
+     ``131.*`` addresses all atoms in residues 131 of all chains
 
 Water molecules
 ----------------
@@ -71,75 +75,85 @@ Conformers
 ----------
 
 Conformers are addressed by numbers in curly brackets ``{}``. By default, conformer 1 (model 1 in PDB) is selected. It is not possible to unselect all conformers. 
-The selection is empty if no chain, no residue, and no atom is selected.
+The selection is empty if no chain, no residue, and no atom is selected. For the conformer range, keywords ``start`` (first conformer) and ``end`` (last conformer) are supported.
 
 .. admonition:: Conformer address examples
 
      ``{3-5,12}``  addresses conformers 3, 4, 5, and 12 of the whole entity
 	 
+     ``{4-end}`` addresses all conformers starting at number 4
+	 
      ``{7}(A).CA`` addresses all ``CA`` atoms of chain A in conformer 7
 	 
      ``{5}cys,met`` addresses all cysteine and methionine residues in conformer 5 of the entity
+	 
+     ``{*}`` selects all conformers of the entity
 
 Rotamers
 ----------
 
-Rotamers are addressed at residue level by their numbers after a vertical bar ``|``. By default, rotamer 1 is selected. It is not possible to unselect all rotamers if the residue, the chain, or the conformer is selected.
+Rotamers are addressed at residue level by their numbers after a vertical bar ``|``. 
+By default, rotamer 1 is selected. It is not possible to unselect all rotamers if the residue, the chain, or the conformer is selected.
+Rotamer selection overrules location selection for atoms. In a rotameric structure, atom locations correspond to distinct rotamers.
 
 .. admonition:: Rotamer address examples
 
-     ``{3-5,12}``  addresses conformers 3, 4, 5, and 12 of the whole entity
+     ``(A)131|1-3``  addresses rotamers 1, 2, 3 of residue 131 in chain (A)
 	 
-     ``{7}(A).CA`` addresses all ``CA`` atoms of chain A in conformer 7
+     ``55-57|2.CA`` addresses the second *location* (where no location tag is often the first location) for the ``CA`` atoms of residues 55, 56, and 57 in all chains  
 	 
-     ``{5}cys,met`` addresses all cysteine and methionine residues in conformer 5 of the entity
+     ``gln|2`` addresses the second rotamer for all glutamine residues in the entity
+	 
+     ``glu|*`` addresses all rotamers for all glutamate residues in the entity
 
+Locations
+----------
 
-Conformation
-------------
+Locations are addressed at atom level by their tags after a colon ``:``.  
+A location tag is preferably a single upper-case letter for up to 26 locations and a single lower-case letter for locations 27-52. More than 52 locations cannot be stored in PDB files.
+By default, the first location (location tag is usually a space) is selected. It is not possible to unselect all locations if the atom is selected.
+If you want to address a location by its tag, you must not address rotamers in the same address.
 
-The only information on conformation that the topology variable needs to hold are population vectors (vide supra) on entity level and on residue level (rotamers).
-The length of these vectors specifies the number of entity conformers or sidechain rotamers. The topology variable must also hold the topological indices (vide supra). 
-With that information, all atom coordinates can be retrieved via the index array from the coordinate array and the associated populations can be computed.
+.. admonition:: Location address examples
 
-Element assignment of atoms
----------------------------
+     ``.OE1:B``  addresses location B of all OE1 atoms in the entity, if no such location exists for an OE1 atom, the first location is selected 
+	 
+     ``(A)glu.OE1:A`` addresses location A of OE1 atoms of all glutamate residues in chain A
+	 
+     ``glu.OE1:*`` addresses all locations of OE1 atoms in all glutamate residues in chain A 
+	 
 
-The information still missing even for basic computations concerns element assignment of the atoms, as retrieval from the atom name is not safe. 
-For ease of access, this information is stored in a separate element vector that matches the coordinate index array, but can be typed `int8`. 
+Changes compared to MMM
+-----------------------
 
-Conversion to PDB representation
---------------------------------
+The MMMx address format was designed to be as close as possible to the MMM address format, but allowing for full access to the ``MMMx:atomic`` representation of ensemble structure.
+This entailed the following changes:
 
-In the ``MMMx|atomic`` representation, the same atom coordinate can apply in several conformers (*models* in the PDB representation). 
-Upon conversion to PDB, the coordinate array expands. The PDB writer of MMMx expands per conformer during writing to reduce memory requirements.
+* the structure identifier in square brackets is no longer required, since MMMx methods work on an entity
 
-Rotameric states are expressed by alternate atom locations. Up to 26 (preferably) or 52 (with lower-case location identifiers) rotamers can be converted.
-Not all external programs may be able to process PDB files with more than 26 locations. By default, only the 26 rotamers with highest populations are converted.
-As an option, 52 rotamers can be converted.
+* rotamer addressing was newly introduced
 
-If an atom coordinate in the ``MMMx|atomic`` representation is "not a number", this atom is ignored. 
-This should happen only if the structure originated from an inconsistent PDB file.
+* the wildcard is now the asterisk ``*`` rather than the colon ``:``
 
-MMMx converts to PDB representation only for two purposes:
+* preferably, the conformer is now addressed first, whereas MMM addressed it as "chain model" after the chain identifier; both address sequences still work
 
-* saving structure in a PDB files
+Correspondence with ChimeraX
+----------------------------
 
-* transmitting structure to ChimeraX for visualization
+MMMx can translate a subset of basic ChimeraX target specifications into MMM addresses. The following functionality of ChimeraX target specifications is **not** translated:
 
-Conversion from PDB representation
-----------------------------------
+* usage of ``start`` and ``end`` in ranges, except for conformers
+* structure hierarchy with a depth of more than two (only structure and conformers allowed)
+* ranges for structure identifiers or chain identifiers
+* implicit operations (returning higher-level address parts)
+* use of the wild card ``*`` for part of a name
+* use of the wild card ``?`` for single characters
+* built-in classifications
+* user-defned attributes
+* zones
+* combinations
 
-MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry. 
-Residue numbers are preserved in the about `96.5% structures that do not use "insertion codes"`__ and only if all are positive numbers.  
-The entity has a field ``original_element_numbers`` that indicates whether residue numbers were preserved.
+Such selections can be made in ChimeraX, also via the ChimeraX interface of MMMx, and can then be imported into MMMx.
 
-.. __: http://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v40.dic/Items/_atom_site.pdbx_PDB_ins_code.html
-
-The number of chain/molecule conformers equals the number of PDB ``models`` for all chains and molecules of the entity. Uniform populations are assumed.
-
-The number of rotamers of a residue is as large as the maximum number of alternate locations among the atoms of this residue. 
-Rotamer populations are mean populations over all atoms which have this number of alternate locations.
-
-In case of topological inconsistency between *models*, topology is determined by the first model encountered in the PDB file (regardless of its model number).
-Only atom coordinates are read for further models. Surplus atom coordinates are ignored. Missing atom coordinates are assigned "not a number".
+MMMx can project its own addresses onto ChimeraX target specifications, as far as the ChimeraX target specification supports the type of addressing. 
+This excludes rotamer and atom location addressing.

@@ -42,7 +42,7 @@ MMMx internal representations
 
 As a multi-scale modeller, MMMx needs extensible and varied representations of entity structure. Two representations exist in the first release:
 
-1) :ref:`MMMx|atomic<MMMx_atomic>`: This representation is closest to PDB representation, but allows for non-uniform conformer populations and sidegroup rotamers with associated populations. 
+1) :ref:`MMMx|atomic<MMMx_atomic>`: This representation is closest to PDB representation, but allows for non-uniform conformer populations and sidegroup rotamers with associated populations. Rotamers overrule atom locations.
 
 2) :ref:`MMMx|RigiFlex<MMMx_RigiFlex>`: This representation keeps full information on rigid-body arrangement for models where some chains or chain segments are specified as rigid bodies. 
    It is also more memory economic for such models, which can matter for large ensembles.

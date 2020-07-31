@@ -1,34 +1,27 @@
-.. _MMMx_addresses:
+.. _object_access:
 
-Selection by address
+Object access
 ==========================
 
-Topology and ensemble addressing
+Concept
 ---------------------------------
 
-Addresses are used for selecting part of an entity (see :ref:`MMMx|atomic<MMMx_atomic>`) for display, processing, or analysis. 
-Such selection can refer to objects in the molecular structure (chains or molecules in a complex, residues, atoms) or to different realizations of an object (conformers of the whole structure, sidechain rotamers, atom locations).
-The first selection type is *topology addressing*  and the second selection type *ensemble addressing*.
+Object access functions return or set object attributes, where an object is a conformer, a chain, a residue, a rotamer, an atom, or an atom location. 
+They operate on an ``entity``, which is an MMMx ensemble structure representation in :ref:`MMMx|atomic<MMMx_atomic>` or :ref:`MMMx|RigiFlex<MMMx_RigiFlex>` format.
+Wherever possible, methods should operate on an entity only through object access functions.
 
-MMMx internally uses only one index for atom locations (old style) and rotamers (new style). 
-Since atom locations in crystal structure cannot generally and umabigously assigned to rotamers, addressing allows reference to either locations or rotamers in a given structure.
-Mixing both concepts is discouraged, but the address style and selection functions do not prevent it.
-MMMx stores occupation of water atoms from the PDB file, but does not allow to select water locations by address.
+``get`` functions retrieve attributes, whereas ``set`` functions set or change attributes. They are specific to an object hierarchy level in order to avoid unintended behaviour.
+The objects are selected by an :ref:`MMMx address<MMMx_addresses>`. The address can also be ``selected`` for accessing all currently selected objects on this hierarchy level. 
 
-Chains
---------
+Generic syntax
+--------------
 
-Chain identifiers should be upper-case letters for up to 26 chains and lower-case letters for chains 27-52 chains. Chain identifiers longer than on letter are not compatible with PDB format, but are allowed in MMMx if required.
-Chain identifiers in MMMx must start with a letter and must not contain an underscore ``_``. Chain addresses are enclosed in parentheses (*chain*). 
+.. code-block:: matlab
 
-.. admonition:: Chain address examples
-
-     ``(C)``  addresses chain C
+    [argout,exceptions] = get_"object"(entity,address,attribute)
 	 
-     ``(A,C,g)`` addresses chains A, C, and g
-	 
-     ``(*)`` addresses all chains
-	 
+where possible ``attribute`` strings are specific to the "object" hierarchy level ("conformer", "chain", "residue", "rotamer", "atom", "location", see below) and argout is a cell vector, whose length is the number of objects of this hierarchy level that were selected by ``address``.
+Error messages or warnings are reported as MException objects in cell array ``exceptions``.  
    
 Residues
 ---------
@@ -131,7 +124,6 @@ Programmatic access
     
 selects objects by ``address`` in an ``entity``. If ``overwrite`` (default: false) is true, a pre-existing selection is deleted. 
 If ``unselected`` (default: false) is true, the addressed objects are unselected rather than selected. An unselect request overrules a simultaneous overwrite request.
-For the address ``selected``, the value of ``overwrite`` is inconsequential, whereas ``unselect = true`` unselects the existing selection.
 
 .. code-block:: matlab
 

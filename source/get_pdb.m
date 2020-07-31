@@ -133,6 +133,7 @@ chains = '';
 curr_chain = '';
 models = 1;
 current_model = 1;
+old_resname = 'HOH'; % avoid location entry for water residues
 while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
@@ -190,7 +191,7 @@ while 1
             preserve_residue_numbers = false;
         end
         if trial_resnum ~= curr_resnum
-            if curr_resnum > 0
+            if curr_resnum > 0 && ~strcmpi(old_resname,'HOH')
                 entity.(chainfield).(resfield).locations = altlocs;
             end
             altlocs = altloc;
@@ -268,6 +269,10 @@ while 1
         end
         % update current residue number
         curr_resnum = trial_resnum;
+        old_resname = resname;
+%         if atoms == 992
+%             disp('Aber hallo!');
+%         end
     end % end atom loop
 end
 entity.original_residue_numbers = preserve_residue_numbers;

@@ -27,6 +27,16 @@ MMMx 0.0.0 Documentation
 
 .. toctree::
     :hidden:
+    :caption: Programmer's Guide
+    :maxdepth: 2
+
+    ./object_access
+    ./ChimeraX
+    ./python
+    ./dependencies
+
+.. toctree::
+    :hidden:
     :caption: Architecture
     :maxdepth: 2
 
@@ -34,14 +44,6 @@ MMMx 0.0.0 Documentation
     ./data
     ./docs
 
-.. toctree::
-    :hidden:
-    :caption: Programmer's Guide
-    :maxdepth: 2
-
-    ./ChimeraX
-    ./python
-    ./dependencies
 
 .. Indices and tables
 .. ==================

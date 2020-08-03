@@ -2,9 +2,6 @@ function [addresses,exceptions] = cx_to_mmmx_address(spec)
 %
 % CX_TO_MMMX_ADDRESS Translate ChimeraX target specification
 %
-%   [addresses,exceptions] = CX_TO_MMMX_ADDRESS
-%   Returns MMMx addresses and entity identifiers
-%
 %   [addresses,exceptions] = CX_TO_MMMX_address(spec)
 %   Translates a ChimeraX target specification into a set of MMMx
 %   addresses and ChimeraX structure identifiers, only a subset of ChimeraX

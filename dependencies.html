@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Documentation &mdash; MMMx  documentation</title>
+  <title>Dependencies &mdash; MMMx  documentation</title>
   
 
   
@@ -44,7 +44,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="prev" title="Data" href="data.html" /> 
+    <link rel="next" title="Concept" href="concept.html" />
+    <link rel="prev" title="Python" href="python.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -136,7 +137,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">Programmer's Guide</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="object_access.html#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_access.html#generic-syntax">Generic syntax</a></li>
@@ -160,10 +161,10 @@
 <li class="toctree-l2"><a class="reference internal" href="python.html#current-conclusion">Current conclusion</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependencies</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Dependencies</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Architecture</span></p>
-<ul class="current">
+<ul>
 <li class="toctree-l1"><a class="reference internal" href="concept.html">Concept</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-concept">Open source concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="concept.html#separation-of-user-interface-from-computation">Separation of user interface from computation</a></li>
@@ -176,9 +177,9 @@
 <li class="toctree-l2"><a class="reference internal" href="data.html#distance-distribution-restraints">Distance distribution restraints</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#automation">Automation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
 </ul>
 </li>
 </ul>
@@ -227,7 +228,7 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Documentation</li>
+      <li>Dependencies</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -244,58 +245,22 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="documentation">
-<h1>Documentation<a class="headerlink" href="#documentation" title="Permalink to this headline">¶</a></h1>
-<div class="section" id="concept">
-<h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
-<p>MMMx documentation will be handled with Sphinx. The main documentation channel is HTML, i.e., the <code class="docutils literal notranslate"><span class="pre">.rst</span></code> source files will be optimized for HTML appearance.
-Still, a PDF version via Latex will be made available.</p>
-<p>The documentation is organized as follows:</p>
-<blockquote>
-<div><ul>
-<li><dl>
-<dt>User part</dt><dd><p>Everything needed for users without scripting and programming ambitions:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>introduction to the purpose of MMMx and its structure representation</p></li>
-<li><p>graphical user interface (MMMx Control GUI)</p></li>
-<li><p>command reference</p></li>
-</ul>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-<li><dl>
-<dt>Programmer part</dt><dd><p>Everything needed for programmatic access, external access, and contributing to MMMx:</p>
-<blockquote>
-<div><ul class="simple">
-<li><p>introduction to scripting</p></li>
-<li><p>function reference</p></li>
-<li><p>external interface (if developed)</p></li>
-</ul>
-</div></blockquote>
-</dd>
-</dl>
-</li>
-</ul>
-</div></blockquote>
-<p>An external interface would be implemented as a <a class="reference external" href="https://ch.mathworks.com/help/thingspeak/rest-api.html">REST API</a>.</p>
-</div>
-<div class="section" id="automation">
-<h2>Automation<a class="headerlink" href="#automation" title="Permalink to this headline">¶</a></h2>
-<p>The following aspects will be automated in order to keep MMMx documentation and package consistent:</p>
+  <div class="section" id="dependencies">
+<h1>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h1>
+<p>MMMx is self-contained in the following two modes:</p>
 <ul class="simple">
-<li><p>basic description of GUI windows</p></li>
-<li><p>command reference</p></li>
-<li><p>function reference</p></li>
+<li><p>structure analysis, modification, and generation with scripting (MMMx GUI not required)</p></li>
+<li><p>structure analysis, modification, and generation from the MMMx GUI without 3D molecule visualization</p></li>
 </ul>
-<p>For these cases, the documentation source are comment sections in the code source files. Compilation of the documentation has two steps:</p>
+<p>There are three caveats:</p>
 <ol class="arabic simple">
-<li><p>extraction of the information from the code source files into <code class="docutils literal notranslate"><span class="pre">.rst</span></code> source files</p></li>
-<li><p>building the HTML (and Latex) files with the <code class="docutils literal notranslate"><span class="pre">make</span></code> command of Sphinx</p></li>
+<li><p>methods that require DSSP depend on either a DSSP standalone or ChimeraX access</p></li>
+<li><p>methods that generate or optimize sidechains depend on SCWRL4</p></li>
+<li><p>automated structure refinement requires a Yasara structure license</p></li>
 </ol>
-<p>For Python code, the first step is done by the <code class="docutils literal notranslate"><span class="pre">autodoc</span></code> feature of Sphinx. For Matlab code, this will be done by a Matlab function.</p>
-</div>
+<p>For 3D molecular visualization, MMMx depends on ChimeraX. ChimeraX can also be used for accessing information beyond entity structure from PDB or mmCIF files.</p>
+<p>Methods should not directly access ChimeraX. They operate on an entity and can define, in comments or by an auxiliary function, what information beyond structure they request.</p>
+<p><strong>File name convention</strong>: All functions that access ChimeraX have a function name starting with <code class="docutils literal notranslate"><span class="pre">cx_</span></code>.</p>
 </div>
 
 
@@ -306,8 +271,10 @@ Still, a PDF version via Latex will be made available.</p>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
+        <a href="concept.html" class="btn btn-neutral float-right" title="Concept" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
-        <a href="data.html" class="btn btn-neutral float-left" title="Data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+        <a href="python.html" class="btn btn-neutral float-left" title="Python" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

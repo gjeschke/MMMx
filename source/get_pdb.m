@@ -2,10 +2,10 @@ function [entity,exceptions] = get_pdb(ident,options)
 %
 % GET_PDB Load structure from PDB server or local file
 %
-%   [entity,exceptions] = GET_PDB
+%   [entity,exceptions] = GET_PDB(ident)
 %   Returns an (entity) structure in MMMx:atomic representation
 %
-%   [entity,exceptions] = GET_PDB(ident)
+%   [entity,exceptions] = GET_PDB(ident,options)
 %   Reads topology and Cartesian coordinates of a biological entity
 %   from a PDB file obtained from a server or locally
 %
@@ -31,10 +31,6 @@ function [entity,exceptions] = get_pdb(ident,options)
 
 profile on
 
-% use European PDB server
-PDB_server = 'ftp.ebi.ac.uk';
-PDB_structures = '/pub/databases/rcsb/pdb-remediated/data/structures/all/pdb/';
-
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % tghis number is too small and is memory-intensive, if it is too large
 maxatoms = 1000000;
@@ -56,46 +52,23 @@ to_be_deleted = '';
 
 [~,~,ext] = fileparts(ident);
 
-% load file from PDB server if required 
+% load file from PDB server if required
 if isempty(ext) && length(ident) == 4
-    entity.name = ident;
-    fname0 = ['pdb' lower(ident) '.ent.gz'];
-    % open FTP connection
+    query = sprintf('https://files.rcsb.org/download/%s.pdb.gz',lower(ident));
+    fname0 = [lower(ident) '.pdb.gz'];
     try
-        ftp_obj = ftp(PDB_server,'anonymous','anonymous');
+        websave(fname0,query);
     catch exception
         exceptions{1} = exception;
         return;
     end
-    % change FTP object to structure directory
-    try
-    cd(ftp_obj,PDB_structures);
-    catch exception
-        exceptions{1} = exception;
-        return;
-    end
-    % switch FTP object to binary mode
-    try
-        binary(ftp_obj);
-    catch exception
-        exceptions{1} = exception;
-        return;
-    end
-    % download zipped PDB structure file 
-    try
-        mget(ftp_obj,fname0);
-    catch exception
-        exceptions{1} = exception;
-        return;
-    end
-    % unzip the downloded file
     try
         gunzip(fname0);
     catch exception
         exceptions{1} = exception;
         return;
     end
-    ident = ['pdb' lower(ident) '.ent'];
+    ident = sprintf('%s.pdb',lower(ident));
     to_be_deleted = ident;
     % delete the zipped file
     try
@@ -304,15 +277,34 @@ end
 
 if options.dssp && preserve_residue_numbers
     dssp = get_dssp(ident);
+    % the following is required, since DSSP sometimes defines new chains
+    chainfields = fieldnames(entity);
+    cpoi = 0;
+    for kc = 1:length(chainfields)
+        chain = chainfields{kc};
+        if isstrprop(chain(1),'upper')
+            cpoi = cpoi + 1;
+            chainfields{cpoi} = chainfields{kc};
+        end
+    end
+    chainfields = chainfields(1:cpoi);
     for k = 1:length(dssp)
         if isstrprop(dssp(k).chain,'lower')
             chainfield = strcat(upper(chain),'_');
         else
             chainfield = dssp(k).chain;
         end
-        resfield = strcat('R',dssp(k).tag);
-        entity.(chainfield).(resfield).dssp = dssp(k).sec;
-        entity.(chainfield).(resfield).sheet = dssp(k).bp;
+        chain_exists = false;
+        for kc = 1:length(chainfields)
+            if strcmp(chainfield,chainfields{kc})
+                chain_exists = true;
+            end
+        end
+        if chain_exists
+            resfield = strcat('R',dssp(k).tag);
+            entity.(chainfield).(resfield).dssp = dssp(k).sec;
+            entity.(chainfield).(resfield).sheet = dssp(k).bp;
+        end
     end
 end
 

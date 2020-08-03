@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="MMMx|RigiFlex" href="MMMx_RigiFlex.html" />
-    <link rel="prev" title="Structure representation" href="structure_representation.html" /> 
+    <link rel="prev" title="Selection by address" href="MMMx_addresses.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -106,6 +106,20 @@
 <li class="toctree-l2"><a class="reference internal" href="structure_representation.html#mmmx-internal-representations">MMMx internal representations</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#programmatic-access">Programmatic access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">MMMx|atomic</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#basic-considerations">Basic considerations</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#topology">Topology</a></li>
@@ -116,11 +130,38 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="MMMx_RigiFlex.html">MMMx|RigiFlex</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#mmmx-internal-representations">MMMx internal representations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#format">Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#conversion-to-mmmx-atomic-representation">Conversion to MMMx|atomic representation</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#chain">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="property_functions.html#mass">Mass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python.html#remarks">Remarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python.html#current-conclusion">Current conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependencies</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Architecture</span></p>
 <ul>
@@ -139,18 +180,6 @@
 <li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
-</ul>
-</li>
-</ul>
-<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="python.html">Python</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="python.html#remarks">Remarks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="python.html#current-conclusion">Current conclusion</a></li>
 </ul>
 </li>
 </ul>
@@ -238,13 +267,15 @@ Especially for large ensembles, it makes sense to store only unique coordinates.
 </ol>
 <p>The remaining two indices are <em>conformational</em> and designate</p>
 <ol class="arabic simple" start="4">
-<li><p>the conformer of a chain or molecule</p></li>
-<li><p>the rotamer of a sidegroup</p></li>
+<li><p>the conformer</p></li>
+<li><p>the rotamer of a sidegroup (structures with specified rotamers) or one of the atom locations existing for a residue (crystal structures with locations)</p></li>
 </ol>
 </div></blockquote>
 </div>
 <p>The Cartesian coordinate array <img class="math" src="_images/math/91bb7ebe5360f220c5ddca9f8a3cff6379617fe0.svg" alt="\mathbf{C}"/> of an entity is thus supplemented by a coordinate index array <img class="math" src="_images/math/3e96f1d3536f5bc432fbb8d17a3b199f92aacff3.svg" alt="\mathbf{I}_\mathrm{c}"/>.
-In Matlab, <a class="reference external" href="https://blogs.mathworks.com/loren/2013/02/20/logical-indexing-multiple-conditions/">logical indexing</a>, together with the index array, provides a very intuitive and efficient way for extracting required subsets of coordinates and to reassign them after some processing.</p>
+In Matlab, <a class="reference external" href="https://blogs.mathworks.com/loren/2013/02/20/logical-indexing-multiple-conditions/">logical indexing</a>, together with the index array, provides a very intuitive and efficient way for extracting required subsets of coordinates and to reassign them after some processing.
+The index array is typed <code class="docutils literal notranslate"><span class="pre">uint16</span></code>, so that each hierarchy level can hold up to 65535 items.</p>
+<p>The coordinate array is further supplemented by a vector of atomic numbers (number of the element in the periodic table) and by a vector of occupancies. Both vectors are single-byte unsigned integers. Occupancy is multiplied by 100 and rounded to an integer for storage.</p>
 </div>
 <div class="section" id="topology">
 <h2>Topology<a class="headerlink" href="#topology" title="Permalink to this headline">¶</a></h2>
@@ -259,22 +290,27 @@ Hierarchical relation means that an atom belongs to a residue or molecule and a 
 <blockquote>
 <div><ul class="simple">
 <li><p><strong>Chain identifiers</strong>. Small letters from PDB files with more than 26 chains are represented by a capital letter with an appended underscore.
-Entities with more than 26 chains can be exchanged with other software only in <img class="math" src="_images/math/5837bc9aa1c36e6270d53a281eb3edbceba7d352.svg" alt="mmCIF"/> format.</p></li>
-<li><p><strong>Residue identifiers</strong>. Capital <img class="math" src="_images/math/04d2325fffa56c70ed7ef25845d117f2daf8f3af.svg" alt="R"/> followed by the residue number.</p></li>
-<li><p><strong>Atom identifiers</strong>. The atom name in PDB or mmCIF syntax.
-If a name staring with a lowercase character is encountered, the first letter is capitalized and an underscore is appended to the atom name.</p></li>
+Entities with more than 26 chains can be exchanged with other software only in <code class="docutils literal notranslate"><span class="pre">mmCIF</span></code> format.</p></li>
+<li><p><strong>Residue identifiers</strong>. Capital <code class="docutils literal notranslate"><span class="pre">R</span></code> followed by the residue number.</p></li>
+<li><p><strong>Atom identifiers</strong>. The atom name in PDB or mmCIF syntax. Primes are substituted by an underscore.
+If a name starting with a lowercase character is encountered, the first letter is capitalized and an underscore is appended to the atom name.</p></li>
 </ul>
-<p>The fieldname <img class="math" src="_images/math/a3893850e6b021b373a97133f7f522d96944dcc8.svg" alt="index"/> is reserved on all levels. This field holds the topology index per object and level.</p>
-<p>The fieldname <img class="math" src="_images/math/3619ce53a80e4a9c04871f5ceb95f58f2296945e.svg" alt="populations"/> is reserved on chain/molecule level and on residue level.</p>
+<p>The fieldname <code class="docutils literal notranslate"><span class="pre">selected</span></code> is reserved at all levels. At entity level it is a vector of selected conformers (default: 1), at other levels a boolean flag.</p>
+<p>The fieldname <code class="docutils literal notranslate"><span class="pre">index</span></code> is reserved at all levels below entity. This field holds the topology index per object and level.</p>
+<p>The fieldnames <code class="docutils literal notranslate"><span class="pre">water</span></code> and <code class="docutils literal notranslate"><span class="pre">water_selected</span></code> at entity level are reserved for water molecules. They hold an index vector of all water atoms and a flag whether they are selected.</p>
+<p>The fieldnames <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">xyz</span></code>, <code class="docutils literal notranslate"><span class="pre">index_array</span></code>, <code class="docutils literal notranslate"><span class="pre">elements</span></code>, <code class="docutils literal notranslate"><span class="pre">occupancies</span></code>, and <code class="docutils literal notranslate"><span class="pre">original_residue_numbers</span></code> are reserved at entity level</p>
+<p>The fieldname <code class="docutils literal notranslate"><span class="pre">populations</span></code> is reserved at entity level and at residue level. At residue level, the length of the population vecor specifies the number of rotamers.</p>
+<p>The fieldnames <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_rotamers</span></code>, <code class="docutils literal notranslate"><span class="pre">locations</span></code>, <code class="docutils literal notranslate"><span class="pre">dssp</span></code>, and <code class="docutils literal notranslate"><span class="pre">sheet</span></code> are reserved at residue level</p>
+<p>The fieldnames <code class="docutils literal notranslate"><span class="pre">element</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_locations</span></code>, <code class="docutils literal notranslate"><span class="pre">charge</span></code>, and <code class="docutils literal notranslate"><span class="pre">bfactor</span></code> are reserved at atom level</p>
 <p>Methods can define further lower-case fieldnames for object attributes. These attributes are internal to the method.
-Passing back such attributes to MMMx and saving them in <img class="math" src="_images/math/5837bc9aa1c36e6270d53a281eb3edbceba7d352.svg" alt="mmCIF"/> output files may be enabled in a future release.</p>
+Passing back such attributes to MMMx and saving them in <code class="docutils literal notranslate"><span class="pre">mmCIF</span></code> output files may be enabled in a future release.</p>
 </div></blockquote>
 </div>
 </div>
 <div class="section" id="conformation">
 <h2>Conformation<a class="headerlink" href="#conformation" title="Permalink to this headline">¶</a></h2>
-<p>The only information on conformation that the topology variable needs to hold are population vectors (vide supra) on molecule/chain level and on residue level (rotamers).
-The length of these vectors specifies the number of conformers or rotamers of this object. The topology variable must also hold the topological indices (vide supra).
+<p>The only information on conformation that the topology variable needs to hold are population vectors (vide supra) on entity level and on residue level (rotamers).
+The length of these vectors specifies the number of entity conformers or sidechain rotamers. The topology variable must also hold the topological indices (vide supra).
 With that information, all atom coordinates can be retrieved via the index array from the coordinate array and the associated populations can be computed.</p>
 </div>
 <div class="section" id="element-assignment-of-atoms">
@@ -284,12 +320,12 @@ For ease of access, this information is stored in a separate element vector that
 </div>
 <div class="section" id="conversion-to-pdb-representation">
 <h2>Conversion to PDB representation<a class="headerlink" href="#conversion-to-pdb-representation" title="Permalink to this headline">¶</a></h2>
-<p>In the <img class="math" src="_images/math/716e51206b8e70958a2c5fc12fa230aa3dfc00c3.svg" alt="MMMx|atomic"/> representation, the same atom coordinate can apply in several conformers (<em>models</em> in the PDB representation).
+<p>In the <code class="docutils literal notranslate"><span class="pre">MMMx|atomic</span></code> representation, the same atom coordinate can apply in several conformers (<em>models</em> in the PDB representation).
 Upon conversion to PDB, the coordinate array expands. The PDB writer of MMMx expands per conformer during writing to reduce memory requirements.</p>
 <p>Rotameric states are expressed by alternate atom locations. Up to 26 (preferably) or 52 (with lower-case location identifiers) rotamers can be converted.
 Not all external programs may be able to process PDB files with more than 26 locations. By default, only the 26 rotamers with highest populations are converted.
 As an option, 52 rotamers can be converted.</p>
-<p>If an atom coordinate in the <img class="math" src="_images/math/716e51206b8e70958a2c5fc12fa230aa3dfc00c3.svg" alt="MMMx|atomic"/> representation is “not a number”, this atom is ignored.
+<p>If an atom coordinate in the <code class="docutils literal notranslate"><span class="pre">MMMx|atomic</span></code> representation is “not a number”, this atom is ignored.
 This should happen only if the structure originated from an inconsistent PDB file.</p>
 <p>MMMx converts to PDB representation only for two purposes:</p>
 <ul class="simple">
@@ -299,9 +335,10 @@ This should happen only if the structure originated from an inconsistent PDB fil
 </div>
 <div class="section" id="conversion-from-pdb-representation">
 <h2>Conversion from PDB representation<a class="headerlink" href="#conversion-from-pdb-representation" title="Permalink to this headline">¶</a></h2>
-<p>MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry.
-Residue numbers are preserved in the about <a class="reference external" href="http://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v40.dic/Items/_atom_site.pdbx_PDB_ins_code.html">96.5% structures that do not use “insertion codes”</a>.</p>
-<p>The number of chain/molecule conformers equals the number of PDB <img class="math" src="_images/math/354040c8d2543d16824654a350170cea0ae971e9.svg" alt="models"/> for all chains and molecules of the entity. Uniform populations are assumed.</p>
+<p>Upon loading a PDB file, MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry.
+Residue numbers are preserved in the about <a class="reference external" href="http://mmcif.wwpdb.org/dictionaries/mmcif_pdbx_v40.dic/Items/_atom_site.pdbx_PDB_ins_code.html">96.5% structures that do not use “insertion codes”</a> and only if they all are positive numbers and if, within the same chain, they appear in ascending order in the PDB file.
+The entity has a field <code class="docutils literal notranslate"><span class="pre">original_residue_numbers</span></code> that indicates whether residue numbers were preserved.</p>
+<p>The number of chain/molecule conformers equals the number of PDB <code class="docutils literal notranslate"><span class="pre">models</span></code> for all chains and molecules of the entity. Uniform populations are assumed.</p>
 <p>The number of rotamers of a residue is as large as the maximum number of alternate locations among the atoms of this residue.
 Rotamer populations are mean populations over all atoms which have this number of alternate locations.</p>
 <p>In case of topological inconsistency between <em>models</em>, topology is determined by the first model encountered in the PDB file (regardless of its model number).
@@ -320,7 +357,7 @@ Only atom coordinates are read for further models. Surplus atom coordinates are 
         <a href="MMMx_RigiFlex.html" class="btn btn-neutral float-right" title="MMMx|RigiFlex" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="structure_representation.html" class="btn btn-neutral float-left" title="Structure representation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="MMMx_addresses.html" class="btn btn-neutral float-left" title="Selection by address" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

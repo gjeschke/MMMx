@@ -1,6 +1,6 @@
 function [entity,exceptions] = select(entity,address,overwrite,unselect)
 %
-% SELECT Select objects in an entity (MMMx internal) 
+% SELECT Select objects in an entity
 %
 %   [entity,exceptions] = SELECT
 %   Selects all objects in an entity that match an MMMx address
@@ -30,7 +30,6 @@ function [entity,exceptions] = select(entity,address,overwrite,unselect)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
-profile on
 
 exceptions{100} = [];
 warnings = 0; % counter for warnings
@@ -45,6 +44,16 @@ if ~exist('unselect','var') || isempty(unselect)
     unselect = false;
 elseif unselect
     overwrite = false;
+end
+
+% treat address `selected`
+if strcmp(address,'selected') 
+    if ~unselect
+        exceptions{1} = [];
+        return
+    else
+        overwrite = true;
+    end
 end
 
 if overwrite % delete existing selection
@@ -73,6 +82,12 @@ if overwrite % delete existing selection
             end
         end
     end
+end
+
+% we have now unselected the selection, if this was requested, and can return
+if strcmp(address,'selected') 
+    exceptions{1} = [];
+    return
 end
 
 % treat water selection
@@ -348,6 +363,7 @@ if ~isempty(address)
     for k = 1:length(delimited)-1
         locations = [locations address(delimited(k)+1:delimited(k+1)-1)]; %#ok<AGROW>
     end
+    level = 4;
 end
 
 exceptions = exceptions(1:warnings);
@@ -435,13 +451,15 @@ for kc = 1:length(chains)
                         end
                         % process location wildcard
                         if strcmp(strtrim(locations),'*')
-                            locations = entity.(chain).(residue).locations;
+                            res_locations = entity.(chain).(residue).locations;
+                        else
+                            res_locations = locations;
                         end
                         % translate location string to location index vector
-                        location_vector = zeros(1,length(locations));
+                        location_vector = zeros(1,length(res_locations));
                         locpoi = 0;
-                        for kloc = 1:length(locations)
-                            loc = strfind(location_set,locations(kloc));
+                        for kloc = 1:length(res_locations)
+                            loc = strfind(location_set,res_locations(kloc));
                             if ~isempty(loc)
                                 locpoi = locpoi + 1;
                                 location_vector(locpoi) = loc;
@@ -454,8 +472,12 @@ for kc = 1:length(chains)
                             location_vector = rotamers;
                         end
                         % at least one location must be selected
+                        no_location = false;
                         if isempty(location_vector)
                             location_vector = 1;
+                            if level == 4
+                                no_location = true;
+                            end
                         end
                         atoms = fieldnames(entity.(chain).(residue));
                         for ka = 1:length(atoms)
@@ -472,6 +494,10 @@ for kc = 1:length(chains)
                                 end
                                 entity.(chain).(residue).(atom).selected...
                                     = selected;
+                                if no_location
+                                    selected = false;
+                                    entity.(chain).(residue).(atom).selected = false;
+                                end
                                 if selected && ~was_selected % loction assignment for new selection
                                     entity.(chain).(residue).(atom).selected_locations...
                                         = location_vector;
@@ -487,8 +513,3 @@ for kc = 1:length(chains)
         end
     end
 end
-
-
-profile viewer
-
-fprintf(1,'Debug line\n');

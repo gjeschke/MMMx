@@ -2,7 +2,7 @@ function [entity,exception,id] = cx_get_pdb(ident,options)
 %
 % CX_GET_PDB Load PDB structure into ChimeraX and retrieve entity
 %
-%   [entity,exception,id] = CX_GET_PDB
+%   [entity,exception,id] = CX_GET_PDB(ident)
 %   Returns ChimeraX model number and entity in MMMx:atomic representation
 %
 %   [entity,exception,id] = CX_GET_PDB(ident,options)

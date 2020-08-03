@@ -2,12 +2,12 @@ function [spec,exceptions] = cx_from_mmmx_address(address,id)
 %
 % CX_FROM_MMMX_ADDRESS Translate ChimeraX target specification
 %
-%   [spec,exceptions] = CX_FROM_MMMX_ADDRESS
+%   [spec,exceptions] = CX_FROM_MMMX_ADDRESS(address)
 %   Returns ChimeraX address
 %
 %   [addresses,exceptions] = CX_FROM_MMMX_address(address,id)
 %   Projects an MMMx address onto a ChimeraX target specification,
-%   and optionlly assigns a structure ID
+%   and assigns a structure ID
 %
 % INPUT
 % address    MMMx address referring to one entity

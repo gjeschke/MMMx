@@ -44,6 +44,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Dependencies" href="dependencies.html" />
     <link rel="prev" title="ChimeraX" href="ChimeraX.html" /> 
 </head>
 
@@ -105,18 +106,62 @@
 <li class="toctree-l2"><a class="reference internal" href="structure_representation.html#mmmx-internal-representations">MMMx internal representations</a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#programmatic-access">Programmatic access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="MMMx_atomic.html">MMMx|atomic</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#mmmx-internal-representations">MMMx internal representations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#topology">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conformation">Conformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#element-assignment-of-atoms">Element assignment of atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conversion-to-pdb-representation">Conversion to PDB representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conversion-from-pdb-representation">Conversion from PDB representation</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="MMMx_RigiFlex.html">MMMx|RigiFlex</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
-<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#mmmx-internal-representations">MMMx internal representations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#format">Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#conversion-to-mmmx-atomic-representation">Conversion to MMMx|atomic representation</a></li>
 </ul>
 </li>
+</ul>
+<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#chain">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="property_functions.html#mass">Mass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#remarks">Remarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#current-conclusion">Current conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependencies</a></li>
 </ul>
 <p class="caption"><span class="caption-text">Architecture</span></p>
 <ul>
@@ -135,18 +180,6 @@
 <li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
-</ul>
-</li>
-</ul>
-<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
-</ul>
-</li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Python</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#remarks">Remarks</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#current-conclusion">Current conclusion</a></li>
 </ul>
 </li>
 </ul>
@@ -271,6 +304,8 @@
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="dependencies.html" class="btn btn-neutral float-right" title="Dependencies" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
         <a href="ChimeraX.html" class="btn btn-neutral float-left" title="ChimeraX" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>

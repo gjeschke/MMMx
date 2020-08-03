@@ -1,26 +1,28 @@
-function [argout,exceptions] = get_location(entity,attribute,address)
+function [argout,exceptions] = get_atom(entity,attribute,address)
 %
-% GET_LOCATION Retrieves attributes of an atom location 
+% GET_ATOM Retrieves attributes of an atom
 %
-%   [argout,exceptions] = GET_LOCATION(entity,attribute)
-%   Provides attribute values and possibly exceptions for atom locations
-%   selected in entity
+%   [argout,exceptions] = GET_ATOM(entity,attribute)
+%   Provides attribute values and possibly exceptions for atoms selected in
+%   an entity
 %
-%   [argout,exceptions] = GET_LOCATION(entity,attribute,address)
-%   Provides attribute values and possibly exceptions for atom locations
-%   selected by address
+%   [argout,exceptions] = GET_ATOM(entity,attribute,address)
+%   Provides attribute values and possibly exceptions for atoms selected by
+%   address
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided
 % address      MMMx address, 'selected' refers to the current selection
 %              defaults to 'selected'
-% attribute    location attribute to be retrieved, string, defaults to
-%              'info'
+% attribute    atom attribute to be retrieved, string, defaults to
+%              'info', all loactions of the atom are included
 %              attribute   output                           Type
 %              ------------------------------------------------------------
+%              bfactor     B factor                         double
+%              charge      atom charge                      int
 %              coor        Cartesian coordinate array       (N,3) double
 %              element     atomic number                    int8
-%              info        .tag           location tag      string
+%              info        .name          atom name         string
 %                                         R# for a rotamer  # is a number
 %                          .indices       index vector      (1,5) uint16
 %                          .atom_index    atom array index  int
@@ -69,11 +71,12 @@ for kc = 1:length(chains)
             residue = residues{kr};
             if strcmp(residue(1),'R') % these are residue fields
                 index_vector(2) =  entity.(chain).(residue).index;
-                locations = entity.(chain).(residue).locations;
-                location_tags = true;
+                % all locations are selected
+                location_vector = 1:length(entity.(chain).(residue).locations);
                 % rotamers overrule locations
                 if length(entity.(chain).(residue).populations) > 1
-                    location_tags = false;
+                    % all rotamers are selected
+                    location_vector = 1:length(entity.(chain).(residue).populations); 
                 end
                 atoms = fieldnames(entity.(chain).(residue));
                 for ka = 1:length(atoms) % expand over all atoms
@@ -83,21 +86,21 @@ for kc = 1:length(chains)
                         if entity.(chain).(residue).(atom).selected % report back
                             for kconf = 1:length(conformers)
                                 index_vector(4) = conformers(kconf);
-                                for kl = 1:length(entity.(chain).(residue).(atom).selected_locations)
-                                    index_vector(5) = entity.(chain).(residue).(atom).selected_locations(kl);
+                                for kl = location_vector
+                                    index_vector(5) = kl;
                                     [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');                                    
                                     atom_index = all_atom_indices(atom_indices~=0);
                                     if ~isempty(entity.xyz(atom_index,:))
                                         outputs = outputs + 1;
                                         switch attribute
+                                            case 'bfactor'
+                                                argout{outputs} = entity.(chain).(residue).(atom).bfactor;
+                                            case 'charge'
+                                                argout{outputs} = entity.(chain).(residue).(atom).charge;
                                             case 'element'
                                                 argout{outputs} = entity.elements(atom_index);
                                             case 'info'
-                                                if location_tags
-                                                    info.tag = locations(entity.(chain).(residue).(atom).selected_locations(kl));
-                                                else
-                                                    info.tag = sprintf('R%i',locations(entity.(chain).(residue).(atom).selected_locations(kl)));
-                                                end
+                                                info.name = atom;
                                                 info.indices = index_vector;
                                                 info.atom_index = atom_index;
                                                 argout{outputs} = info;
@@ -107,7 +110,7 @@ for kc = 1:length(chains)
                                                 argout{outputs} = entity.xyz(atom_index,:);
                                             otherwise
                                                 argout = {};
-                                                exceptions = {MException('get_location:unsupported_attribute', 'Attribute %s not supported',attribute)};
+                                                exceptions = {MException('get_atom:unsupported_attribute', 'Attribute %s not supported',attribute)};
                                                 return
                                         end
                                     end

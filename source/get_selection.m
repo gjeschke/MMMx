@@ -1,16 +1,20 @@
-function [atom_indices,complete] = get_selection(entity)
+function [atom_indices,complete] = get_selection(entity,paradigm)
 %
 % GET_SELECTION Provide indices for selection
 %
-%   [atom_indices,complete] = GET_SELECTION
+%   [atom_indices,complete] = GET_SELECTION(entity)
 %   Extracts the current selection in an entity into index arrays 
 %
-%   [atom_indices,complete] = GET_SELECTION(entity)
-%   Scans an entity for selected objects on all hierachy levels and 
-%   builds an atom index vector as well as an object index matrix
+%   [atom_indices,complete] = GET_SELECTION(entity,paradigm)
+%   Ignores selection of conformers, rotamers or location if flag paradigm
+%   is true, returns only the first loaction in the first rotamer in that
+%   case
 %
 % INPUT
 % entity    entity in an MMMx format
+% paradigm  flag, if true only the first conformer and rotamer/location is
+%           returned, regardless of conformation selections, defaults to
+%           false
 %
 % OUTPUT
 % atom_indices  atom index vector, column vector
@@ -25,10 +29,19 @@ max_selected = 100000; % estimate for maximum number of selected objects,
                        % too small number can make the function slow, a too 
                        % large number makes it memory intensive 
 
+% initialize missing/empty input
+if ~exist('paradigm','var') || isempty(paradigm)
+    paradigm = false;
+end
+
 selection = zeros(max_selected,5,'uint16');
 
 chains = fieldnames(entity);
-conformers = entity.selected.'; % column vector of selected conformers
+if paradigm % return only first conformer, regardless of selection
+    conformers = 1;
+else
+    conformers = entity.selected.'; % column vector of selected conformers
+end
 num_conf = length(conformers);
 old_selection = zeros(num_conf,5);
 old_selection(1:num_conf,4) = conformers;
@@ -52,6 +65,9 @@ for kc = 1:length(chains)
                     % rotamers overrule locations
                     if length(entity.(chain).(residue).populations) > 1
                         rot_indices = 1:length(entity.(chain).(residue).populations);
+                    end
+                    if paradigm % return only first rotamer/location, regardless of selection
+                        rot_indices = 1;
                     end
                     old_selection(:,2) = res_index; % set current residue index
                     atoms = fieldnames(entity.(chain).(residue));
@@ -122,9 +138,12 @@ all_atom_indices = 1:m;
 [~,atom_indices] = ismember(entity.index_array,complete,'rows');
 atom_indices = all_atom_indices(atom_indices~=0);
 
+atom_indices = sort(atom_indices);
+
+complete = entity.index_array(atom_indices,:);
+
 if entity.water_selected
     atom_indices = [atom_indices;entity.water];
 end
 
-atom_indices = sort(atom_indices);
 

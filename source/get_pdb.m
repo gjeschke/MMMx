@@ -231,6 +231,12 @@ while 1
             entity.(chainfield).(resfield).(atname).bfactor = Bfactor;
             entity.(chainfield).(resfield).(atname).selected = 0;
             entity.(chainfield).(resfield).(atname).selected_locations = 1;
+            if ~isfield(entity.(chainfield).(resfield).(atname),'tab_indices')
+                entity.(chainfield).(resfield).(atname).tab_indices = atoms;
+            else
+                entity.(chainfield).(resfield).(atname).tab_indices = ...
+                    [entity.(chainfield).(resfield).(atname).tab_indices atoms];
+            end
             % determine missing rotamer indices
             rotamer_index = strfind(altlocs,altloc);
             atom_index = strfind(atnames,[':' atname ':']);
@@ -356,37 +362,4 @@ else
     element(2) = lower(element(2));
 end
 elnum = (strfind(pse,element)+1)/2;
-
-function dssp = get_dssp(fname)
-
-dssp=[];
-
-dospath = which('dssp-2.0.4-win32.exe');
-if isempty(dospath)
-    dospath = which('dssp.exe');
-end
-if isempty(dospath)
-    dospath = which('dsspcmbi.exe');
-end
-if ~isempty(dospath) % suppress this if DSSP not known
-    infile = which(fname);
-    poi = strfind(infile,'.pdb');
-    if isempty(poi)
-        poi = strfind(infile,'.ent');
-    end
-    if isempty(poi) || poi(1)<2
-        basname = infile;
-    else
-        basname = infile(1:poi(1)-1);
-    end
-    dssp_file = [basname '.dssp'];
-    cmd=[dospath ' ' infile ' ' dssp_file];
-    s = dos(cmd);
-    if s~=0 % dssp was not successful
-        return
-    else
-        dssp = rd_dssp(dssp_file);
-    end
-end 
-
 

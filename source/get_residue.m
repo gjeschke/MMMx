@@ -3,12 +3,12 @@ function [argout,exceptions] = get_residue(entity,attribute,address)
 % GET_RESIDUE Retrieves attributes of a residue
 %
 %   [argout,exceptions] = GET_RESIDUE(entity,attribute)
-%   Provides attribute values and possibly exceptions for atoms selected in
-%   an entity
+%   Provides attribute values and possibly exceptions for residues selected
+%   in an entity
 %
 %   [argout,exceptions] = GET_RESIDUE(entity,attribute,address)
-%   Provides attribute values and possibly exceptions for atoms selected by
-%   address
+%   Provides attribute values and possibly exceptions for residues selected
+%   by an address
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided

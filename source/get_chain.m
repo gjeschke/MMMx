@@ -3,12 +3,12 @@ function [argout,exceptions] = get_chain(entity,attribute,address)
 % GET_CHAIN Retrieves attributes of a chain (or molecule)
 %
 %   [argout,exceptions] = GET_CHAIN(entity,attribute)
-%   Provides attribute values and possibly exceptions for atoms selected in
-%   an entity
+%   Provides attribute values and possibly exceptions for chains selected
+%   in an entity
 %
 %   [argout,exceptions] = GET_CHAIN(entity,attribute,address)
-%   Provides attribute values and possibly exceptions for atoms selected by
-%   address
+%   Provides attribute values and possibly exceptions for chains selected
+%   by address
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided

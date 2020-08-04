@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Get object attributes &mdash; MMMx  documentation</title>
+  <title>Set object attributes &mdash; MMMx  documentation</title>
   
 
   
@@ -44,8 +44,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Set object attributes" href="object_modification.html" />
-    <link rel="prev" title="MMMx|RigiFlex" href="MMMx_RigiFlex.html" /> 
+    <link rel="next" title="Property functions" href="property_functions.html" />
+    <link rel="prev" title="Get object attributes" href="object_access.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -138,25 +138,25 @@
 </ul>
 <p class="caption"><span class="caption-text">Programmer's Guide</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Get object attributes</a><ul>
+<li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#chain">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#single-conformer">Single conformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Set object attributes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#generic-syntax">Generic syntax</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#chain">Chain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#residue">Residue</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#atoms">Atoms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#locations">Locations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#single-conformer">Single conformer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="object_modification.html">Set object attributes</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#generic-syntax">Generic syntax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#chain">Chain</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#residue">Residue</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#atoms">Atoms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#locations">Locations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
@@ -239,7 +239,7 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Get object attributes</li>
+      <li>Set object attributes</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -256,12 +256,12 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="get-object-attributes">
-<span id="object-access"></span><h1>Get object attributes<a class="headerlink" href="#get-object-attributes" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="set-object-attributes">
+<span id="object-modification"></span><h1>Set object attributes<a class="headerlink" href="#set-object-attributes" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="concept">
 <h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
-<p>Object access functions return or set object attributes, where an object is a conformer, a chain, a residue, a rotamer, an atom, or an atom location.
-They operate on an <code class="docutils literal notranslate"><span class="pre">entity</span></code>, which is an MMMx ensemble structure representation in <a class="reference internal" href="MMMx_atomic.html#mmmx-atomic"><span class="std std-ref">MMMx|atomic</span></a> or <a class="reference internal" href="MMMx_RigiFlex.html#mmmx-rigiflex"><span class="std std-ref">MMMx|RigiFlex</span></a> format.</p>
+<p>Methods in MMMx should not directly change the <code class="docutils literal notranslate"><span class="pre">entity</span></code> variable, but rather use the <code class="docutils literal notranslate"><span class="pre">set_*object*</span></code> functions, where <em>object</em> is a conformer, a chain, a residue, a rotamer, an atom, or an atom location.
+The <code class="docutils literal notranslate"><span class="pre">entity</span></code> is an MMMx ensemble structure representation in <a class="reference internal" href="MMMx_atomic.html#mmmx-atomic"><span class="std std-ref">MMMx|atomic</span></a> or <a class="reference internal" href="MMMx_RigiFlex.html#mmmx-rigiflex"><span class="std std-ref">MMMx|RigiFlex</span></a> format.</p>
 <p>Wherever possible, methods should operate on an entity only through object access functions. In order to speed up access to coordinates,
 an additional function <code class="docutils literal notranslate"><span class="pre">get_coor</span></code> exists for fast retrieval of atom coordinates, atomic numbers, and corresponding indices into MMMx:atomic tables.
 This function works for objects selected on any level of structural hierachy and combinations of objects at various levels.
@@ -336,10 +336,6 @@ Selections below chain level are ignored.</p>
 </tr>
 </tbody>
 </table>
-<p>The <code class="docutils literal notranslate"><span class="pre">+</span></code> types indicate that a chain contains peptide, DNA, or RNA sections, but additionally other “residues”.
-Structures with such “chains” are frequent in the PDB. In native MMMx structures, other molecules or ions should
-be combined with a chain if and only if they are coordinated to the chain and coordination geometry is considered to
-be immutable within the model approximation.</p>
 </div>
 <div class="section" id="residue">
 <h2>Residue<a class="headerlink" href="#residue" title="Permalink to this headline">¶</a></h2>
@@ -422,9 +418,8 @@ To reformat the point coordinates <code class="docutils literal notranslate"><sp
 </tr>
 </tbody>
 </table>
-<p>DSSP information (<code class="docutils literal notranslate"><span class="pre">dssp</span></code>, <code class="docutils literal notranslate"><span class="pre">sheet</span></code>) exists only if DSSP was run or accessed through ChimeraX. Otherwise, empty output is returned.
-Furthermore, DSSP assignments refer to only the first conformer. Use <code class="docutils literal notranslate"><span class="pre">get_conformer</span></code> or <code class="docutils literal notranslate"><span class="pre">cx_get_conformer</span></code> for ensemble analysis.
-Depending on the task, <code class="docutils literal notranslate"><span class="pre">get_conformer</span></code> may be more convenient for obtaining DSSP information even if you operate on a single chain in a single conformer.</p>
+<p>DSSP information (<code class="docutils literal notranslate"><span class="pre">dssp</span></code>, <code class="docutils literal notranslate"><span class="pre">sheet</span></code>) exist only if DSSP was run or accessed through ChimeraX. Otherwise, empty output is returned.
+Furthermore, DSSP assignments refer to only the first conformer. Use <code class="docutils literal notranslate"><span class="pre">dssp_all_conformers</span></code> or <code class="docutils literal notranslate"><span class="pre">cx_dssp_all_conformers</span></code> for ensemble analysis.</p>
 </div>
 <hr class="docutils" />
 <div class="section" id="atoms">
@@ -582,145 +577,8 @@ Selections above atom level are ignored.</p>
 </tr>
 </tbody>
 </table>
+</div>
 <hr class="docutils" />
-</div>
-<div class="section" id="single-conformer">
-<span id="get-conformer"></span><h2>Single conformer<a class="headerlink" href="#single-conformer" title="Permalink to this headline">¶</a></h2>
-<p>The function <code class="docutils literal notranslate"><span class="pre">get_conformer</span></code> is special in that it accesses a single conformer in the entity by number.
-General addressing and simultaneous access to several conformers are not supported. The function is intended for ensemble analysis.</p>
-<p>Populations of rotamers have to be processed residue-by-residue, since the number of rotamers can differ between residues.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argout</span> <span class="p">=</span> <span class="n">get_conformer</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
-<span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_conformer</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
-<span class="n">argout</span> <span class="p">=</span> <span class="n">get_conformer</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">conformer</span><span class="p">)</span>
-<span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">conformer</span><span class="p">)</span>
-</pre></div>
-</div>
-<dl class="simple">
-<dt>Parameters</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">attribute</span></code> - see table below (string)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">conformer</span></code> - MMMx:atomic format conformer number, defaults to 1</p></li>
-</ul>
-</dd>
-<dt>Returns</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">argout</span></code> - output arguments (<em>M</em>-element cell array)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message, if attribute is not supported  (1-element cell array)</p></li>
-</ul>
-</dd>
-</dl>
-<p><strong>Attributes</strong></p>
-<table class="docutils align-default">
-<colgroup>
-<col style="width: 24%" />
-<col style="width: 47%" />
-<col style="width: 29%" />
-</colgroup>
-<thead>
-<tr class="row-odd"><th class="head"><p>Variable</p></th>
-<th class="head"><p>Explanation</p></th>
-<th class="head"><p>Type</p></th>
-</tr>
-</thead>
-<tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp</span></code></p></td>
-<td><p>DSSP information for <em>C</em> peptide chains</p></td>
-<td><p>(1,C) array of struct</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).chain</span></code></p></td>
-<td><p>chain identifier for chain <em>c</em></p></td>
-<td><p>string</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).resnum</span></code></p></td>
-<td><p>residue numbers</p></td>
-<td><p>(1,R) int</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).sequence</span></code></p></td>
-<td><p>amino acid sequence for chain <em>c</em></p></td>
-<td><p>string</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).secondary</span></code></p></td>
-<td><p>secondary structure assignment for chain <em>c</em></p></td>
-<td><p>string</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).sheets</span></code></p></td>
-<td><p>sheet information for <em>R</em> residues of chain <em>c</em></p></td>
-<td><p>(R,2) double</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).bp</span></code></p></td>
-<td><p>bridge partners for <em>R</em> residues of chain <em>c</em></p></td>
-<td><p>(R,2) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).acc</span></code></p></td>
-<td><p>water exposed surface for <em>R</em> residues (Å^2)</p></td>
-<td><p>(1,R) double</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).NHO</span></code></p></td>
-<td><p>N-H–&gt;O hydrogen bonds (two) with subfields</p></td>
-<td><p>(1,R) array of struct</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).NHO(r).hp</span></code></p></td>
-<td><p>hydrogen bonding partner for residue <em>r</em></p></td>
-<td><p>int</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).NHO(r).en</span></code></p></td>
-<td><p>energy (kcal/mol) for residue <em>r</em></p></td>
-<td><p>double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).OHN</span></code></p></td>
-<td><p>O–&gt;H-N hydrogen bonds (two) with subfields</p></td>
-<td><p>(1,R) array of struct</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).OHN(r).hp</span></code></p></td>
-<td><p>hydrogen bonding partner for residue <em>r</em></p></td>
-<td><p>int</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).OHN(r).en</span></code></p></td>
-<td><p>energy (kcal/mol) for residue <em>r</em></p></td>
-<td><p>double</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).tco</span></code></p></td>
-<td><p>cosine of angle between C=O of residues <em>r</em>, <em>r</em> +1</p></td>
-<td><p>(1,R) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).kappa</span></code></p></td>
-<td><p>angle between CA of residues <em>r</em>-2, <em>r</em>, <em>r</em> +2</p></td>
-<td><p>(1,R) double</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).alpha</span></code></p></td>
-<td><p>CA torsion of residues <em>r</em>-1, <em>r</em>, <em>r</em> +1, <em>r</em> +2</p></td>
-<td><p>(1,R) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).phi</span></code></p></td>
-<td><p>backbone dihedral phi</p></td>
-<td><p>(1,R) double</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp(c).psi</span></code></p></td>
-<td><p>backbone dihedral psi</p></td>
-<td><p>(1,R) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">coor</span></code></p></td>
-<td><p>coordinates, elements, indices</p></td>
-<td><p>struct</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor.xyz</span></code></p></td>
-<td><p>Cartesian coordinates of all <em>N</em> atoms</p></td>
-<td><p>(N,3) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">coor.elements</span></code></p></td>
-<td><p>atomic numbers of all <em>N</em> atoms</p></td>
-<td><p>(N,3) double</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor.indices</span></code></p></td>
-<td><p>atomic indices of <em>N</em> atoms into <code class="docutils literal notranslate"><span class="pre">entity.xyz</span></code></p></td>
-<td><p>(1,N) int</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">coor.all_indices</span></code></p></td>
-<td><p>full indices in <code class="docutils literal notranslate"><span class="pre">entity.index_array</span></code> format</p></td>
-<td><p>(N,5) int16</p></td>
-</tr>
-</tbody>
-</table>
-</div>
 <div class="section" id="coordinates-atomic-numbers-any-level">
 <h2>Coordinates &amp; atomic numbers (any level)<a class="headerlink" href="#coordinates-atomic-numbers-any-level" title="Permalink to this headline">¶</a></h2>
 <p>Retrieval of just the Cartesian coordinates (and optionally of the atomic numbers) is much faster with <code class="docutils literal notranslate"><span class="pre">get_coor</span></code>.
@@ -763,10 +621,10 @@ Unlike the object-oriented <code class="docutils literal notranslate"><span clas
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="object_modification.html" class="btn btn-neutral float-right" title="Set object attributes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="property_functions.html" class="btn btn-neutral float-right" title="Property functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="MMMx_RigiFlex.html" class="btn btn-neutral float-left" title="MMMx|RigiFlex" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="object_access.html" class="btn btn-neutral float-left" title="Get object attributes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

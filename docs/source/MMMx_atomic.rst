@@ -78,7 +78,7 @@ Further attributes of objects can be stored by extending levels of the topology 
 
 	 The fieldname ``populations`` is reserved at entity level and at residue level. At residue level, the length of the population vecor specifies the number of rotamers.
 	 
-	 The fieldnames ``name``, ``selected_rotamers``, ``locations``, ```dssp``, and ``sheet`` are reserved at residue level
+	 The fieldnames ``name``, ``selected_rotamers``, ``locations``, ``dssp``, and ``sheet`` are reserved at residue level
 	 
 	 The fieldnames ``element``, ``selected_locations``, ``charge``, and ``bfactor`` are reserved at atom level
 	 
@@ -118,6 +118,41 @@ MMMx converts to PDB representation only for two purposes:
 
 * transmitting structure to ChimeraX for visualization
 
+For saving to PDB, use function ``put_pdb`` 
+
+.. code-block:: matlab
+
+    exceptions = put_pdb(entity)
+    exceptions = put_pdb(entity,fname)
+    exceptions = put_pdb(entity,fname,options)
+
+
+Parameters
+    *   ``entity`` - entity in MMMx:atomic format
+    *   ``fname`` - output filename (string), '.pdb' is appended, if no extension, defaults to ``entity.name``
+    *   ``options`` - output control, see below
+Returns
+    *   ``argout`` - output arguments (*M*-element cell array)
+    *   ``exceptions`` - Matlab MException object, if any error occurred (1-element cell array)
+	
+**Options**
+	
+====================== =============================================== ================================ =====================
+Variable               Explanation                                     Type                             Default
+====================== =============================================== ================================ =====================
+``.selected``          if true, only selected objects are output       boolean                          false
+``.chainIDs``          rename *C* chains as compared to entity         cell string (C,2)                empty
+``.``                  .chainIDs(c,1): name in entity                  string
+``.``                  .chainIDs(c,2): name in PDB output              string
+``.charged``           if true, writes atom charges                    boolean                          false
+``.bfactor``           if false, writes zero B factors                 boolean                          false
+``.order``             changed conformer order, only listed conformers (1,M) double                     empty (all conformers)
+``.pop``               write conformer populations (in REMARK 400)     boolean                          false
+``.pdbid``             (pseudo-)PDB identifier, 4 characters           string                           ``entity.name(1:4)``
+====================== =============================================== ================================ =====================
+
+-----------------------------
+
 Conversion from PDB representation
 ----------------------------------
 
@@ -134,3 +169,30 @@ Rotamer populations are mean populations over all atoms which have this number o
 
 In case of topological inconsistency between *models*, topology is determined by the first model encountered in the PDB file (regardless of its model number).
 Only atom coordinates are read for further models. Surplus atom coordinates are ignored. Missing atom coordinates are assigned "not a number".
+
+For loading from PDB, use function ``get_pdb`` 
+
+.. code-block:: matlab
+
+    [entity,exceptions] = get_pdb(ident)
+    [entity,exceptions] = get_pdb(ident,options)
+
+
+Parameters
+    *   ``ident`` - if 4 characters and no extension, interpreted as PDB identifier for download, otherwise as local file name
+    *   ``options`` - input control, see below
+Returns
+    *   ``entity`` - entity in MMMx:atomic format
+    *   ``exceptions`` - cell array of Matlab MException object, if any errors occurred
+	
+**Options**
+	
+====================== =============================================== ================================ =======================
+Variable               Explanation                                     Type                             Default
+====================== =============================================== ================================ =======================
+``.dssp``              if true, DSSP is assigned for first model       boolean                          false
+``.name``              name for the entity                             string                           PDB identifier/ ``MMMX``
+====================== =============================================== ================================ =======================
+
+Note that DSSP is only assigned, if there are no insertion codes and all residue numbers are positive. 
+We recommend to retrieve DSSP information separately by calling :ref:`get_conformer<get_conformer>` with attribute ``dssp``.

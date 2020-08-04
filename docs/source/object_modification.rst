@@ -1,13 +1,13 @@
-.. _object_access:
+.. _object_modification:
 
-Get object attributes
+Set object attributes
 ==========================
 
 Concept
 ---------------------------------
 
-Object access functions return or set object attributes, where an object is a conformer, a chain, a residue, a rotamer, an atom, or an atom location. 
-They operate on an ``entity``, which is an MMMx ensemble structure representation in :ref:`MMMx|atomic<MMMx_atomic>` or :ref:`MMMx|RigiFlex<MMMx_RigiFlex>` format.
+Methods in MMMx should not directly change the ``entity`` variable, but rather use the ``set_*object*`` functions, where *object* is a conformer, a chain, a residue, a rotamer, an atom, or an atom location. 
+The ``entity`` is an MMMx ensemble structure representation in :ref:`MMMx|atomic<MMMx_atomic>` or :ref:`MMMx|RigiFlex<MMMx_RigiFlex>` format.
 
 Wherever possible, methods should operate on an entity only through object access functions. In order to speed up access to coordinates, 
 an additional function ``get_coor`` exists for fast retrieval of atom coordinates, atomic numbers, and corresponding indices into MMMx:atomic tables. 
@@ -65,10 +65,6 @@ Variable               Explanation                                     Type
 ``populations``        populations for all *C* conformers              (*C*,1) double
 ====================== =============================================== ================================ 
  
-The ``+`` types indicate that a chain contains peptide, DNA, or RNA sections, but additionally other "residues".
-Structures with such "chains" are frequent in the PDB. In native MMMx structures, other molecules or ions should 
-be combined with a chain if and only if they are coordinated to the chain and coordination geometry is considered to
-be immutable within the model approximation.   
 
 Residue
 ---------
@@ -121,9 +117,8 @@ Variable               Explanation                                     Type
 ``sheet``              DSSP information on sheets                      (1,2) double
 ====================== =============================================== ================================ 
 
-DSSP information (``dssp``, ``sheet``) exists only if DSSP was run or accessed through ChimeraX. Otherwise, empty output is returned. 
-Furthermore, DSSP assignments refer to only the first conformer. Use ``get_conformer`` or ``cx_get_conformer`` for ensemble analysis.
-Depending on the task, ``get_conformer`` may be more convenient for obtaining DSSP information even if you operate on a single chain in a single conformer. 
+DSSP information (``dssp``, ``sheet``) exist only if DSSP was run or accessed through ChimeraX. Otherwise, empty output is returned. 
+Furthermore, DSSP assignments refer to only the first conformer. Use ``dssp_all_conformers`` or ``cx_dssp_all_conformers`` for ensemble analysis. 
 
 -----------------------------
 
@@ -210,64 +205,7 @@ Variable               Explanation                                     Type
 ====================== =============================================== ================================ 
 
 -----------------------------
-
-.. _get_conformer:
 	 
-Single conformer
-----------------
-
-The function ``get_conformer`` is special in that it accesses a single conformer in the entity by number.
-General addressing and simultaneous access to several conformers are not supported. The function is intended for ensemble analysis.
-
-Populations of rotamers have to be processed residue-by-residue, since the number of rotamers can differ between residues. 
-
-.. code-block:: matlab
-
-    argout = get_conformer(entity,attribute)
-    [argout,exceptions] = get_conformer(entity,attribute)
-    argout = get_conformer(entity,attribute,conformer)
-    [argout,exceptions] = get_residue(entity,attribute,conformer)
-
-
-Parameters
-    *   ``entity`` - entity in MMMx:atomic format
-    *   ``attribute`` - see table below (string)
-    *   ``conformer`` - MMMx:atomic format conformer number, defaults to 1
-Returns
-    *   ``argout`` - output arguments (*M*-element cell array)
-    *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
-	
-**Attributes**
-	
-========================== =================================================== ================================
-Variable                   Explanation                                         Type   
-========================== =================================================== ================================
-``dssp``                   DSSP information for *C* peptide chains             (1,C) array of struct
-``dssp(c).chain``          chain identifier for chain *c*                      string
-``dssp(c).resnum``         residue numbers                                     (1,R) int
-``dssp(c).sequence``       amino acid sequence for chain *c*                   string
-``dssp(c).secondary``      secondary structure assignment for chain *c*        string
-``dssp(c).sheets``         sheet information for *R* residues of chain *c*     (R,2) double
-``dssp(c).bp``             bridge partners for *R* residues of chain *c*       (R,2) double
-``dssp(c).acc``            water exposed surface for *R* residues (Å^2)        (1,R) double
-``dssp(c).NHO``            N-H-->O hydrogen bonds (two) with subfields         (1,R) array of struct
-``dssp(c).NHO(r).hp``      hydrogen bonding partner for residue *r*            int
-``dssp(c).NHO(r).en``      energy (kcal/mol) for residue *r*                   double
-``dssp(c).OHN``            O-->H-N hydrogen bonds (two) with subfields         (1,R) array of struct
-``dssp(c).OHN(r).hp``      hydrogen bonding partner for residue *r*            int
-``dssp(c).OHN(r).en``      energy (kcal/mol) for residue *r*                   double
-``dssp(c).tco``            cosine of angle between C=O of residues *r*, *r* +1 (1,R) double
-``dssp(c).kappa``          angle between CA of residues *r*-2, *r*, *r* +2     (1,R) double
-``dssp(c).alpha``          CA torsion of residues *r*-1, *r*, *r* +1, *r* +2   (1,R) double
-``dssp(c).phi``            backbone dihedral phi                               (1,R) double
-``dssp(c).psi``            backbone dihedral psi                               (1,R) double
-``coor``                   coordinates, elements, indices                      struct
-``coor.xyz``               Cartesian coordinates of all *N* atoms              (N,3) double
-``coor.elements``          atomic numbers of all *N* atoms                     (N,3) double
-``coor.indices``           atomic indices of *N* atoms into ``entity.xyz``     (1,N) int
-``coor.all_indices``       full indices in ``entity.index_array`` format       (N,5) int16
-========================== =================================================== ================================ 
-
 
 Coordinates & atomic numbers (any level)
 ------------------------------------------

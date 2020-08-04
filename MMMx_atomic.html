@@ -145,7 +145,18 @@
 <li class="toctree-l2"><a class="reference internal" href="object_access.html#residue">Residue</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_access.html#atoms">Atoms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_access.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#single-conformer">Single conformer</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_access.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="object_modification.html">Set object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#chain">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
@@ -332,7 +343,90 @@ This should happen only if the structure originated from an inconsistent PDB fil
 <li><p>saving structure in a PDB files</p></li>
 <li><p>transmitting structure to ChimeraX for visualization</p></li>
 </ul>
+<p>For saving to PDB, use function <code class="docutils literal notranslate"><span class="pre">put_pdb</span></code></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">exceptions</span> <span class="p">=</span> <span class="n">put_pdb</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
+<span class="n">exceptions</span> <span class="p">=</span> <span class="n">put_pdb</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">fname</span><span class="p">)</span>
+<span class="n">exceptions</span> <span class="p">=</span> <span class="n">put_pdb</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">fname</span><span class="p">,</span><span class="n">options</span><span class="p">)</span>
+</pre></div>
 </div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">fname</span></code> - output filename (string), ‘.pdb’ is appended, if no extension, defaults to <code class="docutils literal notranslate"><span class="pre">entity.name</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> - output control, see below</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">argout</span></code> - output arguments (<em>M</em>-element cell array)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - Matlab MException object, if any error occurred (1-element cell array)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Options</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 38%" />
+<col style="width: 26%" />
+<col style="width: 18%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Explanation</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.selected</span></code></p></td>
+<td><p>if true, only selected objects are output</p></td>
+<td><p>boolean</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.chainIDs</span></code></p></td>
+<td><p>rename <em>C</em> chains as compared to entity</p></td>
+<td><p>cell string (C,2)</p></td>
+<td><p>empty</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p>.chainIDs(c,1): name in entity</p></td>
+<td><p>string</p></td>
+<td></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.</span></code></p></td>
+<td><p>.chainIDs(c,2): name in PDB output</p></td>
+<td><p>string</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.charged</span></code></p></td>
+<td><p>if true, writes atom charges</p></td>
+<td><p>boolean</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.bfactor</span></code></p></td>
+<td><p>if false, writes zero B factors</p></td>
+<td><p>boolean</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.order</span></code></p></td>
+<td><p>changed conformer order, only listed conformers</p></td>
+<td><p>(1,M) double</p></td>
+<td><p>empty (all conformers)</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.pop</span></code></p></td>
+<td><p>write conformer populations (in REMARK 400)</p></td>
+<td><p>boolean</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.pdbid</span></code></p></td>
+<td><p>(pseudo-)PDB identifier, 4 characters</p></td>
+<td><p>string</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">entity.name(1:4)</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr class="docutils" />
 <div class="section" id="conversion-from-pdb-representation">
 <h2>Conversion from PDB representation<a class="headerlink" href="#conversion-from-pdb-representation" title="Permalink to this headline">¶</a></h2>
 <p>Upon loading a PDB file, MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry.
@@ -343,6 +437,53 @@ The entity has a field <code class="docutils literal notranslate"><span class="p
 Rotamer populations are mean populations over all atoms which have this number of alternate locations.</p>
 <p>In case of topological inconsistency between <em>models</em>, topology is determined by the first model encountered in the PDB file (regardless of its model number).
 Only atom coordinates are read for further models. Surplus atom coordinates are ignored. Missing atom coordinates are assigned “not a number”.</p>
+<p>For loading from PDB, use function <code class="docutils literal notranslate"><span class="pre">get_pdb</span></code></p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_pdb</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_pdb</span><span class="p">(</span><span class="n">ident</span><span class="p">,</span><span class="n">options</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ident</span></code> - if 4 characters and no extension, interpreted as PDB identifier for download, otherwise as local file name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">options</span></code> - input control, see below</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - cell array of Matlab MException object, if any errors occurred</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Options</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 18%" />
+<col style="width: 38%" />
+<col style="width: 26%" />
+<col style="width: 19%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Explanation</p></th>
+<th class="head"><p>Type</p></th>
+<th class="head"><p>Default</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">.dssp</span></code></p></td>
+<td><p>if true, DSSP is assigned for first model</p></td>
+<td><p>boolean</p></td>
+<td><p>false</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">.name</span></code></p></td>
+<td><p>name for the entity</p></td>
+<td><p>string</p></td>
+<td><p>PDB identifier/ <code class="docutils literal notranslate"><span class="pre">MMMX</span></code></p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that DSSP is only assigned, if there are no insertion codes and all residue numbers are positive.
+We recommend to retrieve DSSP information separately by calling <a class="reference internal" href="object_access.html#get-conformer"><span class="std std-ref">get_conformer</span></a> with attribute <code class="docutils literal notranslate"><span class="pre">dssp</span></code>.</p>
 </div>
 </div>
 

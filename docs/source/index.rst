@@ -31,6 +31,8 @@ MMMx 0.0.0 Documentation
     :maxdepth: 2
 
     ./object_access
+    ./object_modification
+    ./property_functions
     ./ChimeraX
     ./python
     ./dependencies

@@ -136,6 +136,27 @@
 </ul>
 </li>
 </ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#locations">Locations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#coordinates-any-level">Coordinates (any level)</a></li>
+</ul>
+</li>
+</ul>
 <p class="caption"><span class="caption-text">Programmer's Guide</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
@@ -152,11 +173,10 @@
 <li class="toctree-l1"><a class="reference internal" href="object_modification.html">Set object attributes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#generic-syntax">Generic syntax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#chain">Chain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#residue">Residue</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#atoms">Atoms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#locations">Locations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-any-level">Coordinates (any level)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
@@ -311,7 +331,7 @@ If a name starting with a lowercase character is encountered, the first letter i
 <p>The fieldnames <code class="docutils literal notranslate"><span class="pre">water</span></code> and <code class="docutils literal notranslate"><span class="pre">water_selected</span></code> at entity level are reserved for water molecules. They hold an index vector of all water atoms and a flag whether they are selected.</p>
 <p>The fieldnames <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">xyz</span></code>, <code class="docutils literal notranslate"><span class="pre">index_array</span></code>, <code class="docutils literal notranslate"><span class="pre">elements</span></code>, <code class="docutils literal notranslate"><span class="pre">occupancies</span></code>, and <code class="docutils literal notranslate"><span class="pre">original_residue_numbers</span></code> are reserved at entity level</p>
 <p>The fieldname <code class="docutils literal notranslate"><span class="pre">populations</span></code> is reserved at entity level and at residue level. At residue level, the length of the population vecor specifies the number of rotamers.</p>
-<p>The fieldnames <code class="docutils literal notranslate"><span class="pre">name</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_rotamers</span></code>, <code class="docutils literal notranslate"><span class="pre">locations</span></code>, <code class="docutils literal notranslate"><span class="pre">dssp</span></code>, and <code class="docutils literal notranslate"><span class="pre">sheet</span></code> are reserved at residue level</p>
+<p>The fieldnames <code class="docutils literal notranslate"><span class="pre">`dssp</span></code>, <code class="docutils literal notranslate"><span class="pre">labels</span></code>, <code class="docutils literal notranslate"><span class="pre">locations</span></code>, <img class="math" src="_images/math/7c2336375db97939f3533428a65c091e8bb3c5c9.svg" alt="name"/>, <code class="docutils literal notranslate"><span class="pre">selected_rotamers</span></code> and <code class="docutils literal notranslate"><span class="pre">sheet</span></code> are reserved at residue level</p>
 <p>The fieldnames <code class="docutils literal notranslate"><span class="pre">element</span></code>, <code class="docutils literal notranslate"><span class="pre">selected_locations</span></code>, <code class="docutils literal notranslate"><span class="pre">charge</span></code>, and <code class="docutils literal notranslate"><span class="pre">bfactor</span></code> are reserved at atom level</p>
 <p>Methods can define further lower-case fieldnames for object attributes. These attributes are internal to the method.
 Passing back such attributes to MMMx and saving them in <code class="docutils literal notranslate"><span class="pre">mmCIF</span></code> output files may be enabled in a future release.</p>
@@ -332,7 +352,10 @@ For ease of access, this information is stored in a separate element vector that
 <div class="section" id="conversion-to-pdb-representation">
 <h2>Conversion to PDB representation<a class="headerlink" href="#conversion-to-pdb-representation" title="Permalink to this headline">¶</a></h2>
 <p>In the <code class="docutils literal notranslate"><span class="pre">MMMx|atomic</span></code> representation, the same atom coordinate can apply in several conformers (<em>models</em> in the PDB representation).
-Upon conversion to PDB, the coordinate array expands. The PDB writer of MMMx expands per conformer during writing to reduce memory requirements.</p>
+Upon conversion to PDB, the coordinate array then expands. The PDB writer of MMMx indexes rather than expands during writing to reduce memory requirements.</p>
+<p>Conformer populations are stored in the free-text section of a <code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span> <span class="pre">COMPOUND</span></code> record in the following format (example):</p>
+<p><code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span>&#160;&#160; <span class="pre">MODEL</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">1</span> <span class="pre">POPULATION</span>&#160;&#160; <span class="pre">0.5000</span></code></p>
+<p>where the conformer number is in columns 19-28 of the line and the population in columns 40-48.</p>
 <p>Rotameric states are expressed by alternate atom locations. Up to 26 (preferably) or 52 (with lower-case location identifiers) rotamers can be converted.
 Not all external programs may be able to process PDB files with more than 26 locations. By default, only the 26 rotamers with highest populations are converted.
 As an option, 52 rotamers can be converted.</p>
@@ -425,8 +448,9 @@ This should happen only if the structure originated from an inconsistent PDB fil
 </tr>
 </tbody>
 </table>
-</div>
 <hr class="docutils" />
+<p>Please note that <code class="docutils literal notranslate"><span class="pre">put_pdb</span></code> does not save water atoms. Specifying them makes sense in crystal structures, but not in modelled structures.</p>
+</div>
 <div class="section" id="conversion-from-pdb-representation">
 <h2>Conversion from PDB representation<a class="headerlink" href="#conversion-from-pdb-representation" title="Permalink to this headline">¶</a></h2>
 <p>Upon loading a PDB file, MMMx does not make an effort to preserve atom numbers and only a limited effort to preserve residue numbers of the original PDB entry.
@@ -437,6 +461,12 @@ The entity has a field <code class="docutils literal notranslate"><span class="p
 Rotamer populations are mean populations over all atoms which have this number of alternate locations.</p>
 <p>In case of topological inconsistency between <em>models</em>, topology is determined by the first model encountered in the PDB file (regardless of its model number).
 Only atom coordinates are read for further models. Surplus atom coordinates are ignored. Missing atom coordinates are assigned “not a number”.</p>
+<p><code class="docutils literal notranslate"><span class="pre">get_pdb</span></code> reads conformer populations from <code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span></code> records in PDB files that were stored by MMMx. If other software needs to convey populations in PDB files,
+the corresponding <code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span></code> lines must have the following format (example):</p>
+<p><code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span>&#160;&#160; <span class="pre">MODEL</span>&#160;&#160;&#160;&#160;&#160;&#160;&#160;&#160; <span class="pre">1</span> <span class="pre">POPULATION</span>&#160;&#160; <span class="pre">0.5000</span></code></p>
+<p>where the conformer number is in columns 19-28 of the line and the population in columns 40-48.
+The populations must be specified for all models in the coordinate section and must not be specified for models that do not appear in the coordinate section.
+Otherwise, uniform populations are assigned, as if the <code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span></code> was missing.</p>
 <p>For loading from PDB, use function <code class="docutils literal notranslate"><span class="pre">get_pdb</span></code></p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_pdb</span><span class="p">(</span><span class="n">ident</span><span class="p">)</span>
 <span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_pdb</span><span class="p">(</span><span class="n">ident</span><span class="p">,</span><span class="n">options</span><span class="p">)</span>

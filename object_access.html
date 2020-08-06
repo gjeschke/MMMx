@@ -45,7 +45,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Set object attributes" href="object_modification.html" />
-    <link rel="prev" title="MMMx|RigiFlex" href="MMMx_RigiFlex.html" /> 
+    <link rel="prev" title="Distance distributions" href="distance_distributions.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -136,6 +136,27 @@
 </ul>
 </li>
 </ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#locations">Locations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#coordinates-any-level">Coordinates (any level)</a></li>
+</ul>
+</li>
+</ul>
 <p class="caption"><span class="caption-text">Programmer's Guide</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Get object attributes</a><ul>
@@ -152,11 +173,10 @@
 <li class="toctree-l1"><a class="reference internal" href="object_modification.html">Set object attributes</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#generic-syntax">Generic syntax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#chain">Chain</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#residue">Residue</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#atoms">Atoms</a></li>
 <li class="toctree-l2"><a class="reference internal" href="object_modification.html#locations">Locations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-any-level">Coordinates (any level)</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
@@ -271,11 +291,11 @@ The objects are selected by an <a class="reference internal" href="MMMx_addresse
 </div>
 <div class="section" id="generic-syntax">
 <h2>Generic syntax<a class="headerlink" href="#generic-syntax" title="Permalink to this headline">¶</a></h2>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_</span><span class="s">&quot;object&quot;</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">address</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_</span><span class="s">&quot;object&quot;</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
 </pre></div>
 </div>
-<p>where possible <code class="docutils literal notranslate"><span class="pre">attribute</span></code> strings are specific to the “object” hierarchy level
-(“conformer”, “chain”, “residue”, “rotamer”, “atom”, “location”, see below) and argout is a cell vector,
+<p>where the <code class="docutils literal notranslate"><span class="pre">attribute</span></code> strings are specific to the “object” hierarchy level
+(“chain”, “residue”, “atom”, “location”, “conformer”, see below) and argout is a cell vector,
 whose length is (most of the time) the number of objects of this hierarchy level that were selected by <code class="docutils literal notranslate"><span class="pre">address</span></code>.
 If the address is <code class="docutils literal notranslate"><span class="pre">selected</span></code> or empty, the <code class="docutils literal notranslate"><span class="pre">get</span></code> functions operate on objects currently selected in the entity.</p>
 <p>Error messages or warnings are reported as MException objects in cell array <code class="docutils literal notranslate"><span class="pre">exceptions</span></code>.</p>
@@ -353,7 +373,9 @@ To reformat the point coordinates <code class="docutils literal notranslate"><sp
 <span class="n">arrayout</span> <span class="p">=</span> <span class="nb">reshape</span><span class="p">(</span><span class="n">arrayout</span><span class="p">,</span><span class="o">*</span><span class="n">n</span><span class="o">*</span><span class="p">,</span><span class="n">outputs</span><span class="p">).</span><span class="o">&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
-<p>where <code class="docutils literal notranslate"><span class="pre">*n*</span> <span class="pre">=</span> <span class="pre">3</span></code> for point coordinates and <code class="docutils literal notranslate"><span class="pre">*n*</span> <span class="pre">=</span> <span class="pre">2</span></code> for sheet information.</p>
+<p>where <code class="docutils literal notranslate"><span class="pre">*n*</span> <span class="pre">=</span> <span class="pre">3</span></code> for point coordinates and <code class="docutils literal notranslate"><span class="pre">*n*</span> <span class="pre">=</span> <span class="pre">2</span></code> for sheet information.
+Do this only if you do not want to reassign these values after modification.
+If you do want that, operate on the cell vectors.</p>
 <p>Populations of rotamers have to be processed residue-by-residue, since the number of rotamers can differ between residues.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argout</span> <span class="p">=</span> <span class="n">get_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
 <span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
@@ -404,19 +426,15 @@ To reformat the point coordinates <code class="docutils literal notranslate"><sp
 <td><p>three-letter code/PDB residue tag</p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pointcoor</span></code></p></td>
-<td><p>CA coordinate (aa) or C4’ coordinate (nt)</p></td>
-<td><p>(1,3) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">pointindices</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">pointindices</span></code></p></td>
 <td><p>indices into MMMx:atom atom arrays for CA/C4`</p></td>
 <td><p>int</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
 <td><p>populations for all <em>R</em> rotamers</p></td>
 <td><p>(<em>R</em>,1) double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code></p></td>
 <td><p>DSSP information on sheets</p></td>
 <td><p>(1,2) double</p></td>
 </tr>
@@ -432,6 +450,7 @@ Depending on the task, <code class="docutils literal notranslate"><span class="p
 <p>Use this function if you want to operate on atoms of all rotamers or on all atom locations.
 Selections above atom level are ignored.</p>
 <p>Use Matlab built-in function <code class="docutils literal notranslate"><span class="pre">cell2mat</span></code> for reforming output for B factor, charge, atomic number, and population into vectors.
+Do this only if you do not want to reassign them later after modification. If you do want to reassign, operate on the cell vectors.
 Note that MMMx supports only one B factor per atom, not distinct B factors for locations.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argout</span> <span class="p">=</span> <span class="n">get_atom</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
 <span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_atom</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
@@ -474,35 +493,31 @@ Note that MMMx supports only one B factor per atom, not distinct B factors for l
 <td><p>atom charge, usually unspecified (zero)</p></td>
 <td><p>int</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor</span></code></p></td>
-<td><p>Cartesian coordinate array for <em>all</em> locations</p></td>
-<td><p>(<em>N</em>,3) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">element</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">element</span></code></p></td>
 <td><p>atomic number</p></td>
 <td><p>int8</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info</span></code></p></td>
 <td><p>object information</p></td>
 <td><p>struct</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.name</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.name</span></code></p></td>
 <td><p>atom name</p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.indices</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.indices</span></code></p></td>
 <td><p>index vector (MMMx:atomic)</p></td>
 <td><p>(1,5) uint16 array</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.atom_index</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.atom_index</span></code></p></td>
 <td><p>index into atom array</p></td>
 <td><p>int</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">population</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">population</span></code></p></td>
 <td><p>rotamer population or atom occupancy</p></td>
 <td><p>double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
 <td><p>Cartesian coordinates per location</p></td>
 <td><p>(1,3) double</p></td>
 </tr>
@@ -529,7 +544,7 @@ Selections above atom level are ignored.</p>
 </ul>
 </dd>
 <dt>Returns</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">argout</span></code> - output arguments (<em>M</em>-element cell array)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argout</span></code> - output arguments (<em>M</em>-element cell array for <em>M</em> selected locations)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message, if attribute is not supported  (1-element cell array)</p></li>
 </ul>
 </dd>
@@ -548,35 +563,31 @@ Selections above atom level are ignored.</p>
 </tr>
 </thead>
 <tbody>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor</span></code></p></td>
-<td><p>Cartesian coordinate array for <em>all</em> locations</p></td>
-<td><p>(<em>N</em>,3) double</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">element</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">element</span></code></p></td>
 <td><p>atomic number</p></td>
 <td><p>int8</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info</span></code></p></td>
 <td><p>object information</p></td>
 <td><p>struct</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.tag</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.tag</span></code></p></td>
 <td><p>location tag, R# for a rotamer</p></td>
 <td><p>string, # is rotamer number</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.indices</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.indices</span></code></p></td>
 <td><p>index vector (MMMx:atomic)</p></td>
 <td><p>(1,5) uint16 array</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.atom_index</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.atom_index</span></code></p></td>
 <td><p>index into atom array</p></td>
 <td><p>int</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">population</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">population</span></code></p></td>
 <td><p>rotamer population or atom occupancy</p></td>
 <td><p>double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
 <td><p>Cartesian coordinates per location</p></td>
 <td><p>(1,3) double</p></td>
 </tr>
@@ -588,7 +599,8 @@ Selections above atom level are ignored.</p>
 <span id="get-conformer"></span><h2>Single conformer<a class="headerlink" href="#single-conformer" title="Permalink to this headline">¶</a></h2>
 <p>The function <code class="docutils literal notranslate"><span class="pre">get_conformer</span></code> is special in that it accesses a single conformer in the entity by number.
 General addressing and simultaneous access to several conformers are not supported. The function is intended for ensemble analysis.</p>
-<p>Populations of rotamers have to be processed residue-by-residue, since the number of rotamers can differ between residues.</p>
+<p>There is not pendant <code class="docutils literal notranslate"><span class="pre">set_conformer</span></code>. However, you can modify the returned coordinates <code class="docutils literal notranslate"><span class="pre">coor.xyz</span></code> and reassign them by the call
+<code class="docutils literal notranslate"><span class="pre">entity</span> <span class="pre">=</span> <span class="pre">set_coor(entity,coor.xyz,coor.indices)</span></code>.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argout</span> <span class="p">=</span> <span class="n">get_conformer</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
 <span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_conformer</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
 <span class="n">argout</span> <span class="p">=</span> <span class="n">get_conformer</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">conformer</span><span class="p">)</span>
@@ -726,7 +738,7 @@ General addressing and simultaneous access to several conformers are not support
 <p>Retrieval of just the Cartesian coordinates (and optionally of the atomic numbers) is much faster with <code class="docutils literal notranslate"><span class="pre">get_coor</span></code>.
 For instance, selection of all atom coordinates in all chains of light harvesting complex LHCII (PDB 2bhw) speeds up by a factor of 17
 when using <code class="docutils literal notranslate"><span class="pre">get_coor</span></code> instead of <code class="docutils literal notranslate"><span class="pre">get_locations</span></code> with attribute <code class="docutils literal notranslate"><span class="pre">coor</span></code>.
-Unlike the object-oriented <code class="docutils literal notranslate"><span class="pre">get</span></code> functions, <code class="docutils literal notranslate"><span class="pre">get_coor</span></code> expands <em>all seletions on different hierarchy levels</em> down to location level.</p>
+Unlike the object-oriented <code class="docutils literal notranslate"><span class="pre">get</span></code> functions, <code class="docutils literal notranslate"><span class="pre">get_coor</span></code> expands <em>all selections on different hierarchy levels</em> down to location level.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">coor</span> <span class="p">=</span> <span class="n">get_coor</span><span class="p">(</span><span class="n">entity</span><span class="p">)</span>
 <span class="n">coor</span> <span class="p">=</span> <span class="n">get_coor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
 <span class="n">coor</span> <span class="p">=</span> <span class="n">get_coor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">address</span><span class="p">,</span><span class="n">heavy</span><span class="p">)</span>
@@ -741,7 +753,7 @@ Unlike the object-oriented <code class="docutils literal notranslate"><span clas
 <li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx address for object selection, ‘selected’ or empty uses current selection</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">heavy</span></code> - flag, if true, hydrogen atoms are neglected, defaults to false</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">paradigm</span></code> - flag, if true, only the first loction/rotamer is returned for each atom</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">paradigm</span></code> - flag, if true, only the first loction/rotamer in the first conformer is returned for each atom</p></li>
 </ul>
 </dd>
 <dt>Returns</dt><dd><ul class="simple">
@@ -766,7 +778,7 @@ Unlike the object-oriented <code class="docutils literal notranslate"><span clas
         <a href="object_modification.html" class="btn btn-neutral float-right" title="Set object attributes" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="MMMx_RigiFlex.html" class="btn btn-neutral float-left" title="MMMx|RigiFlex" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="distance_distributions.html" class="btn btn-neutral float-left" title="Distance distributions" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

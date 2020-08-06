@@ -1,19 +1,17 @@
-function [argout,exceptions] = get_atom(entity,attribute,address)
+function [entity,exceptions] = set_atom(entity,attribute,argin,address)
 %
-% GET_ATOM Retrieves attributes of atoms
+% SET_ATOM Assigns attributes to atoms
 %
-%   [argout,exceptions] = GET_ATOM(entity,attribute)
-%   Provides attribute values and possibly exceptions for atoms selected in
-%   an entity
+%   [argout,exceptions] = SET_ATOM(entity,attribute,argin)
+%   Modifies an attribute of selected atoms in entity to the values 
+%   provided in argin
 %
-%   [argout,exceptions] = GET_ATOM(entity,attribute,address)
-%   Provides attribute values and possibly exceptions for atoms selected by
-%   address
+%   [argout,exceptions] = SET_ATOM(entity,attribute,argin,address)
+%   Modifies an attribute of atoms in entity to the values specified by 
+%   address provided in argin
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided
-% address      MMMx address, 'selected' refers to the current selection
-%              defaults to 'selected'
 % attribute    atom attribute to be retrieved, string, defaults to
 %              'info', all locations of the atom are included
 %              attribute   output                           Type
@@ -21,15 +19,15 @@ function [argout,exceptions] = get_atom(entity,attribute,address)
 %              bfactor     B factor                         double
 %              charge      atom charge                      int
 %              element     atomic number                    int8
-%              info        .name          atom name         string
-%                                         R# for a rotamer  # is a number
-%                          .indices       index vector      (1,5) uint16
-%                          .atom_index    atom array index  int
+%              name        atom name (be careful!)          string
 %              population  rotamer population or occupancy  double
 %              xyz         Cartesian coordinates            (1,3) double
+% argin        cell array of inputs, see table above
+% address      MMMx address, 'selected' refers to the current selection
+%              defaults to 'selected'
 %
 % OUTPUT
-% argout       cell array of outputs, see above
+% entity       the input entity with  modified attributes
 % exceptions   cell vector of MException objects if something went wrong, 
 %              defaults to one cell holding an empty array
 %
@@ -38,21 +36,23 @@ function [argout,exceptions] = get_atom(entity,attribute,address)
 % Copyright(c) 2020: Gunnar Jeschke
 
 % initialize empty output
-argout = cell(1,10000);
 exceptions = {[]};
 
 % set default arguments
 if ~exist('address','var')
     address = 'selected';
 end
-if ~exist('attribute','var')
-    attribute = 'info';
+if ~exist('attribute','var') || isempty(attribute)
+    exceptions = {MException('set_atom:missing_attribute', 'Attribute must be provided')};
+end
+if ~exist('argin','var')
+    exceptions = {MException('set_atom:missing_input', 'Input arguments must be provided')};
 end
 
 % select the objects by the provided address
 entity = select(entity,address,true);
 
-outputs = 0; % counter for the number of outputs
+inputs = 0; % counter for the number of outputs
 index_vector = zeros(1,5,'uint16');
 conformers = entity.selected; % selected conformers
 % scan entity for selected locations
@@ -88,26 +88,34 @@ for kc = 1:length(chains)
                                     [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');                                    
                                     atom_index = all_atom_indices(atom_indices~=0);
                                     if ~isempty(entity.xyz(atom_index,:))
-                                        outputs = outputs + 1;
+                                        inputs = inputs + 1;
                                         switch attribute
                                             case 'bfactor'
-                                                argout{outputs} = entity.(chain).(residue).(atom).bfactor;
+                                                entity.(chain).(residue).(atom).bfactor = argin{inputs};
                                             case 'charge'
-                                                argout{outputs} = entity.(chain).(residue).(atom).charge;
+                                                entity.(chain).(residue).(atom).charge = argin{inputs};
                                             case 'element'
-                                                argout{outputs} = entity.elements(atom_index);
-                                            case 'info'
-                                                info.name = atom;
-                                                info.indices = index_vector;
-                                                info.atom_index = atom_index;
-                                                argout{outputs} = info;
+                                                entity.elements(atom_index) = argin{inputs};
                                             case 'population'
-                                                argout{outputs} = entity.populations(kconf)*double(entity.occupancies(atom_index))/100;
+                                                entity.occupancies(atom_index) =  uint8(100*argin{inputs}/entity.populations(kconf));
+                                            case 'name'
+                                                data = entity.(chain).(residue).(atom);
+                                                modified_residue = rmfield(entity.(chain).(residue),atom);
+                                                name = upper(argin{inputs});
+                                                for kchar = 1:length(name)
+                                                    if name(kchar) == ''''
+                                                        name(kchar) = '_';
+                                                    end
+                                                end
+                                                if length(name) > 4
+                                                    name = name(1:4);
+                                                end
+                                                modified_residue.(name) = data;
+                                                entity.(chain).(residue) = modified_residue;
                                             case {'xyz'}
-                                                argout{outputs} = entity.xyz(atom_index,:);
+                                                entity.xyz(atom_index,:) = argin{inputs};
                                             otherwise
-                                                argout = {};
-                                                exceptions = {MException('get_atom:unsupported_attribute', 'Attribute %s not supported',attribute)};
+                                                exceptions = {MException('set_atom:unsupported_attribute', 'Attribute %s not supported',attribute)};
                                                 return
                                         end
                                     end
@@ -121,4 +129,3 @@ for kc = 1:length(chains)
     end
 end
 
-argout = argout(1:outputs);

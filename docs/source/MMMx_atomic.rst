@@ -78,7 +78,7 @@ Further attributes of objects can be stored by extending levels of the topology 
 
 	 The fieldname ``populations`` is reserved at entity level and at residue level. At residue level, the length of the population vecor specifies the number of rotamers.
 	 
-	 The fieldnames ``name``, ``selected_rotamers``, ``locations``, ``dssp``, and ``sheet`` are reserved at residue level
+	 The fieldnames ```dssp``, ``labels``, ``locations``, `name``, ``selected_rotamers`` and ``sheet`` are reserved at residue level
 	 
 	 The fieldnames ``element``, ``selected_locations``, ``charge``, and ``bfactor`` are reserved at atom level
 	 
@@ -103,7 +103,13 @@ Conversion to PDB representation
 --------------------------------
 
 In the ``MMMx|atomic`` representation, the same atom coordinate can apply in several conformers (*models* in the PDB representation). 
-Upon conversion to PDB, the coordinate array expands. The PDB writer of MMMx expands per conformer during writing to reduce memory requirements.
+Upon conversion to PDB, the coordinate array then expands. The PDB writer of MMMx indexes rather than expands during writing to reduce memory requirements.
+
+Conformer populations are stored in the free-text section of a ``REMARK 400 COMPOUND`` record in the following format (example):
+
+``REMARK 400   MODEL         1 POPULATION   0.5000``
+
+where the conformer number is in columns 19-28 of the line and the population in columns 40-48. 
 
 Rotameric states are expressed by alternate atom locations. Up to 26 (preferably) or 52 (with lower-case location identifiers) rotamers can be converted.
 Not all external programs may be able to process PDB files with more than 26 locations. By default, only the 26 rotamers with highest populations are converted.
@@ -153,6 +159,8 @@ Variable               Explanation                                     Type     
 
 -----------------------------
 
+Please note that ``put_pdb`` does not save water atoms. Specifying them makes sense in crystal structures, but not in modelled structures.
+
 Conversion from PDB representation
 ----------------------------------
 
@@ -169,6 +177,15 @@ Rotamer populations are mean populations over all atoms which have this number o
 
 In case of topological inconsistency between *models*, topology is determined by the first model encountered in the PDB file (regardless of its model number).
 Only atom coordinates are read for further models. Surplus atom coordinates are ignored. Missing atom coordinates are assigned "not a number".
+
+``get_pdb`` reads conformer populations from ``REMARK 400`` records in PDB files that were stored by MMMx. If other software needs to convey populations in PDB files,
+the corresponding ``REMARK 400`` lines must have the following format (example):
+
+``REMARK 400   MODEL         1 POPULATION   0.5000``
+
+where the conformer number is in columns 19-28 of the line and the population in columns 40-48.
+The populations must be specified for all models in the coordinate section and must not be specified for models that do not appear in the coordinate section.
+Otherwise, uniform populations are assigned, as if the ``REMARK 400`` was missing.
 
 For loading from PDB, use function ``get_pdb`` 
 

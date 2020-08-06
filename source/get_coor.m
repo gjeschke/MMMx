@@ -1,6 +1,6 @@
 function [coor,indices,exceptions,elements] = get_coor(entity,address,heavy,paradigm)
 %
-% GET_COOR Retrieves attributes of an atom location 
+% GET_COOR Retrieves atom location coordinates for selected objects 
 %
 %   [coor,indices,elements,exceptions] = GET_COOR(entity)
 %   Returns a Cartesian coordinate array, indices into the corresponding
@@ -13,10 +13,11 @@ function [coor,indices,exceptions,elements] = get_coor(entity,address,heavy,para
 %   entity slected by address
 %
 %   [coor,indices,elements,exceptions] = GET_COOR(entity,address,heavy)
-%   Neglects hydrogen atoms, if heavy is true, heavy defaults ro false
+%   Neglects hydrogen atoms, if heavy is true, heavy defaults to false
 %
 %   [coor,indices,elements,exceptions] = GET_COOR(entity,address,heavy,paradigm)
-%   Returns only the firts location(rotamer) for each atom
+%   Returns only the first location(rotamer) in the first conformer for
+%   each atom
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided
@@ -37,8 +38,6 @@ function [coor,indices,exceptions,elements] = get_coor(entity,address,heavy,para
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
-
-profile on
 
 % initialize empty output
 coor = [];
@@ -70,7 +69,7 @@ end
 % get atom indices
 if paradigm % only the first location/rotamer of each atom
     [indices,complete] = get_selection(entity);
-    indices = indices(complete(:,5) ==1);
+    indices = indices((complete(:,4) == 1) & (complete(:,5) == 1));
 else
     indices = get_selection(entity);
 end
@@ -88,4 +87,3 @@ if heavy
     elements = elements(elements > 1);
 end
 
-profile viewer

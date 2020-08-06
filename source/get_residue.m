@@ -12,18 +12,19 @@ function [argout,exceptions] = get_residue(entity,attribute,address)
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided
-% address      MMMx address, 'selected' refers to the current selection
-%              defaults to 'selected'
 % attribute    residue attribute to be retrieved, string, defaults to
 %              'info'
-%              attribute   output                           Type
+%              attribute    output                           Type
 %              ------------------------------------------------------------
-%              dssp        DSSP secondary structure         char
-%              info        .number      residue number      int
-%                          .tlc         three-letter code   string
-%              pointcoor   CA (aa) or C4' (nt) coordinate   (1,3) double
-%              populations rotamer populations              (R,1) double
-%              sheet       DSSP sheet information           (1,2) double
+%              dssp         DSSP secondary structure         char
+%              info         .number      residue number      int
+%                           .tlc         three-letter code   string
+%              pointcoor    CA (aa) or C4' (nt) coordinate   (1,3) double
+%              pointindices indices for CA or C4'atoms       int  
+%              populations  rotamer populations              (R,1) double
+%              sheet        DSSP sheet information           (1,2) double
+% address      MMMx address, 'selected' refers to the current selection
+%              defaults to 'selected'
 %
 % OUTPUT
 % argout       cell array of outputs, see above
@@ -34,7 +35,6 @@ function [argout,exceptions] = get_residue(entity,attribute,address)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
-profile on
 
 % initialize empty output
 argout = cell(1,10000);
@@ -143,4 +143,4 @@ end
 
 argout = argout(1:outputs);
 
-profile viewer
+

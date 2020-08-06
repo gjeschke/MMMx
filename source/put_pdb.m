@@ -139,7 +139,7 @@ if isfield(options,'pop') && ~isempty(options.pop) && options.pop
     pdbline = 'REMARK 400  POPULATIONS';
     fprintf(fid,'%s\n',pad(pdbline,80));
     for kconf = 1:length(conformer_order)
-        pdbline = sprintf('REMARK 400   MODEL %i POPULATION %6.4f',kconf,entity.populations(conformer_order(kconf)));
+        pdbline = sprintf('REMARK 400   MODEL %9i POPULATION %8.4f',kconf,entity.populations(conformer_order(kconf)));
         fprintf(fid,'%s\n',pad(pdbline,80));
     end
 end
@@ -172,18 +172,20 @@ for kconf = 1:length(conformer_order)
             selected = entity.(chain).selected | select_all;
             indices(1) = entity.(chain).index;
             residues = fieldnames(entity.(chain));
+            residue_sorting = sort_residues(residues);
             cid = chain;
             % replace chain identifier, if requested
             if isfield(options,'chainIDs') && ~isempty(options.chainIDs)
                 for kx = 1:replace_chains
-                    if strcmp(options.chainIDs(kx,1),cid)
-                        cid = options.chainIDs(kx,2);
+                    if strcmp(options.chainIDs{kx,1},cid)
+                        cid = options.chainIDs{kx,2};
+                        break
                     end
                 end
             end
             info.cid = cid;
             if selected % expand selection to residues, atoms, and locations, if chain is selected
-                for kr = 1:length(residues) % expand over all residues
+                for kr = residue_sorting % expand over all residues
                     residue = residues{kr};
                     if strcmp(residue(1),'R') % these are residue fields
                         indices(2) =  entity.(chain).(residue).index;
@@ -234,7 +236,7 @@ for kconf = 1:length(conformer_order)
                     end
                 end
             else % chain was not selected
-                for kr = 1:length(residues) % test all residues
+                for kr = residue_sorting % test all residues
                     residue = residues{kr};
                     if strcmp(residue(1),'R') % these are residue fields
                         indices(2) =  entity.(chain).(residue).index;
@@ -399,3 +401,21 @@ index_array = index_array(sel4,:);
 all_indices = all_indices(sel4);
 sel5 = index_array(:,5) == indices(5);
 index = all_indices(sel5);
+
+function residue_sorting = sort_residues(residues)
+% sorts residue field names in acsending order
+% non-residue fields are removed in the sorting vector
+
+sorter = zeros(1,length(residues));
+true_residues = 0;
+for kr = 1:length(residues)
+    residue = residues{kr};
+    if strcmp(residue(1),'R') % these are residue fields
+        sorter(kr) = str2double(residue(2:end)); % residue number
+        true_residues = true_residues + 1;
+    else
+        sorter(kr) = 1e12;
+    end
+end
+[~,residue_sorting] = sort(sorter);
+residue_sorting = residue_sorting(1:true_residues);

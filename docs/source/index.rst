@@ -24,6 +24,14 @@ MMMx 0.0.0 Documentation
     ./MMMx_addresses
     ./MMMx_atomic
     ./MMMx_RigiFlex
+	
+.. toctree::
+    :hidden:
+    :caption: Spectroscopic labels
+    :maxdepth: 2
+
+    ./rotamer_concept
+    ./distance_distributions
 
 .. toctree::
     :hidden:

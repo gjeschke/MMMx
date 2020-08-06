@@ -1,6 +1,6 @@
-.. _object_modification:
+.. _distance_distributions:
 
-Set object attributes
+Distance distributions
 ==========================
 
 Concept

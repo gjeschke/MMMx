@@ -32,9 +32,10 @@ function [entity,exceptions] = get_pdb(ident,options)
 profile on
 
 % maximum number of atoms for array pre-allocation, function gets slow, if
-% tghis number is too small and is memory-intensive, if it is too large
+% this number is too small and is memory-intensive, if it is too large
 maxatoms = 1000000;
 maxwater = 100000;
+maxmodels = 100000;
 
 % initialize empty outputs
 entity = [];
@@ -107,6 +108,8 @@ curr_chain = '';
 models = 1;
 current_model = 1;
 old_resname = 'HOH'; % avoid location entry for water residues
+populations = zeros(1,maxmodels);
+conformers = 0;
 while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
@@ -121,6 +124,16 @@ while 1
             models = current_model;
         end
     end
+    % read population information in MMMx:atomic PDB files
+    if length(tline) >= 48 && contains(tline,'REMARK 400   MODEL') && contains(tline,'POPULATION')
+        conformer = str2double(tline(19:28));
+        if conformer > 0
+            populations(conformer) = str2double(tline(40:48));
+            if conformer > conformers
+                conformers = conformer;
+            end
+        end
+    end   
     % ATOM record must contain at least 54 characters (up to coordinates) 
     % atom numbers and insertion codes are ignored
     if length(tline) >= 54 && (strcmpi(tline(1:4),'ATOM') || ...
@@ -254,6 +267,7 @@ while 1
 %         end
     end % end atom loop
 end
+populations = populations(1:conformers);
 entity.original_residue_numbers = preserve_residue_numbers;
 entity.xyz = xyz(1:atoms,:);
 entity.elements = elements(1:atoms);
@@ -262,7 +276,11 @@ entity.index_array = index_array(1:indexed_atoms,:);
 entity.water = water_indices(1:water_atoms);
 entity.water_selected = false;
 % add conformer populations
-entity.populations = ones(1,models)/models;
+if conformers == models
+    entity.populations = populations;
+else
+    entity.populations = ones(1,models)/models;
+end
 entity.selected = 1; % first conformer is selected by default
 
 % set entity name, if it was not yet assigned

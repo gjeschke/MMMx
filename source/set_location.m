@@ -1,34 +1,31 @@
-function [argout,exceptions] = get_location(entity,attribute,address)
+function [entity,exceptions] = set_location(entity,attribute,argin,address)
 %
-% GET_LOCATION Retrieves attributes of an atom location 
+% SET_LOCATION Assigns attributes to atom locations 
 %
-%   [argout,exceptions] = GET_LOCATION(entity,attribute)
-%   Provides attribute values and possibly exceptions for atom locations
-%   selected in entity
+%   [entity,exceptions] = SET_LOCATION(entity,attribute,argin)
+%   Modifies an attribute of selected locations in entity to the values 
+%   provided in argin
 %
-%   [argout,exceptions] = GET_LOCATION(entity,attribute,address)
-%   Provides attribute values and possibly exceptions for atom locations
-%   selected by address
+%   [entity,exceptions] = SET_LOCATION(entity,attribute,argin,address)
+%   Modifies an attribute of the locations in entity specified by address
+%   to the values provided in argin
 %
 % INPUT
 % entity       entity in an MMMx format, must be provided
-% address      MMMx address, 'selected' refers to the current selection
-%              defaults to 'selected'
-% attribute    location attribute to be retrieved, string, defaults to
-%              'info'
+% attribute    location attribute to be modified, string, must be
+%              provided
 %              attribute   output                           Type
 %              ------------------------------------------------------------
-%              coor        Cartesian coordinate array       (N,3) double
 %              element     atomic number                    int8
-%              info        .tag           location tag      string
-%                                         R# for a rotamer  # is a number
-%                          .indices       index vector      (1,5) uint16
-%                          .atom_index    atom array index  int
 %              population  rotamer population or occupancy  double
 %              xyz         Cartesian coordinates            (1,3) double
+% argin        new values for the attribute, must be provided, cell array
+%              of inputs, see table above
+% address      MMMx address, 'selected' refers to the current selection
+%              defaults to 'selected'
 %
 % OUTPUT
-% argout       cell array of outputs, see above
+% entity       the input entity with  modified attributes
 % exceptions   cell vector of MException objects if something went wrong, 
 %              defaults to one cell holding an empty array
 %
@@ -37,21 +34,23 @@ function [argout,exceptions] = get_location(entity,attribute,address)
 % Copyright(c) 2020: Gunnar Jeschke
 
 % initialize empty output
-argout = cell(1,10000);
 exceptions = {[]};
 
 % set default arguments
 if ~exist('address','var')
     address = 'selected';
 end
-if ~exist('attribute','var')
-    attribute = 'info';
+if ~exist('attribute','var') || isempty(attribute)
+    exceptions = {MException('set_location:missing_attribute', 'Attribute must be provided')};
+end
+if ~exist('argin','var')
+    exceptions = {MException('set_location:missing_input', 'Input arguments must be provided')};
 end
 
 % select the objects by the provided address
 entity = select(entity,address,true);
 
-outputs = 0; % counter for the number of outputs
+inputs = 0; % counter for the number of outputs
 index_vector = zeros(1,5,'uint16');
 conformers = entity.selected; % selected conformers
 % scan entity for selected locations
@@ -67,12 +66,6 @@ for kc = 1:length(chains)
             residue = residues{kr};
             if strcmp(residue(1),'R') % these are residue fields
                 index_vector(2) =  entity.(chain).(residue).index;
-                locations = entity.(chain).(residue).locations;
-                location_tags = true;
-                % rotamers overrule locations
-                if length(entity.(chain).(residue).populations) > 1
-                    location_tags = false;
-                end
                 atoms = fieldnames(entity.(chain).(residue));
                 for ka = 1:length(atoms) % expand over all atoms
                     atom = atoms{ka};
@@ -86,26 +79,16 @@ for kc = 1:length(chains)
                                     [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');                                    
                                     atom_index = all_atom_indices(atom_indices~=0);
                                     if ~isempty(entity.xyz(atom_index,:))
-                                        outputs = outputs + 1;
+                                        inputs = inputs + 1;
                                         switch attribute
                                             case 'element'
-                                                argout{outputs} = entity.elements(atom_index);
-                                            case 'info'
-                                                if location_tags
-                                                    info.tag = locations(entity.(chain).(residue).(atom).selected_locations(kl));
-                                                else
-                                                    info.tag = sprintf('R%i',locations(entity.(chain).(residue).(atom).selected_locations(kl)));
-                                                end
-                                                info.indices = index_vector;
-                                                info.atom_index = atom_index;
-                                                argout{outputs} = info;
+                                                entity.elements(atom_index) = argin{inputs};
                                             case 'population'
-                                                argout{outputs} = entity.populations(kconf)*double(entity.occupancies(atom_index))/100;
+                                                entity.occupancies(atom_index) =  uint8(100*argin{inputs}/entity.populations(kconf));
                                             case {'xyz'}
-                                                argout{outputs} = entity.xyz(atom_index,:);
+                                                entity.xyz(atom_index,:) = argin{inputs};
                                             otherwise
-                                                argout = {};
-                                                exceptions = {MException('get_location:unsupported_attribute', 'Attribute %s not supported',attribute)};
+                                                exceptions = {MException('set_location:unsupported_attribute', 'Attribute %s not supported',attribute)};
                                                 return
                                         end
                                     end
@@ -118,6 +101,3 @@ for kc = 1:length(chains)
         end
     end
 end
-
-argout = argout(1:outputs);
-

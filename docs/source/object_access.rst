@@ -22,10 +22,10 @@ Generic syntax
 
 .. code-block:: matlab
 
-    [argout,exceptions] = get_"object"(entity,address,attribute)
+    [argout,exceptions] = get_"object"(entity,attribute,address)
 	 
-where possible ``attribute`` strings are specific to the "object" hierarchy level 
-("conformer", "chain", "residue", "rotamer", "atom", "location", see below) and argout is a cell vector, 
+where the ``attribute`` strings are specific to the "object" hierarchy level 
+("chain", "residue", "atom", "location", "conformer", see below) and argout is a cell vector, 
 whose length is (most of the time) the number of objects of this hierarchy level that were selected by ``address``.
 If the address is ``selected`` or empty, the ``get`` functions operate on objects currently selected in the entity.
 
@@ -86,7 +86,9 @@ To reformat the point coordinates ``pointcoor`` or the sheet information ``sheet
     arrayout = cell2mat(arrayout);
     arrayout = reshape(arrayout,*n*,outputs).';
 	
-where ``*n* = 3`` for point coordinates and ``*n* = 2`` for sheet information.
+where ``*n* = 3`` for point coordinates and ``*n* = 2`` for sheet information. 
+Do this only if you do not want to reassign these values after modification.
+If you do want that, operate on the cell vectors.
 
 Populations of rotamers have to be processed residue-by-residue, since the number of rotamers can differ between residues. 
 
@@ -115,7 +117,6 @@ Variable               Explanation                                     Type
 ``info``               object information                              struct
 ``info.number``        residue number                                  int
 ``info.tlc``           three-letter code/PDB residue tag               string
-``pointcoor``          CA coordinate (aa) or C4' coordinate (nt)       (1,3) double
 ``pointindices``       indices into MMMx:atom atom arrays for CA/C4`   int
 ``populations``        populations for all *R* rotamers                (*R*,1) double
 ``sheet``              DSSP information on sheets                      (1,2) double
@@ -134,6 +135,7 @@ Use this function if you want to operate on atoms of all rotamers or on all atom
 Selections above atom level are ignored.
 
 Use Matlab built-in function ``cell2mat`` for reforming output for B factor, charge, atomic number, and population into vectors. 
+Do this only if you do not want to reassign them later after modification. If you do want to reassign, operate on the cell vectors. 
 Note that MMMx supports only one B factor per atom, not distinct B factors for locations.
 
 .. code-block:: matlab
@@ -159,7 +161,6 @@ Variable               Explanation                                     Type
 ====================== =============================================== ================================
 ``bfactor``            crystallographic B factor, zero if unspecified  double
 ``charge``             atom charge, usually unspecified (zero)         int
-``coor``               Cartesian coordinate array for *all* locations  (*N*,3) double
 ``element``            atomic number                                   int8        
 ``info``               object information                              struct
 ``info.name``          atom name                                       string
@@ -191,7 +192,7 @@ Parameters
     *   ``attribute`` - see table below (string)
     *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
 Returns
-    *   ``argout`` - output arguments (*M*-element cell array)
+    *   ``argout`` - output arguments (*M*-element cell array for *M* selected locations)
     *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
 	
 **Attributes**
@@ -199,7 +200,6 @@ Returns
 ====================== =============================================== ================================
 Variable               Explanation                                     Type   
 ====================== =============================================== ================================
-``coor``               Cartesian coordinate array for *all* locations  (*N*,3) double
 ``element``            atomic number                                   int8        
 ``info``               object information                              struct
 ``info.tag``           location tag, R# for a rotamer                  string, # is rotamer number
@@ -213,13 +213,14 @@ Variable               Explanation                                     Type
 
 .. _get_conformer:
 	 
-Single conformer
-----------------
+Single conformer 
+------------------------------------
 
 The function ``get_conformer`` is special in that it accesses a single conformer in the entity by number.
 General addressing and simultaneous access to several conformers are not supported. The function is intended for ensemble analysis.
 
-Populations of rotamers have to be processed residue-by-residue, since the number of rotamers can differ between residues. 
+There is not pendant ``set_conformer``. However, you can modify the returned coordinates ``coor.xyz`` and reassign them by the call 
+``entity = set_coor(entity,coor.xyz,coor.indices)``.
 
 .. code-block:: matlab
 
@@ -275,7 +276,7 @@ Coordinates & atomic numbers (any level)
 Retrieval of just the Cartesian coordinates (and optionally of the atomic numbers) is much faster with ``get_coor``.
 For instance, selection of all atom coordinates in all chains of light harvesting complex LHCII (PDB 2bhw) speeds up by a factor of 17
 when using ``get_coor`` instead of ``get_locations`` with attribute ``coor``. 
-Unlike the object-oriented ``get`` functions, ``get_coor`` expands *all seletions on different hierarchy levels* down to location level.
+Unlike the object-oriented ``get`` functions, ``get_coor`` expands *all selections on different hierarchy levels* down to location level.
 
 .. code-block:: matlab
 
@@ -292,7 +293,7 @@ Parameters
     *   ``entity`` - entity in MMMx:atomic format
     *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
     *   ``heavy`` - flag, if true, hydrogen atoms are neglected, defaults to false
-    *   ``paradigm`` - flag, if true, only the first loction/rotamer is returned for each atom
+    *   ``paradigm`` - flag, if true, only the first loction/rotamer in the first conformer is returned for each atom
 Returns
     *   ``coor`` - Cartesian coordinates, (*N*,3) double array for *N* selected atom locations
     *   ``indices`` - indices into entity atom tables, (*N*,1) int array

@@ -10,11 +10,16 @@ As previously established in MMM, site-directed labeling is modelled in MMMx bas
 Such libraries can be generated with classical atomic force fields via molecular dynamics simulations or Monte Carlo sampling of conformation space.
 Briefly, the label side group is represented by a moderate number, typically between 100 and 10000, of rotameric states and their associated 
 reference populations for a state that is non-interacting with the protein. Upon attachment to a labelling site, interaction with the protein is computed 
-for a static (ensemble) structure of the latter assuming only non-bonded interaction via a Lennard-Jones potential. Flexibility of the protein as well as 
-of the label beyond rotameric states is roughly modelled by an *f*-factor (`0 \le f \le 1`) that scales van-der-Waals radii of atoms in the underlying force field. 
+for a static (ensemble) structure of the latter assuming only non-bonded interaction via a Lennard-Jones potential parametrized in the Universal Force Field (UFF). 
+Flexibility of the protein as well as of the label beyond rotameric states is roughly modelled by an *f*-factor (`0 \le f \le 1`) that scales van-der-Waals radii of atoms in the underlying force field. 
+A few libraries use an enhanced attraction term, i.e., the attractive part of the Lennard-Jones potential is multiplied by the *f*-factor and an enhancement factor `e_\mathrm{attract}`. 
+The default *f*-factor is 0.5 and the default enhancement factor is 1.0.
 
 Attachment results in rotation and translation of the rotamer coordinates and in reweighting of populations, assuming a Boltzmann distribution at 298 K. 
-Distributions of properties can then be computed by population-weighted averaging. 
+Distributions of properties can then be computed by population-weighted averaging.
+
+A number of features in MMM were used only in method development and have not been in use anymore for years. These features are deprecated in MMMx.
+The concept of a "library temperature" has been deprecated as well, as libraries computed for the glass transition temperature of the medium have been found to perform worse than those computed for ambient temperature (298 K).
 
 Implementation
 --------------
@@ -85,36 +90,39 @@ For libraries that contain several stereoisomers, the SMILES string refers to on
 Set of libraries
 -----------------
 
+MMMx uses a single type of rotamer libraries, built by hierarchical clustering of Monte-Carlo generated conformer ensembles.
+Ensemble generation assumes torsion potentials and the non-bonded interaction potential of UFF. 
+
 For the following labels, rotamer libraries are provided with MMMx:
 
-=======  ===============================  ==============  ================ =========
-Label    Synonyms                         Class           Attachment       Rotamers
-=======  ===============================  ==============  ================ =========
-``R1A``  ``mtsl``, ``mtssl``              nitroxide       cysteine         216
-``R7A``  ``br-mtsl``, ``br-mtssl``        nitroxide       cysteine         216
-``V1A``  ``v1``                           nitroxide       cysteine         72
-``IA1``  ``ia-proxyl``                    nitroxide       cysteine         108
-``MA1``  ``ma-proxyl``                    nitroxide       cysteine         108
-``DZD``  ``dzd``                          nitroxide       cysteine         216
-``DZC``  ``dzc``                          nitroxide       cysteine         216
-``GDI``  ``iag``                          nitroxide       cysteine         2461
-``GDM``  ``mag``                          nitroxide       cysteine         1367
-``TUP``  ``iap-4tu``, ``iap-thiouracil``  nitroxide       4-thiouracil     72                          
-``TUM``  ``mts-4tu``, ``mts-thiouracil``  nitroxide       4-thiouracil     192
-``RTT``  ``r5-tpt``                       nitroxide       5'-thiophosphate 576
-``R5P``  ``r5p``                          nitroxide       5'-thiophosphate 2048
-``R3P``  ``r3p``                          nitroxide       3'-thiophosphate 512
-``K1H``  ``HF-K1``                        nitroxide       unnatural aa     288
-``NC1``  ``cNox@Tyr``                     nitroxide       tyrosine         128
-``NX1``  ``lNox@Tyr``                     nitroxide       tyrosine         256   
-``CNR``  ``CNC-NO``                       nitroxide       cofactor         144
-``GMO``  ``dota-gd``                      gadolinium      cysteine         648
-``GTO``  ``dtpa-gd``                      gadolinium      cysteine         2430
-``M8D``  ``m8-dota-gd``                   gadolinium      cysteine         1944
-``GPM``  ``gpymi-MTA``                    gadolinium      cysteine         432
-``TMT``  ``tormyshev-trityl``             trityl          cysteine         3888
-``HCU``  ``dHis-Cu``                      histidine       any amino acid   12
-=======  ===============================  ==============  ================ =========
+=======  ===============================  ==============  ================ ========= ====================
+Label    Synonyms                         Class           Attachment       Rotamers  `e_\mathrm{attract}`
+=======  ===============================  ==============  ================ ========= ====================
+``R1A``  ``mtsl``, ``mtssl``              nitroxide       cysteine         216       1
+``R7A``  ``br-mtsl``, ``br-mtssl``        nitroxide       cysteine         216       1
+``V1A``  ``v1``                           nitroxide       cysteine         72        1
+``IA1``  ``ia-proxyl``                    nitroxide       cysteine         108       1
+``MA1``  ``ma-proxyl``                    nitroxide       cysteine         108       2.0
+``DZD``  ``dzd``                          nitroxide       cysteine         216       1
+``DZC``  ``dzc``                          nitroxide       cysteine         216       1
+``GDI``  ``iag``                          nitroxide       cysteine         2461      2.0
+``GDM``  ``mag``                          nitroxide       cysteine         1367      2.0
+``TUP``  ``iap-4tu``, ``iap-thiouracil``  nitroxide       4-thiouracil     72        1                          
+``TUM``  ``mts-4tu``, ``mts-thiouracil``  nitroxide       4-thiouracil     192       1
+``RTT``  ``r5-tpt``                       nitroxide       5'-thiophosphate 576       1
+``R5P``  ``r5p``                          nitroxide       5'-thiophosphate 2048      1
+``R3P``  ``r3p``                          nitroxide       3'-thiophosphate 512       1
+``K1H``  ``HF-K1``                        nitroxide       unnatural aa     288       1
+``NC1``  ``cNox@Tyr``                     nitroxide       tyrosine         128       1
+``NX1``  ``lNox@Tyr``                     nitroxide       tyrosine         256       1
+``CNR``  ``CNC-NO``                       nitroxide       cofactor         144       1
+``GMO``  ``dota-gd``                      gadolinium      cysteine         648       1
+``GTO``  ``dtpa-gd``                      gadolinium      cysteine         2430      1
+``M8D``  ``m8-dota-gd``                   gadolinium      cysteine         1944      1
+``GPM``  ``gpymi-MTA``                    gadolinium      cysteine         432       1
+``TMT``  ``tormyshev-trityl``             trityl          cysteine         3888      1
+``HCU``  ``dHis-Cu``                      histidine       any amino acid   12        1
+=======  ===============================  ==============  ================ ========= ====================
 
 Label names (three-letter codes) and synonyms are case-insensitive. 
 Note that gadolinium labels are sufficiently good approximations for other lanthanide labels with the same ligand,
@@ -122,86 +130,68 @@ for instance, for pseudo-contact shift (PCS) and paramagnetic relaxation enhncem
 
 -----------------------------
 
-Atoms
----------
+Rotamer library format
+----------------------
 
-Use this function if you want to operate on atoms of all rotamers or on all atom locations.
-Selections above atom level are ignored.
+Rotamer libraries are stored in a binary Matlab format as a ``struct`` variable ``rot_lib``. The fields are defined as follows:
 
-Use Matlab built-in function ``cell2mat`` for reforming output for B factor, charge, atomic number, and population into vectors. 
-Do this only if you do not want to reassign them later after modification. If you do want to reassign, operate on the cell vectors. 
-Note that MMMx supports only one B factor per atom, not distinct B factors for locations.
-
-.. code-block:: matlab
-
-    argout = get_atom(entity,attribute)
-    [argout,exceptions] = get_atom(entity,attribute)
-    argout = get_atom(entity,attribute,address)
-    [argout,exceptions] = get_atom(entity,attribute,address)
-
-
-Parameters
-    *   ``entity`` - entity in MMMx:atomic format
-    *   ``attribute`` - see table below (string)
-    *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
-Returns
-    *   ``argout`` - output arguments (*M*-element cell array)
-    *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
 	
-**Attributes**
-	
-====================== =============================================== ================================
-Variable               Explanation                                     Type   
-====================== =============================================== ================================
-``bfactor``            crystallographic B factor, zero if unspecified  double
-``charge``             atom charge, usually unspecified (zero)         int
-``element``            atomic number                                   int8        
-``info``               object information                              struct
-``info.name``          atom name                                       string
-``info.indices``       index vector (MMMx:atomic)                      (1,5) uint16 array
-``info.atom_index``    index into atom array                           int
-``population``         rotamer population or atom occupancy            double
-``xyz``                Cartesian coordinates per location              (1,3) double
-====================== =============================================== ================================ 
+======================= =============================================== ================================
+Field                   Content                                         Type   
+======================= =============================================== ================================
+``tlc``                 three-letter code                               string
+``synonyms``            *S* synonyms for the label name                 (1,*S*) cell string
+``SMILES``              SMILES string defining the structure            string
+``rotamers``            information on *R* rotamers (index *r*)         (1,*R*) struct  
+``rotamers(r).coor``    Cartesian coordinates of ``A`` atoms/rotamer    (*A*,3) double
+``rotamers(k).torsion`` values of *T* torsion angles `\chi_t` for       (*R,T*) double
+                        *R* rotamers
+``elements``            atomic numbers for *A* atoms                    (*A*,1) uint8
+``populations``         *R* populations for the non-attached rotamers   (*R*,1) double
+``position``            *P* atom numbers and densities that define the  (*P*,2) double
+                        label position
+``attachment``          structure element to which the label can be     string
+                        attached, for instance ``peptide``
+``side_chain``          first side chain atom numer, for instance ``9`` ìnt
+                        for a ``CB`` atom in position 9
+``atom_tags``           *A* atom names                                  (1,*A*) cell string
+``std_frame``           atoms that define the standard frame for
+                        attachment: origin, atom on *x* axis, atom in   (1,3) int
+                        *xy* plane
+``std_frame_atoms``     atom types of the standard frame                (1,3) cell string 
+``mol_frame``           atoms that define the label molecular frame:    (1,3) int
+                        origin, atom on *x* axis, atom in *xy* plane
+``mol_frame_atoms``     atom types of the standard frame                (1,3) cell string 
+``class``               label class, for instance ``nitroxide``         string
+``chi_def``             definition of *T* torsion angles `\chi_t`       (*T*,4) int
+``connect``             bonding information for up to *B* bonds for *A* (*A,B*) int
+                        atoms
+``attach_forcefield``   force field for protein attachment, usually     string
+                        ``UFF_Towhee``
+``B_factors``           pseudo-temperature factors for *N* atoms in     (*N,R*) double
+                        *R* rotamers
+``method``              method for library generation. for instance     string
+                        ``MMM_Monte_Carlo``
+``gen_forcefield``      force field used in library generation          string
+                        for instance ``UFF_Towhee``		
+``types``               *A* atom type numbers for the used force field  (*A*,1) uint16 						
+``solvation``           solvation assumed in library generation,        string
+                        usually ``none``						
+``prerun``              number of trials in a prerun of the MMMx native int
+                        UFF Monte Carlo rotamer library generator
+``suppress_H``          true if hydrogen atoms were neglected in        boolean
+                        library generation, not recommended
+``threshold``           thresholds for confermer acceptance in the      double
+                        MMMx native generator
+``min_strain``          minimum strain energy (kcal/mol) encountered    double
+``maxdist``             maximum distance of the label position from     double
+                        the backbone (CA atom or origin of attachment)
+                        frame					   
+``color``               RGB color triplet (fraction) for display        (1,3) double
+``radius``              sphere radius (Angstroem) corresponding to      double
+                        100% rotamer population for display
+======================= =============================================== ================================ 
 
------------------------------
-   
-Locations
----------
-
-Use this function if you want to operate on selected rotamers or atom locations.
-If the selection is on atom level and no rotamers are selected, only the first location or rotamer is referred to.
-Selections above atom level are ignored.
-
-.. code-block:: matlab
-
-    argout = get_location(entity,attribute)
-    [argout,exceptions] = get_location(entity,attribute)
-    argout = get_location(entity,attribute,address)
-    [argout,exceptions] = get_location(entity,attribute,address)
-
-
-Parameters
-    *   ``entity`` - entity in MMMx:atomic format
-    *   ``attribute`` - see table below (string)
-    *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
-Returns
-    *   ``argout`` - output arguments (*M*-element cell array for *M* selected locations)
-    *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
-	
-**Attributes**
-	
-====================== =============================================== ================================
-Variable               Explanation                                     Type   
-====================== =============================================== ================================
-``element``            atomic number                                   int8        
-``info``               object information                              struct
-``info.tag``           location tag, R# for a rotamer                  string, # is rotamer number
-``info.indices``       index vector (MMMx:atomic)                      (1,5) uint16 array
-``info.atom_index``    index into atom array                           int
-``population``         rotamer population or atom occupancy            double
-``xyz``                Cartesian coordinates per location              (1,3) double
-====================== =============================================== ================================ 
-
+The pseudo-temperature factors relate to the variation of atom positions within the cluster of conformers that was projected onto a single rotamer. 
 
 

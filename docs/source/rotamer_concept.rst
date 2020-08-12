@@ -76,12 +76,15 @@ Variable               Explanation                                     Type
 ``info.tlc``           MMMx internal three-letter code                 string
 ``info.class``         label class, for instance ``nitroxide``         string
 ``info.smiles``        SMILES string representing label structure      string
-``info.f_factor``      f-factor definition for attachment              double
-``info.ref_pop``       reference populations for *C* rotamers          (*C*,1) double
-``dihedrals``          *D* sidechain dihedrals for *C* rotamers        (*C,D*) double
-``orientations``       Euler angles of molecular frame                 (*C*,3) double
-``populations``        populations for *C* rotamers                    (*C*,1) double
-``positions``          positions for *C* rotamers                      (*C*,3) double
+``info.f_factor``      f-factor and attraction enhancement factor      (1,2) double
+``info.ref_pop``       reference populations for *R* rotamers          (*R*,1) double
+``info.site``          site address                                    string
+``torsion``            *T* sidechain torsions for *R* rotamers         (*R,T*) double
+``orientations``       Euler angles of molecular frame                 (*R*,3) double
+``populations``        populations for *R* rotamers                    (*R*,1) double
+``positions``          positions for *R* rotamers                      (*R*,3) double
+``affine``             affine matrix that transforms from the standard (4,4) double
+                       frame to the site frame
 ====================== =============================================== =================
  
 Note that SMILES strings for nitroxides tend to be interpreted as the corresponding hydroxylamines by some programs, notably by ChemDraw.
@@ -154,6 +157,7 @@ Field                   Content                                         Type
                         attached, for instance ``peptide``
 ``side_chain``          first side chain atom numer, for instance ``9`` ìnt
                         for a ``CB`` atom in position 9
+``f_factor``            "forgive" factor and attraction enhancement     (1,2) double
 ``atom_tags``           *A* atom names                                  (1,*A*) cell string
 ``std_frame``           atoms that define the standard frame for
                         attachment: origin, atom on *x* axis, atom in   (1,3) int
@@ -190,6 +194,12 @@ Field                   Content                                         Type
 ``color``               RGB color triplet (fraction) for display        (1,3) double
 ``radius``              sphere radius (Angstroem) corresponding to      double
                         100% rotamer population for display
+``ff``                  force field parameters for attachment           struct
+``ff.LJ_r``             van-der-Waals radii for attachment indexed by   (1,103) double
+                        atomic number
+``ff.LJ_D``             Lennard-Jones potentials for attachment indexed (1,103) double
+                        by atomic number
+``ff.types``            atom type tags for force field                  string
 ======================= =============================================== ================================ 
 
 The pseudo-temperature factors relate to the variation of atom positions within the cluster of conformers that was projected onto a single rotamer. 

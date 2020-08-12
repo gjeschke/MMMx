@@ -363,28 +363,37 @@ entity, while their indices are stored in the <code class="docutils literal notr
 <td><p>string</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.f_factor</span></code></p></td>
-<td><p>f-factor definition for attachment</p></td>
-<td><p>double</p></td>
+<td><p>f-factor and attraction enhancement factor</p></td>
+<td><p>(1,2) double</p></td>
 </tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.ref_pop</span></code></p></td>
-<td><p>reference populations for <em>C</em> rotamers</p></td>
-<td><p>(<em>C</em>,1) double</p></td>
+<td><p>reference populations for <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dihedrals</span></code></p></td>
-<td><p><em>D</em> sidechain dihedrals for <em>C</em> rotamers</p></td>
-<td><p>(<em>C,D</em>) double</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.site</span></code></p></td>
+<td><p>site address</p></td>
+<td><p>string</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">orientations</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">torsion</span></code></p></td>
+<td><p><em>T</em> sidechain torsions for <em>R</em> rotamers</p></td>
+<td><p>(<em>R,T</em>) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">orientations</span></code></p></td>
 <td><p>Euler angles of molecular frame</p></td>
-<td><p>(<em>C</em>,3) double</p></td>
+<td><p>(<em>R</em>,3) double</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
-<td><p>populations for <em>C</em> rotamers</p></td>
-<td><p>(<em>C</em>,1) double</p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
+<td><p>populations for <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">positions</span></code></p></td>
-<td><p>positions for <em>C</em> rotamers</p></td>
-<td><p>(<em>C</em>,3) double</p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">positions</span></code></p></td>
+<td><p>positions for <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,3) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">affine</span></code></p></td>
+<td><p>affine matrix that transforms from the standard
+frame to the site frame</p></td>
+<td><p>(4,4) double</p></td>
 </tr>
 </tbody>
 </table>
@@ -654,104 +663,126 @@ attached, for instance <code class="docutils literal notranslate"><span class="p
 for a <code class="docutils literal notranslate"><span class="pre">CB</span></code> atom in position 9</p></td>
 <td><p>ìnt</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">atom_tags</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f_factor</span></code></p></td>
+<td><p>“forgive” factor and attraction enhancement</p></td>
+<td><p>(1,2) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">atom_tags</span></code></p></td>
 <td><p><em>A</em> atom names</p></td>
 <td><p>(1,*A*) cell string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">std_frame</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">std_frame</span></code></p></td>
 <td><p>atoms that define the standard frame for
 attachment: origin, atom on <em>x</em> axis, atom in
 <em>xy</em> plane</p></td>
 <td><p>(1,3) int</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">std_frame_atoms</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">std_frame_atoms</span></code></p></td>
 <td><p>atom types of the standard frame</p></td>
 <td><p>(1,3) cell string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mol_frame</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mol_frame</span></code></p></td>
 <td><p>atoms that define the label molecular frame:
 origin, atom on <em>x</em> axis, atom in <em>xy</em> plane</p></td>
 <td><p>(1,3) int</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mol_frame_atoms</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mol_frame_atoms</span></code></p></td>
 <td><p>atom types of the standard frame</p></td>
 <td><p>(1,3) cell string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">class</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">class</span></code></p></td>
 <td><p>label class, for instance <code class="docutils literal notranslate"><span class="pre">nitroxide</span></code></p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">chi_def</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">chi_def</span></code></p></td>
 <td><p>definition of <em>T</em> torsion angles <img class="math" src="_images/math/7f1339ae1142e940d4cd6615f8c4b9d1c9fc594b.svg" alt="\chi_t"/></p></td>
 <td><p>(<em>T</em>,4) int</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">connect</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connect</span></code></p></td>
 <td><p>bonding information for up to <em>B</em> bonds for <em>A</em>
 atoms</p></td>
 <td><p>(<em>A,B</em>) int</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attach_forcefield</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attach_forcefield</span></code></p></td>
 <td><p>force field for protein attachment, usually
 <code class="docutils literal notranslate"><span class="pre">UFF_Towhee</span></code></p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">B_factors</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B_factors</span></code></p></td>
 <td><p>pseudo-temperature factors for <em>N</em> atoms in
 <em>R</em> rotamers</p></td>
 <td><p>(<em>N,R</em>) double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
 <td><p>method for library generation. for instance
 <code class="docutils literal notranslate"><span class="pre">MMM_Monte_Carlo</span></code></p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">gen_forcefield</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gen_forcefield</span></code></p></td>
 <td><p>force field used in library generation
 for instance <code class="docutils literal notranslate"><span class="pre">UFF_Towhee</span></code></p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">types</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">types</span></code></p></td>
 <td><p><em>A</em> atom type numbers for the used force field</p></td>
 <td><p>(<em>A</em>,1) uint16</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">solvation</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solvation</span></code></p></td>
 <td><p>solvation assumed in library generation,
 usually <code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
 <td><p>string</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">prerun</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prerun</span></code></p></td>
 <td><p>number of trials in a prerun of the MMMx native
 UFF Monte Carlo rotamer library generator</p></td>
 <td><p>int</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">suppress_H</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">suppress_H</span></code></p></td>
 <td><p>true if hydrogen atoms were neglected in
 library generation, not recommended</p></td>
 <td><p>boolean</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
 <td><p>thresholds for confermer acceptance in the
 MMMx native generator</p></td>
 <td><p>double</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">min_strain</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_strain</span></code></p></td>
 <td><p>minimum strain energy (kcal/mol) encountered</p></td>
 <td><p>double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">maxdist</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxdist</span></code></p></td>
 <td><p>maximum distance of the label position from
 the backbone (CA atom or origin of attachment)
 frame</p></td>
 <td><p>double</p></td>
 </tr>
-<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">color</span></code></p></td>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">color</span></code></p></td>
 <td><p>RGB color triplet (fraction) for display</p></td>
 <td><p>(1,3) double</p></td>
 </tr>
-<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">radius</span></code></p></td>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">radius</span></code></p></td>
 <td><p>sphere radius (Angstroem) corresponding to
 100% rotamer population for display</p></td>
 <td><p>double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ff</span></code></p></td>
+<td><p>force field parameters for attachment</p></td>
+<td><p>struct</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ff.LJ_r</span></code></p></td>
+<td><p>van-der-Waals radii for attachment indexed by
+atomic number</p></td>
+<td><p>(1,103) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ff.LJ_D</span></code></p></td>
+<td><p>Lennard-Jones potentials for attachment indexed
+by atomic number</p></td>
+<td><p>(1,103) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ff.types</span></code></p></td>
+<td><p>atom type tags for force field</p></td>
+<td><p>string</p></td>
 </tr>
 </tbody>
 </table>

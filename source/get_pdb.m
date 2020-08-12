@@ -29,8 +29,6 @@ function [entity,exceptions] = get_pdb(ident,options)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
-profile on
-
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % this number is too small and is memory-intensive, if it is too large
 maxatoms = 1000000;
@@ -341,8 +339,6 @@ if ~isempty(to_be_deleted)
         exceptions{warnings} = exception;
     end
 end
-
-profile viewer
 
 % functions private to get_pdb follow
 

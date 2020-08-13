@@ -79,16 +79,32 @@ Variable               Explanation                                     Type
 ``info.f_factor``      f-factor and attraction enhancement factor      (1,2) double
 ``info.ref_pop``       reference populations for *R* rotamers          (*R*,1) double
 ``info.site``          site address                                    string
+``part_fun``           attachment partitition function                 double
+``potentials``         attachment potentials (J/mol)                   (*R*,1) double
 ``torsion``            *T* sidechain torsions for *R* rotamers         (*R,T*) double
 ``orientations``       Euler angles of molecular frame                 (*R*,3) double
 ``populations``        populations for *R* rotamers                    (*R*,1) double
 ``positions``          positions for *R* rotamers                      (*R*,3) double
+``numbers``            numbers of the rotamers in the library          (*R*,1) int
+``coor``               full atom coordinates of *R* rotamers           (*R*,1) cell
 ``affine``             affine matrix that transforms from the standard (4,4) double
                        frame to the site frame
 ====================== =============================================== =================
  
 Note that SMILES strings for nitroxides tend to be interpreted as the corresponding hydroxylamines by some programs, notably by ChemDraw.
 For libraries that contain several stereoisomers, the SMILES string refers to only one of them.
+
+The attribute ``orientations`` can be used for simulating orientation selection in pulsed dipolar spectroscopy for spin labels
+or `\kappa` averaging for FRET chromophores. In order to compute unit vectors along the `x,y,z` axes of the label molecular frame
+in the entity frame (direction cosine matrix ``DCM``, the unit vectors are matrix rows) for rotamer `r=1`, use the code (example):
+
+.. code-block:: matlab
+     
+   entity = get_pdb('2lzm'); % load structure of T4 Lysozyme with ID 2lzm from PDB server 
+   [argout,exceptions] = get_label(entity,'mtsl','orientations','(A)131'); % get MTSL label orientation at residue 13
+   orientations = argout{1}; % extract from cell output
+   r = 1;
+   DCM = Euler2DCM(orientations(r,:)); % compute direction cosine matrix
 
 Set of libraries
 -----------------

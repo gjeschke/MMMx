@@ -24,11 +24,11 @@ function rotamers = get_rotamers_for_site(entity,site,rot_lib)
 %            .orientations   (R,3) Euler angles relating the label frame to
 %                            the entity frame for R rotamers
 %            .potentials     (R,1) double entity interaction energies
-%                            (kJ/mol) for R rotamers
+%                            (J/mol) for R rotamers
 %            .numbers        (R,1) int numbers of the R rotamers in the
 %                            library
 %            .coor           (1,R) cell with full coordinates of R rotamers
-%            .Z              double partition function for attachment
+%            .part_fun       double partition function for attachment
 %            .affine         affine transformation from standard frame to
 %                            local site frame 
 % exceptions   cell vector of MException objects if something went wrong, 
@@ -66,28 +66,31 @@ options.f_factor = rot_lib.f_factor;
 entity = select(entity,sprintf('{%i}(*)*.*',site.conformer));
 % unselect the site
 entity = select(entity,sprintf('{%i}(%s)%s.*',site.conformer,site.chain,site.residue(2:end)),false,true);
-argout = get_atom(entity,'xyz');
-arrayout = argout(~cellfun('isempty',argout));
-outputs = length(arrayout);
-xyz = cell2mat(arrayout);
-xyz = reshape(xyz,3,outputs).';
-argout = get_atom(entity,'element');
-elements = double(cell2mat(argout).');
-context = [elements xyz];
+% argout = get_atom(entity,'xyz');
+% arrayout = argout(~cellfun('isempty',argout));
+% outputs = length(arrayout);
+% xyz = cell2mat(arrayout);
+% xyz = reshape(xyz,3,outputs).';
+% argout = get_atom(entity,'element');
+% elements = double(cell2mat(argout).');
+% context = [elements xyz];
+
+argouts = get_atom(entity,'ecoor');
+context = argouts{1}(:,1:4);
 
 % get standard frame coordinates
 address = sprintf('{%i}(%s)%s.%s',site.conformer,site.chain,site.residue(2:end),...
     rot_lib.std_frame_atoms{1});
-ypax = get_atom(entity,'xyz',address);
-ypax = ypax{1};
+orig = get_atom(entity,'xyz',address);
+orig = orig{1};
 address = sprintf('{%i}(%s)%s.%s',site.conformer,site.chain,site.residue(2:end),...
     rot_lib.std_frame_atoms{2});
 xax = get_atom(entity,'xyz',address);
 xax = xax{1};
 address = sprintf('{%i}(%s)%s.%s',site.conformer,site.chain,site.residue(2:end),...
     rot_lib.std_frame_atoms{3});
-orig = get_atom(entity,'xyz',address);
-orig = orig{1};
+ypax = get_atom(entity,'xyz',address);
+ypax = ypax{1};
 x = xax - orig; 
 x = x/norm(x);    
 yp = ypax - orig; 
@@ -137,7 +140,7 @@ end
 populations = exp(-rotamers.potentials/(gas_un*T));
 rotamers.populations = populations.*rot_lib.populations;
 % partition function for attachment
-rotamers.Z = sum(rotamers.populations)/sum(rot_lib.populations);
+rotamers.part_fun = sum(rotamers.populations)/sum(rot_lib.populations);
 % renormalize populations
 rotamers.populations = rotamers.populations/sum(rotamers.populations);
 % sort rotamers by descending population

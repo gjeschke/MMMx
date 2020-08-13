@@ -139,6 +139,7 @@ while 1
     rot_lib.std_frame = old.rot_lib.stdframe;
     rot_lib.std_frame_atoms = cell(1,3);
     for k = 1:3
+        rot_lib.std_frame(k) = old.rot_lib.stdframe(4-k);
         rot_lib.std_frame_atoms{k} = id2tag(rot_lib.std_frame(k),atom_tag_string);
     end
     for k = 1:3

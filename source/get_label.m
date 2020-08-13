@@ -1,16 +1,16 @@
-function [argout,exceptions] = get_label(entity,label,attribute,address,force)
+function [argout,entity,exceptions] = get_label(entity,label,attribute,address,force)
 %
 % GET_LABEL Retrieves attributes of a label, computes the label if required
 %
-%   [argout,exceptions] = GET_LABEL(entity,label,attribute)
+%   [argout,entity,exceptions] = GET_LABEL(entity,label,attribute)
 %   Provides attribute values and possibly exceptions for sites selected
 %   in an entity at residue level
 %
-%   [argout,exceptions] = GET_RESIDUE(entity,label,attribute,address)
+%   [argout,entity,exceptions] = GET_LABEL(entity,label,attribute,address)
 %   Provides attribute values and possibly exceptions for sites selected
 %   by a residue address
 %
-%   [argout,exceptions] = GET_RESIDUE(entity,label,attribute,address,force)
+%   [argout,emtity,exceptions] = GET_LABEL(entity,label,attribute,address,force)
 %   if force = true, recomputation is performed even if the label had been
 %   computed before, defaults to false
 %
@@ -33,6 +33,7 @@ function [argout,exceptions] = get_label(entity,label,attribute,address,force)
 %               .ref_pop    reference populations for R      (R.1) double
 %                           rotamers
 %               .site       site address                     string
+%              part_fun     partition function               double
 %              torsion      T sidechain torsions for R       (R,T) double
 %                           rotamers
 %              orientations Euler angles of molecular frame  (R,3) double  
@@ -40,6 +41,10 @@ function [argout,exceptions] = get_label(entity,label,attribute,address,force)
 %              positions    positions for R rotamers         (R,3) double
 %              affine       affine transformation matrix     (4,4) double
 %                           that transforms label to site
+%              coor         full coordinates of R rotamers   (1,R) cell 
+%              potentials   attachment energies (J/mol)      (R,1) double
+%              numbers      numbers of the rotamers in the   (R,1) int
+%                           library
 % address      MMMx address, 'selected' refers to the current selection
 %              defaults to 'selected'
 % force        forces recomputation of the label rotamers if true, defaults
@@ -47,6 +52,7 @@ function [argout,exceptions] = get_label(entity,label,attribute,address,force)
 %
 % OUTPUT
 % argout       cell array of outputs, one cell for each site, see above
+% entity       input entity augmented by label information
 % exceptions   cell vector of MException objects if something went wrong, 
 %              defaults to one cell holding an empty array
 %
@@ -110,7 +116,6 @@ for kc = 1:length(chains)
             if strcmp(residue(1),'R') % these are residue fields
                 index_vector(2) =  entity.(chain).(residue).index;
                 if entity.(chain).(residue).selected % report back
-                    outputs = outputs + 1;
                     % for an atom site, generate rotamer library equivalent
                     if atom_site
                         [lib,exceptions,warnings] = get_atom_rot_lib(entity,...
@@ -125,6 +130,7 @@ for kc = 1:length(chains)
                     end
                     switch attribute
                         case 'info' % depends only on rotamer library
+                            outputs = outputs + 1;
                             conformer_string = sprintf('%i',conformers(1));
                             for kconf = 2:length(conformers)
                                 conformer_string = sprintf('%s,%i',conformer_string,conformers(kconf));
@@ -136,7 +142,8 @@ for kc = 1:length(chains)
                             info.ref_pop = lib.rot_lib.populations;
                             info.site = sprintf('{%s}(%s)%s',conformer_string,chain,residue(2:end));
                             argout{outputs} = info;
-                        case 'torsion' % depns only on rotamer library
+                        case 'torsion' % depends only on rotamer library
+                            outputs = outputs + 1;
                             if atom_site
                                 argout{outputs} = lib.torsion;
                             else
@@ -149,6 +156,7 @@ for kc = 1:length(chains)
                             end
                         case 'orientations' % depends on attachment
                             if atom_site
+                                outputs = outputs + 1;
                                 argout{outputs} = lib.orientations;
                             else
                                 for kconf = 1:length(conformers)
@@ -161,6 +169,7 @@ for kc = 1:length(chains)
                             end
                         case 'populations' % depends on attachment
                             if atom_site
+                                outputs = outputs + 1;
                                 argout{outputs} = lib.populations;
                             else
                                 for kconf = 1:length(conformers)
@@ -173,6 +182,7 @@ for kc = 1:length(chains)
                             end
                         case 'positions' % depends on attachment
                             if atom_site
+                                outputs = outputs + 1;
                                 argout{outputs} = lib.positions;
                             else
                                 for kconf = 1:length(conformers)
@@ -185,6 +195,7 @@ for kc = 1:length(chains)
                             end
                         case 'affine' % depends on attachment
                             if atom_site
+                                outputs = outputs + 1;
                                 argout{outputs} = lib.affine;
                             else
                                 for kconf = 1:length(conformers)
@@ -193,6 +204,58 @@ for kc = 1:length(chains)
                                     outputs = outputs + 1;
                                     argout{outputs} = ...
                                         entity.(chain).(residue).labels.(tlc).affine{conformers(kconf)};
+                                end
+                            end
+                        case 'part_fun' % depends on attachment
+                            if atom_site
+                                outputs = outputs + 1;
+                              argout{outputs} = 1;
+                            else
+                                for kconf = 1:length(conformers)
+                                    entity = label_if_required(entity,chain,...
+                                        residue,conformers(kconf),tlc,lib,force);
+                                    outputs = outputs + 1;
+                                    argout{outputs} = ...
+                                        entity.(chain).(residue).labels.(tlc).part_fun{conformers(kconf)};
+                                end
+                            end
+                        case 'coor' % depends on attachment
+                            if atom_site
+                                outputs = outputs + 1;
+                              argout{outputs} = lib.positions;
+                            else
+                                for kconf = 1:length(conformers)
+                                    entity = label_if_required(entity,chain,...
+                                        residue,conformers(kconf),tlc,lib,force);
+                                    outputs = outputs + 1;
+                                    argout{outputs} = ...
+                                        entity.(chain).(residue).labels.(tlc).coor{conformers(kconf)};
+                                end
+                            end
+                        case 'numbers' % depends on attachment
+                            if atom_site
+                                outputs = outputs + 1;
+                                argout{outputs} = 1;
+                            else
+                                for kconf = 1:length(conformers)
+                                    entity = label_if_required(entity,chain,...
+                                        residue,conformers(kconf),tlc,lib,force);
+                                    outputs = outputs + 1;
+                                    argout{outputs} = ...
+                                        entity.(chain).(residue).labels.(tlc).numbers{conformers(kconf)};
+                                end
+                            end
+                        case 'potentials' % depends on attachment
+                            if atom_site
+                                outputs = outputs + 1;
+                                argout{outputs} = 1;
+                            else
+                                for kconf = 1:length(conformers)
+                                    entity = label_if_required(entity,chain,...
+                                        residue,conformers(kconf),tlc,lib,force);
+                                    outputs = outputs + 1;
+                                    argout{outputs} = ...
+                                        entity.(chain).(residue).labels.(tlc).potentials{conformers(kconf)};
                                 end
                             end
                         otherwise
@@ -279,20 +342,17 @@ function entity = label_if_required(entity,chain,residue,conformer,tlc,lib,force
 % Checks, whether rotamers were already computed for this label at this
 % residue and computes them if nor or if forced
 
+% check whether we need to compute or already have the result
 compute = true;
-if force || ~isfield(entity.(chain).(residue),'labels')
-    fprintf(1,'I am computing because no label exists here.\n');
-else
+if ~force && isfield(entity.(chain).(residue),'labels')
     if isfield(entity.(chain).(residue).labels,tlc)...
             && length(entity.(chain).(residue).labels.(tlc).affine) >= conformer...
             && ~isempty(entity.(chain).(residue).labels.(tlc).affine{conformer})
         compute = false;
-        fprintf(1,'I am not computing, as the label %s was already computed here.\n',tlc);
     end
 end
 
 if compute
-    fprintf(1,'Now I am computing conformation %i with label %s and library %s\n',conformer,tlc,lib.rot_lib.tlc);
     site.conformer = conformer;
     site.chain = chain;
     site.residue = residue;
@@ -301,7 +361,7 @@ if compute
     entity.(chain).(residue).labels.(tlc).populations{conformer} = rotamers.populations;
     entity.(chain).(residue).labels.(tlc).orientations{conformer} = rotamers.orientations;
     entity.(chain).(residue).labels.(tlc).affine{conformer} = rotamers.affine;
-    entity.(chain).(residue).labels.(tlc).Z{conformer} = rotamers.Z;
+    entity.(chain).(residue).labels.(tlc).part_fun{conformer} = rotamers.part_fun;
     entity.(chain).(residue).labels.(tlc).coor{conformer} = rotamers.coor;
     entity.(chain).(residue).labels.(tlc).numbers{conformer} = rotamers.numbers;
     entity.(chain).(residue).labels.(tlc).potentials{conformer} = rotamers.potentials;

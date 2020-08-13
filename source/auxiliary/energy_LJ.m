@@ -6,7 +6,7 @@ function energy = energy_LJ(coor1,coor2,options)
 %   energy = ENERGY_LJ(coor1,coor2,options)
 %   Given two sets of coordinates with associated atomic numbers and at
 %   least Lennard-Jones definitions of a force field in options, computes
-%   Lennard-Jones interaction energy
+%   Lennard-Jones interaction energy in J/mol
 %
 % INPUT
 % coor1    (N,4) double for N atoms, first column atomic numbers, columns
@@ -26,7 +26,7 @@ function energy = energy_LJ(coor1,coor2,options)
 % energy    interaction energy in J/mol
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
-% Copyright(c) 2010-2020: Yevhen O. Polyhach, Gunnar Jeschke
+% Copyright(c) 2010-2020: Yevhen O. Polyhach, Stefan Stoll, Gunnar Jeschke
 
 
 conv_factor=(4.185*1000); % conversion from kcal/mol to J/mol

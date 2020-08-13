@@ -27,6 +27,13 @@ function [argout,exceptions] = get_atom(entity,attribute,address)
 %                          .atom_index    atom array index  int
 %              population  rotamer population or occupancy  double
 %              xyz         Cartesian coordinates            (1,3) double
+%              ecoor       extended coordinates as a        (N,5) double
+%                          single array, columns
+%                          1  : atomic numbers
+%                          2-4: Cartesian coordinates
+%                          5  : populations
+%                          the second cell holds the (N,1)
+%                          corresponding atom indices
 %
 % OUTPUT
 % argout       cell array of outputs, see above
@@ -59,6 +66,9 @@ conformers = entity.selected; % selected conformers
 chains = fieldnames(entity);
 [m,~] = size(entity.index_array);
 all_atom_indices = 1:m;
+if strcmp(attribute,'ecoor')
+    all_indices = zeros(m,5);
+end
 for kc = 1:length(chains)
     chain = chains{kc};
     if isstrprop(chain(1),'upper') % chain fields start with a capital
@@ -85,31 +95,53 @@ for kc = 1:length(chains)
                                 index_vector(4) = conformers(kconf);
                                 for kl = location_vector
                                     index_vector(5) = kl;
-                                    [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');                                    
-                                    atom_index = all_atom_indices(atom_indices~=0);
-                                    if ~isempty(entity.xyz(atom_index,:))
-                                        outputs = outputs + 1;
-                                        switch attribute
-                                            case 'bfactor'
-                                                argout{outputs} = entity.(chain).(residue).(atom).bfactor;
-                                            case 'charge'
-                                                argout{outputs} = entity.(chain).(residue).(atom).charge;
-                                            case 'element'
+                                    outputs = outputs + 1;
+                                    switch attribute
+                                        case 'bfactor'
+                                            argout{outputs} = entity.(chain).(residue).(atom).bfactor;
+                                        case 'charge'
+                                            argout{outputs} = entity.(chain).(residue).(atom).charge;
+                                        case 'element'
+                                            [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');
+                                            atom_index = all_atom_indices(atom_indices~=0);
+                                            if ~isempty(atom_index)
                                                 argout{outputs} = entity.elements(atom_index);
-                                            case 'info'
-                                                info.name = atom;
+                                            else
+                                                outputs = outputs - 1;
+                                            end
+                                        case 'info'
+                                            info.name = atom;
+                                            [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');
+                                            atom_index = all_atom_indices(atom_indices~=0);
+                                            if ~isempty(atom_index)
                                                 info.indices = index_vector;
                                                 info.atom_index = atom_index;
                                                 argout{outputs} = info;
-                                            case 'population'
+                                            else
+                                                outputs = outputs - 1;
+                                            end
+                                        case 'population'
+                                            [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');
+                                            atom_index = all_atom_indices(atom_indices~=0);
+                                            if ~isempty(atom_index)
                                                 argout{outputs} = entity.populations(kconf)*double(entity.occupancies(atom_index))/100;
-                                            case {'xyz'}
+                                            else
+                                                outputs = outputs - 1;
+                                            end
+                                        case 'xyz'
+                                            [~,atom_indices] = ismember(entity.index_array,index_vector,'rows');
+                                            atom_index = all_atom_indices(atom_indices~=0);
+                                            if ~isempty(atom_index)
                                                 argout{outputs} = entity.xyz(atom_index,:);
-                                            otherwise
-                                                argout = {};
-                                                exceptions = {MException('get_atom:unsupported_attribute', 'Attribute %s not supported',attribute)};
-                                                return
-                                        end
+                                            else
+                                                outputs = outputs - 1;
+                                            end
+                                        case 'ecoor'
+                                            all_indices(outputs,:) = index_vector;
+                                        otherwise
+                                            argout = {};
+                                            exceptions = {MException('get_atom:unsupported_attribute', 'Attribute %s not supported',attribute)};
+                                            return
                                     end
                                 end
                             end
@@ -121,4 +153,21 @@ for kc = 1:length(chains)
     end
 end
 
-argout = argout(1:outputs);
+if strcmp(attribute,'ecoor')
+    all_indices = all_indices(1:outputs,:);
+    all_indices = all_indices(1:outputs,:);
+    [~,atom_indices] = ismember(entity.index_array,all_indices,'rows');
+    atom_indices = all_atom_indices(atom_indices~=0);
+    conformer_indices = entity.index_array(atom_indices,4);
+    argout{2} = atom_indices;
+    ecoor = zeros(length(atom_indices),5);
+    ecoor(:,1) = entity.elements(atom_indices);
+    ecoor(:,2:4) = entity.xyz(atom_indices,:);
+    ecoor(:,5) = entity.populations(conformer_indices).*double(entity.occupancies(atom_indices).')/100;    
+    argout{1} = ecoor;
+else
+    argout = argout(1:outputs);
+end
+
+
+

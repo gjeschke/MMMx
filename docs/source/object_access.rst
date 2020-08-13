@@ -168,6 +168,11 @@ Variable               Explanation                                     Type
 ``info.atom_index``    index into atom array                           int
 ``population``         rotamer population or atom occupancy            double
 ``xyz``                Cartesian coordinates per location              (1,3) double
+``ecoor``              argout{1} extended coordinates, argout{2}
+                       corresponding atom indices
+``ecoor, argout{1}``   column 1: atomic numbers; 2-4: Cartesian        (*A*,5) double
+                       coordinates, 5: populations
+``ecoor, argout{2}``   atom indices on entity level                    (*A*,1) int
 ====================== =============================================== ================================ 
 
 -----------------------------

@@ -3,190 +3,102 @@
 Distance distributions
 ==========================
 
-Concept
----------------------------------
+Reasons why distances are distributed
+-------------------------------------
 
-Methods in MMMx should not directly change the ``entity`` variable, but rather use the ``set_*object*`` functions, where *object* is a conformer, a chain, a residue, a rotamer, an atom, or an atom location. 
-The ``entity`` is an MMMx ensemble structure representation in :ref:`MMMx|atomic<MMMx_atomic>` or :ref:`MMMx|RigiFlex<MMMx_RigiFlex>` format.
+In atomic-resolution structures obtained by x-ray crystallography, distances between atoms are defined with a 
+precision given by the B factors. Parts of the macromolecules that are too disordered even in a crystal are not specified. 
+Such disorder may arise from sidechains adopting several rotameric states or from coexistence of many different backbone conformations.
 
-``set`` functions modify attributes of objects, whereas ``get`` functions retrieve them. They are specific to an object hierarchy level in order to avoid unintended behaviour.
-The objects are selected by an :ref:`MMMx address<MMMx_addresses>`. The address can also be ``selected`` for accessing all currently selected objects on this hierarchy level. 
-If an address is provided, selection in the entity changes to the one specified by this address.
+Atomic-resolution structures obtained by NMR are represented by several models, typically 20 models. For small globular proteins,
+which are the mainstay of solution NMR, usually a core of the protein is defined with a atom position variance not much different from the
+properly scaled B factor in a crystal structure of the same protein. Terminal loops, internal loops, and sometimes whole domains may
+exhibit much more variation between models. Usually, this variation can only be interpreted in a binary way: this section is disordered.
+The extent of disorder cannot be specified, as the contribution from a lack of restraints cannot safely be separated from the contribution due
+to coexistence of several conformers.
 
-It is good practice to use ``get_"object"`` to retrieve current attributes, modify them, and reassign the modified attributes by ``set_object``.
-Between the calls of ``get_"object"`` and ``set_"object"``, either the selection in the entity should not be changed (calls without ``address``)
-or the same address must be used in both calls. 
+Distance distributions, as they are accessible by pulse dipolar spectroscopy (PDS) EPR techniques, have the potential for at least
+partial separation of the two contributions. In that, two problems arise from the necessity to introduce labels. First, the 
+label might influence the ensemble of backbone conformers and, second, the non-native spin label side chain may have a broader distributions
+of rotameric states than a native sidechain. The first problem appears to be minor compared to the second one at least in ordered cores.
+More caution and more research may be required for disordered sections. It is generally advisable to integrate PDS data with data from other
+techniques and to assess consistency between the individual restraint sets.
 
-The special function ``set_coor`` can be used to assign modified coordinates. 
-It can be applied to a mixed selection on several hierarchy levels and is faster than coordinate access by the ``set_"object"`` functions.
-
-For transforming coordinates of all atoms of a single conformer, the fastest way is to retrieve coordinates and atom indices with :ref:`get_conformer<get_conformer>` 
-and to use ``entity = set_coor(entity,coor.xyz,coor.indices)`` for reassignment of modified coordinates. For changing conformer populations, directly access ``entity.populations``. 
+The second problem is addressed in MMMx by mdelling the conformational distribution of the spin label sidechain :ref:`with a rotamer library<rotamer_concept>`.
+The same concept is applied to chromophore labels for Förster resonance energy transfer (FRET). 
+Uncertainties in this modelling limit the resolution of structures that rely on PDS or FRET restraints and thus the minimal extent
+of backbone disorder that can safely be recognized as backbone disorder. For the most widely applied methanthiosulfonate spin label (MTSL), 
+the resolution limit is about 2-3 Å.
 
 The attribute ``info`` cannot generally be modified, as this could compromise integrity of addressing or indexing the entity. 
 There are exceptions for fields of info on some hierarchy levels.
 
-Generic syntax
---------------
+Computation of distance distributions
+-------------------------------------
+
+MMMx can compute distance distributions between two atoms, between an atom and a label, 
+or between two labels for individual structural models or ensembles models. All these computations use the same function:
 
 .. code-block:: matlab
 
-    [entity,exceptions] = set_"object"(entity,attribute,argin,address)
-	 
-where the ``attribute`` strings are specific to the "object" hierarchy level 
-("residue", "atom", "location", see below) and argin is a cell vector, 
-whose length is (most of the time) the number of objects of this hierarchy level that were selected by ``address``.
-If the address is ``selected`` or empty, the ``set`` functions operate on objects currently selected in the entity.
-
-There is no ``set`` function for chains. Chain tags can be changed only upon saving the entity, for instance with ``put_pdb``.
-
-Error messages or warnings are reported as MException objects in cell array ``exceptions``. 
-
- 
-Residue
----------
-
-Use this function if you want to operate exclusively on residue level.
-Selections above or below residue level are ignored.
-
-.. code-block:: matlab
-
-    entity = set_residue(entity,attribute,argin)
-    [entity,exceptions] = set_residue(entity,attribute,argin)
-    entity = set_residue(entity,attribute,argin,address)
-    [entity,exceptions] = set_residue(entity,attribute,argin,address)
+    [r_axis,distribution] = distance_distribution(entity,site1,label1,site2,label2)
+    [r_axis,distribution,entity] = distance_distribution(entity,site1,label1,site2,label2)
+    [r_axis,distribution,entity,exceptions] = distance_distribution(entity,site1,label1,site2,label2)
+    [r_axis,distribution] = distance_distribution(entity,site1,label1,site2,label2,options)
+    [r_axis,distribution,entity] = distance_distribution(entity,site1,label1,site2,label2,options)
+    [r_axis,distribution,entity,exceptions] = distance_distribution(entity,site1,label1,site2,label2,options)
 
 Parameters
     *   ``entity`` - entity in MMMx:atomic format
-    *   ``attribute`` - see table below (string)
-    *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
+    *   ``site1`` - residue address of the first site
+    *   ``label1`` - label name (see below) or ``atom.`` *atomname* for an atom in that residue (first site)
+    *   ``site2`` - residue address of the second site
+    *   ``label2`` - label name (see below) or ``atom.`` *atomname* for an atom in that residue (second site)
+	*   ``options`` - computation options, see tble below
 Returns
-    *   ``entity`` - modified entity in MMMx:atomic format
-    *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
+    *   ``r_axis`` - distance axis (Å)
+    *   ``distribution`` - distance distributions
+	*   ``entity`` - input entity augmented by newly computed labels
+    *   ``exceptions`` - error messages  (cell array)
 	
-**Attributes**
+**Options**
 	
 ====================== =============================================== ================================
 Variable               Explanation                                     Type   
 ====================== =============================================== ================================
-``dssp``               DSSP secondary structure assignment             char
-``number``             residue number                                  int
-``populations``        populations for all *R* rotamers                (*R*,1) double
-``sheet``              DSSP information on sheets                      (1,2) double
-``tlc``                three-letter code/PDB residue tag               string
+``rmin``               minimum distance, default: 10 Å                 double
+``rmax``               maximum distance, default: 150 Å                double
+``resolution``         resolution, default: 0.5 Å                      double
+``units``              ``probability`` or  ``density`` (default)       string                    
+``coupled``            for ensemble computations, ``coupled = true``   boolean
+                       implies that both sites are in the same model
+                       (default), else distributions between sites in
+                       different models are also added
+``smoothing``          Standard deviation for Gaussian smoothing,      double
+                       defaults to twice ``options.resolution``
 ====================== =============================================== ================================ 
 
-``set_residue`` raises an exception and returns an empty entity if the requested residue number already exists in that chain.
+For ``options.units = 'probability'``, the sum of the distribution is unity.
+For ``options.units = 'density'``, elements of the distribution vector have the unit 1/Å.  
 
-Three-letter codes are capitalized, any characters that are not alphanumeric are removed, and the string is trimmed and truncated to at most three characters. 
-If the request does not contain alphanumeric characters, an exception is raised and the returned entity is empty. 
+It is good practice to receive the updated entity, as this saves time in later computations involving the same label(s).
 
-The format of ``dssp`` and ``sheet`` information is not checked.
-
------------------------------
-
-Atoms
----------
-
-Use this function if you want to operate on atoms of all rotamers or on all atom locations.
-Selections above atom level are ignored.
-
-Use Matlab built-in function ``cell2mat`` for reforming output for B factor, charge, atomic number, and population into vectors. 
-Note that MMMx supports only one B factor per atom, not distinct B factors for locations.
+The possible choices for ``label1`` and ``label2`` are given by the :ref:`implemented rotamer libraries<label_set>`. The syntax:
 
 .. code-block:: matlab
 
-    entity = set_atom(entity,attribute,argin)
-    [entity,exceptions] = set_atom(entity,attribute,argin)
-    entity = set_atom(entity,attribute,argin,address)
-    [entity,exceptions] = set_atom(entity,attribute,argin,address)
+    [r_axis,distribution] = distance_distribution(entity,'{*}(A)78','atom.CA','{*}(A)135','atom.CA');
 
-Parameters
-    *   ``entity`` - entity in MMMx:atomic format
-    *   ``attribute`` - see table below (string)
-    *   ``argin`` - input arguments (*M*-element cell array for *M* selected locations)
-    *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
-Returns
-    *   ``entity`` - modified entity in MMMx:atomic format
-    *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
-	
-**Attributes**
-	
-====================== =============================================== ================================
-Variable               Explanation                                     Type   
-====================== =============================================== ================================
-``bfactor``            crystallographic B factor                       double
-``charge``             atom charge                                     int
-``coor``               Cartesian coordinate array for *all* locations  (*N*,3) double
-``element``            atomic number                                   int8      
-``name``               atom name                                       string, maximum 4 characters  
-``population``         rotamer population or atom occupancy            double
-``xyz``                Cartesian coordinates per location              (1,3) double
-====================== =============================================== ================================ 
+returns the CA-CA distance distribution for residues 78 and 135 in chain A over all conformers (models) in the entity.
+If only atoms are addressed, it is not necessary to receive the entity, as it remains unchanged.
 
------------------------------
-
-Modifying atom names is generally discouraged, but may be useful for (paramagnetic) substitution of ions.
-The atom name is capitalized, primes are substituted by underscores, and it is truncated to 4 characters.
-   
-Locations
----------
-
-Use this function if you want to operate on selected rotamers or atom locations.
-If the selection is on atom level and no rotamers are selected, only the first location or rotamer is referred to.
-Selections above atom level are ignored.
+The syntax:
 
 .. code-block:: matlab
 
-    entity = set_location(entity,attribute,argin)
-    [entity,exceptions] = set_location(entity,attribute,argin)
-    [entity,exceptions] = set_location(entity,attribute,argin,address)
+    [r_axis,distribution,entity] = distance_distribution(entity,'{3}(A)29','mtsl','{3}(B)507','dota-gd');
 
+returns the distance distribution within conformer 3 between MTSL attached to residue 29 in chain A and a Gd(DOTA) label attached to residue 507 in chain B.
 
-Parameters
-    *   ``entity`` - entity in MMMx:atomic format
-    *   ``attribute`` - see table below (string)
-    *   ``argin`` - input arguments (*M*-element cell array for *M* selected locations)
-    *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection
-Returns
-    *   ``entity`` - modified entity in MMMx:atomic format
-    *   ``exceptions`` - error message, if attribute is not supported  (1-element cell array)
-	
-**Attributes**
-	
-====================== =============================================== ================================
-Variable               Explanation                                     Type   
-====================== =============================================== ================================
-``element``            atomic number                                   int8        
-``population``         rotamer population or atom occupancy            double
-``xyz``                Cartesian coordinates per location              (1,3) double
-====================== =============================================== ================================ 
-
------------------------------
-	 
-
-Coordinates (any level)
-------------------------------------------
-
-For modification of only Cartesian coordinates of a set of objects, it is faster to use ``get_coor`` and ``set_coor``.
-
-If no atom indices are provided, ``set_coor`` expands *all selections on different hierarchy levels* down to location level.
-The function is much faster when the atom indices, originally retrieved by ``get_coor``, are provided instead of an ``address``.
-However, in order to enable better code readability, a call with ``address`` or for the current selection is allowed.
-
-.. code-block:: matlab
-
-    [entity,exceptions] = set_coor(entity,coor)
-    [entity,exceptions] = set_coor(entity,coor,indices)
-    [entity,exceptions] = set_coor(entity,coor,address)
-
-    
-Parameters
-    *   ``entity`` - entity in MMMx:atomic format
-    *   ``coor`` - Cartesian coordinates, (*N*,3) double array for *N* selected or indexed atom locations
-    *   ``indices`` - indices into entity atom tables, (*N*,1) int array
-    *   ``address`` - MMMx address for object selection, 'selected' or empty uses current selection, string
-Returns
-    *   ``entity`` - modified entity in MMMx:atomic format
-    *   ``exceptions`` - cell array of MException objects that occurred upon selection by address
+If the site address misses a conformer specification, conformer 1 is assumed. If the function fails, the distribution ist empty.
 

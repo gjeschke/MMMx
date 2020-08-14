@@ -114,6 +114,8 @@ Ensemble generation assumes torsion potentials and the non-bonded interaction po
 
 For the following labels, rotamer libraries are provided with MMMx:
 
+.. _label_set:
+
 =======  ===============================  ==============  ================ ========= ====================
 Label    Synonyms                         Class           Attachment       Rotamers  `e_\mathrm{attract}`
 =======  ===============================  ==============  ================ ========= ====================

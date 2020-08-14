@@ -163,7 +163,7 @@ if strcmp(attribute,'ecoor')
     ecoor = zeros(length(atom_indices),5);
     ecoor(:,1) = entity.elements(atom_indices);
     ecoor(:,2:4) = entity.xyz(atom_indices,:);
-    ecoor(:,5) = entity.populations(conformer_indices).*double(entity.occupancies(atom_indices).')/100;    
+    ecoor(:,5) = entity.populations(conformer_indices).*double(entity.occupancies(atom_indices))/100;    
     argout{1} = ecoor;
 else
     argout = argout(1:outputs);

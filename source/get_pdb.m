@@ -94,7 +94,7 @@ preserve_residue_numbers = true; % flag for preserving residue numbers
 % pre-allocate Cartesian coordinate, element, and index arrays
 xyz = zeros(maxatoms,3);
 elements = zeros(1,maxatoms,'uint8');
-occupancies = zeros(1,maxatoms,'uint8');
+occupancies = zeros(maxatoms,1,'uint8');
 index_array = zeros(maxatoms,5,'uint16');
 water_indices = zeros(1,maxwater,'uint32');
 atoms = 0;
@@ -106,7 +106,7 @@ curr_chain = '';
 models = 1;
 current_model = 1;
 old_resname = 'HOH'; % avoid location entry for water residues
-populations = zeros(1,maxmodels);
+populations = zeros(maxmodels,1);
 conformers = 0;
 while 1
     tline = fgetl(fid);
@@ -121,6 +121,7 @@ while 1
         if current_model > models
             models = current_model;
         end
+        curr_chain = '';
     end
     % read population information in MMMx:atomic PDB files
     if length(tline) >= 48 && contains(tline,'REMARK 400   MODEL') && contains(tline,'POPULATION')
@@ -277,7 +278,7 @@ entity.water_selected = false;
 if conformers == models
     entity.populations = populations;
 else
-    entity.populations = ones(1,models)/models;
+    entity.populations = ones(models,1)/models;
 end
 entity.selected = 1; % first conformer is selected by default
 

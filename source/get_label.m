@@ -60,8 +60,6 @@ function [argout,entity,exceptions] = get_label(entity,label,attribute,address,f
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
-profile on
-
 % initialize empty output
 argout = cell(1,10000);
 exceptions = {[]};
@@ -271,8 +269,6 @@ end
 
 argout = argout(1:outputs);
 
-profile viewer
-
 function [lib,exceptions,warnings] = get_atom_rot_lib(entity,chain,resname,...
     atom_tag,index_vector,conformers,exceptions,warnings)
 % Makes a minimal pseudo-rotamer library for an atom site
@@ -314,7 +310,7 @@ if isfield(residue,atom_tag)
             else
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('get_label:unknown_atom_location',...
-                    'Atom location %s does not exist',sprintf('{%i}(%s)%s.%s',kconf,chain,...
+                    'Atom location %s does not exist',sprintf('{%i}(%s)%s.%s',conformers{kconf},chain,...
                     resname(2:end),atom_tag));
             end
         end

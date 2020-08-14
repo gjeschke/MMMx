@@ -170,4 +170,5 @@ for r = 1:significant_rotamers
     rotamers.positions(r,:) = position; 
 end
 
+rotamers.positions = rotamers.positions(1:significant_rotamers,:);
 

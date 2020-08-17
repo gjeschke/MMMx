@@ -138,6 +138,7 @@ for r = 1:R
     rotamers.potentials(r) = energy_LJ(side_chain,context,options);
 end
 populations = exp(-rotamers.potentials/(gas_un*T));
+populations(isnan(populations)) = 0;
 rotamers.populations = populations.*rot_lib.populations;
 % partition function for attachment
 rotamers.part_fun = sum(rotamers.populations)/sum(rot_lib.populations);
@@ -147,15 +148,22 @@ rotamers.populations = rotamers.populations/sum(rotamers.populations);
 [rotamers.populations,sorting] = sort(rotamers.populations,'descend');
 rotamers.coor = rotamers.coor(sorting);
 % remove the least populated rotamers above a coverage threshold
-decider = cumsum(rotamers.populations);
-[~,significant_rotamers] = min(abs(decider-1+threshold));
-if decider(significant_rotamers) < 1- threshold
-    significant_rotamers = significant_rotamers + 1;
+if sum(isnan(rotamers.populations)) == length(populations)
+    rotamers.populations = [];
+    rotamers.coor = [];
+    rotamers.numbers = [];
+    return
+else
+    decider = cumsum(rotamers.populations);
+    [~,significant_rotamers] = min(abs(decider-1+threshold));
+    if decider(significant_rotamers) < 1- threshold
+        significant_rotamers = significant_rotamers + 1;
+    end
+    rotamers.populations = rotamers.populations(1:significant_rotamers);
+    rotamers.populations = rotamers.populations/sum(rotamers.populations);
+    rotamers.coor = rotamers.coor(1:significant_rotamers);
+    rotamers.numbers = sorting(1:significant_rotamers);
 end
-rotamers.populations = rotamers.populations(1:significant_rotamers);
-rotamers.populations = rotamers.populations/sum(rotamers.populations);
-rotamers.coor = rotamers.coor(1:significant_rotamers);
-rotamers.numbers = sorting(1:significant_rotamers);
 
 % compute label positions
 position_indices =rot_lib.position(:,1);

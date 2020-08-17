@@ -147,12 +147,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#generic-syntax">Generic syntax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#residue">Residue</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#atoms">Atoms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#locations">Locations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#coordinates-any-level">Coordinates (any level)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
 </ul>
 </li>
 </ul>
@@ -311,27 +307,35 @@ entity, while their indices are stored in the <code class="docutils literal notr
 <div class="section" id="the-get-label-function">
 <span id="get-label"></span><h2>The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function<a class="headerlink" href="#the-get-label-function" title="Permalink to this headline">¶</a></h2>
 <p>Use this function if you want to label a residue with a particular label or want to retrieve attributes of a previously computed label.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
-<span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attribute</span><span class="p">)</span>
-<span class="n">argout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
-<span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argsout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">)</span>
+<span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">)</span>
+<span class="n">argsout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+<span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
 </pre></div>
 </div>
 <dl class="simple">
 <dt>Parameters</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">label</span></code> - label name</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">attribute</span></code> - see table below (string)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code> - either a string (see table below) or a cell array of strings</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx residue address</p></li>
 </ul>
 </dd>
 <dt>Returns</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">argout</span></code> - output arguments (<em>M</em>-element cell array)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argsout</span></code> - output arguments (<em>M</em>-element cell array for a single attribute)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message (1-element cell array)</p></li>
 </ul>
 </dd>
 </dl>
 <p>Either a rotamer library for <code class="docutils literal notranslate"><span class="pre">label</span></code> must be registered with MMMx (see below) or the label name must be <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;atname&gt;</span></code> is an existing atom name for this residue.</p>
+<p>Requesting several attributes for the same site (residue) simultaneously can lead to a significant speedup in large entitities.
+The gain in speed may be very large if the labels were already precomputed. To do this, arrange all attributes in a cell of strings and split the output cell array:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">site</span> <span class="p">=</span> <span class="n">sprintf</span><span class="p">(</span><span class="s">&#39;{%i}%s&#39;</span><span class="p">,</span><span class="n">conformer_number</span><span class="p">,</span><span class="n">residue</span><span class="p">);</span>
+<span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,{</span><span class="s">&#39;positions&#39;</span><span class="p">,</span><span class="s">&#39;populations&#39;</span><span class="p">},</span><span class="n">site</span><span class="p">);</span>
+<span class="n">positions</span> <span class="p">=</span> <span class="n">argsout</span><span class="p">{</span><span class="mi">1</span><span class="p">}{</span><span class="mi">1</span><span class="p">};</span>
+<span class="n">populations</span> <span class="p">=</span> <span class="n">argsout</span><span class="p">{</span><span class="mi">2</span><span class="p">}{</span><span class="mi">1</span><span class="p">};</span>
+</pre></div>
+</div>
 <p><strong>Attributes</strong></p>
 <table class="docutils align-default">
 <colgroup>
@@ -374,6 +378,14 @@ entity, while their indices are stored in the <code class="docutils literal notr
 <td><p>site address</p></td>
 <td><p>string</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">part_fun</span></code></p></td>
+<td><p>attachment partitition function</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">potentials</span></code></p></td>
+<td><p>attachment potentials (J/mol)</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
+</tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">torsion</span></code></p></td>
 <td><p><em>T</em> sidechain torsions for <em>R</em> rotamers</p></td>
 <td><p>(<em>R,T</em>) double</p></td>
@@ -390,6 +402,14 @@ entity, while their indices are stored in the <code class="docutils literal notr
 <td><p>positions for <em>R</em> rotamers</p></td>
 <td><p>(<em>R</em>,3) double</p></td>
 </tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">numbers</span></code></p></td>
+<td><p>numbers of the rotamers in the library</p></td>
+<td><p>(<em>R</em>,1) int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor</span></code></p></td>
+<td><p>full atom coordinates of <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) cell</p></td>
+</tr>
 <tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">affine</span></code></p></td>
 <td><p>affine matrix that transforms from the standard
 frame to the site frame</p></td>
@@ -399,13 +419,23 @@ frame to the site frame</p></td>
 </table>
 <p>Note that SMILES strings for nitroxides tend to be interpreted as the corresponding hydroxylamines by some programs, notably by ChemDraw.
 For libraries that contain several stereoisomers, the SMILES string refers to only one of them.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">orientations</span></code> can be used for simulating orientation selection in pulsed dipolar spectroscopy for spin labels
+or <img class="math" src="_images/math/566994edc83ec94a2e889bd85118baad3d17e18b.svg" alt="\kappa"/> averaging for FRET chromophores. In order to compute unit vectors along the <img class="math" src="_images/math/91ed8ef79d71a0d072a185f703a0d26853a2ded8.svg" alt="x,y,z"/> axes of the label molecular frame
+in the entity frame (direction cosine matrix <code class="docutils literal notranslate"><span class="pre">DCM</span></code>, the unit vectors are matrix rows) for rotamer <img class="math" src="_images/math/025b2f075298c0a898260ebea2e68d6e737a3f90.svg" alt="r=1"/>, use the code (example):</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">entity</span> <span class="p">=</span> <span class="n">get_pdb</span><span class="p">(</span><span class="s">&#39;2lzm&#39;</span><span class="p">);</span> <span class="c">% load structure of T4 Lysozyme with ID 2lzm from PDB server</span>
+<span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="s">&#39;mtsl&#39;</span><span class="p">,</span><span class="s">&#39;orientations&#39;</span><span class="p">,</span><span class="s">&#39;(A)131&#39;</span><span class="p">);</span> <span class="c">% get MTSL label orientation at residue 13</span>
+<span class="n">orientations</span> <span class="p">=</span> <span class="n">argout</span><span class="p">{</span><span class="mi">1</span><span class="p">};</span> <span class="c">% extract from cell output</span>
+<span class="n">r</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">DCM</span> <span class="p">=</span> <span class="n">Euler2DCM</span><span class="p">(</span><span class="n">orientations</span><span class="p">(</span><span class="n">r</span><span class="p">,:));</span> <span class="c">% compute direction cosine matrix</span>
+</pre></div>
+</div>
 </div>
 <div class="section" id="set-of-libraries">
 <h2>Set of libraries<a class="headerlink" href="#set-of-libraries" title="Permalink to this headline">¶</a></h2>
 <p>MMMx uses a single type of rotamer libraries, built by hierarchical clustering of Monte-Carlo generated conformer ensembles.
 Ensemble generation assumes torsion potentials and the non-bonded interaction potential of UFF.</p>
 <p>For the following labels, rotamer libraries are provided with MMMx:</p>
-<table class="docutils align-default">
+<table class="docutils align-default" id="label-set">
 <colgroup>
 <col style="width: 7%" />
 <col style="width: 32%" />

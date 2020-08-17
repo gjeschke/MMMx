@@ -147,12 +147,8 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#generic-syntax">Generic syntax</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#residue">Residue</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#atoms">Atoms</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#locations">Locations</a></li>
-<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#coordinates-any-level">Coordinates (any level)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
 </ul>
 </li>
 </ul>
@@ -519,6 +515,20 @@ Note that MMMx supports only one B factor per atom, not distinct B factors for l
 <tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
 <td><p>Cartesian coordinates per location</p></td>
 <td><p>(1,3) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ecoor</span></code></p></td>
+<td><p>argout{1} extended coordinates, argout{2}
+corresponding atom indices</p></td>
+<td></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ecoor,</span> <span class="pre">argout{1}</span></code></p></td>
+<td><p>column 1: atomic numbers; 2-4: Cartesian
+coordinates, 5: populations</p></td>
+<td><p>(<em>A</em>,5) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ecoor,</span> <span class="pre">argout{2}</span></code></p></td>
+<td><p>atom indices on entity level</p></td>
+<td><p>(<em>A</em>,1) int</p></td>
 </tr>
 </tbody>
 </table>

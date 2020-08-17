@@ -1,16 +1,16 @@
-function [argout,entity,exceptions] = get_label(entity,label,attribute,address,force)
+function [argsout,entity,exceptions] = get_label(entity,label,attributes,address,force)
 %
 % GET_LABEL Retrieves attributes of a label, computes the label if required
 %
-%   [argout,entity,exceptions] = GET_LABEL(entity,label,attribute)
+%   [argout,entity,exceptions] = GET_LABEL(entity,label,attributes)
 %   Provides attribute values and possibly exceptions for sites selected
 %   in an entity at residue level
 %
-%   [argout,entity,exceptions] = GET_LABEL(entity,label,attribute,address)
+%   [argout,entity,exceptions] = GET_LABEL(entity,label,attributes,address)
 %   Provides attribute values and possibly exceptions for sites selected
 %   by a residue address
 %
-%   [argout,emtity,exceptions] = GET_LABEL(entity,label,attribute,address,force)
+%   [argout,emtity,exceptions] = GET_LABEL(entity,label,attributes,address,force)
 %   if force = true, recomputation is performed even if the label had been
 %   computed before, defaults to false
 %
@@ -20,8 +20,9 @@ function [argout,entity,exceptions] = get_label(entity,label,attribute,address,f
 %              have a rotamer library for this label or it must be
 %              atom.<atname>, where <atname> is a valid atom name in the
 %              residue, such as 'CA' or 'Cu'
-% attribute    residue attribute to be retrieved, string, defaults to
-%              'info'
+% attributes   residue attribute to be retrieved, string, defaults to
+%              'info', either a string or a cell array of strings for
+%              multiple simultaneous requests (saves time on selection)
 %              attribute    output                           Type
 %              ------------------------------------------------------------
 %              info         rotamer library information      struct
@@ -51,7 +52,9 @@ function [argout,entity,exceptions] = get_label(entity,label,attribute,address,f
 %              to false
 %
 % OUTPUT
-% argout       cell array of outputs, one cell for each site, see above
+% argsout      cell array of outputs, one cell for each site, see above
+%              for a request with multiple attributes, cell array of cell
+%              arrays, with outer level corresponding to attributes
 % entity       input entity augmented by label information
 % exceptions   cell vector of MException objects if something went wrong, 
 %              defaults to one cell holding an empty array
@@ -61,9 +64,15 @@ function [argout,entity,exceptions] = get_label(entity,label,attribute,address,f
 % Copyright(c) 2020: Gunnar Jeschke
 
 % initialize empty output
-argout = cell(1,10000);
 exceptions = {[]};
 warnings = 0;
+
+% reform single string input to cell aaray with on element
+if ~iscell(attributes)
+    attributes = {attributes};
+end
+num_attributes = length(attributes);
+argsout = cell(1,num_attributes);
 
 % convert label name into standard name
 
@@ -75,7 +84,7 @@ if isempty(tlc)
         atom_site = true;
         atom_tag = upper(label(6:end));
     else
-        argout = {};
+        argsout = {};
         exceptions = {MException('get_label:unknown_label', 'Label %s is not known to MMMx',label)};
         return
     end
@@ -89,8 +98,8 @@ end
 if ~exist('address','var') || isempty(address)
     address = 'selected';
 end
-if ~exist('attribute','var') || isempty(attribute)
-    attribute = 'info';
+if ~exist('attributes','var') || isempty(attributes)
+    attributes = {'info'};
 end
 if ~exist('force','var') || isempty(force)
     force = false;
@@ -99,7 +108,6 @@ end
 % select the objects by the provided address
 entity = select(entity,address,true);
 
-outputs = 0; % counter for the number of outputs
 index_vector = zeros(1,5,'uint16');
 conformers = entity.selected; % selected conformers
 % scan entity for selected locations
@@ -126,140 +134,146 @@ for kc = 1:length(chains)
                             continue
                         end
                     end
-                    switch attribute
-                        case 'info' % depends only on rotamer library
-                            outputs = outputs + 1;
-                            conformer_string = sprintf('%i',conformers(1));
-                            for kconf = 2:length(conformers)
-                                conformer_string = sprintf('%s,%i',conformer_string,conformers(kconf));
-                            end
-                            info.tlc = lib.rot_lib.tlc;
-                            info.class = lib.rot_lib.class;
-                            info.smiles = lib.rot_lib.SMILES;
-                            info.f_factor = lib.rot_lib.f_factor;
-                            info.ref_pop = lib.rot_lib.populations;
-                            info.site = sprintf('{%s}(%s)%s',conformer_string,chain,residue(2:end));
-                            argout{outputs} = info;
-                        case 'torsion' % depends only on rotamer library
-                            outputs = outputs + 1;
-                            if atom_site
-                                argout{outputs} = lib.torsion;
-                            else
-                                torsion = lib.rot_lib.rotamers(1).torsion;
-                                torsion = zeros(1,length(torsion));
-                                for kt = 1:length(torsion)
-                                    torsion(kt,:) = lib.rot_lib.rotamers(kt).torsion;
-                                end
-                                argout{outputs} = torsion;
-                            end
-                        case 'orientations' % depends on attachment
-                            if atom_site
+                    for kattr = 1:num_attributes
+                        attribute = attributes{kattr};
+                        outputs = 0; % counter for the number of outputs
+                        argout = cell(1,65000);
+                        switch attribute
+                            case 'info' % depends only on rotamer library
                                 outputs = outputs + 1;
-                                argout{outputs} = lib.orientations;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
-                                    outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).orientations{conformers(kconf)};
+                                conformer_string = sprintf('%i',conformers(1));
+                                for kconf = 2:length(conformers)
+                                    conformer_string = sprintf('%s,%i',conformer_string,conformers(kconf));
                                 end
-                            end
-                        case 'populations' % depends on attachment
-                            if atom_site
+                                info.tlc = lib.rot_lib.tlc;
+                                info.class = lib.rot_lib.class;
+                                info.smiles = lib.rot_lib.SMILES;
+                                info.f_factor = lib.rot_lib.f_factor;
+                                info.ref_pop = lib.rot_lib.populations;
+                                info.site = sprintf('{%s}(%s)%s',conformer_string,chain,residue(2:end));
+                                argout{outputs} = info;
+                            case 'torsion' % depends only on rotamer library
                                 outputs = outputs + 1;
-                                argout{outputs} = lib.populations;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
-                                    outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).populations{conformers(kconf)};
+                                if atom_site
+                                    argout{outputs} = lib.torsion;
+                                else
+                                    torsion = lib.rot_lib.rotamers(1).torsion;
+                                    torsion = zeros(1,length(torsion));
+                                    for kt = 1:length(torsion)
+                                        torsion(kt,:) = lib.rot_lib.rotamers(kt).torsion;
+                                    end
+                                    argout{outputs} = torsion;
                                 end
-                            end
-                        case 'positions' % depends on attachment
-                            if atom_site
-                                outputs = outputs + 1;
-                                argout{outputs} = lib.positions;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
+                            case 'orientations' % depends on attachment
+                                if atom_site
                                     outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).positions{conformers(kconf)};
+                                    argout{outputs} = lib.orientations;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).orientations{conformers(kconf)};
+                                    end
                                 end
-                            end
-                        case 'affine' % depends on attachment
-                            if atom_site
-                                outputs = outputs + 1;
-                                argout{outputs} = lib.affine;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
+                            case 'populations' % depends on attachment
+                                if atom_site
                                     outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).affine{conformers(kconf)};
+                                    argout{outputs} = lib.populations;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).populations{conformers(kconf)};
+                                    end
                                 end
-                            end
-                        case 'part_fun' % depends on attachment
-                            if atom_site
-                                outputs = outputs + 1;
-                              argout{outputs} = 1;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
+                            case 'positions' % depends on attachment
+                                if atom_site
                                     outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).part_fun{conformers(kconf)};
+                                    argout{outputs} = lib.positions;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).positions{conformers(kconf)};
+                                    end
                                 end
-                            end
-                        case 'coor' % depends on attachment
-                            if atom_site
-                                outputs = outputs + 1;
-                              argout{outputs} = lib.positions;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
+                            case 'affine' % depends on attachment
+                                if atom_site
                                     outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).coor{conformers(kconf)};
+                                    argout{outputs} = lib.affine;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).affine{conformers(kconf)};
+                                    end
                                 end
-                            end
-                        case 'numbers' % depends on attachment
-                            if atom_site
-                                outputs = outputs + 1;
-                                argout{outputs} = 1;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
+                            case 'part_fun' % depends on attachment
+                                if atom_site
                                     outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).numbers{conformers(kconf)};
+                                    argout{outputs} = 1;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).part_fun{conformers(kconf)};
+                                    end
                                 end
-                            end
-                        case 'potentials' % depends on attachment
-                            if atom_site
-                                outputs = outputs + 1;
-                                argout{outputs} = 1;
-                            else
-                                for kconf = 1:length(conformers)
-                                    entity = label_if_required(entity,chain,...
-                                        residue,conformers(kconf),tlc,lib,force);
+                            case 'coor' % depends on attachment
+                                if atom_site
                                     outputs = outputs + 1;
-                                    argout{outputs} = ...
-                                        entity.(chain).(residue).labels.(tlc).potentials{conformers(kconf)};
+                                    argout{outputs} = lib.positions;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).coor{conformers(kconf)};
+                                    end
                                 end
-                            end
-                        otherwise
-                            argout = {};
-                            exceptions = {MException('get_label:unsupported_attribute', 'Attribute %s not supported',attribute)};
-                            return
+                            case 'numbers' % depends on attachment
+                                if atom_site
+                                    outputs = outputs + 1;
+                                    argout{outputs} = 1;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).numbers{conformers(kconf)};
+                                    end
+                                end
+                            case 'potentials' % depends on attachment
+                                if atom_site
+                                    outputs = outputs + 1;
+                                    argout{outputs} = 1;
+                                else
+                                    for kconf = 1:length(conformers)
+                                        entity = label_if_required(entity,chain,...
+                                            residue,conformers(kconf),tlc,lib,force);
+                                        outputs = outputs + 1;
+                                        argout{outputs} = ...
+                                            entity.(chain).(residue).labels.(tlc).potentials{conformers(kconf)};
+                                    end
+                                end
+                            otherwise
+                                argsout = {};
+                                exceptions = {MException('get_label:unsupported_attribute', 'Attribute %s not supported',attribute)};
+                                return
+                        end
+                        argsout{kattr} = argout(1:outputs);
                     end
                 end
             end
@@ -267,7 +281,9 @@ for kc = 1:length(chains)
     end
 end
 
-argout = argout(1:outputs);
+if num_attributes == 1
+    argsout = argsout{1};
+end
 
 function [lib,exceptions,warnings] = get_atom_rot_lib(entity,chain,resname,...
     atom_tag,index_vector,conformers,exceptions,warnings)

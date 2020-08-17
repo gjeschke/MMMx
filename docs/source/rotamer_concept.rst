@@ -50,22 +50,32 @@ Use this function if you want to label a residue with a particular label or want
 
 .. code-block:: matlab
 
-    argout = get_label(entity,label,attribute)
-    [argout,exceptions] = get_label(entity,label,attribute)
-    argout = get_label(entity,label,attribute,address)
-    [argout,exceptions] = get_label(entity,label,attribute,address)
+    argsout = get_label(entity,label,attributes)
+    [argsout,exceptions] = get_label(entity,label,attributes)
+    argsout = get_label(entity,label,attributes,address)
+    [argsout,exceptions] = get_label(entity,label,attributes,address)
 
 
 Parameters
     *   ``entity`` - entity in MMMx:atomic format
     *   ``label`` - label name
-    *   ``attribute`` - see table below (string)
+    *   ``attributes`` - either a string (see table below) or a cell array of strings
     *   ``address`` - MMMx residue address
 Returns
-    *   ``argout`` - output arguments (*M*-element cell array)
+    *   ``argsout`` - output arguments (*M*-element cell array for a single attribute)
     *   ``exceptions`` - error message (1-element cell array)
 	
 Either a rotamer library for ``label`` must be registered with MMMx (see below) or the label name must be ``atom.<atname>``, where ``<atname>`` is an existing atom name for this residue.
+
+Requesting several attributes for the same site (residue) simultaneously can lead to a significant speedup in large entitities.
+The gain in speed may be very large if the labels were already precomputed. To do this, arrange all attributes in a cell of strings and split the output cell array:
+
+.. code-block:: matlab
+
+    site = sprintf('{%i}%s',conformer_number,residue);
+    [argsout,entity,exceptions] = get_label(entity,label,{'positions','populations'},site);
+    positions = argsout{1}{1};
+    populations = argsout{2}{1};
 	
 **Attributes**
 	

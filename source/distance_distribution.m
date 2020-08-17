@@ -223,34 +223,35 @@ profile on
 if options.coupled
     for kconf = conformers1
         site1 = sprintf('{%i}%s',kconf,residue1);
-        [argout,entity,exceptions] = get_label(entity,label1,'positions',site1);
+        [argsout,entity,exceptions] = get_label(entity,label1,{'positions','populations'},site1);
         if ~isempty(exceptions{1})
             distribution = [];
             return
         end
-        positions1 = argout{1};
-        [argout,entity,exceptions] = get_label(entity,label1,'populations',site1);
-        if ~isempty(exceptions{1})
-            distribution = [];
-            return
-        end
-        populations1 = argout{1};
+        positions1 = argsout{1}{1};
+        populations1 = argsout{2}{1};
         site2 = sprintf('{%i}%s',kconf,residue2);
-        [argout,entity,exceptions] = get_label(entity,label2,'positions',site2);
+        [argsout,entity,exceptions] = get_label(entity,label2,{'positions','populations'},site2);
         if ~isempty(exceptions{1})
             distribution = [];
             return
         end
-        positions2 = argout{1};
-        [argout,entity,exceptions] = get_label(entity,label2,'populations',site2);
-        if ~isempty(exceptions{1})
-            distribution = [];
-            return
+        positions2 = argsout{1}{1};
+        populations2 = argsout{2}{1};
+        % exclude, if one of the sites could not be labelled, raise an
+        % exception
+        if isempty(populations1) || isempty(populations2)
+            warnings = warnings + 1;
+            exceptions{warnings} = MException('distance_distribution:failed_site_pair', 'For %s-%s, the distance distribution is empty.',site1,site2);
+            missing = 0; % because the warning was already raised
+        else % if it worked out, add distribution
+            [pair_distribution,missing] = get_pair_distribution(r_axis,...
+                positions1,populations1,positions2,populations2,options.smoothing);
+            if sum(isnan(pair_distribution))
+                disp('Aber hallo!');
+            end
+            distribution = distribution + (1-missing)*pair_distribution;
         end
-        populations2 = argout{1};
-        [pair_distribution,missing] = get_pair_distribution(r_axis,...
-            positions1,populations1,positions2,populations2,options.smoothing);
-        distribution = distribution + (1-missing)*pair_distribution;
         if missing > 0.5e-2
             warnings = warnings + 1;
             exceptions{warnings} = MException('distance_distribution:missing_population', 'For %s-%s, %4.1f%% of population are outside distance range',site1,site2,100*missing);
@@ -258,40 +259,64 @@ if options.coupled
     end
 % in uncoupled mode, loop over both conformer ranges
 else
+    % precompute the two sets of positions and populations
+    all_positions1 = cell(1,length(conformers1));
+    all_populations1 = cell(1,length(conformers1));
     for kconf1 = conformers1
         site1 = sprintf('{%i}%s',kconf1,residue1);
-        [argout,entity,exceptions] = get_label(entity,label1,'positions',site1);
+        [argsout,entity,exceptions] = get_label(entity,label1,{'positions','populations'},site1);
         if ~isempty(exceptions{1})
             distribution = [];
             return
         end
-        positions1 = argout{1};
-        [argout,entity,exceptions] = get_label(entity,label1,'populations',site1);
+        all_positions1{kconf1} = argsout{1}{1};
+        all_populations1{kconf1} = argsout{2}{1};
+    end
+    all_positions2 = cell(1,length(conformers2));
+    all_populations2 = cell(1,length(conformers2));
+    for kconf2 = conformers2
+        site2 = sprintf('{%i}%s',kconf2,residue2);
+        [argsout,entity,exceptions] = get_label(entity,label2,{'positions','populations'},site2);
         if ~isempty(exceptions{1})
             distribution = [];
             return
         end
-        populations1 = argout{1};
+        all_positions2{kconf2} = argsout{1}{1};
+        all_populations2{kconf2} = argsout{2}{1};
+    end
+    for kconf1 = conformers1
+%         site1 = sprintf('{%i}%s',kconf1,residue1);
+%         [argsout,entity,exceptions] = get_label(entity,label1,{'positions','populations'},site1);
+%         if ~isempty(exceptions{1})
+%             distribution = [];
+%             return
+%         end
+%         positions1 = argsout{1}{1};
+%         populations1 = argsout{2}{1};
+        positions1 = all_positions1{kconf1};
+        populations1 = all_populations1{kconf1};
         for kconf2 = conformers2
-            site2 = sprintf('{%i}%s',kconf2,residue2);
-            [argout,entity,exceptions] = get_label(entity,label2,'positions',site2);
-            if ~isempty(exceptions{1})
-                distribution = [];
-                return
-            end
-            positions2 = argout{1};
-            [argout,entity,exceptions] = get_label(entity,label2,'populations',site2);
-            if ~isempty(exceptions{1})
-                distribution = [];
-                return
-            end
-            populations2 = argout{1};
-            [pair_distribution,missing] = get_pair_distribution(r_axis,...
-                positions1,populations1,positions2,populations2,options.smoothing);
-            distribution = distribution + (1-missing)*pair_distribution;
-            if missing > 0.5e-2
+%             site2 = sprintf('{%i}%s',kconf2,residue2);
+%             [argsout,entity,exceptions] = get_label(entity,label2,{'positions','populations'},site2);
+%             if ~isempty(exceptions{1})
+%                 distribution = [];
+%                 return
+%             end
+%             positions2 = argsout{1}{1};
+%             populations2 = argsout{2}{1};
+            positions2 = all_positions2{kconf2};
+            populations2 = all_populations2{kconf2};
+            if isempty(populations1) || isempty(populations2)
                 warnings = warnings + 1;
-                exceptions{warnings} = MException('distance_distribution:missing_population', 'For %s-%s, %4.1f%% of population are outside distance range',site1,site2,100*missing);
+                exceptions{warnings} = MException('distance_distribution:failed_site_pair', 'For %s-%s, the distance distribution is empty.',site1,site2);
+            else
+                [pair_distribution,missing] = get_pair_distribution(r_axis,...
+                    positions1,populations1,positions2,populations2,options.smoothing);
+                distribution = distribution + (1-missing)*pair_distribution;
+                if missing > 0.5e-2
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('distance_distribution:missing_population', 'For %s-%s, %4.1f%% of population are outside distance range',site1,site2,100*missing);
+                end
             end
         end
     end
@@ -303,6 +328,11 @@ distribution = distribution/sum(distribution);
 % rescale units if requested
 if strcmpi(options.units,'density')
     distribution = distribution/options.resolution;
+end
+
+if sum(isnan(distribution))
+    distribution = [];
+    exceptions = {MException('distance_distribution:empty_distribution', 'Distance distribution is empty for this site pair in the requested range')};
 end
 
 profile viewer
@@ -349,5 +379,5 @@ inverted_distribution = ifft(pair_distribution).*ifft(broadening);
 pair_distribution = real(fft(inverted_distribution));
 
 % normalization
-pair_distribution = pair_distribution/max(pair_distribution);
+pair_distribution = (1-missing)*pair_distribution/max(pair_distribution);
 

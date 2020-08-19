@@ -7,7 +7,7 @@
   
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Rotamer libraries &mdash; MMMx  documentation</title>
+  <title>Log files &mdash; MMMx  documentation</title>
   
 
   
@@ -44,8 +44,8 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Distance distributions" href="distance_distributions.html" />
-    <link rel="prev" title="Modelling modules" href="modelling_modules.html" /> 
+    <link rel="next" title="Modelling modules" href="modelling_modules.html" />
+    <link rel="prev" title="Control files" href="control_files.html" /> 
 </head>
 
 <body class="wy-body-for-nav">
@@ -137,7 +137,7 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">Modelling</span></p>
-<ul>
+<ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
 <li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
@@ -145,12 +145,12 @@
 <li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#implementation">Implementation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#set-of-libraries">Set of libraries</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#rotamer-library-format">Rotamer library format</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Log files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rotamer-library-format">Rotamer library format</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modelling_modules.html">Modelling modules</a><ul>
@@ -163,13 +163,13 @@
 </li>
 </ul>
 <p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Rotamer libraries</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#implementation">Implementation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#set-of-libraries">Set of libraries</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#rotamer-library-format">Rotamer library format</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
@@ -280,7 +280,7 @@
     
       <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
         
-      <li>Rotamer libraries</li>
+      <li>Log files</li>
     
     
       <li class="wy-breadcrumbs-aside">
@@ -297,8 +297,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
             
-  <div class="section" id="rotamer-libraries">
-<span id="rotamer-concept"></span><h1>Rotamer libraries<a class="headerlink" href="#rotamer-libraries" title="Permalink to this headline">¶</a></h1>
+  <div class="section" id="log-files">
+<span id="id1"></span><h1>Log files<a class="headerlink" href="#log-files" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="concept">
 <h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
 <p>As previously established in MMM, site-directed labeling is modelled in MMMx based on pre-computed rotamer libraries of the label side groups.
@@ -331,7 +331,7 @@ entity, while their indices are stored in the <code class="docutils literal notr
 </ul>
 </div>
 <div class="section" id="the-get-label-function">
-<span id="get-label"></span><h2>The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function<a class="headerlink" href="#the-get-label-function" title="Permalink to this headline">¶</a></h2>
+<span id="have-got-it"></span><h2>The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function<a class="headerlink" href="#the-get-label-function" title="Permalink to this headline">¶</a></h2>
 <p>Use this function if you want to label a residue with a particular label or want to retrieve attributes of a previously computed label.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argsout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">)</span>
 <span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">)</span>
@@ -854,10 +854,10 @@ by atomic number</p></td>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="distance_distributions.html" class="btn btn-neutral float-right" title="Distance distributions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="modelling_modules.html" class="btn btn-neutral float-right" title="Modelling modules" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="modelling_modules.html" class="btn btn-neutral float-left" title="Modelling modules" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="control_files.html" class="btn btn-neutral float-left" title="Control files" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

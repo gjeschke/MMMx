@@ -27,6 +27,15 @@ MMMx 0.0.0 Documentation
 	
 .. toctree::
     :hidden:
+    :caption: Modelling
+    :maxdepth: 2
+
+    ./control_files
+    ./log_files
+    ./modelling_modules
+	
+.. toctree::
+    :hidden:
     :caption: Spectroscopic labels
     :maxdepth: 2
 

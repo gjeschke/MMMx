@@ -147,10 +147,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="log_files.html#concept">Concept</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#implementation">Implementation</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#set-of-libraries">Set of libraries</a></li>
-<li class="toctree-l2"><a class="reference internal" href="log_files.html#rotamer-library-format">Rotamer library format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log_files.html#conventions">Conventions</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="modelling_modules.html">Modelling modules</a><ul>
@@ -319,6 +316,7 @@
 </dd>
 </dl>
 <p>When MMModel is activated from the GUI, the control file can be selected with a file browser and exceptions are reported through the status text field of the GUI.</p>
+<p>The control file can have any extension. If it has none and such a file without extension does not exist or is in the wrong format, <code class="docutils literal notranslate"><span class="pre">.mxc</span></code> is tried.</p>
 <p>Any call to MMModel generates a <a class="reference internal" href="log_files.html#log-files"><span class="std std-ref">log file</span></a>. The default file name is <code class="docutils literal notranslate"><span class="pre">MMModel_yyyy_mm_dd_HH_MM.log</span></code>, where <code class="docutils literal notranslate"><span class="pre">yyyy</span></code>, <code class="docutils literal notranslate"><span class="pre">mm</span></code>, <code class="docutils literal notranslate"><span class="pre">dd</span></code>, <code class="docutils literal notranslate"><span class="pre">HH</span></code>, <code class="docutils literal notranslate"><span class="pre">MM</span></code>
 specify the year, month, day, hour, and minute of the starting time of <code class="docutils literal notranslate"><span class="pre">MMModel</span></code>. A different log file name can be specified in the control file.</p>
 <p>Further output files may be generated depending on the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling modules</span></a> that are called in the control file.</p>
@@ -327,16 +325,25 @@ Where possible, MMMx checks whether restraints in a sequence of module calls are
 </div>
 <div class="section" id="syntax">
 <h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">¶</a></h2>
-<p>The syntax of MMMx control files is akin of the syntax of MMM restraint files, but MMM restraint files cannot be used without editing as MMMx control files.</p>
+<p>The syntax of MMMx control files is akin of the syntax of MMM restraint files, but MMM restraint files cannot be used without editing as MMMx control files.
+Keywords are case-insensitive.</p>
 <p>The MMMx control file consists of blocks corresponding to individual <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling modules</span></a>. Outside such blocks, keywords for input and output are supported.
 Keywords outside of blocks have the form <code class="docutils literal notranslate"><span class="pre">#</span></code> <em>keyword</em>.</p>
 <p>Comments are initiated by <code class="docutils literal notranslate"><span class="pre">%</span></code> and can appear anywhere. The rest of the line after a <code class="docutils literal notranslate"><span class="pre">%</span></code> character is ignored.</p>
 <p>Module blocks are opened by <code class="docutils literal notranslate"><span class="pre">!</span></code> <em>module</em>, where <em>module</em> is the name of the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling module</span></a>. They are closed by <code class="docutils literal notranslate"><span class="pre">.</span></code> <em>module</em>.
 If a new block is opened or the file ends before the closing line of a block, <code class="docutils literal notranslate"><span class="pre">MMModel</span></code> proceeds, but raises a warning.</p>
 <p>The syntax</p>
-<p><code class="docutils literal notranslate"><span class="pre">!</span></code> <em>module</em> [<em>entity_1</em> [<em>entity_2</em>] …] passes entities to the module, where <em>entity_1</em>, <em>entity_2</em> etc. are entity numbers. By default, a module requiring one entity will be passed the last entity that was used or generated.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">!</span></code><em>module</em> [<em>entity_1</em> [<em>entity_2</em>] …]</p>
+</div>
+<p>passes entities to the module, where <em>entity_1</em>, <em>entity_2</em> etc. are entity numbers. By default, a module requiring one entity will be passed the last entity that was used or generated.</p>
 <p>The syntax</p>
-<p><code class="docutils literal notranslate"><span class="pre">.</span></code> <em>module</em> [<em>entity_1</em> [<em>entity_2</em>] …] passes entities from the module to <code class="docutils literal notranslate"><span class="pre">MMModel</span></code>, where <em>entity_1</em>, <em>entity_2</em> etc. are internal entity numbers.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">.</span></code><em>module</em> [<em>entity_1</em> [<em>entity_2</em>] …]</p>
+</div>
+<p>passes entities from the module to <code class="docutils literal notranslate"><span class="pre">MMModel</span></code>, where <em>entity_1</em>, <em>entity_2</em> etc. are internal entity numbers.</p>
 <p>The control file ends with a <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">end</span></code> statement. If it is missing, MMMx raises a warning. All lines after an <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">end</span></code> statement are ignored.</p>
 <p>Each module can define its own keywords for restraint specification and run options. In principle, the same keyword can be used with different meanings in different modules, except for restraint keywords.
 However, such practice is discouraged.
@@ -345,13 +352,205 @@ It is allowed and good practice to end such a block with <code class="docutils l
 </div>
 <div class="section" id="input-and-output-specification">
 <h2>Input and output specification<a class="headerlink" href="#input-and-output-specification" title="Permalink to this headline">¶</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">logfile</span></code> <em>logname</em>  - name of the logfile, if present, first line of the control file</p>
-<p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">getpdb</span></code>  <em>pdbfile</em> [<em>number</em>] - fetches an entity from the PDB server or from a local file. <em>number</em> assigns an internal entity number (defaults to next available number)</p>
-<p><code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">putpdb</span></code>  <em>pdbfile</em> [<em>number</em>] - saves an entity to a local file. <em>number</em>  specifies the internal entity number (defaults to the last entity used or generated)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">#logfile</span></code> <em>logname</em>  % name of the logfile</p>
+<p><code class="docutils literal notranslate"><span class="pre">#getpdb</span></code>  <em>pdbfile</em> [<em>number</em>] % fetch entity <em>number</em> from the PDB server or from a local file</p>
+<p><code class="docutils literal notranslate"><span class="pre">#putpdb</span></code>  <em>pdbfile</em> [<em>number</em>] % saves entity <em>number</em> to local file</p>
+</div>
 </div>
 <div class="section" id="restraint-specification">
 <h2>Restraint specification<a class="headerlink" href="#restraint-specification" title="Permalink to this headline">¶</a></h2>
-<p>Restraint format is the same for all modules.</p>
+<p>The following restraint formats apply to all modules. There can be multiple blocks of restraints of the same type within the same module section.
+Please note that there may be additional module-specific restraint types that are explained in keyword specifications of the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling modules</span></a>.</p>
+<p><strong>Distance distribution restraints</strong></p>
+<p>Keyword: <code class="docutils literal notranslate"><span class="pre">ddr</span></code>  Legacy keyword: <code class="docutils literal notranslate"><span class="pre">deer</span></code></p>
+<p>The distance unit is <strong>Angstroem</strong>.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">ddr</span></code> <em>label_1</em> [<em>label_2</em>] [-permute]</p>
+<blockquote>
+<div><p><em>site_1</em> <em>site_2</em> <em>&lt;r1&gt;</em> <em>fwhm1</em> [<em>pop1</em> <em>&lt;r2&gt;</em> <em>fwhm2</em> …] <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">(multi)Gaussian</span> <span class="pre">restraints</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">-lb</span></code> <em>lower_bound</em> <code class="docutils literal notranslate"><span class="pre">-ub</span></code> <em>upper_bound</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">lower-bound/upper-bound</span> <span class="pre">restraints</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> <em>distribution_data</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">parameter-free</span> <span class="pre">distributions</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">-rice</span></code> <em>&lt;r1&gt;</em> <em>fwhm1</em> [<em>pop1</em> <em>&lt;r2&gt;</em> <em>fwhm2</em> …] <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">(multi)Rice</span> <span class="pre">restraints</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">-skew</span></code> <em>&lt;r&gt;</em> <em>fwhm</em> <em>skewness</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">skew</span> <span class="pre">Gauss</span> <span class="pre">restraints</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.ddr</span></code></p>
+</div>
+<p>Each combination of label types at the two sites requires its own <code class="docutils literal notranslate"><span class="pre">ddr</span></code> block. If both sites are labeled with the same label, it is sufficient to specify it once.
+Possible label types <em>label_1</em> and <em>label_2</em> correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a>.
+The syntax <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code> specifies an atom, for instance, <code class="docutils literal notranslate"><span class="pre">atom.CA</span></code> the CA atom of the addressed site.</p>
+<p>If option <code class="docutils literal notranslate"><span class="pre">-permute</span></code> is present, labels 1 and 2 are attached to sites 1 and 2 in both bossible permutations.</p>
+<p>The two labelled sites are specified by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx residue addresses</span></a> <em>site_1</em> and <em>site_2</em> .
+These addresses must refer to either a residue in an entity passed to the module or to a residue generated by the module.</p>
+<p>For a single Gaussian restraint, the mean value <em>&lt;r1&gt;</em> and full width at half maximum <em>fwhm1</em> need to be specified.
+For multi-Gaussian restraints, populations <em>pop1</em>, <em>pop2</em>, … need to be specified, except for the last component (the populations add to 1).</p>
+<p>Upper/lower bound restraints require the option specifiers <code class="docutils literal notranslate"><span class="pre">-lb</span></code> and <code class="docutils literal notranslate"><span class="pre">ub</span></code>. These are hard restraints. Conformers are rejected, if the simulated distance is outside bounds.
+Use distributions if you expect that some restraints may be violated.</p>
+<p>Parameter-free distributions require an ASCII data file with name <em>distribution_data</em>.dat (extension may be included) that has at least two columns. The first column is the distance axis (Angstroem units) and the second column is the probability per distance bin.
+We advise to provide lower and upper confidence limits for the bin probabilities in columns 3 and 4. White space between <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> and <em>distribution_data</em> is allowed, but not required.
+Bin probabilities are automatically normalized to unity sum.</p>
+<p>(Multi)-Rice distributions require the option specifier <code class="docutils literal notranslate"><span class="pre">-rice</span></code>. Otherwise they work line (multi)-Gaussian distributions.</p>
+<p>Skew Gauss distribution restraints require the option specifier <code class="docutils literal notranslate"><span class="pre">-skew</span></code>. Only a single skew distribution is supported.</p>
+<p>Note that you can provide any parametrized distance distribution by first converting it to a binned distance distribution and saving it as <em>distribution_data</em>.dat.
+However, for parametrized models that are supported, it is more transparent to specify the restraints by the parameters.</p>
+<p><strong>Symmetry-related distance distribution restraints</strong></p>
+<p>Symmetry constraints are specified at restraint level, because they may refer to only part of an entity.
+In combination with distribution restraints, this choice allows for symmetry disorder.</p>
+<p>Keyword: <code class="docutils literal notranslate"><span class="pre">ddr_sym</span></code>  Legacy keyword: <code class="docutils literal notranslate"><span class="pre">oligomer</span></code></p>
+<p>The distance unit is <strong>Angstroem</strong>.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">ddr_sym</span></code> <em>label</em> <em>n</em> [<em>ox</em> <em>oy</em> <em>oz</em> [<em>dx</em> <em>dy</em> <em>dz</em>]] [<code class="docutils literal notranslate"><span class="pre">-all</span></code>]</p>
+<blockquote>
+<div><p><em>site</em> <em>&lt;r1&gt;</em> <em>fwhm1</em> [<em>pop1</em> <em>&lt;r2&gt;</em> <em>fwhm2</em> …] <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">(multi)Gaussian</span> <span class="pre">restraints</span></code></p>
+<p><em>site</em> <code class="docutils literal notranslate"><span class="pre">-lb</span></code> <em>lower_bound</em> <code class="docutils literal notranslate"><span class="pre">-ub</span></code> <em>upper_bound</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">lower-bound/upper-bound</span> <span class="pre">restraints</span></code></p>
+<p><em>site</em> <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> <em>distribution_data</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">parameter-free</span> <span class="pre">distributions</span></code></p>
+<p><em>site</em> <code class="docutils literal notranslate"><span class="pre">-rice</span></code> <em>&lt;r1&gt;</em> <em>fwhm1</em> [<em>pop1</em> <em>&lt;r2&gt;</em> <em>fwhm2</em> …] <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">(multi)Rice</span> <span class="pre">restraints</span></code></p>
+<p><em>site</em> <code class="docutils literal notranslate"><span class="pre">-skew</span></code> <em>&lt;r&gt;</em> <em>fwhm</em> <em>skewness</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">skew</span> <span class="pre">Gauss</span> <span class="pre">restraints</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.ddr_sym</span></code></p>
+</div>
+<p>Only one labeling site is specified. The second site is generated by a rotation by an angle 360°/<em>n</em> about a C<sub>n</sub> (<em>n</em>-fold) rotation axis.
+In all-distances mode, specified by the option <code class="docutils literal notranslate"><span class="pre">-all</span></code>, all <em>n(n-1)/2</em> pairs between the <em>n</em> label positions are considered.
+Otherwise, only the modal distance (side length of the <em>n</em> -gon) is considered (default). For <em>n</em> = 2 and <em>n</em> = 3, option <code class="docutils literal notranslate"><span class="pre">-all</span></code> has no effect.</p>
+<p>By default, the rotation axis is a <em>z</em> axis passing through the origin of the coordinate frame of the entity.
+It is possible to specify a point on the rotation axis by coordinates <em>ox</em>, <em>oy</em>, and <em>oz</em>
+as well as a direction of the rotation axis by coordinates <em>dx</em>, <em>dy</em>, and <em>dz</em>.</p>
+<p>Apart from specification of only one site, restraint lines have the same syntax as in <code class="docutils literal notranslate"><span class="pre">ddr</span></code> blocks.</p>
+<p><strong>Paramagnetic relaxation enhancement (PRE) restraints</strong></p>
+<p>Keyword: <code class="docutils literal notranslate"><span class="pre">pre</span></code></p>
+<p>The distance unit is <strong>Angstroem</strong>.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">pre</span></code> <em>label</em> <em>atom</em> [<em>taui</em> [<em>taur</em> [<em>taus</em>]]]</p>
+<blockquote>
+<div><p><em>site_1</em> <em>site_2</em> <em>ratio</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">ratio</span> <span class="pre">Ipara/Idia</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">-Gamma2</span></code> <em>Gamma2</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">transverse</span> <span class="pre">relaxation</span> <span class="pre">enhancement</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.pre</span></code></p>
+</div>
+<p>Possible spin label types <em>label</em> correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a>. If the entity has explicit protons, they can be specified by <em>atom</em>.
+Otherwise, the heavy atom, for instance <img class="math" src="_images/math/3c01db19d2bea9adb52e8e0b68b2983f852ba49a.svg" alt="N"/> for a backbone NH atom should be specified. MMMx will attempt to generate the proton position.</p>
+<p>Correlation times can be provided as additional arguments. The default for the correlation time of internal motion (<em>taui</em>) is 250 ps,
+the one for global tumbling of the protein (<em>taur</em>) 3 ns, and the one for spin label relaxation (<em>taus</em>) 1 <img class="math" src="_images/math/fcd01bdc1a3b5e443eacc89a68da6b9dcadf3c35.svg" alt="\mu"/>s.</p>
+<p>The experimental restraints can be specified either by the intensity <em>ratio</em> between the paramagnetically and diamagnetically labelled sample or by the transverse relaxation enhancement rate <em>Gamma2</em>.</p>
+<p><strong>SAXS restraints</strong></p>
+<p>Small-angle x-ray scattering fits can be specified for the whole entity or for a subset of chains.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">saxs</span></code> <em>saxs_data</em> [<em>sm</em>] [<code class="docutils literal notranslate"><span class="pre">-v3</span></code>]</p>
+<blockquote>
+<div><p><em>chain_1</em> [<em>chain_2</em> …]</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.saxs</span></code></p>
+</div>
+<p>Usually, SAXS restraints are specified by a single line, giving only the file name of the SAXS data and optionally a maximum scattering vector <em>sm</em> for fitting till <em>sm</em>.
+SAXS fitting in MMMx uses <a class="reference external" href="https://www.embl-hamburg.de/biosaxs/manuals/crysol.html">crysol</a> of the ATSAS package. Option <code class="docutils literal notranslate"><span class="pre">-v3</span></code> specifies that <a class="reference external" href="https://www.embl-hamburg.de/biosaxs/manuals/crysol3.html">crysol3</a> is used instead.
+It is possible to specify only a subset of the chains of an enity for SAXS fitting.
+For this, <code class="docutils literal notranslate"><span class="pre">saxs</span></code> is used as a block restraint with a single additional line that specifies the included chains by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx chain addresses</span></a>.</p>
+<p><strong>SANS restraints</strong></p>
+<p>Small-angle neutron scattering fits can be specified for the whole entity or for a subset of chains.
+If an experimental selection of part of the entity was made by contrast matching,
+it is better to specify the deuterium content in the buffer than to specify the selected chains.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">sans</span></code> <em>sans_data</em> [<em>illres</em> [<code class="docutils literal notranslate"><span class="pre">*D2O*</span></code>]]</p>
+<blockquote>
+<div><p><em>chain_1</em> [<em>chain_2</em> …]</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.sans</span></code></p>
+</div>
+<p>Usually, SANS restraints are specified by a single line, giving only the file name of the SANS data and optionally the name of a resolution file,
+a fraction of D<sub>2</sub>O in the solution.
+If the second argument is a number instead of a string, it is interpreted as D<sub>2</sub>O content and the resolution file is considered to be missing (a warning is raised).</p>
+<p>SAXS fitting in MMMx uses <a class="reference external" href="https://www.embl-hamburg.de/biosaxs/manuals/cryson.html">cryson</a> of the ATSAS package.
+It is possible to specify only a subset of the chains of an enity for SANS fitting.
+For this, <code class="docutils literal notranslate"><span class="pre">sans</span></code> is used as a block restraint with a single additional line that specifies the included chains by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx chain addresses</span></a>.</p>
+<p><strong>Crosslink restraints</strong></p>
+<p>Crosslink restraints can be specified as a fraction of potentially crosslinkable residue pairs that are sufficiently close to be actually crosslinked.
+The maximum distance (in Angstroem) and fraction (0… 1) apply to all crosslinks in one block.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">crosslink</span></code> <em>maxdist</em> <em>fraction</em> [<em>atom_a</em> [<em>atom_b</em>]]</p>
+<blockquote>
+<div><p><em>site_1_a</em> <em>site_1_b</em></p>
+<p><em>site_2_a</em> <em>site_2_b</em></p>
+<p>…</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.crosslink</span></code></p>
+</div>
+<p>The distance is measured between CA atoms, unless the atom types in sites a and b of the crosslink are specified.
+The <code class="docutils literal notranslate"><span class="pre">crosslink</span></code> line is followed by <em>x</em> lines specifying individual pairs of residues for which crosslinks were found.
+The two linked sites are specified by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx residue addresses</span></a></p>
+<p>A conformer is rejected if more than <em>fraction</em>·<em>x</em> of the addressed atom pairs have a larger distance than <em>maxdist</em>.</p>
+<p><strong>Immersion depth restraints</strong></p>
+<p>The depth of immersion of sites into a lipid bilayer can be specified with this restraint.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">depth</span></code> <em>label</em> [<em>ox</em> <em>oy</em> <em>oz</em> [<em>dx</em> <em>dy</em> <em>dz</em>]]</p>
+<blockquote>
+<div><p><em>site</em> <em>&lt;r&gt;</em> <em>fwhm</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">Gaussian</span> <span class="pre">restraints</span></code></p>
+<p><em>site</em> <code class="docutils literal notranslate"><span class="pre">-lb</span></code> <em>lower_bound</em> <code class="docutils literal notranslate"><span class="pre">-ub</span></code> <em>upper_bound</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">lower-bound/upper-bound</span> <span class="pre">restraints</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.depth</span></code></p>
+</div>
+<p>The depth is measured as a distance from the center plane of the bilayer, i.e., large values correspond to low immersion depth or even positions outside the bilayer.</p>
+<p>Possible label types <em>label</em> correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a>.
+The syntax <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code> specifies an atom, for instance, <code class="docutils literal notranslate"><span class="pre">atom.CA</span></code> the CA atom of the addressed site.</p>
+<p>For a Gaussian restraint, the mean value <em>&lt;r&gt;</em> and full width at half maximum <em>fwhm</em> need to be specified.
+Upper/lower bound restraints require the option specifiers <code class="docutils literal notranslate"><span class="pre">-lb</span></code> and <code class="docutils literal notranslate"><span class="pre">ub</span></code>. These are hard restraints.
+Conformers are rejected, if the simulated distance is outside bounds. Use distributions if you expect that some restraints may be violated.</p>
+<p>By default, the bilayer normal is assumed to be the <em>z</em> axis and the center plane is assumed to pass through <em>z</em> = 0 of the coordinate frame of the entity.
+It is possible to specify a point on the center plane by coordinates <em>ox</em>, <em>oy</em>, and <em>oz</em> and the direction of the bilayer normal by coordinates <em>dx</em>, <em>dy</em>, and <em>dz</em>.</p>
+<p><strong>Secondary structure and cis peptide propensities</strong></p>
+<p>The keywords <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">beta</span></code>, <code class="docutils literal notranslate"><span class="pre">polypro</span></code>, and <code class="docutils literal notranslate"><span class="pre">cis</span></code> allow to specify propensities at a residue to adopt <img class="math" src="_images/math/108eadc3411b115de07d6fed1e21becdcfbf8a1a.svg" alt="{\alpha}"/>-helix, <img class="math" src="_images/math/731d0b74ca4cb889f6c344dcb1e0b97b0efb39e4.svg" alt="{\beta}"/>-strand, polyproline-helix, or cis-peptide backbone torsion angles.
+The following example is for <img class="math" src="_images/math/108eadc3411b115de07d6fed1e21becdcfbf8a1a.svg" alt="{\alpha}"/>-helix propensities.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p>
+<blockquote>
+<div><p><em>site</em> <em>propensity</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">single</span> <span class="pre">site</span></code></p>
+<blockquote>
+<div><p><em>site_1</em><code class="docutils literal notranslate"><span class="pre">-</span></code><em>site_2</em> <em>propensity</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">range</span> <span class="pre">of</span> <span class="pre">residues</span></code></p>
+</div></blockquote>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.alpha</span></code></p>
+</div>
+<p>The sites <em>site</em>, &amp;site_1*, and <em>site_2</em> are specified by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx residue addresses</span></a> and <em>propensity</em>  is a value between 0 and 1.
+Use the range syntax with propensity 1 to strictly enforce secondary structure for a certain section of residues.</p>
+<p>Specifying propensities instead of physical ensemble mean restraints related to them (e.g. NMR chemical shifts and residual dipolar couplings)
+is prefereable in ensemble building, as it allows to adapt backbone torsions statistics, which in turn improves sampling of suitable conformations.</p>
+<p>In ensemble fitting, it is advisable to specify restraints as close as possible to primary experimental data.</p>
+<p><strong>Rigid bodies</strong></p>
+<p>In general, a rigid body can comprise one or more sections of one or more macromolecular chains, as well as cofactors or other ligands.
+Builder modules, such as <code class="docutils literal notranslate"><span class="pre">Rigi</span></code>, may require that the complete chain behaves as a rigid body. Template entities have to be prepared to ensure this.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">rigid</span></code> <em>section_1</em> [<em>section_2</em> […]]</p>
+<blockquote>
+<div><p><em>refsite_1</em> <em>reflabel_1</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">origin</span></code></p>
+<p><em>refsite_2</em> <em>reflabel_2</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">point</span> <span class="pre">on</span> <span class="pre">*x*</span> <span class="pre">axis</span></code></p>
+<p><em>refsite_3</em> <em>reflabel_3</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">point</span> <span class="pre">in</span> <span class="pre">*xy*</span> <span class="pre">plane</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.rigid</span></code></p>
+</div>
+<p>Rigid bodies are internally numbered in the sequence of the corresponding <code class="docutils literal notranslate"><span class="pre">rigid</span></code> blocks. This numbering is internal to a module.</p>
+<p>The section specifiers <em>section_1</em>, <em>section_2</em>, … are <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx chain or residue-range addresses</span></a>, such as <code class="docutils literal notranslate"><span class="pre">(B)</span></code> or <code class="docutils literal notranslate"><span class="pre">(C)58-123</span></code>.</p>
+<p>The three reference sites <em>refsite_1</em>, <em>refsite_2</em>. and <em>refsite_3</em> are obligatory and should not be situated on a line.
+They specify a local frame and can be used for computing rigid-body arrangements by distance geometry.</p>
+<p>The labels <em>reflabel_1</em>, <em>reflabel_2</em>, and <em>reflabel_3</em> either correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a> or
+have the syntax <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code>. The latter syntax specifies an atom, for instance, <code class="docutils literal notranslate"><span class="pre">atom.CA</span></code> the CA atom of the reference site.</p>
 </div>
 </div>
 

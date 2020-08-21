@@ -1,0 +1,193 @@
+% RigiFlex restraints for PTBP1/EMCV-IRES, 23.10.2019
+% translated to a new MMMx format control file 21.08.2020
+%
+
+#logfile PTBP1_test_restraints
+#getpdb PTBC 
+
+!rigi
+
+   rigid (A) (B)
+     (A)71 MTSL
+     (A)80 MTSL
+     (A)109 MTSL
+   .rigid
+   rigid (C) (D)
+     (C)205 MTSL
+     (C)235 MTSL
+     (C)240 MTSL
+   .rigid
+   rigid (E) (F) (G)
+     (E)352 MTSL
+     (E)388 MTSL
+     (E)475 MTSL
+   .rigid
+
+   ddr mtsl
+       % 15 core restraints
+       (A)71  (A)205  44.0  15.6 
+       (A)71  (A)235  36.2  11.4
+       (A)71  (A)240  40.9  13.2
+       (A)80  (A)205  43.8  14.9
+       (A)80  (A)235  37.9  13.7
+       (A)109 (A)235  29.9  5.5
+       (A)71  (A)388  44.1  15.4
+       (A)80  (A)352  59.5  17.5
+       (A)80  (A)388  59.8  14.2
+       (A)109 (A)388  71.8  14.2
+       (A)71  (A)475  65.7  8.9
+       (A)80  (A)475  70.7  10.3
+       (A)109 (A)475  77.4  11.7
+       (A)205 (A)352  59.9  9.4
+       (A)205 (A)388  54.3  13.9
+       (A)240 (A)352  63.7  12.7
+       (A)235 (A)388  58.8  9.9
+       (A)235 (A)475  67.9  12.6
+	   
+       % 4 auxiliary protein-protein restraints
+       (A)116 (A)240  49.7  14.7
+       (A)152 (A)235  33.4  10.4
+       (A)202 (A)475  70.5  12.2
+       (A)235 (A)500  63.0  9.7
+   .ddr
+
+   ddr ia-proxyl
+       % 2 additional auxiliary protein-protein restraints
+       (A)71  (A)202  43.8  12.9 	
+       (A)109 (A)202  38.2  11.3 	
+   .ddr
+
+   rlink 
+       (F)304 (B)327 23 70 % SLD 26/ SLE 38 
+       (B)329 (G)342 13 60 % SLE 53/ Link E,F 59 
+       (G)344 (D)358 14 40 % Link E,F 61/ SLF 65
+   .rlink
+   
+.rigi 2
+
+!flexrna 0.5 0.25 % coverage, time per model, SLD-SLE
+
+   anchors (F)318 (B)322
+
+   sequence 319 321 GUG
+   
+.flexrna
+
+!flexrna 0.5 0.25 % coverage, time per model, SLE-LinkEF
+
+   anchors (B)335 (G)342
+
+   sequence 336 341 UUAUUU
+   
+.flexrna
+
+!flexrna 0.5 0.25 % coverage, time per model, LinkEF-SLF
+
+   anchors (G)344 (D)348
+
+   sequence 345 347 ACC
+      
+.flexrna
+
+!stitch (R) (F) (B) (G) (D) 
+
+!flex 0.5 0.5 % coverage, time per model, for link RRM1-RRM2
+   
+   anchors (A)154 (C)182
+   
+   sequence 155 181 NSVQSGNLALAASAAAVDAGMAMAGQS
+   
+   ddr ia-proxyl
+       (A)235 156 36.0 11.3	
+   .ddr
+   
+.flex
+
+!flex 0.5 0.5 % coverage, time per model, for link RRM2-RRM3,4
+   
+   anchors (C)283 (E)337
+   
+   sequence 284 336 DSQPSLDQTMAAAFGLSVPNVHGALAPLAIPSAAAAAAAAGRIAIPGLAGAGN
+   
+   ddr mtsl
+       (A)235  288   47.5  8.1
+       (A)235  315   46.7  14.3
+       (A)235  327   49.1  12.8
+       (A)388  315   34.3  10.2
+       (A)388  288   43.5  12.7
+       (A)475  327   52.5  11.5
+   .ddr
+   
+.flex
+
+!stitch (P) (A) (C) (E)
+
+!ensemblefit
+
+   ddr mtsl 
+      % 15 core restraints
+      (P)71  (P)205  @DEER_71_205_MTSL_EMCV_d2_12us_spec
+      (P)71  (P)235  @DEER_71_235_MTSL_EMCV_d2_6us_30scs_spec
+      (P)71  (P)240  @DEER_71_240_MTSL_EMCV_d2_6us_115scs_spec
+      (P)80  (P)205  @DEER_80_205_MTSL_EMCV_d2_9us_27scs_spec
+      (P)80  (P)235  @DEER_L80C_Q235C_MTSL_EMCV_d2_7us_spec
+      (P)109 (P)235  @DEER_CiGm_complex_EMCV_native_DtoF_T109_Q235_IPproxyl_spec
+      (P)71  (P)388  @DEER_71_388_IPP_D2O_EMCV_after_SEC_d2_9us_10scs_spec
+      (P)80  (P)352  @DEER_L80C_Q352C_FL_MTSL_EMCV_d2_14us_65scs_spec
+      (P)80  (P)388  @DEER_80_388_MTSL_EMCV_d2_9.5us_spec
+      (P)109 (P)388  @DEER_T109C_Q388C_D2O_MTSL_EMCV_d2_16us_92scs_spec
+      (P)71  (P)475  @DEER_71_475_MTSL_D2O_EMCV_nat_d2_9us_250scs_spec
+      (P)80  (P)475  @DEER_L80C_S475C_EMCV_Complex_MTSSL_d218us_138scs_spec
+      (P)109 (P)475  @DEER_T109C_S475C_MTSL_EMCV_afterSEC_New_d214us_298scs_spec
+      (P)205 (P)352  @DEER_S205_Q352C_LB_MTSL_EMCV_d2_12us_spec
+      (P)205 (P)388  @DEER_S205C_Q388C_MTSL_EMCV_d2_10us_100scs_spec
+      (P)240 (P)352  @DEER_352_240_MTSSL_prot_EMCV_d2_9us_spec
+      (P)235 (P)388  @DEER_Q235C_Q388C_EMCV_Nat_prot_after_SEC_d29.5_81scs_spec
+      (P)235 (P)475  @DEER_Q235C_S475C_IA_EMCV_in_D2O_d2_14us_spec
+   .ddr
+	  
+   ddr ia-proxyl
+      % 6 auxiliary protein-protein restraints, 4 used
+      (P)116 (P)240  @DEER_S116C_S240C_MTSL_EMCV_new_d2_8us_spec
+      (P)152 (P)235  @DEER_Q152C_Q235C_MTSL_EMCV_d2_6us_spec
+      (P)202 (P)475  @DEER_202_475_MTSL_D2O_EMCV_nat_d2_15us_32 6scs_spec
+      (P)235 (P)500  @DEER_235_500_D2O_MTSL_EMCV_d2_15.5us_spec	  
+      (P)109 (P)500  -monitor @DEER_t109C_S500C_d2O_MTSL_EMCV_nat_d2_14us_110scsc_spec
+      (P)152 (P)475  -monitor @DEER_Q152C_S475C_MTSL_EMCV_d2_13us_spec
+   .ddr
+
+   ddr ia-proxyl iap-4tu
+      % 6 protein-RNA restraints, not fitted, only monitored
+      (P)109 (R)304  -monitor @DEER_EMCV_D304_IAP_T109C_IAP_d2_20us_752scans_spec
+      (P)235 (R)304  -monitor @DEER_Q235IAP_D2O_EMCV_DU304_IAP_d2_16us_spec
+      (P)352 (R)337  -monitor @DEER_Q352CD2OIAP_EMCV_ELink337_IAP_d2_12us_spec
+      (P)352 (R)361  -monitor @DEER_Q235IAP_D2O_EMCV_DU304_IAP_d2_16us_spec
+      (P)388 (R)361  -monitor @DEER_Q388CIAP_EMCV_FU361_IAP_d2_6us_spec
+      (P)109 (R)309  -monitor @DEER_T109CIAP_EMCV_D309IAP_d2_10us_spec
+   .ddr
+   
+   ddr mtsl iap-4tu
+      % 2 protein-RNA restraints, not fitted, only monitored
+      (P)352 (R)330  -monitor @DEER_Q352CMTSL_EMCV_EU330_IAP_d2_8us_spec
+      (P)109 (R)361  -monitor @DEER_T109CMTSL_D2O_EMCV_FU361_IAP_d2_14us_spec   
+   .ddr
+   
+   ddr iap-4tu
+       % 4 RNA-RNA restraints, not fitted, only monitored
+       (R)304 (R)328 -monitor @Deer_EMCV_D304_E328_IAP_57uM_d2_16us_279scans_spec
+       (R)309 (R)330 -monitor @DEER_EMCV_D309_E330_IAP_clessPTBP1_d2_14us_spec
+       (R)330 (R)337 -monitor @DEER_EMCV_ELinkU330U337IAP_ClessPTBP1_d2_6us_spec
+       (R)337 (R)361 -monitor @DEER_EMCV_ELinkU337_FU361IAP_cyslessPTBP1_d2_16us_spec
+   .ddr
+   
+   sans 1-4sD2O_66_1p2m_atsas.dat ill_1p2m.res 0.66
+  
+   sans 1-4sD2O_66_4m_atsas.dat ill_4m.res 0.66
+  
+   saxs 1-4s-Buffer.dat
+  
+   superimpose (P)182-283
+
+.ensemblefit 3
+
+#putpdb PTB1_EMCV_IRES_test 3 P>A R>B

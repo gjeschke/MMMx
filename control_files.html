@@ -316,7 +316,7 @@
 </dd>
 </dl>
 <p>When MMModel is activated from the GUI, the control file can be selected with a file browser and exceptions are reported through the status text field of the GUI.</p>
-<p>The control file can have any extension. If it has none and such a file without extension does not exist or is in the wrong format, <code class="docutils literal notranslate"><span class="pre">.mxc</span></code> is tried.</p>
+<p>The control file can have any extension. If it has none and the file without extension canno be opened, MMMx tries with appended extension <code class="docutils literal notranslate"><span class="pre">.mxc</span></code>.</p>
 <p>Any call to MMModel generates a <a class="reference internal" href="log_files.html#log-files"><span class="std std-ref">log file</span></a>. The default file name is <code class="docutils literal notranslate"><span class="pre">MMModel_yyyy_mm_dd_HH_MM.log</span></code>, where <code class="docutils literal notranslate"><span class="pre">yyyy</span></code>, <code class="docutils literal notranslate"><span class="pre">mm</span></code>, <code class="docutils literal notranslate"><span class="pre">dd</span></code>, <code class="docutils literal notranslate"><span class="pre">HH</span></code>, <code class="docutils literal notranslate"><span class="pre">MM</span></code>
 specify the year, month, day, hour, and minute of the starting time of <code class="docutils literal notranslate"><span class="pre">MMModel</span></code>. A different log file name can be specified in the control file.</p>
 <p>Further output files may be generated depending on the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling modules</span></a> that are called in the control file.</p>
@@ -326,11 +326,11 @@ Where possible, MMMx checks whether restraints in a sequence of module calls are
 <div class="section" id="syntax">
 <h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">¶</a></h2>
 <p>The syntax of MMMx control files is akin of the syntax of MMM restraint files, but MMM restraint files cannot be used without editing as MMMx control files.
-Keywords are case-insensitive.</p>
+Keywords are case-insensitive. Empty lines are allowed.</p>
 <p>The MMMx control file consists of blocks corresponding to individual <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling modules</span></a>. Outside such blocks, keywords for input and output are supported.
 Keywords outside of blocks have the form <code class="docutils literal notranslate"><span class="pre">#</span></code> <em>keyword</em>.</p>
 <p>Comments are initiated by <code class="docutils literal notranslate"><span class="pre">%</span></code> and can appear anywhere. The rest of the line after a <code class="docutils literal notranslate"><span class="pre">%</span></code> character is ignored.</p>
-<p>Module blocks are opened by <code class="docutils literal notranslate"><span class="pre">!</span></code> <em>module</em>, where <em>module</em> is the name of the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling module</span></a>. They are closed by <code class="docutils literal notranslate"><span class="pre">.</span></code> <em>module</em>.
+<p>Module blocks are opened by <code class="docutils literal notranslate"><span class="pre">!</span></code><em>module</em>, where <em>module</em> is the name of the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling module</span></a>. They are closed by <code class="docutils literal notranslate"><span class="pre">.</span></code><em>module</em>.
 If a new block is opened or the file ends before the closing line of a block, <code class="docutils literal notranslate"><span class="pre">MMModel</span></code> proceeds, but raises a warning.</p>
 <p>The syntax</p>
 <div class="admonition note">
@@ -344,7 +344,7 @@ If a new block is opened or the file ends before the closing line of a block, <c
 <p><code class="docutils literal notranslate"><span class="pre">.</span></code><em>module</em> [<em>entity_1</em> [<em>entity_2</em>] …]</p>
 </div>
 <p>passes entities from the module to <code class="docutils literal notranslate"><span class="pre">MMModel</span></code>, where <em>entity_1</em>, <em>entity_2</em> etc. are internal entity numbers.</p>
-<p>The control file ends with a <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">end</span></code> statement. If it is missing, MMMx raises a warning. All lines after an <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">end</span></code> statement are ignored.</p>
+<p>The control file ends with a <code class="docutils literal notranslate"><span class="pre">#end</span></code> statement. If it is missing, MMMx raises a warning. All lines after an <code class="docutils literal notranslate"><span class="pre">#end</span></code> statement are ignored.</p>
 <p>Each module can define its own keywords for restraint specification and run options. In principle, the same keyword can be used with different meanings in different modules, except for restraint keywords.
 However, such practice is discouraged.
 Keywords inside blocks must be indented by at least two spaces. If a keyword initiates a block of restraint lines, the restraint lines must be indented by at least two spaces with respect to this keyword.
@@ -356,13 +356,22 @@ It is allowed and good practice to end such a block with <code class="docutils l
 <p class="admonition-title">Note</p>
 <p><code class="docutils literal notranslate"><span class="pre">#logfile</span></code> <em>logname</em>  % name of the logfile</p>
 <p><code class="docutils literal notranslate"><span class="pre">#getpdb</span></code>  <em>pdbfile</em> [<em>number</em>] % fetch entity <em>number</em> from the PDB server or from a local file</p>
-<p><code class="docutils literal notranslate"><span class="pre">#putpdb</span></code>  <em>pdbfile</em> [<em>number</em>] % saves entity <em>number</em> to local file</p>
+<p><code class="docutils literal notranslate"><span class="pre">#putpdb</span></code>  <em>pdbfile</em> [<em>number</em>] [<em>old_chain_id</em>&gt;<em>new_chain_id</em>] % saves entity <em>number</em> to local file</p>
 </div>
+<p>If the <em>number</em>  parameter is missing, <code class="docutils literal notranslate"><span class="pre">getpdb</span></code> assigns the next available number and <code class="docutils literal notranslate"><span class="pre">putpdb</span></code> saves the entity with the highest number.</p>
+<p><code class="docutils literal notranslate"><span class="pre">#putpdb</span></code> can rename several chains, i.e., there may be as many <em>old_chain_id</em>&gt;<em>new_chain_id</em> arguments as needed,
+where <em>old_chain_id</em> is a chain identifier in the saved entity and <em>new_chain_id</em> the identifier to be used for this chain in the output PDB file.</p>
+<p>Example: <code class="docutils literal notranslate"><span class="pre">#putpdb</span> <span class="pre">PTB1_EMCVIRES_test.pdb</span> <span class="pre">P&gt;A</span> <span class="pre">R&gt;B</span></code></p>
+<p>rename chain P to A and chain R to B upon saving. As the second argument is a string,
+MMModel recognizes that the number is missing and saves the current entity.</p>
 </div>
 <div class="section" id="restraint-specification">
 <h2>Restraint specification<a class="headerlink" href="#restraint-specification" title="Permalink to this headline">¶</a></h2>
 <p>The following restraint formats apply to all modules. There can be multiple blocks of restraints of the same type within the same module section.
 Please note that there may be additional module-specific restraint types that are explained in keyword specifications of the <a class="reference internal" href="modelling_modules.html#modelling-modules"><span class="std std-ref">modelling modules</span></a>.</p>
+<p>Some modules may support for some restraints the <code class="docutils literal notranslate"><span class="pre">-monitor</span></code> option. Restraints with this option are not actively fitted,
+but it is checked, how well they fit.
+For blocks of restraints, <code class="docutils literal notranslate"><span class="pre">-monitor</span></code> is specified for individual restraints (lines inside the block).</p>
 <p><strong>Distance distribution restraints</strong></p>
 <p>Keyword: <code class="docutils literal notranslate"><span class="pre">ddr</span></code>  Legacy keyword: <code class="docutils literal notranslate"><span class="pre">deer</span></code></p>
 <p>The distance unit is <strong>Angstroem</strong>.</p>

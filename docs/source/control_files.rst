@@ -23,7 +23,7 @@ Returns
 
 When MMModel is activated from the GUI, the control file can be selected with a file browser and exceptions are reported through the status text field of the GUI.
 
-The control file can have any extension. If it has none and such a file without extension does not exist or is in the wrong format, ``.mxc`` is tried.
+The control file can have any extension. If it has none and the file without extension canno be opened, MMMx tries with appended extension ``.mxc``.
 
 Any call to MMModel generates a :ref:`log file<log_files>`. The default file name is ``MMModel_yyyy_mm_dd_HH_MM.log``, where ``yyyy``, ``mm``, ``dd``, ``HH``, ``MM``
 specify the year, month, day, hour, and minute of the starting time of ``MMModel``. A different log file name can be specified in the control file.
@@ -37,14 +37,14 @@ Syntax
 --------------
 
 The syntax of MMMx control files is akin of the syntax of MMM restraint files, but MMM restraint files cannot be used without editing as MMMx control files.
-Keywords are case-insensitive.
+Keywords are case-insensitive. Empty lines are allowed.
 
 The MMMx control file consists of blocks corresponding to individual :ref:`modelling modules<modelling_modules>`. Outside such blocks, keywords for input and output are supported.
 Keywords outside of blocks have the form ``#`` *keyword*.
 
 Comments are initiated by ``%`` and can appear anywhere. The rest of the line after a ``%`` character is ignored.
 
-Module blocks are opened by ``!`` *module*, where *module* is the name of the :ref:`modelling module<modelling_modules>`. They are closed by ``.`` *module*. 
+Module blocks are opened by ``!``\ *module*, where *module* is the name of the :ref:`modelling module<modelling_modules>`. They are closed by ``.``\ *module*. 
 If a new block is opened or the file ends before the closing line of a block, ``MMModel`` proceeds, but raises a warning.
 
 The syntax
@@ -63,7 +63,7 @@ The syntax
 
 passes entities from the module to ``MMModel``, where *entity_1*, *entity_2* etc. are internal entity numbers.
 
-The control file ends with a ``# end`` statement. If it is missing, MMMx raises a warning. All lines after an ``# end`` statement are ignored.
+The control file ends with a ``#end`` statement. If it is missing, MMMx raises a warning. All lines after an ``#end`` statement are ignored.
 
 Each module can define its own keywords for restraint specification and run options. In principle, the same keyword can be used with different meanings in different modules, except for restraint keywords. 
 However, such practice is discouraged.
@@ -79,15 +79,27 @@ Input and output specification
 
   ``#getpdb``  *pdbfile* [*number*] % fetch entity *number* from the PDB server or from a local file
 
-  ``#putpdb``  *pdbfile* [*number*] % saves entity *number* to local file
+  ``#putpdb``  *pdbfile* [*number*] [*old_chain_id*\ >\ *new_chain_id*] % saves entity *number* to local file
   
+If the *number*  parameter is missing, ``getpdb`` assigns the next available number and ``putpdb`` saves the entity with the highest number.
 
+``#putpdb`` can rename several chains, i.e., there may be as many *old_chain_id*\ >\ *new_chain_id* arguments as needed,
+where *old_chain_id* is a chain identifier in the saved entity and *new_chain_id* the identifier to be used for this chain in the output PDB file.
+
+Example: ``#putpdb PTB1_EMCVIRES_test.pdb P>A R>B``
+
+rename chain P to A and chain R to B upon saving. As the second argument is a string, 
+MMModel recognizes that the number is missing and saves the current entity.
 
 Restraint specification
 -----------------------
 
 The following restraint formats apply to all modules. There can be multiple blocks of restraints of the same type within the same module section.
 Please note that there may be additional module-specific restraint types that are explained in keyword specifications of the :ref:`modelling modules<modelling_modules>`.
+
+Some modules may support for some restraints the ``-monitor`` option. Restraints with this option are not actively fitted, 
+but it is checked, how well they fit. 
+For blocks of restraints, ``-monitor`` is specified for individual restraints (lines inside the block). 
 
 **Distance distribution restraints**
 

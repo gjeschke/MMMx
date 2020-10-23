@@ -45,7 +45,7 @@ if ~exist('options','var') || ~isfield(options,'dssp') || ...
     options.dssp = false;
 end
 
-% placeholder for dowloaded file later to be deleted
+% placeholder for downloaded file later to be deleted
 to_be_deleted = ''; 
 
 
@@ -163,10 +163,10 @@ while 1
             chainfield = chain;
         end
         trial_resnum = str2double(tline(23:26));
-        if trial_resnum < curr_resnum
-            preserve_residue_numbers = false;
-            trial_resnum = curr_resnum + 1;
-        end
+%         if trial_resnum < curr_resnum
+%             preserve_residue_numbers = false;
+%             trial_resnum = curr_resnum + 1;
+%         end
         % the infamous insertion code
         if tline(27) ~= ' '
             if trial_resnum ~= curr_resnum

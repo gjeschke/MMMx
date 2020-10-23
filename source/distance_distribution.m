@@ -284,26 +284,11 @@ else
         all_positions2{kconf2} = argsout{1}{1};
         all_populations2{kconf2} = argsout{2}{1};
     end
+    % compute the sum of the distance distributions with pre-computed rotamers 
     for kconf1 = conformers1
-%         site1 = sprintf('{%i}%s',kconf1,residue1);
-%         [argsout,entity,exceptions] = get_label(entity,label1,{'positions','populations'},site1);
-%         if ~isempty(exceptions{1})
-%             distribution = [];
-%             return
-%         end
-%         positions1 = argsout{1}{1};
-%         populations1 = argsout{2}{1};
         positions1 = all_positions1{kconf1};
         populations1 = all_populations1{kconf1};
         for kconf2 = conformers2
-%             site2 = sprintf('{%i}%s',kconf2,residue2);
-%             [argsout,entity,exceptions] = get_label(entity,label2,{'positions','populations'},site2);
-%             if ~isempty(exceptions{1})
-%                 distribution = [];
-%                 return
-%             end
-%             positions2 = argsout{1}{1};
-%             populations2 = argsout{2}{1};
             positions2 = all_positions2{kconf2};
             populations2 = all_populations2{kconf2};
             if isempty(populations1) || isempty(populations2)

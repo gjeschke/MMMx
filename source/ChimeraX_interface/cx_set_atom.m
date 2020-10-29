@@ -16,6 +16,7 @@ function [attribute,exceptions] = cx_set_atom(id,address,whichone,attribute)
 %           color         https://www.cgl.ucsf.edu/chimerax/docs/user/commands/colornames.html
 %                         or (1,3) double RGB triple (0... 255)
 %           colorscheme   'byelement', 'byhet'
+%           coor          (1,3) double coordinates (?)
 %           element       string
 %           hide          attribute can be missing or empty, otherwise Boolean flag
 %           occupancy     double (0 < occupancy <= 1)
@@ -53,6 +54,11 @@ switch whichone
         end
     case 'colorscheme'
         attribute = lower(attribute);
+    case 'coor'
+        coorstr = strtrim(sprintf('%8.3f',attribute(1)));
+        coorstr = sprintf('%s,%s',coorstr,strtrim(sprintf('%8.3f',attribute(2))));
+        coorstr = sprintf('%s,%s',coorstr,strtrim(sprintf('%8.3f',attribute(3))));
+        attribute = cx_command(sprintf('marker change %s position %s',spec,coorstr));
     case 'hide'
         if ~exist('attribute','var') || isempty(attribute)
             attribute = 1;
@@ -85,6 +91,6 @@ if strcmpi(whichone,'color') || strcmpi(whichone,'colorscheme')
     cx_command(sprintf('color %s %s',spec,attribute));
 elseif strcmpi(whichone,'transparency')
     cx_command(sprintf('transparency %s %s target a',spec,attribute));
-else
+elseif ~strcmp(whichone,'coor')
     attribute = cx_set_attribute(spec,'atom',whichone,attribute);
 end

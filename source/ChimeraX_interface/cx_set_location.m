@@ -11,8 +11,9 @@ function [attribute,exceptions] = cx_set_location(id,address,whichone,attribute)
 % id        ChimeraX internal identifier for entity
 % address   MMMx address for the location, see:
 %           https://www.cgl.ucsf.edu/chimerax/docs/user/commands/atomspec.html
-% whichone  valid attribute name, only coor is supported for a location
-% attribute attribute value (string) that should be set
+% whichone  valid attribute name
+%           coor    (1,3) double atom coordinates (?)
+% attribute attribute value that should be set
 %
 % OUTPUT
 % attribute  echoes the input attribute if successful, is empty otherwise
@@ -49,7 +50,10 @@ end
 
 switch whichone
     case 'coor'
-        attribute = cx_set_attribute(spec,'atom','coord',attribute);
+        coorstr = strtrim(sprintf('%8.3f',attribute(1)));
+        coorstr = sprintf('%s,%s',coorstr,strtrim(sprintf('%8.3f',attribute(2))));
+        coorstr = sprintf('%s,%s',coorstr,strtrim(sprintf('%8.3f',attribute(3))));        
+        attribute = cx_command(sprintf('marker change %s position %s',spec,coorstr));
     otherwise
         exceptions{1} = MException('cx_set_location:no_such_attribute', 'Attribute %s not supported for a location', whichone);
 end

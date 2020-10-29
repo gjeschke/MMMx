@@ -13,7 +13,7 @@ function [attribute,exceptions] = cx_get_location(id,address,whichone)
 % whichone  valid attribute name, only 'coor' is supported for a location
 %
 % OUTPUT
-% attribute  echoes the input attribute if successful, is empty otherwise
+% attribute  (1,3) double coordinates (?)
 % exceptions cell vector of MException objects if something went wrong, 
 %            defaults to one cell holding an empty array
 %
@@ -50,6 +50,7 @@ end
 switch whichone
     case 'coor'
         attribute = cx_get_attribute(spec,'atom','coord');
+        attribute = str2num(attribute); %#ok<ST2NM>
     otherwise
         exceptions{1} = MException('cx_get_location:no_such_attribute', 'Attribute %s not supported for a location', whichone);
 end

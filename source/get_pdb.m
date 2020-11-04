@@ -108,6 +108,7 @@ current_model = 1;
 old_resname = 'HOH'; % avoid location entry for water residues
 populations = zeros(maxmodels,1);
 conformers = 0;
+offset = 0; % residue number offset to avoid negativ residue numbers
 while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
@@ -138,6 +139,9 @@ while 1
     if length(tline) >= 54 && (strcmpi(tline(1:4),'ATOM') || ...
             strcmpi(tline(1:6),'HETATM')) % atom loop
         chain = tline(22);
+        if chain == ' '
+            chain = 'Z';
+        end
         if ~strcmp(chain,curr_chain)
             curr_chain = chain;
             curr_resnum = 0; % current residue number
@@ -163,6 +167,10 @@ while 1
             chainfield = chain;
         end
         trial_resnum = str2double(tline(23:26));
+        if trial_resnum < 1 && offset ==0
+            offset = 1 - trial_resnum;
+        end
+        trial_resnum = trial_resnum + offset;
 %         if trial_resnum < curr_resnum
 %             preserve_residue_numbers = false;
 %             trial_resnum = curr_resnum + 1;

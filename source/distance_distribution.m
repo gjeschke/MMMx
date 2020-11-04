@@ -218,7 +218,6 @@ end
 % initialize empty distribution
 distribution = zeros(size(r_axis));
 
-profile on
 % in coupled mode, loop over one conformer range
 if options.coupled
     for kconf = conformers1
@@ -320,7 +319,6 @@ if sum(isnan(distribution))
     exceptions = {MException('distance_distribution:empty_distribution', 'Distance distribution is empty for this site pair in the requested range')};
 end
 
-profile viewer
 
 function [pair_distribution,missing] = get_pair_distribution(rax,positions1,populations1,positions2,populations2,smoothing)
 % Computes a pair distance distribution as well as the fraction of missing

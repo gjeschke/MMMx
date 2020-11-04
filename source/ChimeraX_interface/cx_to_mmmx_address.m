@@ -17,6 +17,10 @@ function [addresses,exceptions] = cx_to_mmmx_address(spec)
 %                       empty, if not specified
 %            .address   MMMx address string, empty if the ChimeraX
 %                       specifier could not be interpreted
+%            .conformer conformer number
+%            .chain     chain identifier
+%            .residue   residue identifier
+%            .atom      atom identifier
 % exceptions   cell vector of MException objects if something went wrong, 
 %              defaults to one cell holding an empty array
 %
@@ -26,7 +30,7 @@ function [addresses,exceptions] = cx_to_mmmx_address(spec)
 
 % initalize empty output
 addresses(1).id = [];
-addresses(1).adddress = '';
+addresses(1).address = '';
 exceptions = {[]};
 
 id_done = false;
@@ -112,7 +116,7 @@ if ~isempty(remainder)
 end
 
 % check for extended ChimeraX syntax that is not supported
-valid = check_part(id_str);
+valid = check_part(id_str,'.');
 if ~valid
     exceptions = {MException('cx_to_mmmx_address:invalid_id_syntax', 'Invalid syntax of ID: %s', id_str)};
     return
@@ -184,67 +188,71 @@ for k = 1:length(ids)
         address = sprintf('%s.%s',address,atom_str);
     end
     addresses(k).address = address;
+    addresses(k).conformer = conformers{k};
+    addresses(k).chain = chain_str;
+    addresses(k).residue = residue_str;
+    addresses(k).atom = atom_str;
 end
-fprintf(1,'chain part    : |%s|\n',chain_str);
-fprintf(1,'residue part  : |%s|\n',residue_str);
-fprintf(1,'atom part     : |%s|\n',atom_str);
+% fprintf(1,'chain part    : |%s|\n',chain_str);
+% fprintf(1,'residue part  : |%s|\n',residue_str);
+% fprintf(1,'atom part     : |%s|\n',atom_str);
 
-function valid = check_part(part)
+function valid = check_part(part,allowed)
 % checks whether a string is valid for translation
 
 valid = true;
-if contains(part,'#')
+if contains(part,'#') && ~contains(allowed,'#')
     valid = false;
     return
 end
-if contains(part,'/')
+if contains(part,'/') && ~contains(allowed,'/')
     valid = false;
     return
 end
-if contains(part,':')
+if contains(part,':') && ~contains(allowed,':')
     valid = false;
     return
 end
-if contains(part,'@')
+if contains(part,'@') && ~contains(allowed,'@')
     valid = false;
     return
 end
-if contains(part,'?')
+if contains(part,'?') && ~contains(allowed,'?')
     valid = false;
     return
 end
-if contains(part,'|')
+if contains(part,'|') && ~contains(allowed,'|')
     valid = false;
 end
-if contains(part,'=')
-    valid = false;
-    return
-end
-if contains(part,'>')
+if contains(part,'=') && ~contains(allowed,'=')
     valid = false;
     return
 end
-if contains(part,'<')
+if contains(part,'>') && ~contains(allowed,'>')
     valid = false;
     return
 end
-if contains(part,'~')
+if contains(part,'<') && ~contains(allowed,'<')
     valid = false;
     return
 end
-if contains(part,'+')
+if contains(part,'~') && ~contains(allowed,'~')
     valid = false;
     return
 end
-if contains(part,'[')
+if contains(part,'+') && ~contains(allowed,'+')
     valid = false;
     return
 end
-if contains(part,']')
+if contains(part,'[') && ~contains(allowed,'[')
     valid = false;
     return
 end
-if contains(part,'.') % to avoid more than two levels
+if contains(part,']') && ~contains(allowed,']')
+    valid = false;
+    return
+end
+if contains(part,'.') && ~contains(allowed,'.') % to avoid more than two levels
     valid = false;
     return
 end

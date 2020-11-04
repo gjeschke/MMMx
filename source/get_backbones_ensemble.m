@@ -1,11 +1,13 @@
-function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble)
+function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,range)
 %
 % GET_BACKBONES_ENSEMBLE Retrieve backbone coordinates for an ensemble
 %
-%   [backbones,pop,exceptions] = GET_BACKBONES_ENSEMBLE(ensemble)
+%   [backbones,pop,exceptions] = GET_BACKBONES_ENSEMBLE(ensemble,chain,range)
 %   Provides backbone coordinates and corresponding residue numbers for all
 %   conformers of all biopolymer chains of an ensemble structure as well as
-%   conformer populations and, if the function fails, exceptions
+%   conformer populations and, if the function fails, exceptions,
+%   optionally, retrieval can be confined to a chain and a residue range
+%   within the chain
 %
 % INPUT
 % ensemble  either an entity or a file name specifying the ensemble with
@@ -24,6 +26,7 @@ function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble)
 %               .mono (1,nm) double, numbers of the residues
 %               .bb   (1,c) cell of (nm,3) coordinate array for backbone
 %                     atoms
+%               .slc  sequence in single-letter code
 % pop           (1,C) population vector for C conformers
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
@@ -43,6 +46,18 @@ exceptions = {[]};
 pop = [];
 popdef = [];
 
+% set defaults for missing input
+if ~exist('chain','var') || isempty(chain)
+    all_chains = true;
+    selected_chain = '';
+else
+    all_chains = false;
+    selected_chain = chain;
+end
+if ~exist('range','var') || isempty(range)
+    range = [-1e01, 1e10];
+end
+
 if isstruct(ensemble) % input is an entity
     pop = ensemble.populations;
     for c = 1:length(ensemble.populations) % loop over all conformers
@@ -50,8 +65,11 @@ if isstruct(ensemble) % input is an entity
             chains = fieldnames(ensemble);
             for kc = 1:length(chains)
                 chain = chains{kc};
+                if ~all_chains && ~strcmp(chain,selected_chain)
+                    continue
+                end
                 if isstrprop(chain(1),'upper') % chain fields start with a capital
-                    backbone = get_backbone(ensemble,chain,1);
+                    backbone = get_backbone(ensemble,chain,1,range);
                     if isempty(backbone.aa) && isempty(backbone.nt) % skip chains that are not a biopolymer
                         continue
                     end
@@ -60,18 +78,23 @@ if isstruct(ensemble) % input is an entity
                         backbones.(chain).type = 1;
                         backbones.(chain).mono = backbone.aa;
                         backbones.(chain).bb{1} = backbone.CA;
+                        backbones.(chain).slc = backbone.res;
                     else % its a nucleic acid
                         backbones.(chain).type = 2;
                         backbones.(chain).mono = backbone.nt;
                         backbones.(chain).bb{1} = backbone.C4p;
+                        backbones.(chain).slc = backbone.nuc;
                     end
                 end
             end
         else % not the first conformer
             for kc = 1:length(chains)
                 chain = chains{kc};
+                if ~all_chains && ~strcmp(chain,selected_chain)
+                    continue
+                end
                 if isstrprop(chain(1),'upper') % chain fields start with a capital
-                    backbone = get_backbone(ensemble,chain,c);
+                    backbone = get_backbone(ensemble,chain,c,range);
                     switch backbones.(chain).type
                         case 1 % peptide
                             if length(backbones.(chain).mono) ~= length(backbone.aa)
@@ -126,12 +149,12 @@ else % file name is given
         entity = get_pdb(all_files(f).name);
         if f == 1 % initialize output
             % we can do this by a recursive algorithm
-            [backbones,pop,exceptions] = get_backbones_ensemble(entity);
+            [backbones,pop,exceptions] = get_backbones_ensemble(entity,selected_chain,range);
             if ~isempty(exceptions{1})
                 return
             end
         else % these are additional conformers from more PDB files
-            [backbones2,pop2,exceptions] = get_backbones_ensemble(entity);
+            [backbones2,pop2,exceptions] = get_backbones_ensemble(entity,selected_chain,range);
             if ~isempty(exceptions{1})
                 exceptions{2} = MException('get_backbones_ensemble:wrong_file',...
                     'File %s does not match expected format',all_files(f).name);

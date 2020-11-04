@@ -159,6 +159,7 @@ while ischar(tline)
             switch level
                 case 1
                     directive = directive + 1;
+                    argline = 0;
                     controller(task).directives(directive).name = arg1; %#ok<AGROW>
                     % store options
                     controller(task).directives(directive).options = ...
@@ -167,7 +168,13 @@ while ischar(tline)
                         controller(task).directives(directive).options{karg-argument_pointer+1}...
                             = strtrim(char(arguments{karg}));
                     end
+                    controller(task).directives(directive).block = cell(1,1);  %#ok<AGROW>
                 case 2
+                    argline = argline+1;
+                    for karg =  1:length(arguments)
+                        controller(task).directives(directive).block{argline,karg}...
+                            = strtrim(char(arguments{karg})); %#ok<AGROW>
+                    end
             end
     end
     

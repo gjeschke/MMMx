@@ -25,7 +25,7 @@ function [r_axis,distribution,entity,exceptions] = distance_distribution(entity,
 % options   computation options
 %           .rmin         minimum distance (Angstroem), default 10, double
 %           .rmax         maximum distance (Angstroem), default 150, double
-%           .resolution   resolution (Angstroem), defaul 0.5, double
+%           .resolution   resolution (Angstroem), default 0.5, double
 %           .units        string, 'probability' makes sum(distribution) = 1
 %                         'density' returns probability density in units of
 %                         (1/Angstroem), default: 'density'
@@ -85,6 +85,7 @@ if ~isempty(si) && ~isempty(ei)
     residue1 = [site1(1:si-1) site1(ei+1:end)];
 else
     confstr = '1';
+    residue1 = site1;
 end
 if strcmp(strtrim(confstr),'*')
     conformers1 =  1:length(entity.populations);
@@ -148,6 +149,7 @@ if ~isempty(si) && ~isempty(ei)
     residue2 = [site2(1:si-1) site2(ei+1:end)];
 else
     confstr = '1';
+    residue2 = site2;
 end
 if strcmp(strtrim(confstr),'*')
     conformers2 =  1:length(entity.populations);

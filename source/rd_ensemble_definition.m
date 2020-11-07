@@ -34,6 +34,14 @@ catch exception
     return
 end
 
+if fid == -1
+    all_files = [];
+    pop = [];
+    exceptions = {MException('rd_ensemble_definition:file_could_not_be_opened',...
+                                    'File %s could not be opened',fname)};
+    return
+end
+
 % pre-allocate memory
 all_files(10000).name = '';
 pop = zeros(1,10000);

@@ -35,13 +35,13 @@ logfid = 1;
 close_log = false;
 
 for module = 1:length(controller)
-    fprintf(logfid,'> Excecuting %s <\n\n',controller(module).name);
+    fprintf(logfid,'> Executing %s <\n\n',controller(module).name);
     switch lower(controller(module).name)
         case 'logfile'
             close_log = true;
             logfid = fopen(controller(module).options{1},'wt');
         case 'ensemblefit'
-            [entity,module_exceptions,failed,restraints] = module_ensemble_fit(controller(module),logfid);
+            [entity,module_exceptions,failed,restraints,fit_task] = module_ensemble_fit(controller(module),logfid);
             for exci = 1:length(module_exceptions)
                 if ~isempty(module_exceptions{exci})
                     warnings = warnings + 1;
@@ -60,4 +60,6 @@ if close_log
     fclose(logfid);
 end
 
+save test_Tikh_ensemble_fit_module restraints fit_task 
 disp(restraints);
+disp(fit_task);

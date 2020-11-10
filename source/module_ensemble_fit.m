@@ -30,6 +30,10 @@ function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(co
 % addpdb        PDB files of conformers to be added, file name that can
 %               contain wildcards 
 % plot          generate plots
+% blocksize     size of a block of conformers fitted simultaneously,
+%               defaults to 100
+% save          file name for saving ensemble, if not given, the ensemble
+%               is saved as ensemble.ens to the current directory
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -50,6 +54,10 @@ added_conformers = '';
 opt.threshold = 0.01; % conformers wih population below this threshold are discarded
 
 opt.interactive = false; % no interactive plotting during fits
+opt.blocksize = 100;
+opt.skip_restraints = false;
+
+outname = 'ensemble.ens';
 
 restraints.ddr(1).labels{1} = '';
 restraints.saxs(1).data{1} = '';
@@ -61,7 +69,7 @@ sans_poi = 0;
 
 % read restraints
 for d = 1:length(control.directives)
-    switch control.directives(d).name
+    switch lower(control.directives(d).name)
         case 'nofit'
             run_fit = false;
         case 'plot'
@@ -70,8 +78,12 @@ for d = 1:length(control.directives)
             initial_ensemble = control.directives(d).options{1};
         case 'interactive'
             opt.interactive = true;
+        case 'blocksize'
+            opt.blocksize = str2double(control.directives(d).options{1});
         case 'addpdb'
             added_conformers = control.directives(d).options{1};
+        case 'save'
+            outname = control.directives(d).options{1};
         case 'ddr'
             ddr_poi = ddr_poi + 1; % increase ddr block counter
             fprintf(logfid,'ddr %s',control.directives(d).options{1}); % echo directive to log file
@@ -111,7 +123,7 @@ for d = 1:length(control.directives)
                     restraints.ddr(ddr_poi).sigr(kr) = [];
                 else
                     restraints.ddr(ddr_poi).r(kr) = str2double(arg3);
-                    restraints.ddr(ddr_poi).sigr(kr) = str2double(control.directives(d).block{kr,4})/sqrt(2);
+                    restraints.ddr(ddr_poi).sigr(kr) = str2double(control.directives(d).block{kr,4});
                 end
                 if args > 4
                     arg5 = control.directives(d).block{kr,5};
@@ -143,10 +155,13 @@ added_files = dir(added_conformers); % find all files that match the pattern
 
 C = length(initial_files) + length(added_files);
 
+C0 = length(initial_files); % number of conformers that must be included
+
 if C == 0
     warnings = warnings + 1;
     exceptions{warnings} = MException('module_ensemble_fit:no_conformers', 'No conformers are specified or found.');
     failed = true;
+    fit_task = [];
     return
 end
 
@@ -197,7 +212,7 @@ for ddr_poi = 1:length(restraints.ddr)
         end
         if ~isempty(restraints.ddr(ddr_poi).r(kr))
             rmean = restraints.ddr(ddr_poi).r(kr);
-            sigr = restraints.ddr(ddr_poi).r(kr);
+            sigr = restraints.ddr(ddr_poi).sigr(kr);
             rax = fit_task.r_axis;
             sim_distr = exp(-(rax-rmean).^2/(2*sigr^2));
             fit_task.ddr(kr).sim_distr = sim_distr/sum(sim_distr);
@@ -208,7 +223,8 @@ end
 
 
 
-fit_task.ddr_valid = ones(1,nr);
+fit_task.ddr_valid = true(1,nr); % for logical indexing of restraints
+valid_conformers = true(1,C); % for logical indexing of conformers
 for c = 1:C
     % fprintf(1,'Working on conformer: %s\n',fit_task.file_list{c});
     entity = get_pdb(fit_task.file_list{c});
@@ -230,12 +246,29 @@ for c = 1:C
             if ~isempty(distr)
                 fit_task.ddr(block_offset+kr).distr(c,:) = distr/sum(distr);
             else
-                fit_task.ddr_valid(block_offset+kr) = 0;
+                fprintf(logfid,'Warning: Restraint %i cannot be evaluated for conformer %i\n',kr,c);
+                if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
+                    fit_task.ddr_valid(block_offset+kr) = false;
+                else % otherwise skip conformers for which not all restraints can be evaluated
+                    valid_conformers(c) = false;
+                end
             end
         end
         block_offset = block_offset + length(restraints.ddr(ddr_poi).site1);
     end
 end
+
+% restrict to the conformers for which all valid restraints could be
+% evaluated
+fit_task.file_list = fit_task.file_list(valid_conformers);
+fit_task.pop = fit_task.pop(valid_conformers);
+fit_task.pop = fit_task.pop/sum(fit_task.pop);
+C = length(fit_task.pop);
+
+fprintf(logfid,'\n');
+
+fit_task.remaining_conformers = 1:C;
+fit_task.ensemble_populations = fit_task.pop;
 
 if run_fit
     % prepare DEER fit by arranging fit target and distance distributions
@@ -247,6 +280,7 @@ if run_fit
             nr_ddr = nr_ddr + 1;
             data = zeros(length(fit_task.r_axis),C+2);
             data(:,1) = fit_task.r_axis.';
+            fit_task.ddr(kr).distr = fit_task.ddr(kr).distr(valid_conformers,:);
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 data(:,2) = fit_task.ddr(kr).exp_distr.';
             else
@@ -256,71 +290,137 @@ if run_fit
             all_ddr_predictions{nr_ddr} = data;
         end
     end
-    all_ddr_predictions = all_ddr_predictions(1:nr_deer);
+    all_ddr_predictions = all_ddr_predictions(1:nr_ddr);
     if opt.interactive
         figure
         opt.plot_axes = gca;
         opt.old_size = length(initial_files);
     end
-    clear fit_multi_ddr % initialize iteration counter
-
-    fanonym_ddr = @(v_opt)fit_multi_ddr(v_opt,all_ddr_predictions,opt);
-
-    l_ddr = zeros(1,C); % lower bound, populations are non-negative
-    u_ddr = ones(1,ensemble_size); % upper bound, populations cannot exceed 1
-    v0 = ones(1,C)/C; % start from uniform populations
-
-    fit_options = optimoptions('patternsearch',...
-        'MaxFunctionEvaluations',10000*length(v0),'MaxIterations',500*length(v0),...
-        'StepTolerance',opt.threshold/10);
     
-    tic,
-    [v,fom_ddr,exitflag,fit_output] = patternsearch(fanonym_ddr,v0,[],[],[],[],l_ddr,u_ddr,[],fit_options);
-    ddr_time = toc;
-    th = floor(ddr_time/3600);
-    ddr_time = ddr_time - 3600*th;
-    tmin = floor(ddr_time/60);
-    ts = round(ddr_time - 60*tmin);
+    % the following is an iterative run with block size limit
     
-    fprintf(log_fid,'DEER restraints fit took %i h %i min %i s',th,tmin,ts);
-    switch exitflag
-        case 0
-            fprintf(logfid,'Warning: Maximum number of function evaluations or iterations reached. Not converged.\n');
-        case 1
-            fprintf(logfid,'Convergence by mesh size.\n');
-        case 2
-            fprintf(logfid,'Convergence by change in population.\n');
-        case 3
-            fprintf(logfid,'Convergence by DEER overlap deficiency precision.\n');
-        case 4
-            fprintf(logfid,'Convergence by machine precision.\n');
-        case -1
-            fprintf(logfid,'ERROR: Optimization terminated by output or plot function.\n');
-        case -2
-            fprintf(logfid,'ERROR: No feasible solution found.\n');
-        case -3
-            fprintf(logfid,'Warning: No fitting was requested in restraint file.\n');
+    processed = C0; % pointer for processed files, initial ensemble is automatically included
+    included = 1:C0; % indices for conformers of initial ensemble
+    first_run = true; % even if only the initial ensemble is given, it should be refitted
+    
+    while processed < C || first_run
+    
+        clear fit_multi_ddr % initialize iteration counter
+    
+        first_run = false;
+        
+        if C0 > opt.blocksize - 10 % increase blocksize if necessary and raise warning 
+                                   % process at least 10 additional conformers
+            blocksize = C0 + round(opt.blocksize/2);
+            warnings = warnings + 1;
+            exceptions{warnings} = MException('module_ensemble_fit:blocksize_increased', 'Block size was increased to %i.',blocksize);
+        else
+            blocksize = opt.blocksize;
+        end
+
+        % make the list of conformer indices for this block and extract fit task 
+        
+        conformers = zeros(1,blocksize);
+        conformers(1:C0) = included;
+        % determine index of last conformer in this block
+        last_conformer = processed+blocksize-C0;
+        if last_conformer > C
+            last_conformer = C;
+        end
+        % add the new conformers for this block
+        for c = processed+1:last_conformer
+            conformers(C0+c-processed) = c;
+        end
+        conformers = conformers(1:C0+last_conformer-processed);
+        processed = last_conformer;
+        curr_blocksize = length(conformers); % the actual blocksize, as we might have run out of conformers
+        
+        curr_ddr_predictions = all_ddr_predictions;
+        for kr = 1:length(all_ddr_predictions) % loop over all restraints
+            data = all_ddr_predictions{kr};
+            data = [data(:,1:2) data(:,2+conformers)];
+            curr_ddr_predictions{kr} = data;
+        end
+
+        fanonym_ddr = @(v_opt)fit_multi_ddr(v_opt,curr_ddr_predictions,opt);
+
+        l_ddr = zeros(1,curr_blocksize); % lower bound, populations are non-negative
+        u_ddr = ones(1,curr_blocksize); % upper bound, populations cannot exceed 1
+        v0 = ones(1,curr_blocksize)/curr_blocksize; % start from uniform populations
+
+        fit_options = optimoptions('patternsearch',...
+            'MaxFunctionEvaluations',10000*length(v0),'MaxIterations',500*length(v0),...
+            'StepTolerance',opt.threshold/10);
+
+        tic,
+        [v,fom_ddr,exitflag,fit_output] = patternsearch(fanonym_ddr,v0,[],[],[],[],l_ddr,u_ddr,[],fit_options);
+        ddr_time = toc;
+        th = floor(ddr_time/3600);
+        ddr_time = ddr_time - 3600*th;
+        tmin = floor(ddr_time/60);
+        ts = round(ddr_time - 60*tmin);
+
+        fprintf(logfid,'DEER restraints fit took %i h %i min %i s\n',th,tmin,ts);
+        switch exitflag
+            case 0
+                fprintf(logfid,'Warning: Maximum number of function evaluations or iterations reached. Not converged.\n');
+            case 1
+                fprintf(logfid,'Convergence by mesh size.\n');
+            case 2
+                fprintf(logfid,'Convergence by change in population.\n');
+            case 3
+                fprintf(logfid,'Convergence by DEER overlap deficiency precision.\n');
+            case 4
+                fprintf(logfid,'Convergence by machine precision.\n');
+            case -1
+                fprintf(logfid,'ERROR: Optimization terminated by output or plot function.\n');
+            case -2
+                fprintf(logfid,'ERROR: No feasible solution found.\n');
+            case -3
+                fprintf(logfid,'Warning: No fitting was requested in restraint file.\n');
+        end
+        fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
+        fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
+
+        coeff = v/max(v); % populations normalized to their maximum
+        above_threshold = (coeff >= opt.threshold); % indicies of conformers above the population threshold
+        included = conformers(above_threshold); % these conformers are kept
+        fit_task.remaining_conformers = included; % store numbers of remaining conformers
+        coeff(~above_threshold) = 0; % discard low-probability conformers
+        coeff = coeff/sum(coeff);
+        fit_task.ensemble_populations = coeff(above_threshold); % store corresponding populations
+        fit_task.pop = coeff; % assign 
+        C0 = length(included);
+        opt.old_size = C0;
+        fprintf(logfid,'Final overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0);
     end
-    fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
-    fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
-    fprintf('Final overlap deficiency is: %6.3f\n',fom_ddr);
-    
-    coeff = v/max(v); % populations normalized to their maximum
-    included = 1:C;
-    included = included(coeff >= opt.threshold); % these conformers are kept
-    coeff(coeff >= opt.threshold) = 0; % discard low-probability conformers
-    fit_task.pop = coeff/sum(coeff); % assign 
-    fit_task.remaining_conformers = included; % store numbers of remaining conformers
-    fit_task.ensemble_populations = coeff(included); % store corresponding populations
+end
+
+% save ensemble
+ofid = fopen(outname,'wt');
+if ofid == -1
+    warnings = warnings + 1;
+    exceptions{warnings} = MException('module_ensemble_fit:ensemble_not_saved', 'Output file %s could not be written.',outname);
+else
+    fprintf(ofid,'%% %s, %s\n',outname,datetime);
+    for c = 1:length(fit_task.remaining_conformers)
+        fprintf(ofid,'%s%10.6f\n',fit_task.file_list{fit_task.remaining_conformers(c)},fit_task.ensemble_populations(c));
+    end
+    fclose(ofid);
 end
 
 for kr = 1:nr
-    fit_distr = fit_task.pop*fit_task.ddr(kr).distr;
+    fit_distr = fit_task.ensemble_populations*fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
     fit_task.ddr(kr).fit_distr = fit_distr;
     restraints.ddr(fit_task.ddr(kr).assignment(1)).fit_distr{fit_task.ddr(kr).assignment(2)} = fit_distr;
 end
 
+% save fit task and restraints
+
+save([outname '.mat'],'restraints','fit_task','exceptions');
+
 if plot_result
+    dr = fit_task.r_axis(2) - fit_task.r_axis(1);
     for kr = 1:nr
         if fit_task.ddr_valid(kr)
             figure(kr); clf; hold on
@@ -335,15 +435,15 @@ if plot_result
                 end
                 plot(fit_task.r_axis,dr*fit_task.ddr(kr).exp_distr,'Color',[0.2,0.2,0.2]);
             end
-            if ~isempty(fit_task.ddr(kr).sim_distr)
+            if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
                 plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0]);
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
             end
             plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0]);
             %     fprintf(1,'%i) Normalization of restraint distribution: %8.4f\n',k,sum(fit_task.ddr(k).sim_distr));
             %     fprintf(1,'%i) Normalization of ensemble distribution : %8.4f\n',k,sum(fit_task.ddr(k).fit_distr));
-            fprintf(1,'%i) Overlap Gaussian                       : %8.4f\n',k,overlap_G);
-            fprintf(1,'%i) Overlap DeerNet                        : %8.4f\n',k,overlap_E);
+            % fprintf(1,'%i) Overlap Gaussian                       : %8.4f\n',kr,overlap_G);
+            fprintf(1,'%i) Overlap DeerNet                        : %8.4f\n',kr,overlap_E);
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
             title_str = sprintf('%s-%s Overlaps:',site1,site2);
@@ -352,7 +452,7 @@ if plot_result
             elseif ~isempty(overlap_G)
                 title_str = sprintf('%s Gauss %6.3f',title_str,overlap_G);
             else
-                title_str = sprinyf('%s unknown');
+                title_str = sprintf('%s unknown',title_string);
             end
             title(title_str);
             xlabel('Distance (Angstroem)');
@@ -360,3 +460,4 @@ if plot_result
         end
     end
 end
+

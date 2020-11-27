@@ -21,6 +21,8 @@ function [all_files,pop,exceptions] = rd_ensemble_definition(fname)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
+exceptions{1} = [];
+
 [~,~,ext] = fileparts(fname);
 if isempty(ext)
     fname = strcat(fname,'.ens');

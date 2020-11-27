@@ -35,8 +35,6 @@ function [argout,exceptions] = get_chain(entity,attribute,address)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
-profile on
-
 % initialize empty output
 argout = cell(1,10000);
 exceptions = {[]};
@@ -139,4 +137,3 @@ end
 
 argout = argout(1:outputs);
 
-profile viewer

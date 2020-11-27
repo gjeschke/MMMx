@@ -243,12 +243,12 @@ for kc = 1:length(chains)
             else % should not happen, but if not a biopolymer, switch this analysis off
                 options.type_analysis = false;
             end
-            [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,type_proxi]...
+            [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,mean_R2,R0_seglen,nu_seglen,Rdev,type_proxi]...
                 = local_compactness(backbones.(chains{kc}),pop,options);
             correlations.(chains{kc}).type_proxi = type_proxi;
             correlations.(chains{kc}).res_types = options.slc;
         else % no type analysis
-            [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2]...
+            [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,mean_R2,R0_seglen,nu_seglen,Rdev]...
                 = local_compactness(backbones.(chains{kc}),pop,options);
         end
         measures.(chains{kc}).R0_g = R0;
@@ -260,8 +260,12 @@ for kc = 1:length(chains)
         measures.(chains{kc}).seg_len = all_k;
         measures.(chains{kc}).all_Rg = all_Rg;
         measures.(chains{kc}).all_R2 = all_R2;
+        measures.(chains{kc}).mean_R2 = mean_R2;
+        measures.(chains{kc}).R0_seglen = R0_seglen;
+        measures.(chains{kc}).nu_seglen = nu_seglen;
         correlations.(chains{kc}).compact = Comp;
         correlations.(chains{kc}).proximity = Prox;        
+        correlations.(chains{kc}).Rdev = Rdev;        
     end
 end
 
@@ -347,7 +351,7 @@ for r1 = 1:resnum
     end
 end
 
-function [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,type_proxi] = local_compactness(backbone,pop,options)
+function [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,mean_R2,R0_seglen,nu_seglen,Rdev,type_proxi] = local_compactness(backbone,pop,options)
 % [Comp,R0,nu,raxis,Rg_distr,P,R0_P,nu_P] = local_compactness(backbones,pop)
 % 
 % Local compactness analysis for an ensemble of N Calpha coils with n
@@ -378,12 +382,16 @@ function [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,type_prox
 % raxis     distance axis for Rg distribution matrix
 % Rg_distr  matrix of radius of gyration distribution versus segment length
 % Prox      proximity matrix
-% R0_P      sement length in sqrt(<R^2>) = R0_P n^nu_P
+% R0_P      segment length in sqrt(<R^2>) = R0_P n^nu_P
 % nu_P      scaling (chain extension) exponent in sqrt(<R^2>) = R0_P n^nu_P
 % all_k     vector of the lengths of all encountered segments
 % all_Rg    vector of the radii of gyration of all encountered segments
 % all_R2    vector of mean square end-to-end distances of all encountered
 %           segments 
+% mean_R2   k-averaged end-to-end distance
+% R0_seglen segment length in fit to mean_R2
+% nu_seglen scaling exponent in fit to mean R2
+% Rdev      matrix with deviation of end-to-end distances from mean_R2
 %
 % G. Jeschke, 2019-2020
 
@@ -423,6 +431,8 @@ all_Rg = zeros(1,N*(N-1)/2); % all encountered radii of gyration
 all_R2 = zeros(1,N*(N-1)/2); % all encountered mean square end-to-end distances
 all_Rg_poi = 0; % pointer for radii of gyration
 all_k = all_Rg; % sgement length
+all_i = all_Rg; % index of first residue
+all_j = all_Rg; % index of second residue
 if options.type_analysis
     all_types = zeros(N*(N-1)/2,2); % all residue-type pairs
 end
@@ -473,6 +483,8 @@ for i = 1:N-1 % first residue of segment
         Comp(j,i) = Rg;
         all_Rg(all_Rg_poi) = Rg; % vector of all radii of gyration
         all_k(all_Rg_poi) = k; % vector of all segment lengths
+        all_i(all_Rg_poi) = i; % vector of all indices of residue 1
+        all_j(all_Rg_poi) = j; % vector of all indices of residue 2
         rpoi = 1 + round(increments_per_Angstroem * Rg); % pointer into radii of gyration histogram
         Rg_distr(rpoi,k) = Rg_distr(rpoi,k) + 1; % update histogram for this segment length
         if Rg > exp_rmax % update maximum encountered radius of gyration
@@ -502,6 +514,7 @@ v = fminsearch(@msd_flory,v0,[],all_k,all_R2); % not the best minimizer, but the
 R0_P = v(1);
 nu_P = v(2);
 
+
 % Subtract reference state from compactness and prioximity matrix and normalize to
 % reference state
 % double loop over all residue pairs, indices as in the white paper on
@@ -517,6 +530,29 @@ for i = 1:N-1
         Prox(j,i) = Prox(i,j);
     end
 end
+
+kaxis = 1:max(all_k);
+mean_R2 = zeros(size(kaxis));
+for k = kaxis
+    these_R2 = all_R2(all_k == k);
+    mean_R2(k) = mean(these_R2);
+end
+
+% fit random coil parameters to the mean curve
+v0(1) = sqrt(6)*R0;
+v0(2) = nu;
+v = fminsearch(@msd_flory,v0,[],kaxis,mean_R2); % not the best minimizer, but the problem is simple
+R0_seglen = v(1);
+nu_seglen = v(2);
+
+
+
+Rdev = zeros(size(Prox));
+for me = 1:length(all_R2) % loop over all elements of the upper triangular matrix
+    Rdev(all_i(me),all_j(me)) = (all_R2(me) - mean_R2(all_k(me))); %/all_R2(me); 
+    Rdev(all_j(me),all_i(me)) = Rdev(all_i(me),all_j(me));
+end
+
 
 % do type analysis if requested
 if options.type_analysis % assign residue-type pair, if necessary

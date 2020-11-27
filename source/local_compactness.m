@@ -1,4 +1,4 @@
-function [C,R0,nu,raxis,Rg_distr,P,R0_P,nu_P] = local_compactness(coor,N,n,p)
+function [C,R0,nu,raxis,Rg_distr,P,R0_P,nu_P,all_k,all_Rg,all_R2] = local_compactness(coor,N,n,p)
 % [C,R0,nu,raxis,Rg_distr,P,R0_P,nu_P] = local_compactness(coor,N,n)
 % 
 % Local compactness analysis for an ensemble of N Calpha coils with n

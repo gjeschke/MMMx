@@ -29,6 +29,10 @@ function response = cx_command(command,options,port)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
+if ~exist('options','var') || isempty(options)
+    options = weboptions;
+    options.Timeout = 20;
+end
 
 if exist('port','var') && ~isempty(port)
     IP_port = sprintf('http://127.0.0.1:%i',port);

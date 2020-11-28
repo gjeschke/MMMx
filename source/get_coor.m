@@ -62,7 +62,7 @@ end
 [entity,exceptions] = select(entity,address,true);
 
 % return and report back exceptions, if selection went wrong
-if ~isempty(exceptions)
+if ~isempty(exceptions{1})
     return
 end
 

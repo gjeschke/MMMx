@@ -37,6 +37,7 @@ function [taur,info] = rotational_correlation_time(entity,address,options)
 % info         struct, type of computation and further results
 %              .HYDROPRO    Boolean flag, if true, HYDROPRO was used
 %              .Rh          hydrodynamic radius 
+%              .Tr          harmonic mean relaxation time
 %
 %
 
@@ -97,19 +98,21 @@ if ~exist('address','var') || isempty(address) % all conformers of the entity
     info.Rh = zeros(1,C);
     for c = 1:C
         entity = select(entity,sprintf('{%i}(*)',c),overwrite);
-        [taurc,Rhc] = get_taurc(entity,options,info);
+        [taurc,Rhc,Tr] = get_taurc(entity,options,info);
         taur(c) = taurc;
         info.Rh(c) = Rhc;
+        info.Tr(c) = Tr;
     end
 else
     entity = select(entity,address,overwrite);
-    [taur,Rhc] = get_taurc(entity,options,info);
+    [taur,Rhc,Tr] = get_taurc(entity,options,info);
     info.Rh = Rhc;
+    info.Tr = Tr;
 end
 
 % exceptions = put_pdb(entity,fname,options)
 
-function [taur,Rhc] = get_taurc(entity,options,info)
+function [taur,Rhc,Tr] = get_taurc(entity,options,info)
 
 % empty output
 taur = [];
@@ -164,13 +167,16 @@ if info.HYDROPRO
             disp(args{1});
             if strcmp(strtrim(args{1}),'Harmonic mean (correlation) time')
                 nargs = split(args{2});
-                taur = str2double(nargs{2});
+                Tr = str2double(nargs{2});
             end
             if strcmp(strtrim(args{1}),'Rotation (h)')
                 nargs = split(args{2});
                 Rhc = 1e8*str2double(nargs{2});
             end
         end
+        eta = 0.001*options.viscosity; % cPoise to Pa s
+        Rh = Rhc*1e-10; % Angstroem to m
+        taur = 4*pi*eta*Rh^3/(3*kB*options.T);
         fclose(fid);
     end
     cd(my_path);

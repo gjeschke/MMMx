@@ -59,14 +59,18 @@ opt.skip_restraints = false;
 
 outname = 'ensemble.ens';
 
+sas_options.lm = 20;
+sas_options.fb = 18;
+sas_options.delete = true;
+sas_options.cst = false;
+sas_options.err = true;
+sas_options.crysol3 = true;
+
 restraints.ddr(1).labels{1} = '';
-restraints.saxs(1).data{1} = '';
-restraints.sans(1).data{1} = '';
+restraints.sas(1).data{1} = '';
 
 ddr_poi = 0;
-saxs_poi = 0;
-sans_poi = 0;
-
+sas_poi = 0;
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
@@ -84,6 +88,23 @@ for d = 1:length(control.directives)
             added_conformers = control.directives(d).options{1};
         case 'save'
             outname = control.directives(d).options{1};
+        case 'saxs'
+            sas_poi = sas_poi + 1;
+            restraints.sas(sas_poi).type = 'saxs';
+            restraints.sas(sas_poi).data = control.directives(d).options{1};
+            restraints.sas(sas_poi).options = sas_options;
+        case 'sans'
+            sas_poi = sas_poi + 1;
+            restraints.sas(sas_poi).type = 'sans';
+            restraints.sas(sas_poi).data = control.directives(d).options{1};
+            restraints.sas(sas_poi).options = sas_options;
+            if length(control.directives(d).options) > 1
+                restraints.sas(sas_poi).illres = control.directives(d).options{2};
+            end
+            if length(control.directives(d).options) > 2
+                restraints.sas(sas_poi).D2O = str2double(control.directives(d).options{3});
+                restraints.sas(sas_poi).options.D2O = restraints.sas(sas_poi).D2O;
+            end
         case 'ddr'
             ddr_poi = ddr_poi + 1; % increase ddr block counter
             fprintf(logfid,'ddr %s',control.directives(d).options{1}); % echo directive to log file
@@ -141,8 +162,7 @@ for d = 1:length(control.directives)
 end
 
 restraints.ddr = restraints.ddr(1:ddr_poi);
-restraints.saxs = restraints.saxs(1:saxs_poi);
-restraints.sans = restraints.sans(1:sans_poi);
+restraints.sas = restraints.sas(1:sas_poi);
 
 % make file list of conformers
 
@@ -191,11 +211,13 @@ nr = 0;
 for ddr_poi = 1:length(restraints.ddr)
     nr = nr + length(restraints.ddr(ddr_poi).site1);
 end
-fit_task.ddr(nr).sim_distr = zeros(1,length(fit_task.r_axis));
-fit_task.ddr(nr).exp_distr = [];
-fit_task.ddr(nr).exp_distr_lb = [];
-fit_task.ddr(nr).exp_distr_ub = [];
-fit_task.ddr(nr).fit_distr = [];
+if ~isempty(restraints.ddr)
+    fit_task.ddr(nr).sim_distr = zeros(1,length(fit_task.r_axis));
+    fit_task.ddr(nr).exp_distr = [];
+    fit_task.ddr(nr).exp_distr_lb = [];
+    fit_task.ddr(nr).exp_distr_ub = [];
+    fit_task.ddr(nr).fit_distr = [];
+end
 for ddr_poi = 1:length(restraints.ddr)
     for kr = 1:length(restraints.ddr(ddr_poi).site1)
         if ~isempty(restraints.ddr(ddr_poi).file{kr})
@@ -222,12 +244,30 @@ for ddr_poi = 1:length(restraints.ddr)
 end
 
 
-
+fit_task.sas(length(restraints.sas)).fits = [];
+sas_initialized = false(1,length(restraints.sas));
 fit_task.ddr_valid = true(1,nr); % for logical indexing of restraints
 valid_conformers = true(1,C); % for logical indexing of conformers
 for c = 1:C
     % fprintf(1,'Working on conformer: %s\n',fit_task.file_list{c});
-    entity = get_pdb(fit_task.file_list{c});
+    fname = fit_task.file_list{c};
+    poi = strfind(fname,'.pdb');
+    if ~isempty(poi)
+        fname = fname(1:poi-1);
+    end
+    prop_file = strcat(fname,'.prop.mat');
+    if exist(prop_file,'file')
+        p = load(prop_file);
+        properties = p.properties;
+        if isfield(properties,'entity')
+            entity = properties.entity;
+        else
+            entity = get_pdb(fit_task.file_list{c});
+        end
+    else
+        properties.initialized = true;
+        entity = get_pdb(fit_task.file_list{c});
+    end
     block_offset = 0;
     for ddr_poi = 1:length(restraints.ddr)
         label1 = restraints.ddr(ddr_poi).labels{1};
@@ -236,17 +276,43 @@ for c = 1:C
             fit_task.ddr(block_offset+kr).assignment = [ddr_poi,kr];
             site1 = restraints.ddr(ddr_poi).site1{kr};
             site2 = restraints.ddr(ddr_poi).site2{kr};
-            [~,distr,entity,ddr_exceptions] = distance_distribution(entity,site1,label1,site2,label2,options);
+            is_known = false;
+            if isfield(properties,'ddr')
+                n_comp = length(properties.ddr);
+                for k_comp = 1:n_comp
+                    if strcmp(properties.ddr(k_comp).site1,site1) && ...
+                            strcmp(properties.ddr(k_comp).site2,site2) && ...
+                            strcmp(properties.ddr(k_comp).label1,label1) && ...
+                            strcmp(properties.ddr(k_comp).label2,label2)
+                        ddr_exceptions = [];
+                        distr = properties.ddr(k_comp).distr;
+                        is_known = true;
+                        break
+                    end                    
+                end
+            else
+                n_comp = 0;
+            end
+            if ~is_known
+                [~,distr,entity,ddr_exceptions] = distance_distribution(entity,site1,label1,site2,label2,options);
+            end
             if ~isempty(ddr_exceptions) && ~isempty(ddr_exceptions{1})
                 for ex = 1:length(ddr_exceptions)
                     warnings = warnings + 1;
                     exceptions{warnings} = ddr_exceptions{ex};
                 end
+            elseif ~is_known
+                n_comp = n_comp + 1;
+                properties.ddr(n_comp).site1 = site1;
+                properties.ddr(n_comp).site2 = site2;
+                properties.ddr(n_comp).label1 = label1;
+                properties.ddr(n_comp).label2 = label2;
+                properties.ddr(n_comp).distr = distr;
             end
             if ~isempty(distr)
                 fit_task.ddr(block_offset+kr).distr(c,:) = distr/sum(distr);
             else
-                fprintf(logfid,'Warning: Restraint %i cannot be evaluated for conformer %i\n',kr,c);
+                fprintf(logfid,'Warning: ddr %i cannot be evaluated for conformer %i\n',kr,c);
                 if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
                     fit_task.ddr_valid(block_offset+kr) = false;
                 else % otherwise skip conformers for which not all restraints can be evaluated
@@ -256,6 +322,89 @@ for c = 1:C
         end
         block_offset = block_offset + length(restraints.ddr(ddr_poi).site1);
     end
+    fit_task.sas_valid = false(1,length(restraints.sas)); % for logical indexing of restraints
+    for sas_poi = 1:length(restraints.sas)
+        is_known = false;
+        if isfield(properties,'sas')
+            n_comp = length(properties.sas);
+            for k_comp = 1:n_comp
+                if strcmp(restraints.sas(sas_poi).type,properties.sas(k_comp).type) && ...
+                        strcmp(restraints.sas(sas_poi).data,properties.sas(k_comp).data)
+                    fit = properties.sas(k_comp).fit;
+                    chi2 = properties.sas(k_comp).chi2;
+                    is_known = true;
+                    break
+                end
+            end
+            if ~is_known
+                datafile = restraints.sas(sas_poi).data;
+                options = restraints.sas(sas_poi).options;
+                switch restraints.sas(sas_poi).type
+                    case 'saxs'
+                        [fit,chi2] = fit_SAXS(datafile,fit_task.file_list{c},options);
+                    case 'sans'
+                        illres = restraints.sas(sas_poi).illres;
+                        [fit,chi2] = fit_SANS(datafile,fit_task.file_list{c},illres,options);
+                end
+            end
+            if isempty(fit)
+                warnings = warnings + 1;
+                exceptions{warnings} = ME_expection('module_ensemble_fit:sas_curve_fitting_failed', 'SAS curve %s could not be fitted for conformer %s',datafile,fit_task.file_list{c});
+                fprintf(logfid,'Warning: sas %i cannot be evaluated for conformer %i\n',sas_poi,c);
+                valid_conformers(c) = false;
+            else
+                if ~sas_initialized(sas_poi)
+                    [m,~] = size(fit);
+                    fit_task.sas(sas_poi).fits = zeros(m,3+C);
+                    fit_task.sas(sas_poi).fits(:,1:2) = fit(:,1:2);
+                    fit_task.sas(sas_poi).fits(:,3) = fit(:,4);
+                    fit_task.sas(sas_poi).fits(:,4) = fit(:,3);
+                    sas_initialized(sas_poi) = true;
+                else
+                    fit_task.sas(sas_poi).fits(:,3+c) = fit(:,3);
+                end
+                fit_task.sas_valid(sas_poi) = true; % if at least one conformer can be computed
+            end
+        else
+            n_comp = 0;
+            datafile = restraints.sas(sas_poi).data;
+            options = restraints.sas(sas_poi).options;
+            switch restraints.sas(sas_poi).type
+                case 'saxs'
+                    [fit,chi2] = fit_SAXS(datafile,fit_task.file_list{c},options);
+                case 'sans'
+                    illres = restraints.sas(sas_poi).illres;
+                    [fit,chi2] = fit_SANS(datafile,fit_task.file_list{c},illres,options);
+            end
+            if isempty(fit)
+                warnings = warnings + 1;
+                exceptions{warnings} = ME_exception('module_ensemble_fit:sas_curve_fitting_failed', 'SAS curve %s could not be fitted for conformer %s',datafile,fit_task.file_list{c});
+                fprintf(logfid,'Warning: sas %i cannot be evaluated for conformer %i\n',sas_poi,c);
+                valid_conformers(c) = false;
+            else
+                if ~sas_initialized(sas_poi)
+                    [m,~] = size(fits);
+                    fit_task.sas(sas_poi).fits = zeros(m,3+C);
+                    fit_task.sas(sas_poi).fits(:,1:2) = fit(:,1:2);
+                    fit_task.sas(sas_poi).fits(:,3) = fit(:,4);
+                    fit_task.sas(sas_poi).fits(:,4) = fit(:,3);
+                    sas_initialized(sas_poi) = true;
+                else
+                    fit_task.sas(sas_poi).fits(:,3+c) = fit(:,3);
+                end
+                fit_task.sas_valid(sas_poi) = true; % if at least one conformer can be computed
+            end
+        end
+        if ~is_known
+            n_comp = n_comp + 1;
+            properties.sas(n_comp).fit = fit;
+            properties.sas(n_comp).chi2 = chi2;
+            properties.sas(n_comp).data = restraints.sas(sas_poi).data;
+            properties.sas(n_comp).type = restraints.sas(sas_poi).type;
+        end
+    end
+    properties.entity = entity;
+    save(prop_file,'properties');
 end
 
 % restrict to the conformers for which all valid restraints could be
@@ -263,6 +412,11 @@ end
 fit_task.file_list = fit_task.file_list(valid_conformers);
 fit_task.pop = fit_task.pop(valid_conformers);
 fit_task.pop = fit_task.pop/sum(fit_task.pop);
+for kr = 1:length(fit_task.sas)
+    fit_task.sas(kr).all_fits = fit_task.sas(kr).fits(:,4:end);
+    sas_fits = fit_task.sas(kr).fits(:,4:end);
+    fit_task.sas(kr).fits = [fit_task.sas(kr).fits(:,1:3) sas_fits(:,valid_conformers)];
+end
 C = length(fit_task.pop);
 
 fprintf(logfid,'\n');
@@ -270,33 +424,48 @@ fprintf(logfid,'\n');
 fit_task.remaining_conformers = 1:C;
 fit_task.ensemble_populations = fit_task.pop;
 
-if run_fit
-    % prepare DEER fit by arranging fit target and distance distributions
-    % predicted for all conformers into matrices for all restraints
-    nr_ddr = 0;
-    all_ddr_predictions = cell(1,length(fit_task.ddr_valid));
-    for kr = 1:length(fit_task.ddr_valid) % all restraints
-        if fit_task.ddr_valid(kr) % this is a valid restraint
-            nr_ddr = nr_ddr + 1;
-            data = zeros(length(fit_task.r_axis),C+2);
-            data(:,1) = fit_task.r_axis.';
-            fit_task.ddr(kr).distr = fit_task.ddr(kr).distr(valid_conformers,:);
-            if ~isempty(fit_task.ddr(kr).exp_distr)
-                data(:,2) = fit_task.ddr(kr).exp_distr.';
-            else
-                data(:,2) = fit_task.ddr(kr).sim_distr.';
-            end
-            data(:,3:end) = fit_task.ddr(kr).distr.';
-            all_ddr_predictions{nr_ddr} = data;
+% prepare DEER fit by arranging fit target and distance distributions
+% predicted for all conformers into matrices for all restraints
+nr_ddr = 0;
+all_ddr_predictions = cell(1,length(fit_task.ddr_valid));
+for kr = 1:length(fit_task.ddr_valid) % all restraints
+    if fit_task.ddr_valid(kr) % this is a valid restraint
+        nr_ddr = nr_ddr + 1;
+        data = zeros(length(fit_task.r_axis),C+2);
+        data(:,1) = fit_task.r_axis.';
+        fit_task.ddr(kr).distr = fit_task.ddr(kr).distr(valid_conformers,:);
+        if ~isempty(fit_task.ddr(kr).exp_distr)
+            data(:,2) = fit_task.ddr(kr).exp_distr.';
+        else
+            data(:,2) = fit_task.ddr(kr).sim_distr.';
         end
+        data(:,3:end) = fit_task.ddr(kr).distr.';
+        all_ddr_predictions{nr_ddr} = data;
     end
-    all_ddr_predictions = all_ddr_predictions(1:nr_ddr);
-    if opt.interactive
-        figure
-        opt.plot_axes = gca;
-        opt.old_size = length(initial_files);
+end
+all_ddr_predictions = all_ddr_predictions(1:nr_ddr);
+
+% prepare SAS fit by arranging fit target and distance distributions
+% predicted for all conformers into matrices for all restraints
+nr_sas = 0;
+all_sas_predictions = cell(1,length(fit_task.sas_valid));
+for kr = 1:length(fit_task.sas_valid) % all restraints
+    if fit_task.sas_valid(kr) % this is a valid restraint
+        nr_sas = nr_sas + 1;
+        all_sas_predictions{kr} = fit_task.sas(kr).fits;
     end
-    
+end
+all_sas_predictions = all_sas_predictions(1:nr_sas);
+
+if opt.interactive
+    figure
+    opt.plot_axes = gca;
+    opt.old_size = length(initial_files);
+end
+
+loss_of_merit = [];
+
+if run_fit
     % the following is an iterative run with block size limit
     
     processed = C0; % pointer for processed files, initial ensemble is automatically included
@@ -304,8 +473,6 @@ if run_fit
     first_run = true; % even if only the initial ensemble is given, it should be refitted
     
     while processed < C || first_run
-    
-        clear fit_multi_ddr % initialize iteration counter
     
         first_run = false;
         
@@ -335,53 +502,203 @@ if run_fit
         processed = last_conformer;
         curr_blocksize = length(conformers); % the actual blocksize, as we might have run out of conformers
         
-        curr_ddr_predictions = all_ddr_predictions;
-        for kr = 1:length(all_ddr_predictions) % loop over all restraints
-            data = all_ddr_predictions{kr};
-            data = [data(:,1:2) data(:,2+conformers)];
-            curr_ddr_predictions{kr} = data;
+        % initialize figure-of-merit structure with NaNs
+        
+        fom.ddr = NaN;
+        fom.sas = NaN;
+        fom.pre = NaN;
+        
+        nr_sets = 0;
+        
+        if nr_ddr > 0 % distance distribution fit, if there are such restraints
+            clear fit_multi_ddr % initialize iteration counter
+            
+            curr_ddr_predictions = all_ddr_predictions;
+            for kr = 1:length(all_ddr_predictions) % loop over all restraints
+                data = all_ddr_predictions{kr};
+                data = [data(:,1:2) data(:,2+conformers)];
+                curr_ddr_predictions{kr} = data;
+            end
+            
+            fanonym_ddr = @(v_opt)fit_multi_ddr(v_opt,curr_ddr_predictions,opt);
+            
+            l_ddr = zeros(1,curr_blocksize); % lower bound, populations are non-negative
+            u_ddr = ones(1,curr_blocksize); % upper bound, populations cannot exceed 1
+            v0 = ones(1,curr_blocksize)/curr_blocksize; % start from uniform populations
+            
+            fit_options = optimoptions('patternsearch',...
+                'MaxFunctionEvaluations',10000*length(v0),'MaxIterations',500*length(v0),...
+                'StepTolerance',opt.threshold/10);
+            
+            tic,
+            [v,fom_ddr,exitflag,fit_output] = patternsearch(fanonym_ddr,v0,[],[],[],[],l_ddr,u_ddr,[],fit_options);
+            ddr_time = toc;
+            th = floor(ddr_time/3600);
+            ddr_time = ddr_time - 3600*th;
+            tmin = floor(ddr_time/60);
+            ts = round(ddr_time - 60*tmin);
+            
+            % store information for multi-restraint fit
+            fom.ddr = fom_ddr;
+            predictions.ddr = curr_ddr_predictions;
+            nr_sets = nr_sets + 1;
+            
+            fprintf(logfid,'DEER restraints fit took %i h %i min %i s\n',th,tmin,ts);
+            switch exitflag
+                case 0
+                    fprintf(logfid,'Warning: Maximum number of function evaluations or iterations reached. Not converged.\n');
+                case 1
+                    fprintf(logfid,'Convergence by mesh size.\n');
+                case 2
+                    fprintf(logfid,'Convergence by change in population.\n');
+                case 3
+                    fprintf(logfid,'Convergence by ddr overlap deficiency precision.\n');
+                case 4
+                    fprintf(logfid,'Convergence by machine precision.\n');
+                case -1
+                    fprintf(logfid,'ERROR: Optimization terminated by output or plot function.\n');
+                case -2
+                    fprintf(logfid,'ERROR: No feasible solution found.\n');
+                case -3
+                    fprintf(logfid,'Warning: No fitting was requested in restraint file.\n');
+            end
+            fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
+            fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
+            
+            coeff_ddr = v/max(v); % populations normalized to their maximum
+            above_threshold_ddr = (coeff_ddr >= opt.threshold); % indicies of conformers above the population threshold
+            included_ddr = conformers(above_threshold_ddr); % these conformers are kept
+            C0_ddr = length(included_ddr);
+
+            fprintf(logfid,'Final ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_ddr);
+        end
+        
+        if nr_sas > 0 % small-angle scattering curve fit, if there are such restraints
+            clear fit_multi_SAS % initialize iteration counter
+            
+            curr_sas_predictions = all_sas_predictions;
+            for kr = 1:length(all_sas_predictions) % loop over all restraints
+                data = all_sas_predictions{kr};
+                data = [data(:,1:3) data(:,3+conformers)];
+                curr_sas_predictions{kr} = data;
+            end
+            
+            fanonym_sas = @(v_opt)fit_multi_SAS(v_opt,curr_sas_predictions,opt);
+            
+            l_sas = [zeros(1,curr_blocksize)  -0.01*ones(1,length(curr_sas_predictions))]; % lower bound, populations are non-negative, add baseline corrections
+            u_sas = [ones(1,curr_blocksize) 0.01*ones(1,length(curr_sas_predictions))]; % upper bound, populations cannot exceed 1, add baseline corrections
+            v0 = [ones(1,curr_blocksize)/curr_blocksize zeros(1,length(curr_sas_predictions))]; % start from uniform populations
+            
+            fit_options = optimoptions('patternsearch',...
+                'MaxFunctionEvaluations',10000*length(v0),'MaxIterations',500*length(v0),...
+                'StepTolerance',opt.threshold/10);
+            tic,
+            [v,fom_sas,exitflag,fit_output] = patternsearch(fanonym_sas,v0,[],[],[],[],l_sas,u_sas,[],fit_options);
+            sas_time = toc;
+            th = floor(sas_time/3600);
+            sas_time = sas_time - 3600*th;
+            tmin = floor(sas_time/60);
+            ts = round(sas_time - 60*tmin);
+            
+            % store information for multi-restraint fit
+            fom.sas = fom_sas;
+            predictions.sas = curr_sas_predictions;
+            nr_sets = nr_sets + 1;
+            
+            fprintf(logfid,'SAS curve fit took %i h %i min %i s\n',th,tmin,ts);
+            switch exitflag
+                case 0
+                    fprintf(logfid,'Warning: Maximum number of function evaluations or iterations reached. Not converged.\n');
+                case 1
+                    fprintf(logfid,'Convergence by mesh size.\n');
+                case 2
+                    fprintf(logfid,'Convergence by change in population.\n');
+                case 3
+                    fprintf(logfid,'Convergence by SAS chi^2 precision.\n');
+                case 4
+                    fprintf(logfid,'Convergence by machine precision.\n');
+                case -1
+                    fprintf(logfid,'ERROR: Optimization terminated by output or plot function.\n');
+                case -2
+                    fprintf(logfid,'ERROR: No feasible solution found.\n');
+                case -3
+                    fprintf(logfid,'Warning: No fitting was requested in restraint file.\n');
+            end
+            fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
+            fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
+            
+            coeff_sas = v/max(v); % populations normalized to their maximum
+            above_threshold_sas = (coeff_sas >= opt.threshold); % indicies of conformers above the population threshold
+            included_sas = conformers(above_threshold_sas); % these conformers are kept
+            C0_sas = length(included_sas);
+            fprintf(logfid,'Final SAS chi^2 is: %6.3f with %i conformers\n\n',fom_sas,C0_sas);
         end
 
-        fanonym_ddr = @(v_opt)fit_multi_ddr(v_opt,curr_ddr_predictions,opt);
-
-        l_ddr = zeros(1,curr_blocksize); % lower bound, populations are non-negative
-        u_ddr = ones(1,curr_blocksize); % upper bound, populations cannot exceed 1
-        v0 = ones(1,curr_blocksize)/curr_blocksize; % start from uniform populations
-
-        fit_options = optimoptions('patternsearch',...
-            'MaxFunctionEvaluations',10000*length(v0),'MaxIterations',500*length(v0),...
-            'StepTolerance',opt.threshold/10);
-
-        tic,
-        [v,fom_ddr,exitflag,fit_output] = patternsearch(fanonym_ddr,v0,[],[],[],[],l_ddr,u_ddr,[],fit_options);
-        ddr_time = toc;
-        th = floor(ddr_time/3600);
-        ddr_time = ddr_time - 3600*th;
-        tmin = floor(ddr_time/60);
-        ts = round(ddr_time - 60*tmin);
-
-        fprintf(logfid,'DEER restraints fit took %i h %i min %i s\n',th,tmin,ts);
-        switch exitflag
-            case 0
-                fprintf(logfid,'Warning: Maximum number of function evaluations or iterations reached. Not converged.\n');
-            case 1
-                fprintf(logfid,'Convergence by mesh size.\n');
-            case 2
-                fprintf(logfid,'Convergence by change in population.\n');
-            case 3
-                fprintf(logfid,'Convergence by DEER overlap deficiency precision.\n');
-            case 4
-                fprintf(logfid,'Convergence by machine precision.\n');
-            case -1
-                fprintf(logfid,'ERROR: Optimization terminated by output or plot function.\n');
-            case -2
-                fprintf(logfid,'ERROR: No feasible solution found.\n');
-            case -3
-                fprintf(logfid,'Warning: No fitting was requested in restraint file.\n');
+        loss_of_merit = [];
+        if nr_sets > 1 % multi-restraint fit, if there is more than on restraint set
+            clear fit_multi_restraints % initialize iteration counter
+            
+            fanonym_integrative = @(v_opt)fit_multi_restraints(v_opt,predictions,fom,opt);
+            
+            l = [zeros(1,curr_blocksize)  -0.01*ones(1,length(curr_sas_predictions))]; % lower bound, populations are non-negative, add baseline corrections
+            u = [ones(1,curr_blocksize) 0.01*ones(1,length(curr_sas_predictions))]; % upper bound, populations cannot exceed 1, add baseline corrections
+            v0 = [ones(1,curr_blocksize)/curr_blocksize zeros(1,length(curr_sas_predictions))]; % start from uniform populations
+            
+            fit_options = optimoptions('patternsearch',...
+                'MaxFunctionEvaluations',50000*length(v0),'MaxIterations',2500*length(v0),...
+                'StepTolerance',opt.threshold/10);
+            
+            tic,
+            [v,loss_of_merit,exitflag,fit_output] = patternsearch(fanonym_integrative,v0,[],[],[],[],l,u,[],fit_options);
+            integrative_time = toc;
+            
+            if ~isnan(fom.sas)
+                fom_sas = sim_multi_sas(v,curr_sas_predictions);
+            end
+            v = v(1:end-length(curr_sas_predictions));
+            
+            if ~isnan(fom.ddr)
+                fom_ddr = sim_multi_ddr(v,curr_ddr_predictions);
+            end
+            th = floor(integrative_time/3600);
+            integrative_time = integrative_time - 3600*th;
+            tmin = floor(integrative_time/60);
+            ts = round(integrative_time - 60*tmin);
+            
+            fprintf(logfid,'Iterative fit took %i h %i min %i s\n',th,tmin,ts);
+            switch exitflag
+                case 0
+                    fprintf(logfid,'Warning: Maximum number of function evaluations or iterations reached. Not converged.\n');
+                case 1
+                    fprintf(logfid,'Convergence by mesh size.\n');
+                case 2
+                    fprintf(logfid,'Convergence by change in population.\n');
+                case 3
+                    fprintf(logfid,'Convergence by loss of merit precision.\n');
+                case 4
+                    fprintf(logfid,'Convergence by machine precision.\n');
+                case -1
+                    fprintf(logfid,'ERROR: Optimization terminated by output or plot function.\n');
+                case -2
+                    fprintf(logfid,'ERROR: No feasible solution found.\n');
+                case -3
+                    fprintf(logfid,'Warning: No fitting was requested in restraint file.\n');
+            end
+            fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
+            fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
+            
+            coeff_all = v/max(v); % populations normalized to their maximum
+            above_threshold_all = (coeff_all >= opt.threshold); % indicies of conformers above the population threshold
+            included_all = conformers(above_threshold_all); % these conformers are kept
+            C0_all = length(included_all);
+            if ~isnan(fom.ddr)
+                fprintf(logfid,'Integrative ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_all);            
+            end
+            if ~isnan(fom.sas)
+                fprintf(logfid,'Integrative SAS chi^2 is: %6.3f with %i conformers\n\n',fom_sas,C0_all);            
+            end
+            fprintf(logfid,'Loss of merit is: %6.3f with %i conformers\n\n',loss_of_merit,C0_all);            
         end
-        fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
-        fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
-
         coeff = v/max(v); % populations normalized to their maximum
         above_threshold = (coeff >= opt.threshold); % indicies of conformers above the population threshold
         included = conformers(above_threshold); % these conformers are kept
@@ -392,7 +709,6 @@ if run_fit
         fit_task.pop = coeff; % assign 
         C0 = length(included);
         opt.old_size = C0;
-        fprintf(logfid,'Final overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0);
     end
 end
 
@@ -415,12 +731,33 @@ for kr = 1:nr
     restraints.ddr(fit_task.ddr(kr).assignment(1)).fit_distr{fit_task.ddr(kr).assignment(2)} = fit_distr;
 end
 
+for kr = 1:nr_sas
+    fitted_curve = fit_task.ensemble_populations*fit_task.sas(kr).all_fits(:,fit_task.remaining_conformers).';
+    fitted_curve = fitted_curve.';
+    data = all_sas_predictions{kr};
+    bsl = 0;
+    [bsl,chi2] = fminsearch(@sas_baseline,bsl,[],data(:,2),fitted_curve,data(:,3));
+    fitted_curve = fitted_curve + bsl;
+    sc = sum(data(:,2).*fitted_curve)/sum(fitted_curve.^2);            
+    fit_task.sas(kr).fitted_curve = sc*fitted_curve;
+    fit_task.sas(kr).chi2 = chi2;
+end
+
+if isempty(loss_of_merit) % for non-integrative fits, there is no loss of merit
+    loss_of_merit = 0;
+else
+    fprintf(logfid,'\n Final loss of merit: %6.3f\n',loss_of_merit);
+    fprintf(1,'\n Final loss of merit: %6.3f\n',loss_of_merit);
+end
+fit_task.loss_of_merit = loss_of_merit;
+
 % save fit task and restraints
 
 save([outname '.mat'],'restraints','fit_task','exceptions');
 
 if plot_result
     dr = fit_task.r_axis(2) - fit_task.r_axis(1);
+    overlap = 1;
     for kr = 1:nr
         if fit_task.ddr_valid(kr)
             figure(kr); clf; hold on
@@ -440,10 +777,7 @@ if plot_result
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
             end
             plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0]);
-            %     fprintf(1,'%i) Normalization of restraint distribution: %8.4f\n',k,sum(fit_task.ddr(k).sim_distr));
-            %     fprintf(1,'%i) Normalization of ensemble distribution : %8.4f\n',k,sum(fit_task.ddr(k).fit_distr));
-            % fprintf(1,'%i) Overlap Gaussian                       : %8.4f\n',kr,overlap_G);
-            fprintf(1,'%i) Overlap DeerNet                        : %8.4f\n',kr,overlap_E);
+            overlap = overlap*overlap_E;
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
             title_str = sprintf('%s-%s Overlaps:',site1,site2);
@@ -459,5 +793,72 @@ if plot_result
             ylabel('Probability density');
         end
     end
+    overlap = overlap^(1/nr);
+    fprintf(1,'Overlap deficiency: %6.3f\n',1-overlap);
+    for kr = 1:nr_sas
+        if fit_task.sas_valid(kr)
+            figure(kr+1000); clf; hold on
+            data = all_sas_predictions{kr};
+            fitted_curve = fit_task.sas(kr).fitted_curve;
+            plot(data(:,1),data(:,2),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
+            plot(data(:,1),fitted_curve,'-','LineWidth',2.5,'Color',[0.7,0,0]);
+            title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            xlabel('s [Angstroem^{-1}]');
+            ylabel('I(s)');
+            figure(kr+2000); clf; hold on
+            data = all_sas_predictions{kr};
+            plot(data(:,1),log(data(:,2)),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
+            plot(data(:,1),log(fitted_curve),'-','LineWidth',2.5,'Color',[0.7,0,0]);
+            title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            xlabel('s [Angstroem^{-1}]');
+            ylabel('log(I(s))');
+            figure(kr+3000); clf; hold on
+            data = all_sas_predictions{kr};
+            plot(data(:,1),data(:,2)-fitted_curve,'.','MarkerSize',14,'Color',[0,0,0.8]);
+            title(sprintf('Fit residual: chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            xlabel('s [Angstroem^{-1}]');
+            ylabel('log(I(s))');
+        end
+    end
+end    
+
+function chi2 = sas_baseline(bsl,curve,fit,errors)
+
+sim = fit + bsl;
+sc = sum(curve.*sim)/sum(sim.*sim);
+chi2 = sum(((curve-sc*sim)./errors).^2)/(length(curve)-1);
+
+function fom = sim_multi_ddr(v,fit)
+
+fom = 1;
+for k = 1:length(fit)
+    data = fit{k};
+    restraint = data(:,2);
+    [~,n] = size(data);
+    basis = data(:,3:n);
+    coeff = v;
+    sim = basis*coeff';
+    sim = sim/sum(sim);
+    restraint = restraint/sum(restraint);
+    overlap = sum(min([restraint';sim']));
+    fom = fom * overlap;
+end
+
+fom = 1 - fom^(1/length(fit));
+
+function fom = sim_multi_sas(v,fit)
+
+fom = 0;
+for k = 1:length(fit)
+    data = fit{k};
+    curve = data(:,2);
+    errors = data(:,3);
+    [m,n] = size(data);
+    basis = data(:,4:n);
+    coeff = v(1:n-3);
+    sim = basis*coeff' + v(n-3+k);
+    sc = sum(curve.*sim)/sum(sim.*sim);
+    chi2 = sum(((curve-sc*sim)./errors).^2)/(m-1);
+    fom = fom + chi2;
 end
 

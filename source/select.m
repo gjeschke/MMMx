@@ -183,7 +183,15 @@ if ~isempty(confstr) && ~all_conformers
     elseif overwrite
         entity.selected = conformers(1:cpoi);
     else
-        entity.selected = [entity.selected conformers(1:cpoi)];
+        is_added = true(1,length(entity.selected));
+        for ocpoi = 1:length(entity.selected)
+            for ncpoi = 1:cpoi
+                if entity.selected(ocpoi) == conformers(ncpoi)
+                    is_added(ocpoi) = false;
+                end
+            end
+        end
+        entity.selected = [entity.selected(is_added) conformers(1:cpoi)];
     end
 end
 

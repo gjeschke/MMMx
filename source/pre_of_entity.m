@@ -124,12 +124,12 @@ for c = 1:length(entity.populations) % loop over all conformers
     coor = coor(1:n_H,:);
     
     label_adr = sprintf('{%i}%s',c,label);
-    [positions,entity] = get_label(entity,'mtsl','positions',label_adr);
+    [positions,entity,exceptions] = get_label(entity,'mtsl','positions',label_adr);
     curr_label.coor = positions{1};
-    [populations,entity,exceptions] = get_label(entity,'mtsl','populations','(A)316');
+    [populations,entity] = get_label(entity,'mtsl','populations',label_adr);
     curr_label.pop = populations{1};
     all_pre = pre(coor,curr_label,td,taur,taui,R2_dia,larmor);
-    pres(1:n_H) = pres(1:n_H) + entity.populations(c) + all_pre;
+    pres(1:n_H) = pres(1:n_H) + entity.populations(c)*all_pre;
 end
 
 % copy the ensemble-average PREs to the output list

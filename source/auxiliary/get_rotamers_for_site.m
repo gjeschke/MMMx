@@ -65,7 +65,7 @@ options.f_factor = rot_lib.f_factor;
 % select all atoms of all redidues residues in the whole conformer
 entity = select(entity,sprintf('{%i}(*)*.*',site.conformer));
 % unselect the site
-entity = select(entity,sprintf('{%i}(%s)%s.*',site.conformer,site.chain,site.residue(2:end)),false,true);
+entity = select(entity,sprintf('(%s)%s.*',site.chain,site.residue(2:end)),false,true);
 % argout = get_atom(entity,'xyz');
 % arrayout = argout(~cellfun('isempty',argout));
 % outputs = length(arrayout);

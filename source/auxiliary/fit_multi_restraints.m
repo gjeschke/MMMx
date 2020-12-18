@@ -39,13 +39,17 @@ function fom = fit_multi_restraints(v,predictions,normalize,opt)
 %       3rd column    : SAS error curve
 %       columns 4... n: predicted SAS curves for conformers
 % pre
-%       cell vector of SAS information, each cell
-%       contains data for one PRE restraint, an array [m,n], where
-%       m   number of assigned protons with PRES
-%       n-1 number of ensemble members, must match length of v
-%       1st column    : residue numbers (not used here)
-%       2nd column    : experimental PREs
-%       columns 3... n: predicted PREs for conformers
+%       struct with fields
+%       .predictions    array [m,n] with experimental PRE predictions
+%                       1st column : experimental PREs, I_para/I_dia
+%                       columns 2-n: predicted Gamma2 for n-1 ensemble
+%                       members, n-1 = length(v)
+%       .parameters     array of struct for PRE blocks with fields
+%                       .td     total INEPT time [s]
+%                       .R2dia  relaxation rate for diamagnetic protein,
+%                               [Hz]
+%                       .range  first and last index of block into array
+%                               .predictions
 %
 % normalize
 %       best-fit figures of merit for individual restraint sets, NaN values
@@ -99,8 +103,8 @@ if ~isnan(normalize.ddr)
     n_sets = n_sets + 1;
 end
 if ~isnan(normalize.pre)
-    [~,n] =size(predictions.pre);
-    fom_pre = fit_multi_pre(v(1:n-2),predictions.pre);
+    [~,n] =size(predictions.pre.predictions);
+    fom_pre = fit_multi_PRE(v(1:n-1),predictions.pre.predictions,predictions.pre.parameters);
     fom = fom + fom_pre/normalize.pre;
     n_sets = n_sets + 1;
 end

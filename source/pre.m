@@ -1,12 +1,13 @@
-function all_pre = pre(coor,label,td,taur,taui,R2_dia,larmor)
+function [all_Gamma2,all_pre] = pre(coor,label,td,taur,taui,R2_dia,larmor)
 %
 % PRE Computation of paramagnetic relaxation enhancement 
 %
-%   all_pre = PRE(coor,label_coor,taur,taui,R2_dia)
+%   [all_Gamma2,all_pre] = PRE(coor,label_coor,taur,taui,R2_dia)
 %   Given nuclear and spin label coordinates and populations, the protein
 %   rotational correlatuon time and label internal correlation time and the
 %   nuclear transverse relaxation rate for the diamagnetically labeled
-%   protein, intensity rations I_para/I_dia are estimated
+%   protein, relaxation enhancement rates and intensity ratios I_para/I_dia 
+%   are estimated
 %
 %   see: Tesei et al. https://doi.org/10.1101/2020.08.09.243030 
 %        for description of the approach
@@ -25,7 +26,8 @@ function all_pre = pre(coor,label,td,taur,taui,R2_dia,larmor)
 % larmor    larmor frequency [MHz]
 %
 % OUTPUT
-% all_pre   double (N,1) of intensity ratios I_para/I_dia
+% all_Gamma2    double(N,1) of relaxation enhancement rates
+% all_pre       double (N,1) of intensity ratios I_para/I_dia
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -49,6 +51,7 @@ taut = 1/(1/taur + 1/taui);
 R = length(label.pop);
 
 % initialize output
+all_Gamma2 = NaN(N,1);
 all_pre = NaN(N,1);
 
 for n = 1:N % loop over nuclei
@@ -72,5 +75,6 @@ for n = 1:N % loop over nuclei
     J0 = S2*taur + (1-S2)*taut; % Eq. (9)  Tesei et al.
     J_larmor = S2*taur/(1+(taur*angular_frq)^2) +(1-S2)*taut/(1+(taut*angular_frq)^2); 
     Gamma2 = prefac*rm6_avg*(4*J0 + 3*J_larmor); % Eq. (8) Tesei et al.
+    all_Gamma2(n) = Gamma2;
     all_pre(n) = R2_dia*exp(-td*Gamma2)/(R2_dia+Gamma2);
 end

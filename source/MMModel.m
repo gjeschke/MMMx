@@ -33,6 +33,8 @@ end
 
 logfid = 1;
 close_log = false;
+failed = false;
+module_exceptions ={};
 
 for module = 1:length(controller)
     fprintf(logfid,'> Executing %s <\n\n',controller(module).name);
@@ -40,19 +42,24 @@ for module = 1:length(controller)
         case 'logfile'
             close_log = true;
             logfid = fopen(controller(module).options{1},'wt');
+        case 'getpdb'
+            [entity,module_exceptions] = get_pdb(controller(module).options{1});
+            failed = isempty(entity);  
+        case 'flex'
+            disp('Aber hallo!');
         case 'ensemblefit'
             [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid);
-            for exci = 1:length(module_exceptions)
-                if ~isempty(module_exceptions{exci})
-                    warnings = warnings + 1;
-                    exceptions{warnings} = module_exceptions{exci};
-                end
-                if failed
-                    return
-                end
-            end
         otherwise
             fprintf(logfid,'Warning: Unknown module %s was ignored.\n\n',controller(module).name);
+    end
+    for exci = 1:length(module_exceptions)
+        if ~isempty(module_exceptions{exci})
+            warnings = warnings + 1;
+            exceptions{warnings} = module_exceptions{exci};
+        end
+        if failed
+            return
+        end
     end
 end
 

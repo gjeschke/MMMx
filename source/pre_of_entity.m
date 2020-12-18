@@ -1,4 +1,4 @@
-function [pre_list,exceptions] = pre_of_entity(entity,site_list,label,td,taur,taui,R2_dia,larmor)
+function [pre_list,exceptions,entity] = pre_of_entity(entity,site_list,label,label_adr,td,taur,taui,R2_dia,larmor)
 %
 % PRE_OF_ENTITY Computation of paramagnetic relaxation enhancement for
 %               selected NH protons of an entity
@@ -18,7 +18,8 @@ function [pre_list,exceptions] = pre_of_entity(entity,site_list,label,td,taur,ta
 %           vector (1,n_sites) of struct
 %           .chain    char, chain identifier
 %           .residue  int, residue number
-% label     label address without conformer specification. e.g. (A)316
+% label     label type, defaults to 'mtsl'
+% label_adr label address without conformer specification. e.g. (A)316
 % td        double, total INEPT time in HSQC [s]
 % taur      double, rotational correlation time of the protein [s]
 % taui      double, correlation time of internal label motion [s]
@@ -31,22 +32,29 @@ function [pre_list,exceptions] = pre_of_entity(entity,site_list,label,td,taur,ta
 % all_pre       double (N,1) of intensity ratios I_para/I_dia
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
+% entity        entity, which may be augmented by a label
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2010-2020: Yevhen Polyhach, Gunnar Jeschke
 
-NHbond = 0.98; % length of N-H bond in Angstroem for proton cosntruction
+NHbond = 0.98; % length of N-H bond in Angstroem for proton construction
+
+if isempty(label)
+    label = 'mtsl';
+end
 
 % initialize output
 n_sites = length(site_list);
 pre_list(n_sites).chain = '';
 pre_list(n_sites).residue = 0;
+pre_list(n_sites).Gamma2 = [];
 pre_list(n_sites).pre = [];
 exceptions = {[]};
 warnings = 0;
 
-pres = zeros(n_sites,1);
+% pres = zeros(n_sites,1);
+Gamma2 = zeros(n_sites,1);
 
 for c = 1:length(entity.populations) % loop over all conformers
     % generate coordinate array from site list
@@ -111,6 +119,7 @@ for c = 1:length(entity.populations) % loop over all conformers
                 dir_HN = -(CN/norm(CN)+CAN/norm(CAN));
                 dir_HN = dir_HN/norm(dir_HN);
                 H_pred = entity.xyz(N_index,:) + NHbond*dir_HN;
+                n_H = n_H + 1;
                 coor(n_H,:) = H_pred;
                 pre_list(n_H).chain = site_list(site).chain;
                 pre_list(n_H).residue = site_list(site).residue;
@@ -123,16 +132,17 @@ for c = 1:length(entity.populations) % loop over all conformers
     pre_list = pre_list(1:n_H);
     coor = coor(1:n_H,:);
     
-    label_adr = sprintf('{%i}%s',c,label);
-    [positions,entity,exceptions] = get_label(entity,'mtsl','positions',label_adr);
+    label_adr = sprintf('{%i}%s',c,label_adr);
+    [positions,entity,exceptions] = get_label(entity,label,'positions',label_adr);
     curr_label.coor = positions{1};
-    [populations,entity] = get_label(entity,'mtsl','populations',label_adr);
+    [populations,entity] = get_label(entity,label,'populations',label_adr);
     curr_label.pop = populations{1};
-    all_pre = pre(coor,curr_label,td,taur,taui,R2_dia,larmor);
-    pres(1:n_H) = pres(1:n_H) + entity.populations(c)*all_pre;
+    all_Gamma2 = pre(coor,curr_label,td,taur,taui,R2_dia,larmor);
+    Gamma2(1:n_H) = Gamma2(1:n_H) + entity.populations(c)*all_Gamma2;
 end
 
 % copy the ensemble-average PREs to the output list
 for k_H = 1:n_H
-    pre_list(k_H).pre = pres(k_H);
+    pre_list(k_H).Gamma2 = Gamma2(k_H);
+    pre_list(k_H).pre = R2_dia*exp(-td*Gamma2(k_H))/(R2_dia+Gamma2(k_H));
 end

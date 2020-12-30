@@ -98,9 +98,9 @@ if isfield(options,'un') && ~isempty(options.un)
     cmd = sprintf('%s -un %i',cmd,options.un);
 end
 
-if isfield(options,'cst') && ~options.cst
-    cmd = sprintf('%s -cst',cmd);
-end
+% if isfield(options,'cst') && ~options.cst
+%     cmd = sprintf('%s -cst',cmd);
+% end
 
 if isfield(options,'eh') && ~options.eh
     cmd = sprintf('%s -eh',cmd);
@@ -151,6 +151,6 @@ if ncol == 4 % shift error column to end in output of newer CRYSON or remove it
 end
 fclose(fid);
 
-if isfield(options.delete) && options.delete
+if isfield(options,'delete') && options.delete
     delete(to_be_deleted);
 end

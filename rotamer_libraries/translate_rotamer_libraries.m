@@ -31,6 +31,7 @@ while 1
     defid = tag2id(TLC,upper(defs.label_defs.restags));
     if isempty(defid)
         fprintf(2,'Definition ID is missing for %s\n',rot_lib.tlc);
+        continue
     else
         fprintf(1,'Definition ID is %i\n',defid);
     end
@@ -138,9 +139,14 @@ while 1
     end
     rot_lib.std_frame = old.rot_lib.stdframe;
     rot_lib.std_frame_atoms = cell(1,3);
+    attach_frame = defs.label_defs.residues(defid).res_frame;
     for k = 1:3
         rot_lib.std_frame(k) = old.rot_lib.stdframe(4-k);
-        rot_lib.std_frame_atoms{k} = id2tag(rot_lib.std_frame(k),atom_tag_string);
+        if isempty(attach_frame)
+            rot_lib.std_frame_atoms{k} = id2tag(rot_lib.std_frame(k),atom_tag_string);
+        else
+            rot_lib.std_frame_atoms{k} = id2tag(4-k,attach_frame);
+        end
     end
     for k = 1:3
          tag = id2tag(k,mol_frame);

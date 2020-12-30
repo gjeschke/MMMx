@@ -2,10 +2,10 @@
 % translated to a new MMMx format control file 21.08.2020
 %
 
-#logfile PTBP1_test_restraints
-#getpdb PTBC 
+#logfile PTBP1_test_restraints % specify log file name
+#getpdb PTBC                   % load rigid-body template
 
-!rigi
+!rigi                          % call the Rigi method
 
    rigid (A) (B)
      (A)71 MTSL

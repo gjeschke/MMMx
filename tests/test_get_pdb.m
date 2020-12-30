@@ -1,5 +1,6 @@
 clear options
-entity1 = get_pdb('2lzm');
+entity1 = get_pdb('2ad9');
+return
 options.altlocs = false;
 options.Bfactor = false;
 options.element = false;

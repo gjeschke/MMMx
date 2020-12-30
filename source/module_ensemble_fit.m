@@ -289,7 +289,7 @@ for ddr_poi = 1:length(restraints.ddr)
             lb_exp = exp_data(:,3)';
             ub_exp = exp_data(:,4)';
             fit_task.ddr(kft).exp_distr = interp1(rax_exp,distr_exp,fit_task.r_axis,'pchip',0);
-            sc = 1/sum(fit_task.ddr(kr).exp_distr);
+            sc = 1/sum(fit_task.ddr(kft).exp_distr);
             fit_task.ddr(kft).exp_distr = sc*fit_task.ddr(kft).exp_distr;
             fit_task.ddr(kft).exp_distr_lb = sc*interp1(rax_exp,lb_exp,fit_task.r_axis,'pchip',0);
             fit_task.ddr(kft).exp_distr_ub = sc*interp1(rax_exp,ub_exp,fit_task.r_axis,'pchip',0);
@@ -329,8 +329,10 @@ if ~isempty(restraints.sas)
 end
 fit_task.ddr_valid = true(1,nr); % for logical indexing of restraints
 fit_task.pre_valid = true(1,nr_pre); % for logical indexing of restraints
-pre_parameters(length(restraints.pre)).td = [];
-pre_parameters(length(restraints.pre)).R2dia = [];
+if ~isempty(restraints.pre)
+    pre_parameters(length(restraints.pre)).td = [];
+    pre_parameters(length(restraints.pre)).R2dia = [];
+end
 for nr_pre = 1:length(restraints.pre)
     pre_parameters(nr_pre).range = [1e6,-1];
 end
@@ -352,6 +354,7 @@ for c = 1:C
             entity = get_pdb(fit_task.file_list{c});
         end
     else
+        clear properties
         properties.initialized = true;
         entity = get_pdb(fit_task.file_list{c});
     end
@@ -399,7 +402,7 @@ for c = 1:C
             if ~isempty(distr)
                 fit_task.ddr(block_offset+kr).distr(c,:) = distr/sum(distr);
             else
-                fprintf(logfid,'Warning: ddr %i cannot be evaluated for conformer %i\n',kr,c);
+                fprintf(logfid,'Warning: ddr beteen sites %s and %s cannot be evaluated for conformer %i\n',site1,site2,c);
                 if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
                     fit_task.ddr_valid(block_offset+kr) = false;
                 else % otherwise skip conformers for which not all restraints can be evaluated
@@ -493,6 +496,11 @@ for c = 1:C
                 switch restraints.sas(sas_poi).type
                     case 'saxs'
                         [fit,chi2] = fit_SAXS(datafile,fit_task.file_list{c},options);
+                        figure(3); clf; hold on;
+                        plot(fit(:,1),fit(:,2),'k');
+                        plot(fit(:,1),fit(:,3),'r');
+                        title(sprintf('chi^2 = %6.3f\n',chi2));
+                        drawnow
                     case 'sans'
                         illres = restraints.sas(sas_poi).illres;
                         [fit,chi2] = fit_SANS(datafile,fit_task.file_list{c},illres,options);
@@ -500,7 +508,7 @@ for c = 1:C
             end
             if isempty(fit)
                 warnings = warnings + 1;
-                exceptions{warnings} = ME_expection('module_ensemble_fit:sas_curve_fitting_failed', 'SAS curve %s could not be fitted for conformer %s',datafile,fit_task.file_list{c});
+                exceptions{warnings} = MException('module_ensemble_fit:sas_curve_fitting_failed', 'SAS curve %s could not be fitted for conformer %s',datafile,fit_task.file_list{c});
                 fprintf(logfid,'Warning: sas %i cannot be evaluated for conformer %i\n',sas_poi,c);
                 valid_conformers(c) = false;
             else
@@ -529,12 +537,12 @@ for c = 1:C
             end
             if isempty(fit)
                 warnings = warnings + 1;
-                exceptions{warnings} = ME_exception('module_ensemble_fit:sas_curve_fitting_failed', 'SAS curve %s could not be fitted for conformer %s',datafile,fit_task.file_list{c});
+                exceptions{warnings} = MException('module_ensemble_fit:sas_curve_fitting_failed', 'SAS curve %s could not be fitted for conformer %s',datafile,fit_task.file_list{c});
                 fprintf(logfid,'Warning: sas %i cannot be evaluated for conformer %i\n',sas_poi,c);
                 valid_conformers(c) = false;
             else
                 if ~sas_initialized(sas_poi)
-                    [m,~] = size(fits);
+                    [m,~] = size(fit);
                     fit_task.sas(sas_poi).fits = zeros(m,3+C);
                     fit_task.sas(sas_poi).fits(:,1:2) = fit(:,1:2);
                     fit_task.sas(sas_poi).fits(:,3) = fit(:,4);
@@ -987,21 +995,23 @@ for kr = 1:nr_sas
     fit_task.sas(kr).chi2 = chi2;
 end
 
-kft = 0;
-fom_pre = 0;
-for kr = 1:length(pre_parameters)
-    td = pre_parameters(kr).td;
-    R2dia = pre_parameters(kr).R2dia;
-    range = pre_parameters(kr).range;
-    for nr_pre = range(1):range(2)
-        kft = kft + 1;
-        Gamma2 = sum(fit_task.ensemble_populations.*all_pre_predictions(nr_pre,1+fit_task.remaining_conformers));
-        sim_pre = R2dia*exp(-td*Gamma2)/(Gamma2+R2dia);
-        fit_task.pre(kft).fit_data = sim_pre;
-        fom_pre = fom_pre + (fit_task.pre(kft).fit_data - fit_task.pre(kft).exp_data)^2;
+if nr_pre > 0
+    kft = 0;
+    fom_pre = 0;
+    for kr = 1:length(pre_parameters)
+        td = pre_parameters(kr).td;
+        R2dia = pre_parameters(kr).R2dia;
+        range = pre_parameters(kr).range;
+        for nr_pre = range(1):range(2)
+            kft = kft + 1;
+            Gamma2 = sum(fit_task.ensemble_populations.*all_pre_predictions(nr_pre,1+fit_task.remaining_conformers));
+            sim_pre = R2dia*exp(-td*Gamma2)/(Gamma2+R2dia);
+            fit_task.pre(kft).fit_data = sim_pre;
+            fom_pre = fom_pre + (fit_task.pre(kft).fit_data - fit_task.pre(kft).exp_data)^2;
+        end
     end
+    fom_pre = fom_pre/kft;
 end
-fom_pre = fom_pre/kft;
 
 if isempty(loss_of_merit) % for non-integrative fits, there is no loss of merit
     loss_of_merit = 0;
@@ -1067,8 +1077,8 @@ if plot_result
             ylabel('I(s)');
             figure(kr+2000); clf; hold on
             data = all_sas_predictions{kr};
-            plot(data(:,1),log(data(:,2)),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
-            plot(data(:,1),log(fitted_curve),'-','LineWidth',2.5,'Color',[0.7,0,0]);
+            plot(data(:,1),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
+            plot(data(:,1),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
             xlabel('s [Angstroem^{-1}]');
             ylabel('log(I(s))');
@@ -1080,25 +1090,27 @@ if plot_result
             ylabel('log(I(s))');
         end
     end
-    kft = 0;
-    for kr = 1:length(pre_parameters)
-        figure(10000+kr); clf; hold on;
-        range = pre_parameters(kr).range;
-        kx = 0;
-        for nr_pre = range(1):range(2)
-            kft = kft + 1;
-            kx = kx + 1;
-            plot(kx,fit_task.pre(kft).exp_data,'k.','MarkerSize',12);
-            plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+    if nr_pre > 0
+        kft = 0;
+        for kr = 1:length(pre_parameters)
+            figure(10000+kr); clf; hold on;
+            range = pre_parameters(kr).range;
+            kx = 0;
+            for nr_pre = range(1):range(2)
+                kft = kft + 1;
+                kx = kx + 1;
+                plot(kx,fit_task.pre(kft).exp_data,'k.','MarkerSize',12);
+                plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+            end
+            title(sprintf('PRE for labelling site %s',restraints.pre(kr).site));
+            xlabel('Residue');
+            ylabel('I_{para}/I_{dia}');
+            set(gca,'FontSize',14);
+            axis([1,kx,0,1.05]);
         end
-        title(sprintf('PRE for labelling site %s',restraints.pre(kr).site));
-        xlabel('Residue');
-        ylabel('I_{para}/I_{dia}');
-        set(gca,'FontSize',14);
-        axis([1,kx,0,1.05]);
+        fprintf(1,'PRE mean square deviation: %6.4f\n',fom_pre);
     end
-    fprintf(1,'PRE mean square deviation: %6.4f\n',fom_pre);
-end    
+end
 
 function chi2 = sas_baseline(bsl,curve,fit,errors)
 

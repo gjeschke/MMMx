@@ -6,7 +6,7 @@ options.altlocs = false;
 options.Bfactor = false;
 options.element = false;
 % id = cx_get_pdb('1a6m',options);
-% id = cx_get_pdb('2ad9',options);
+id = cx_get_pdb('2ad9',options);
 % id = cx_get_pdb('2lzm',options);
 
 % address = '(A)57';

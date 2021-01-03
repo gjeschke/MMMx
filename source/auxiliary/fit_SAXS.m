@@ -50,6 +50,12 @@ function [fit,chi2,outname,status,result] = fit_SAXS(datafile,pdbfile,options)
 % Copyright(c) 2020: Gunnar Jeschke
 
 
+% options.sm = 4.8016;
+% options.lm = 30;
+% options.fb = 18;
+% options.crysol3 = 0;
+
+
 if ~exist('options','var') || ~isfield(options,'err')
     options.err = false;
 end
@@ -77,7 +83,12 @@ end
 
 cmd=[s ' ' pdbfile ' ' datafile ' -cst'];
 
-if isfield(options,'sm') && ~isempty(options.sm) && options.sm < 1
+if ~isfield(options,'sm')
+    curve = load_SAXS_curve(datafile);
+    options.sm = 10*max(curve(:,1));
+end
+
+if ~isempty(options.sm)
     cmd = sprintf('%s -sm %6.3f',cmd,options.sm);
 end
 
@@ -166,3 +177,28 @@ fclose(fid);
 if isfield(options,'delete') && options.delete
     delete(to_be_deleted);
 end
+
+function curve = load_SAXS_curve(fname)
+
+fid = fopen(fname);
+if fid==-1
+    curve = [];
+    return;
+end
+nl=0;
+curve = zeros(10000,4);
+while 1
+    tline = fgetl(fid);
+    if ~ischar(tline), break, end
+    ncol = 0;
+    if nl > 0 % skip first line
+        dataset = str2num(tline); %#ok<ST2NM>
+        ncol = length(dataset);
+        curve(nl,1:ncol) = dataset;
+    end
+    if ncol > 0 || nl == 0
+        nl = nl + 1;
+    end
+end
+curve = curve(1:nl-1,:);
+fclose(fid);

@@ -1,10 +1,12 @@
 function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(control,logfid)
 %
-% MMModel Run modelling pipeline
+% MODULE_ENSEMBLE_FIT Run modelling pipeline
 %
-%   [exceptions,entity] = MMModel(control_file)
-%   Parses control file for modelling directives and arguments and runs the
-%   specified modelling pipeline
+%   [exceptions,entity] = MODULE_ENSEMBLE_FIT(control,logfid)
+%   Fits an ensemble by integrating distance distribution, small-angle
+%   scattering, and paramagnetic relaxation enhancement restraints
+%   can also be used to compute restraint fulfilment for an existing
+%   ensemble
 %
 % INPUT
 % control       control structure with fields
@@ -27,6 +29,7 @@ function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(co
 %
 % initial       initial ensemble (file name in .options{1})
 % nofit         suppresses fitting if present, only restraint evaluation
+% interactive   if present, information on progress is displayed
 % addpdb        PDB files of conformers to be added, file name that can
 %               contain wildcards 
 % plot          generate plots
@@ -68,7 +71,7 @@ sas_options.fb = 18;
 sas_options.delete = true;
 sas_options.cst = false;
 sas_options.err = true;
-sas_options.crysol3 = true;
+sas_options.crysol3 = false; 
 
 restraints.ddr(1).labels{1} = '';
 restraints.pre(1).label = '';
@@ -99,6 +102,11 @@ for d = 1:length(control.directives)
             restraints.sas(sas_poi).type = 'saxs';
             restraints.sas(sas_poi).data = control.directives(d).options{1};
             restraints.sas(sas_poi).options = sas_options;
+            if length(control.directives(d).options) > 1
+                if strcmp(control.directives(d).options{2},'crysol3')
+                    restraints.sas(sas_poi).options.crysol3 = true;
+                end
+            end
         case 'sans'
             sas_poi = sas_poi + 1;
             restraints.sas(sas_poi).type = 'sans';
@@ -132,10 +140,12 @@ for d = 1:length(control.directives)
             else % empty block
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_ensemble_fit:empty_ddr_block', 'ddr block %i is empty',d);
+                record_exception(exceptions{warnings},logfid);
             end
             if args < 3 % misformed restraint line
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_ensemble_fit:misformed_ddr', 'ddr restraint has less than three arguments');
+                record_exception(exceptions{warnings},logfid);
                 failed = true;
                 return
             end
@@ -201,10 +211,12 @@ for d = 1:length(control.directives)
             else % empty block
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_ensemble_fit:empty_pre_block', 'pre block %i is empty',d);
+                record_exception(exceptions{warnings},logfid);
             end
             if args < 2 % misformed restraint line
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_ensemble_fit:misformed_pre', 'pre restraint has less than three arguments');
+                record_exception(exceptions{warnings},logfid);
                 failed = true;
                 return
             end
@@ -217,6 +229,11 @@ for d = 1:length(control.directives)
                 fprintf(logfid,'\n');
             end
             fprintf(logfid,'\n\n');
+        otherwise
+            warnings = warnings + 1;
+            exceptions{warnings} = MException('module_ensemble_fit:unknown_directive',...
+                'directive %s is unknown',lower(control.directives(d).name));
+            record_exception(exceptions{warnings},logfid);
     end
 end
 
@@ -240,6 +257,7 @@ C0 = length(initial_files); % number of conformers that must be included
 if C == 0
     warnings = warnings + 1;
     exceptions{warnings} = MException('module_ensemble_fit:no_conformers', 'No conformers are specified or found.');
+    record_exception(exceptions{warnings},logfid);
     failed = true;
     fit_task = [];
     return
@@ -500,6 +518,7 @@ for c = 1:C
                         plot(fit(:,1),fit(:,2),'k');
                         plot(fit(:,1),fit(:,3),'r');
                         title(sprintf('chi^2 = %6.3f\n',chi2));
+                        fprintf(1,'SAXS chi^2 = %6.3f\n',chi2);
                         drawnow
                     case 'sans'
                         illres = restraints.sas(sas_poi).illres;
@@ -668,6 +687,7 @@ if run_fit
             blocksize = C0 + round(opt.blocksize/2);
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_ensemble_fit:blocksize_increased', 'Block size was increased to %i.',blocksize);
+            record_exception(exceptions{warnings},logfid);
         else
             blocksize = opt.blocksize;
         end
@@ -814,8 +834,9 @@ if run_fit
             fprintf(logfid,'%i iterations and %i function evaluations were performed.\n',fit_output.iterations,fit_output.funccount);
             fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
             
+            v = v(1:curr_blocksize);
             coeff_sas = v/max(v); % populations normalized to their maximum
-            above_threshold_sas = (coeff_sas >= opt.threshold); % indicies of conformers above the population threshold
+            above_threshold_sas = (coeff_sas >= opt.threshold); % indices of conformers above the population threshold
             included_sas = conformers(above_threshold_sas); % these conformers are kept
             C0_sas = length(included_sas);
             fprintf(logfid,'Final SAS chi^2 is: %6.3f with %i conformers\n\n',fom_sas,C0_sas);
@@ -969,6 +990,7 @@ ofid = fopen(outname,'wt');
 if ofid == -1
     warnings = warnings + 1;
     exceptions{warnings} = MException('module_ensemble_fit:ensemble_not_saved', 'Output file %s could not be written.',outname);
+    record_exception(exceptions{warnings},logfid);
 else
     fprintf(ofid,'%% %s, %s\n',outname,datetime);
     for c = 1:length(fit_task.remaining_conformers)
@@ -984,14 +1006,21 @@ for kr = 1:nr
 end
 
 for kr = 1:nr_sas
-    fitted_curve = fit_task.ensemble_populations*fit_task.sas(kr).all_fits(:,fit_task.remaining_conformers).';
-    fitted_curve = fitted_curve.';
+%     fitted_curve = fit_task.ensemble_populations*fit_task.sas(kr).all_fits(:,fit_task.remaining_conformers).';
+%     fitted_curve = fitted_curve.';
     data = all_sas_predictions{kr};
+    data = data(:,[1:3 fit_task.remaining_conformers+3]);
     bsl = 0;
-    [bsl,chi2] = fminsearch(@sas_baseline,bsl,[],data(:,2),fitted_curve,data(:,3));
-    fitted_curve = fitted_curve + bsl;
-    sc = sum(data(:,2).*fitted_curve)/sum(fitted_curve.^2);            
-    fit_task.sas(kr).fitted_curve = sc*fitted_curve;
+    %    [bsl,chi2] = fminsearch(@sas_baseline,bsl,[],data(:,2),fitted_curve,data(:,3));
+    [bsl,chi2] = fminsearch(@sas_baseline,bsl,[],fit_task.ensemble_populations,data);
+    curve = data(:,2);
+    [~,n] = size(data);
+    basis = data(:,4:n);
+    sim = basis*fit_task.ensemble_populations' + bsl;
+    sc = sum(curve.*sim)/sum(sim.*sim);
+%     fitted_curve = fitted_curve + bsl;
+%     sc = sum(data(:,2).*fitted_curve)/sum(fitted_curve.^2);            
+    fit_task.sas(kr).fitted_curve = sc*sim;
     fit_task.sas(kr).chi2 = chi2;
 end
 
@@ -1112,11 +1141,20 @@ if plot_result
     end
 end
 
-function chi2 = sas_baseline(bsl,curve,fit,errors)
+function chi2 = sas_baseline(bsl,coeff,data)
 
-sim = fit + bsl;
+curve = data(:,2);
+errors = data(:,3);
+[m,n] = size(data);
+basis = data(:,4:n);
+% coeff = v(1:n-3);
+sim = basis*coeff' + bsl;
 sc = sum(curve.*sim)/sum(sim.*sim);
-chi2 = sum(((curve-sc*sim)./errors).^2)/(length(curve)-1);
+chi2 = sum(((curve-sc*sim)./errors).^2)/(m-1);
+% sim = basis*coeff' + v(n-3+k);
+% sim = fit + bsl;
+% sc = sum(curve.*sim)/sum(sim.*sim);
+% chi2 = sum(((curve-sc*sim)./errors).^2)/(length(curve)-1);
 
 function fom = sim_multi_ddr(v,fit)
 
@@ -1167,3 +1205,7 @@ for kr = 1:length(parameters)
     fom = fom + sum((all_pre-predictions(range(1):range(2),1)).^2);
 end
 fom = fom/n;
+
+function record_exception(exception,logfile)
+
+fprintf(logfile,'### ensemble fit exception %s ###\n',exception.message);

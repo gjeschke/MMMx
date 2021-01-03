@@ -78,7 +78,7 @@ argsout = cell(1,num_attributes);
 
 tlc = label_by_synonym(label);
 
-% if there is no such label, check whether an tom is address
+% if there is no such label, check whether an atom is addressed
 if isempty(tlc)
     if length(label) >= 5 && strcmpi(label(1:5),'atom.')
         atom_site = true;

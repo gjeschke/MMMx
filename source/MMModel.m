@@ -46,7 +46,10 @@ for module = 1:length(controller)
             [entity,module_exceptions] = get_pdb(controller(module).options{1});
             failed = isempty(entity);  
         case 'flex'
-            disp('Aber hallo!');
+            if ~exist('entity','var')
+                entity = [];
+            end
+            [entity,module_exceptions,failed] = module_flex(controller(module),logfid,entity);
         case 'ensemblefit'
             [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid);
         otherwise

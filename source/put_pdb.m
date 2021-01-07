@@ -203,6 +203,9 @@ for kconf = 1:length(conformer_order)
                             if isstrprop(atom(1),'upper') % these are atom fields
                                 indices(3) =  entity.(chain).(residue).(atom).index;
                                 atname = atom;
+                                if length(atname) > 2 && strcmp(atname(1:2),'Z_')
+                                    atname = atname(3:end);
+                                end
                                 if atname(end) == '_'
                                     atname(end) = '''';
                                 end
@@ -229,7 +232,8 @@ for kconf = 1:length(conformer_order)
                                 end
                                 for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                     indices(5) = rot_indices(kl); % set current rotamer index
-                                    atnum = wr_pdb_line(fid,entity,indices,info,atnum);
+                                    atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
+                                    atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                 end
                             end
                         end
@@ -281,7 +285,8 @@ for kconf = 1:length(conformer_order)
                                     end
                                     for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                         indices(:,5) = rot_indices(kl); % set current rotamer index
-                                        atnum = wr_pdb_line(fid,entity,indices,info,atnum);
+                                        atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
+                                        atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                     end
                                 end
                             end
@@ -318,7 +323,8 @@ for kconf = 1:length(conformer_order)
                                         end
                                         for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                             indices(5) = rot_indices(kl); % set current rotamer index
-                                            atnum = wr_pdb_line(fid,entity,indices,info,atnum);
+                                            atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
+                                            atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                         end
                                     end
                                 end
@@ -350,7 +356,7 @@ elseif contains(upper(biomer.monomers.nt_tags_CYANA),name)
     atomtype = 'ATOM';
 end
 
-function atnum = wr_pdb_line(fid,entity,indices,info,atnum)
+function atnum = wr_pdb_line(fid,entity,atom_index,info,atnum)
 % writes one atom line to the file with identifier fid
 % the (1,5) int16 indices refer to entity.index_array in MMMx:atomic format
 % atnum is the current atom number in the file
@@ -363,7 +369,6 @@ function atnum = wr_pdb_line(fid,entity,indices,info,atnum)
 % .bfactor    temperature factor, B factor
 % .charge     charge
 
-atom_index = get_atom_index(indices,entity.index_array);
 if ~isempty(atom_index)
     atnum = atnum + 1;
     xyz = entity.xyz(atom_index,:);

@@ -2,7 +2,7 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 % [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
 % Generates a closed loop model conforming to residue-specific Ramachandran plots
 % backbone based on: H. Sugeta, T. Miyazawa, Biopolymers, 1967, 5, 673-679.
-% residue-specific Ramachandran plots from: S. Hovmöller, T. Zhou, T.
+% residue-specific Ramachandran plots from: S. Hovm?ller, T. Zhou, T.
 % Ohlson, Acta Cryst. D, 2002, 58, 768-776.
 %
 % Input:
@@ -12,13 +12,13 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %           loop, one residue before the first until the last residue, and
 %           for a non-anchored loop only the loop residues
 % anchorN   backbone coordinates of N-terminal anchor residue in the order
-%           N, CA, C, O (Cartesian in Å) 
+%           N, CA, C, O (Cartesian in ?) 
 % anchorC   backbone coordinates of C-terminal anchor residue in the order
-%           N, CA, C, O (Cartesian in Å) 
+%           N, CA, C, O (Cartesian in ?) 
 % anchorNp  backbone coor. of the residue before the N-terminal anchor 
-%           residue in the order N, CA, C, O (Cartesian in Å) 
+%           residue in the order N, CA, C, O (Cartesian in ?) 
 % anchorCn  backbone coordinates of the residue after the C-terminal anchor
-%           residue in the order N, CA, C, O (Cartesian in Å) 
+%           residue in the order N, CA, C, O (Cartesian in ?) 
 % prot_xyz  protein coordinates for clash test
 % restrain  set of restraints to be tested or enforced, loop residues,
 %           format restrain(k).[type] with .[type] being
@@ -27,6 +27,8 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %                       2   beta sheet
 %                       3   inner alpha helix residue (except two residues
 %                           each at the N and C terminus of the helix)
+%                       4   cis peptide
+%                       5   polyproline II helix
 %           .aprop      propensity of alpha-helical structure (0...1)
 %           .bprop      propensity of beta-strand structure (0...1)
 %           .cprop      propensity of cis-peptide formation (0...1)
@@ -111,6 +113,9 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %
 % G. Jeschke, 2007-2020
 
+% start with new random numbers
+rng('shuffle');
+
 % set default output
 errcode = 0;
 p_model = 1; % default probability of an unrestrained model
@@ -147,7 +152,7 @@ if ~isfield(options,'res_attempts') % attempts for single-residue step
     options.res_attempts = 100;
 end
 
-% alpha-helical region according to Hovmöller et al.
+% alpha-helical region according to Hovm?ller et al.
 alpha_phi_LB = -89;
 alpha_phi_UB = -39;
 alpha_psi_LB = -66;
@@ -155,7 +160,7 @@ alpha_psi_UB = -16;
 alpha_phi_psi_LB = -115; 
 alpha_phi_psi_UB = -95; 
 
-% beta_sheet region according to Hovmöller et al.
+% beta_sheet region according to Hovm?ller et al.
 beta_phi_LB = -130;
 beta_phi_UB = -105;
 beta_phi_UB_proline = -80;
@@ -246,10 +251,10 @@ if isfield(restrain,'bprop')
     end
 end
 
-if isfield(restrain,'pprop')
+if isfield(restrain,'cprop')
     for k = 1:length(restrain)
-        if restrain(k).secondary == 0 && ~isempty(restrain(k).pprop)
-            if rand <= restrain(k).pprop
+        if restrain(k).secondary == 0 && ~isempty(restrain(k).cprop)
+            if rand <= restrain(k).cprop
                 restrain(k).secondary = 4;
             end
         end
@@ -290,7 +295,7 @@ if ~isempty(anchorN)
     N = anchorN(1,:);
     CA = anchorN(2,:);
     C = anchorN(3,:);
-    phi = dihedral_fast(C_back,N,CA,C);
+    phi = dihedral_mmmx(C_back,N,CA,C);
 
     poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
     ephi=Rama_res.ephi{rescodes(k)}(poi);
@@ -353,7 +358,7 @@ if isempty(anchorC)
 end
 
 reboot.k = k - 1;
-reboot.counter = reboots;
+reboot.counter = options.reboots;
 reboot.A = A;
 reboot.acoor = acoor;
 reboot.p_model = p_model;
@@ -368,7 +373,7 @@ while k <= kend1
     updated = false;
     if restrain(k-1).secondary == 3
         [rphi,rpsi] = get_phi_psi_in_helix(sequence(k));
-    elseif restrain(k-1).secondary == 4
+    elseif restrain(k-1).secondary == 5
         phi = PPII_phi + 5*randn;
         rphi = pi*phi/180;
         psi = PPII_psi + 5*randn;
@@ -392,7 +397,7 @@ while k <= kend1
             so = soc; co = coc;
         end
     end
-    if restrain(k-1).cis
+    if restrain(k-1).secondary == 4
         so = soc;
         co = coc;
     end
@@ -475,7 +480,7 @@ while k <= kend1
             end
         end
         p_model = p_beacon*p_model;
-        if p_model < min_prob
+        if p_model < options.min_prob
             if reboot.counter > 0
                 reboot.counter = reboot.counter - 1;
                 A = reboot.A;
@@ -547,7 +552,7 @@ while k <= kend1
             end
         end
         p_model = p_oligomer*p_model;
-        if p_model < min_prob
+        if p_model < options.min_prob
             if reboot.counter > 0
                 reboot.counter = reboot.counter - 1;
                 A = reboot.A;
@@ -592,7 +597,7 @@ while k <= kend1
             end
         end
         p_model = p_depth*p_model;
-        if p_model < min_prob
+        if p_model < options.min_prob
             if reboot.counter > 0
                 reboot.counter = reboot.counter - 1;
                 A = reboot.A;
@@ -617,7 +622,7 @@ while k <= kend1
     A=A*A31;    
     if p_model^(1/tested_restraints) > reboot_thresh && updated % set reboot point, if model is 'better than expected' at this poiunt
         reboot.k = k;
-        reboot.counter = reboots;
+        reboot.counter = options.reboots;
         reboot.A = A;
         reboot.acoor = acoor;
         reboot.p_model = p_model;
@@ -635,7 +640,7 @@ if ~isempty(prot_coor)
     % check for clashes with protein
     pair_dist = get_all_pair_dist(backbone(9:4*(kend1-1)+3,:),prot_coor);
     min_dist = min(min(pair_dist));
-    if min_dist < clash_threshold_lp
+    if min_dist < options.clash_threshold_lp
         errcode = 6;
         coor = [];
         return
@@ -647,7 +652,7 @@ k = 1;
 clash = false;
 while ~clash && k <= kend1-2
     min_dist = get_min_pair_dist(k,backbone(1:4*(kend1-1)+4,:));
-    if min_dist < clash_threshold
+    if min_dist < options.clash_threshold
         clash = true;
     end
     k = k + 1;
@@ -672,7 +677,7 @@ p_model_half = p_model;
 
 if p_model^(1/tested_restraints) > reboot_thresh
     reboot.k = k;
-    reboot.counter = reboots;
+    reboot.counter = options.reboots;
     reboot.A = A;
     reboot.acoor = acoor;
     reboot.p_model = p_model;
@@ -697,7 +702,7 @@ while k<ngap+1 && failed < options.max_attempts
         attempts = attempts + 1;
         if restrain(k-1).secondary == 3
             [rphi,rpsi] = get_phi_psi_in_helix(sequence(k));
-        elseif restrain(k-1).secondary == 4
+        elseif restrain(k-1).secondary == 5
             phi = PPII_phi + 5*randn;
             rphi = pi*phi/180;
             psi = PPII_psi + 5*randn;
@@ -721,7 +726,7 @@ while k<ngap+1 && failed < options.max_attempts
                 so = soc; co = coc;
             end
         end
-        if restrain(k-1).cis
+        if restrain(k-1).secondary == 4
             so = soc;
             co = coc;
         end
@@ -964,7 +969,7 @@ while k<ngap+1 && failed < options.max_attempts
     end
     if p_model^(1/tested_restraints) > reboot_thresh && updated % set reboot point, if model is 'better than expected' at this point
         reboot.k = k;
-        reboot.counter = reboots;
+        reboot.counter = options.reboots;
         reboot.A = A;
         reboot.acoor = acoor;
         reboot.p_model = p_model;
@@ -1058,7 +1063,6 @@ if min_dist < options.clash_threshold_lp
         errcode = 4;
     end
     return
-else
 end
 
 function [phi,psi,omega] = dihedrals(k,backbone)
@@ -1069,13 +1073,13 @@ C_back = backbone(4*k-5,:);
 N = backbone(4*k-3,:);
 CA = backbone(4*k-2,:);
 C = backbone(4*k-1,:);
-omega = dihedral_fast(CA_back,C_back,N,CA);
-phi = dihedral_fast(C_back,N,CA,C);
+omega = dihedral_mmmx(CA_back,C_back,N,CA);
+phi = dihedral_mmmx(C_back,N,CA,C);
 if 4*k+1 > m
     psi = [];
 else
     N_next = backbone(4*k+1,:);
-    psi = dihedral_fast(N,CA,C,N_next);
+    psi = dihedral_mmmx(N,CA,C,N_next);
 end
 
 function backbone = add_O(k,backbone)
@@ -1176,6 +1180,7 @@ switch sequence(poi)
     otherwise
         allowed = Rama_res.allowed_gen(psipoi,phipoi);
 end
+
 
 function [backbone,success] = try_fix_rama(k0,backbone,Rama_res,sequence,direction)
 
@@ -1347,4 +1352,82 @@ for k = 2:kend
             return
         end
     end
+end
+
+function coor1=affine_trafo_vector(coor0,matrices)
+% function coor1=affine_trafo_vector(coor0,matrices)
+%
+% Performs 3D affine transformation(s) on the three-element coordinates of
+% a vector
+% see: M. Bender, M. Brill, Computergrafik, Hanser, M?nchen, 2. Aufl.,
+%      2006, section 2.1
+% use function affine_trafo_point for transformations of points
+% use function affine to obtain affine transformation matrices
+%
+% no test for proper input format (vector & matrix dimensions)
+% calls function affine_trafo
+%
+% coor0     original coordinates, can be row or column vector
+% matrices  can be a single 4x4 affine transformation matrix of the form 
+%           obtained with function affine or a one-dimensional cell array
+%           of such matrices, in the latter case the transformations are
+%           performed subsequently from left to right
+%
+% G. Jeschke, 2009
+
+[m,n]=size(coor0);
+
+if m < n
+    coor0=coor0';
+end
+
+coor0 = [coor0;0];
+
+coor1 = affine_trafo(coor0,matrices);
+coor1 = coor1(1:3);
+
+if m<n
+    coor1=coor1';
+end
+
+function coor1=affine_trafo(coor0,matrices)
+% function coor1=affine_trafo(coor0,matrices)
+%
+% Performs 3D affine transformation(s) on a four-element coordinate vector
+% see: M. Bender, M. Brill, Computergrafik, Hanser, M?nchen, 2. Aufl.,
+%      2006, section 2.1
+% use functions affine_trafo_point or affine_trafo_vector 
+% for transformations of three-element coordinate vectors
+% use function affine to obtain affine transformation matrices
+%
+% no test for proper input format (vector & matrix dimensions)
+%
+% coor0     original coordinates, can be row or column vector
+% matrices  can be a single 4x4 affine transformation matrix of the form 
+%           obtained with function affine or a one-dimensional cell array
+%           of such matrices, in the latter case the transformations are
+%           performed subsequently from left to right
+%
+% G. Jeschke, 2009
+
+[m,n] = size(coor0);
+
+if m < n
+    coor0=coor0';
+end
+
+if iscell(matrices)
+    matrix=eye(4);
+    num=length(matrices);
+    for k = 1:num
+        matrix = matrices{k}*matrix;
+    end
+else
+    matrix = matrices;
+end
+        
+coor1=matrix*coor0;
+
+if m < n
+    coor1=coor1';
 end

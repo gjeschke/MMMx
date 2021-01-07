@@ -41,9 +41,16 @@ if ~exist('entity','var')
 end
 % set defaults
 
+keep_sidegroup_clashes = false; % delete models where side groups clash
+
 opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
+opt.interactive = false;
 maxlen = 1000; % maximum expected loop length for memory pre-allocation
+
+fname = 'mmmx_flex';
+pdbid = 'MMMX';
+chainid = 'A';
 
 restraints.ddr(1).labels{1} = '';
 restraints.oligomer(1).label = '';
@@ -65,10 +72,29 @@ for d = 1:length(control.directives)
             restraints.sequence = control.directives(d).options{3};
         case 'interactive'
             opt.interactive = true;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
+                opt.disp_update = str2double(control.directives(d).options{1});
+            end
+        case 'loose'
+            keep_sidegroup_clashes = true;
         case 'parallel'
-            opt.parallel = str2double(control.directives(d).options{1});
+            opt.parnum = str2double(control.directives(d).options{1});
         case 'save'
-            outname = control.directives(d).options{1};
+            fname = control.directives(d).options{1};
+            if length(control.directives(d).options) >= 2
+                pdbid = control.directives(d).options{2};
+                if length(pdbid) > 4
+                    pdbid = pdbid(1:4);
+                elseif length(pdbid) < 4
+                    pdbid = pad(pdbid,'*');
+                end
+            end
+            if length(control.directives(d).options) >= 3
+                chainid = control.directives(d).options{3};
+                if length(chainid) > 1
+                    chainid = chainid(1);
+                end
+            end
         case 'c_anchor'
             restraints.c_anchor = control.directives(d).options{1};
         case 'n_anchor'
@@ -76,7 +102,7 @@ for d = 1:length(control.directives)
         case 'a_prop'
             [nr,~] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
-                for karg = 1:nr
+                for kr = 1:nr
                     res = str2double(control.directives(d).block{kr,1});
                     prop = str2double(control.directives(d).block{kr,2});
                     restraints.aprop(res) = prop;
@@ -89,7 +115,7 @@ for d = 1:length(control.directives)
         case 'b_prop'
             [nr,~] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
-                for karg = 1:nr
+                for kr = 1:nr
                     res = str2double(control.directives(d).block{kr,1});
                     prop = str2double(control.directives(d).block{kr,2});
                     restraints.aprop(res) = prop;
@@ -102,7 +128,7 @@ for d = 1:length(control.directives)
         case 'c_prop'
             [nr,~] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
-                for karg = 1:nr
+                for kr = 1:nr
                     res = str2double(control.directives(d).block{kr,1});
                     prop = str2double(control.directives(d).block{kr,2});
                     restraints.cprop(res) = prop;
@@ -321,8 +347,15 @@ anchorC = [];
 anchorCn = [];
 anchorN = [];
 anchorNp = [];
+anchor_chain = 'A';
 % C-terminal anchor
 if isfield(restraints,'c_anchor') && ~isempty(restraints.c_anchor)
+    % determine anchor chain, if specified
+    poi1 = strfind(restraints.c_anchor,'(');
+    poi2 = strfind(restraints.c_anchor,')');
+    if ~isempty(poi1) && ~isempty(poi2)
+        anchor_chain = restraints.c_anchor(poi1+1:poi2-1);
+    end
     anchorC = zeros(4,3);
     failed = false;
     % extract backbone coordinates of C-terminal anchor residue
@@ -407,6 +440,12 @@ end
 
 % N-terminal anchor
 if isfield(restraints,'n_anchor') && ~isempty(restraints.n_anchor)
+    % determine anchor chain, if specified
+    poi1 = strfind(restraints.n_anchor,'(');
+    poi2 = strfind(restraints.n_anchor,')');
+    if ~isempty(poi1) && ~isempty(poi2)
+        anchor_chain = restraints.n_anchor(poi1+1:poi2-1);
+    end
     % determine backbone coordinates of N-terminal anchor residue
     anchorN = zeros(4,3);
     failed = false;
@@ -573,7 +612,7 @@ for ddr_poi = 1:length(restraints.ddr)
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_flex:ddr_outside_section',...
                 'for ddr, neither %s nor %s is inside modelled chain segment (ignored)',...
-                restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
+                restraints.ddr(ddr_poi).site1{kres1},restraints.ddr(ddr_poi).site2{kres2});
             record_exception(exceptions{warning},logfid);
             continue
         end
@@ -773,13 +812,213 @@ Rama_res.allowed_P = defs.Ramachandran.allowed_P;
 Rama_res.allowed_G = defs.Ramachandran.allowed_G;
 Rama_res.allowed_gen = defs.Ramachandran.allowed_gen;
 
-pmodel = str2double(control.options{1});
+if ~isempty(control.options) || ~isempty(control.options{1})
+    pmodel = str2double(control.options{1});
+else
+    pmodel = 0.5;
+end
 pthr = exp(-erfinv(pmodel)^2);
 min_prob = pthr^n_restraints;
 
+if length(control.options) >= 2
+    max_models = str2double(control.options{2});
+else
+    max_models = 1;
+end
 
-save MMMx_hnRNPA1_restrain restrain control sequence Rama_res anchorC anchorCn anchorN anchorNp entity_xyz rescodes min_prob n_restraints
+if length(control.options) >= 3
+    max_time = str2double(control.options{3});
+else
+    max_time = 1;
+end
 
+ntrials = 20000000; % number of Monte Carlo trials
+max_seconds = 3600*max_time; % maximum runtime in seconds
+
+free_standing = true;
+reverse = false;
+
+if n_anchored || c_anchored
+    free_standing = false;
+end
+
+if c_anchored && ~n_anchored 
+    reverse = true;
+end
+
+if c_anchored && n_anchored 
+    closed_loop = true;
+else
+    closed_loop = false;
+end
+
+res1 = restraints.initial;
+resend = restraints.final;
+        
+if ~free_standing
+    prot_coor = entity_xyz;
+else
+    prot_coor = [];
+end
+
+success = 0;
+err_count=zeros(1,11);
+Ram_fixed = 0;
+Ram_fix_clash = 0;
+resax = res1:resend;
+res_stat = zeros(1,length(resax));
+
+fprintf(logfid,'Saving models to %s_m#.pdb\n',fname);
+
+p_coor = cell(opt.parnum);
+p_restrain = cell(opt.parnum);
+p_errcode = zeros(1,opt.parnum);
+p_cumprob = zeros(1,opt.parnum);
+p_kres = zeros(1,opt.parnum);
+
+run_options.min_prob = min_prob;
+save_options.pdbid = pdbid;
+save_options.chainIDs{1,1} = 'Z';
+save_options.chainIDs{1,2} = chainid;
+
+
+k_MC = 0; % number of Monte Carlo trials
+tpm = NaN;
+
+tic,
+while 1
+    parfor kp = 1:opt.parnum % parfor
+        if reverse
+            [coor,errcode,restrain1,cumprob,kres] = loop_model_reverse(sequence, anchorC, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+        else
+            [coor,errcode,restrain1,cumprob,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+            kres = kres-1;
+        end
+        p_coor{kp} = coor;
+        p_errcode(kp) = errcode;
+        p_restrain{kp} = restrain1;
+        p_cumprob(kp) = cumprob;
+        p_kres(kp) = kres;
+    end
+    for kp = 1:opt.parnum
+        k_MC = k_MC + 1;
+        coor = p_coor{kp};
+        errcode = p_errcode(kp);
+        kres = p_kres(kp);
+        res_stat(kres) = res_stat(kres)+1;
+        runtime = toc;
+        if errcode == -1
+            Ram_fixed = Ram_fixed + 1;
+            errcode = 0;
+        end
+        if errcode == -4
+            Ram_fixed = Ram_fixed + 1;
+            Ram_fix_clash = Ram_fix_clash + 1;
+            errcode = 4;
+        end
+        err_count(errcode+1) = err_count(errcode+1) + 1;
+
+        if ~errcode
+            tpm = runtime/err_count(1);
+            success = success + 1;
+            if success == 1
+                bb0 = coor;
+            elseif free_standing
+                [rms,coor] = rmsd_superimpose(bb0,coor);
+                fprintf(logfid,'Model superimposes onto first model with rmsd of %4.1f Angstroem\n',rms);
+            end
+             loopname = write_pdb_backbone(coor,restraints.sequence,fname,success,res1);
+             pmodel = make_SCWRL4_sidegroups(loopname);
+             if ~isempty(pmodel)
+                 delete(loopname);
+             else
+                 fprintf(logfid,'Warning: Model %s could not be decorated with sidegroups\n',loopname);
+                 pmodel = loopname;
+             end
+             [pclash,iclash] = check_decorated_loop(pmodel,prot_coor,res1,resend);
+
+            if pclash
+                err_count(10) = err_count(10) + 1;
+                success = success - 1;
+                fprintf(logfid,'Warning: Side groups in model %s clash with protein\n',pmodel);
+                if ~keep_sidegroup_clashes
+                    delete(pmodel);
+                end
+            elseif iclash
+                err_count(11) = err_count(11) + 1;
+                success = success - 1; 
+                fprintf(logfid,'Warning: Side groups in model %s clash internally\n',pmodel);
+                if ~keep_sidegroup_clashes
+                    delete(pmodel);
+                end
+            else
+                m_entity = get_pdb(pmodel);
+                fname_valid = sprintf('%s_valid_m%i',fname,success);
+                if n_anchored || c_anchored
+                    entity1 = entity;
+                    for resnum = res1:resend
+                        resname = sprintf('R%i',resnum);
+                        entity1 = add_residue(entity1,anchor_chain,resnum,m_entity.Z.(resname),m_entity.xyz);
+                    end
+                    put_pdb(entity1,fname_valid,save_options);
+                else
+                    put_pdb(m_entity,fname_valid,save_options);
+                end
+                delete(pmodel);
+            end
+
+            if success >= max_models
+                break
+            end
+        end
+        if opt.interactive && mod(k_MC,opt.disp_update) == 0
+            ftr = (1 - k_MC/ntrials)*max_seconds;
+            fti = max_seconds - runtime;
+            fmo = runtime*(max_models-success)/success;
+            time_left = min([fti fmo ftr]);
+            hours = floor(time_left/3600);
+            minutes = round((time_left-3600*floor(time_left/3600))/60);
+            if minutes == 60
+                hours = hours + 1;
+                minutes = 0;
+            end
+            fprintf(1,'Time per model: %8.1f s\n',tpm);
+            fprintf(1,'%i h %i min estimated run time to completion\n',hours,minutes);
+            fprintf(logfid,'Successful trials: %i\n',success);
+            fprintf(logfid,'Successful backbone trials: %i\n',err_count(1));
+            fprintf(logfid,'Restraint violations: %5.2f%%\n',100*err_count(6)/k_MC);
+            fprintf(logfid,'Internal loop clashes: %5.2f%%\n',100*(err_count(3)+err_count(8))/k_MC);
+            fprintf(logfid,'Clashes with protein: %5.2f%%\n',100*(err_count(5)+err_count(7))/k_MC);
+            fprintf(logfid,'Internal sidegroup clashes: %5.2f%%\n',100*err_count(11)/err_count(1));
+            fprintf(logfid,'Sidegroup clashes with protein: %5.2f%%\n',100*err_count(10)/err_count(1));
+            if closed_loop
+                fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
+                fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
+            end
+
+        end
+    end
+    
+    if success >= max_models
+        break
+    end
+    if runtime >= max_seconds
+        fprintf(logfid,'Warning: Computation stopped since maximum runtime of %5.2f h was reached.\n',max_seconds/3600);
+        break
+    end
+end
+fprintf(logfid,'\nFlex module has run its course:\n');
+fprintf(logfid,'Successful trials: %i\n',success);
+fprintf(logfid,'Successful backbone trials: %i\n',err_count(1));
+fprintf(logfid,'Restraint violations: %5.2f%%\n',100*err_count(6)/k_MC);
+fprintf(logfid,'Internal loop clashes: %5.2f%%\n',100*(err_count(3)+err_count(8))/k_MC);
+fprintf(logfid,'Clashes with protein: %5.2f%%\n',100*(err_count(5)+err_count(7))/k_MC);
+fprintf(logfid,'Internal sidegroup clashes: %5.2f%%\n',100*err_count(11)/err_count(1));
+fprintf(logfid,'Sidegroup clashes with protein: %5.2f%%\n',100*err_count(10)/err_count(1));
+if closed_loop
+    fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
+    fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
+end
 
 function mean_pos = get_relative_label(label)
 
@@ -813,3 +1052,123 @@ mean_pos = pop'*pos;
 function record_exception(exception,logfile)
 
 fprintf(logfile,'### flex exception %s ###\n',exception.message);
+
+function loopname = write_pdb_backbone(coor,sequence,fname0,model,res1)
+
+residues='ALAARGASNASPCYSGLNGLUGLYHISILELEULYSMETPHEPROSERTHRTRPTYRVAL';
+oneletter='ARNDCQEGHILKMFPSTWYV';
+
+fname = sprintf('%s_m%i',fname0,model);
+
+loopname = [fname '.pdb'];
+wfile=fopen(loopname,'w');
+for k = 1:length(sequence)
+    respoi=strfind(oneletter,sequence(k));
+    residue=residues(1+3*(respoi-1):3+3*(respoi-1));
+    N = coor(4*k-3,:);
+    CA = coor(4*k-2,:);
+    C = coor(4*k-1,:);
+    O = coor(4*k,:);
+    fprintf(wfile,'%s%5i%s%s%6i%12.3f%8.3f%8.3f  1.00  0.00           N\n','ATOM  ',4*k-3,'  N   ',residue,k+res1-1,N(1),N(2),N(3));
+    fprintf(wfile,'%s%5i%s%s%6i%12.3f%8.3f%8.3f  1.00  0.00           C\n','ATOM  ',4*k-2,'  CA  ',residue,k+res1-1,CA(1),CA(2),CA(3));
+    fprintf(wfile,'%s%5i%s%s%6i%12.3f%8.3f%8.3f  1.00  0.00           C\n','ATOM  ',4*k-1,'  C   ',residue,k+res1-1,C(1),C(2),C(3));
+    fprintf(wfile,'%s%5i%s%s%6i%12.3f%8.3f%8.3f  1.00  0.00           O\n','ATOM  ',4*k,'  O   ',residue,k+res1-1,O(1),O(2),O(3));
+end
+fclose(wfile);
+
+
+function [outname,status,result] = make_SCWRL4_sidegroups(inname)
+%
+% Attaches or corrects sidegroups using SCWRL4
+% the program SCWRL4 needs to be on the current Matlab path
+%
+% inname   name of the PDB file to which sidegroups should be attached
+% outname  name of the output PDB file with SCWRL4 sidegroups
+%
+
+poi = strfind(inname,'.pdb');
+outname = [inname(1:poi-1) '_SCWRL4.pdb'];
+
+s = which('scwrl4.exe');
+if isempty(s)
+    outname = '';
+    return
+end
+cmd = [s ' -i ' inname ' -o ' outname];
+[status,result] = dos(cmd);
+
+function [pclash,iclash,approach_prot,approach_loop] = check_decorated_loop(loopname,prot_coor,res1,resend,min_approach)
+
+if ~exist('min_approach','var')
+    min_approach = 1.2; 
+end
+
+approach_prot = -1;
+approach_loop = -1;
+pclash = 1;
+iclash = 1;
+loop_coor = zeros(5000,3);
+l_res_assign = zeros(5000,3);
+fid=fopen(loopname);
+if fid==-1
+    return;
+end
+poi = 0;
+while 1
+    tline = fgetl(fid);
+    if ~ischar(tline), break, end
+    if length(tline) >= 6
+        record=tline(1:6);
+        resnum = str2double(tline(23:26));
+        if strcmpi(record,'ATOM  ') || strcmpi(record,'HETATM')
+            if length(tline) < 78 || tline(78)~='H'
+                if ~strcmpi(tline(14),'H') && resnum ~= res1 && resnum ~= resend
+                    poi = poi +1;
+                    l_res_assign(poi) = resnum;
+                    loop_coor(poi,:) = [str2double(tline(31:38)) str2double(tline(39:46)) str2double(tline(47:54))];
+                end
+            end
+        end
+    end
+end
+fclose(fid);
+
+loop_coor = loop_coor(1:poi,:);
+l_res_assign = l_res_assign(1:poi);
+
+pclash = 0;
+iclash = 0;
+
+[m1,~] = size(loop_coor); % get sizes of the coordinates arrays
+[m2,~] = size(prot_coor);
+
+if m2 > 0
+    a2 = repmat(sum(loop_coor.^2,2),1,m2);
+    b2 = repmat(sum(prot_coor.^2,2),1,m1).';
+    pair_dist = sqrt(abs(a2 + b2 - 2*loop_coor*prot_coor.'));
+    min_dist = min(min(pair_dist));
+
+    approach_prot = min_dist;
+    if min_dist < min_approach
+       pclash = 1;
+       return
+    end
+end
+
+min_dist = 1e6;
+% test for minimum distance within loop
+for k1 = 1:poi-1
+    for k2 = k1+1:poi
+        if abs(l_res_assign(k1)-l_res_assign(k2))>1
+            approach = norm(loop_coor(k1,:) - loop_coor(k2,:));
+            if approach < min_dist
+                min_dist = approach;
+            end
+        end
+    end
+end
+approach_loop = min_dist;
+if min_dist < min_approach
+    iclash = 1;
+end
+

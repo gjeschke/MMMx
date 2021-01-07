@@ -3,16 +3,16 @@ function [coor,errcode,restrain,p_model,k] = loop_model_reverse(sequence, anchor
 % Generates a loop model anchored at the N terminus of an existing protein 
 % or peptide structure, conforming to residue-specific Ramachandran plots
 % backbone based on: H. Sugeta, T. Miyazawa, Biopolymers, 1967, 5, 673-679.
-% residue-specific Ramachandran plots from: S. Hovmöller, T. Zhou, T.
+% residue-specific Ramachandran plots from: S. Hovm?ller, T. Zhou, T.
 % Ohlson, Acta Cryst. D, 2002, 58, 768-776.
 %
 % Input:
 % sequence  peptide sequence in single-letter code, must contain C-terminal
 %           anchor
 % anchorC   backbone coordinates of C-terminal anchor residue in the order
-%           N, CA, C, O (Cartesian in Å) 
+%           N, CA, C, O (Cartesian in ?) 
 % anchorCn  backbone coordinates of the residue after the C-terminal anchor
-%           residue in the order N, CA, C, O (Cartesian in Å) 
+%           residue in the order N, CA, C, O (Cartesian in ?) 
 % prot_xyz  protein coordinates for clash test
 % restrain  set of restraints to be tested or enforced, loop residues,
 %           format restrain(k).[type] with .[type] being
@@ -21,6 +21,8 @@ function [coor,errcode,restrain,p_model,k] = loop_model_reverse(sequence, anchor
 %                       2   beta sheet
 %                       3   inner alpha helix residue (except two residues
 %                           each at the N and C terminus of the helix)
+%                       4   cis peptide
+%                       5   polyproline II helix
 %           .aprop      propensity of alpha-helical structure (0...1)
 %           .bprop      propensity of beta-strand structure (0...1)
 %           .cprop      propensity of cis-peptide formation (0...1)
@@ -98,6 +100,9 @@ function [coor,errcode,restrain,p_model,k] = loop_model_reverse(sequence, anchor
 %
 % G. Jeschke, 2007-2020
 
+% start with new random numbers
+rng('shuffle');
+
 % set default output
 errcode = 0;
 p_model = 1; % default probability of an unrestrained model
@@ -130,7 +135,7 @@ if ~isfield(options,'res_attempts') % attempts for single-residue step
     options.res_attempts = 100;
 end
 
-% alpha-helical region according to Hovmöller et al.
+% alpha-helical region according to Hovm?ller et al.
 alpha_phi_LB = -89;
 alpha_phi_UB = -39;
 alpha_psi_LB = -66;
@@ -138,7 +143,7 @@ alpha_psi_UB = -16;
 alpha_phi_psi_LB = -115; 
 alpha_phi_psi_UB = -95; 
 
-% beta_sheet region according to Hovmöller et al.
+% beta_sheet region according to Hovm?ller et al.
 beta_phi_LB = -130;
 beta_phi_UB = -105;
 beta_psi_LB = 128;
@@ -220,10 +225,10 @@ if isfield(restrain,'bprop')
     end
 end
 
-if isfield(restrain,'pprop')
+if isfield(restrain,'cprop')
     for k = 1:length(restrain)
-        if restrain(k).secondary == 0 && ~isempty(restrain(k).pprop)
-            if rand <= restrain(k).pprop
+        if restrain(k).secondary == 0 && ~isempty(restrain(k).cprop)
+            if rand <= restrain(k).cprop
                 restrain(k).secondary = 4;
             end
         end
@@ -243,7 +248,7 @@ N_forth = anchorCn(1,:);
 N = anchorC(1,:);
 CA = anchorC(2,:);
 C = anchorC(3,:);
-psi = dihedral_fast(N,CA,C,N_forth);
+psi = dihedral_mmmx(N,CA,C,N_forth);
 
 poi = round(rand*Rama_res.me{rescodes(end)}+0.5);
 ephi=Rama_res.ephi{rescodes(end)}(poi);
@@ -292,7 +297,7 @@ A31=[-cfi2,-sfi2,0;sfi2*co,-cfi2*co,-so;sfi2*so,-cfi2*so,co];
 A=A*A31; % local frame at C of first missing residue
 
 reboot.k = length(sequence);
-reboot.counter = reboots;
+reboot.counter = options.reboots;
 reboot.A = A;
 reboot.acoor = acoor;
 reboot.p_model = p_model;
@@ -308,7 +313,7 @@ while k >= 1
     % resnum = residues(k);
     if restrain(k).secondary == 3
         [rphi,rpsi] = get_phi_psi_in_helix(sequence(k));
-    elseif restrain(k).secondary == 4
+    elseif restrain(k).secondary == 5
         phi = PPII_phi + 5*randn;
         rphi = pi*phi/180;
         psi = PPII_psi + 5*randn;
@@ -332,7 +337,7 @@ while k >= 1
             so = soc; co = coc;
         end
     end
-    if restrain(k).cis
+    if restrain(k).secondary == 4
         so = soc;
         co = coc;
     end
@@ -427,7 +432,6 @@ while k >= 1
             end
             errcode = 5;
             coor = [];
-%                 fprintf(2,'Model rejected at residue %i by too low restraint fulfillment (beacon).\n',k);
             return
         end
         p_intern = 1;
@@ -556,7 +560,7 @@ while k >= 1
     A=A*A31;    
     if p_model^(1/tested_restraints) > reboot_thresh && updated % set reboot point, if model is 'better than expected' at this poiunt
         reboot.k = k;
-        reboot.counter = reboots;
+        reboot.counter = options.reboots;
         reboot.A = A;
         reboot.acoor = acoor;
         reboot.p_model = p_model;

@@ -98,7 +98,11 @@ if ~isnan(normalize.sas)
 end
 if ~isnan(normalize.ddr)
     [~,n] =size(predictions.ddr{1});
-    fom_ddr = fit_multi_ddr(v(1:n-2),predictions.ddr);
+    if isfield(opt,'rmean') && opt.rmean
+        fom_ddr = fit_multi_rmean(v(1:n-2),predictions.ddr);
+    else
+        fom_ddr = fit_multi_ddr(v(1:n-2),predictions.ddr);
+    end
     fom = fom + fom_ddr/normalize.ddr;
     n_sets = n_sets + 1;
 end

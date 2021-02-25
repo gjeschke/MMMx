@@ -80,10 +80,10 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %           .accstd     minimum normalized distance reductions to
 %                       C-terminal anchor in second half loop, default 0.5
 %           .accrad     acceptance radius for approach to N-terminal
-%                       anchor, default .0
+%                       anchor, default 3.0
 %           .clash_threshold    threshold for clashes inside loop, defaults
 %                               to 2.5 Angstroem
-%           .clash_threshold_lp threshold for clashes beween loop and
+%           .clash_threshold_lp threshold for clashes between loop and
 %                               protein, defaults to 2.5 Angstroem
 %           .max_attempts       maximum attempts for generating a second
 %                               half loop, defaults to 100
@@ -160,7 +160,7 @@ alpha_psi_UB = -16;
 alpha_phi_psi_LB = -115; 
 alpha_phi_psi_UB = -95; 
 
-% beta_sheet region according to Hovm?ller et al.
+% beta_strand region according to Hovm?ller et al.
 beta_phi_LB = -130;
 beta_phi_UB = -105;
 beta_phi_UB_proline = -80;
@@ -691,7 +691,7 @@ while k<ngap+1 && failed < options.max_attempts
     updated = false;
     Rvec = anchorC(1,:) - acoor';
     R = norm(Rvec);
-    dR = R/(ngap - k + 1); % required mean distance stept towards C anchor
+    dR = R/(ngap - k + 1); % required mean distance step towards C anchor
     k = k + 1;
     unaccepted = true;
     attempts = 0;

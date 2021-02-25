@@ -896,8 +896,8 @@ while 1
         end
         p_coor{kp} = coor;
         p_errcode(kp) = errcode;
-        p_restrain{kp} = restrain1;
-        p_cumprob(kp) = cumprob;
+        p_restrain{kp} = restrain1; 
+        p_cumprob(kp) = cumprob; 
         p_kres(kp) = kres;
     end
     for kp = 1:opt.parnum

@@ -64,6 +64,8 @@ opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
 
+fit_mean_distances = false;
+
 outname = 'ensemble.ens';
 
 sas_options.lm = 20;
@@ -97,6 +99,8 @@ for d = 1:length(control.directives)
             added_conformers = control.directives(d).options{1};
         case 'save'
             outname = control.directives(d).options{1};
+        case 'rmean'
+            fit_mean_distances = true;
         case 'saxs'
             sas_poi = sas_poi + 1;
             restraints.sas(sas_poi).type = 'saxs';
@@ -420,7 +424,7 @@ for c = 1:C
             if ~isempty(distr)
                 fit_task.ddr(block_offset+kr).distr(c,:) = distr/sum(distr);
             else
-                fprintf(logfid,'Warning: ddr beteen sites %s and %s cannot be evaluated for conformer %i\n',site1,site2,c);
+                fprintf(logfid,'Warning: ddr between sites %s and %s cannot be evaluated for conformer %i\n',site1,site2,c);
                 if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
                     fit_task.ddr_valid(block_offset+kr) = false;
                 else % otherwise skip conformers for which not all restraints can be evaluated
@@ -437,14 +441,14 @@ for c = 1:C
         site_list(length(restraints.pre(pre_poi).residue)).chain = ''; %#ok<AGROW>
         site_list(length(restraints.pre(pre_poi).residue)).residue = []; %#ok<AGROW>
         if ~isnan(restraints.pre(pre_poi).taur)
-            taur = restraints.pre(pre_poi).taur;
+            taur = 1e-9*restraints.pre(pre_poi).taur;
         else
             if isfield(properties,'taur') && ~isempty(properties.taur)
                 taur = properties.taur;
             else
                 options.N = 1000;
                 options.HYDROPRO = true;
-                [taur,info] = rotational_correlation_time(entity,address,options);
+                [taur,info] = rotational_correlation_time(entity,'(*)',options);
                 if ~info.HYDROPRO
                     taur = 1e-9*pre_default_tr;
                     fprintf(logfid,'Warning: pre %i assumes default rotational correlation time %4.1f ns\n',pre_default_tr);
@@ -475,7 +479,7 @@ for c = 1:C
         if ~isempty(pre_exceptions) && ~isempty(pre_exceptions{1})
             for ex = 1:length(pre_exceptions)
                 warnings = warnings + 1;
-                exceptions{warnings} = ddr_exceptions{ex};
+                exceptions{warnings} = pre_exceptions{ex};
             end
         end
         for kr = 1:length(site_list)
@@ -484,12 +488,19 @@ for c = 1:C
                 if strcmp(site_list(kr).chain,pre_list(kcomp).chain) && ...
                         site_list(kr).residue == pre_list(kr).residue
                     fit_task.pre(block_offset+kr).Gamma2(c) = pre_list(kr).Gamma2;
-                    found = true;
-                    break
+                    if ~isnan(pre_list(kr).Gamma2)
+                        found = true;
+                        break
+                    end
                 end
             end
             if ~found
-                fit_task.pre_valid(block_offset+kr) = false;
+                fprintf(logfid,'Warning: pre at sites (%s)%i and %i cannot be evaluated for conformer %i\n',site_list(kr).chain,site_list(kr).residue,pre_list(kr).residue,c);
+                if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
+                    fit_task.pre_valid(block_offset+kr) = false;
+                else % otherwise skip conformers for which not all restraints can be evaluated
+                    valid_conformers(c) = false;
+                end
             end
         end
         block_offset = block_offset + length(restraints.pre(pre_poi).residue);
@@ -727,7 +738,11 @@ if run_fit
                 curr_ddr_predictions{kr} = data;
             end
             
-            fanonym_ddr = @(v_opt)fit_multi_ddr(v_opt,curr_ddr_predictions,opt);
+            if fit_mean_distances % fit only mean distances
+                fanonym_ddr = @(v_opt)fit_multi_rmean(v_opt,curr_ddr_predictions,opt);
+            else % this is the usual mode
+                fanonym_ddr = @(v_opt)fit_multi_ddr(v_opt,curr_ddr_predictions,opt);
+            end
             
             l_ddr = zeros(1,curr_blocksize); % lower bound, populations are non-negative
             u_ddr = ones(1,curr_blocksize); % upper bound, populations cannot exceed 1
@@ -759,7 +774,11 @@ if run_fit
                 case 2
                     fprintf(logfid,'Convergence by change in population.\n');
                 case 3
-                    fprintf(logfid,'Convergence by ddr overlap deficiency precision.\n');
+                    if fit_mean_distances
+                        fprintf(logfid,'Convergence by mean distance RMSD precision.\n');
+                    else
+                        fprintf(logfid,'Convergence by ddr overlap deficiency precision.\n');
+                    end
                 case 4
                     fprintf(logfid,'Convergence by machine precision.\n');
                 case -1
@@ -776,8 +795,11 @@ if run_fit
             above_threshold_ddr = (coeff_ddr >= opt.threshold); % indicies of conformers above the population threshold
             included_ddr = conformers(above_threshold_ddr); % these conformers are kept
             C0_ddr = length(included_ddr);
-
-            fprintf(logfid,'Final ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_ddr);
+            if fit_mean_distances
+                fprintf(logfid,'Final mean distance rmsd is: %6.3f A with %i conformers\n\n',fom_ddr,C0_ddr);
+            else
+                fprintf(logfid,'Final ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_ddr);
+            end
         end
         
         if nr_sas > 0 % small-angle scattering curve fit, if there are such restraints
@@ -903,6 +925,11 @@ if run_fit
         if nr_sets > 1 % multi-restraint fit, if there is more than on restraint set
             clear fit_multi_restraints % initialize iteration counter
             
+            if fit_mean_distances
+                opt.rmean = true;
+            else
+                opt.rmean = false;
+            end
             fanonym_integrative = @(v_opt)fit_multi_restraints(v_opt,predictions,fom,opt);
             
             l = [zeros(1,curr_blocksize)  -0.01*ones(1,length(curr_sas_predictions))]; % lower bound, populations are non-negative, add baseline corrections
@@ -962,7 +989,11 @@ if run_fit
             included_all = conformers(above_threshold_all); % these conformers are kept
             C0_all = length(included_all);
             if ~isnan(fom.ddr)
-                fprintf(logfid,'Integrative ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_all);            
+                if fit_mean_distances
+                    fprintf(logfid,'Integrative mean distance RMSD is: %6.3f A with %i conformers\n\n',fom_ddr,C0_all);
+                else
+                    fprintf(logfid,'Integrative ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_all);
+                end
             end
             if ~isnan(fom.sas)
                 fprintf(logfid,'Integrative SAS chi^2 is: %6.3f with %i conformers\n\n',fom_sas,C0_all);            

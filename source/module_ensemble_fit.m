@@ -256,6 +256,8 @@ added_files = dir(added_conformers); % find all files that match the pattern
 
 C = length(initial_files) + length(added_files);
 
+fprintf(logfid,'Ensemble fit with %i conformers\n',C);
+
 C0 = length(initial_files); % number of conformers that must be included
 
 if C == 0
@@ -801,6 +803,8 @@ if run_fit
                 fprintf(logfid,'Final ddr overlap deficiency is: %6.3f with %i conformers\n\n',fom_ddr,C0_ddr);
             end
         end
+        
+        curr_sas_predictions = {};
         
         if nr_sas > 0 % small-angle scattering curve fit, if there are such restraints
             clear fit_multi_SAS % initialize iteration counter

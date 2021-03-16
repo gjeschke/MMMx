@@ -70,8 +70,6 @@ task = 0;
 % read first line
 tline = fgetl(fid);
 while ischar(tline)
-    % remove trailing blanks
-    tline = deblank(tline);
     % remove comments and skip over pure comment line
     comment = strfind(tline,'%');
     if ~isempty(comment)
@@ -81,6 +79,8 @@ while ischar(tline)
         tline = fgetl(fid);
         continue
     end
+    % remove trailing blanks
+    tline = deblank(tline);
     % determine new indent and current hierarchy level
     line_length = length(tline);
     tline = strtrim(tline);

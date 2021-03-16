@@ -1,9 +1,11 @@
-function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
-% [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
+function [coor,errcode,restrain,p_model,k] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
+% [coor,errcode,restrain,p_model,k] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
 % Generates a closed loop model conforming to residue-specific Ramachandran plots
 % backbone based on: H. Sugeta, T. Miyazawa, Biopolymers, 1967, 5, 673-679.
-% residue-specific Ramachandran plots from: S. Hovm?ller, T. Zhou, T.
+% residue-specific Ramachandran plots from: S. Hovmoller, T. Zhou, T.
 % Ohlson, Acta Cryst. D, 2002, 58, 768-776.
+% this version can consider arbitrary distance distribution restraints by
+% von Neumann rejection sampling
 %
 % Input:
 % sequence  peptide sequence in single-letter code, must include one
@@ -37,12 +39,16 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %                       this residue
 %           .r_beacon   distance restraints to fixed points, vector with
 %                       subfields
-%                       .xyz    xyz coordinates of beacon
-%                       .type   'Gaussian' or 'bounds'
-%                       .par1   mean distance or lower bound, can be
-%                               vectors
-%                       .par2   standard deviation or upper bound,
-%                               can be vectors
+%                       .xyz     xyz coordinates of beacon
+%                       .type    'Gaussian' or 'bounds'
+%                       .par1    mean distance or lower bound, can be
+%                                vectors
+%                       .par2    standard deviation or upper bound,
+%                                can be vectors
+%                       .r_axis  distance axis for full distribution
+%                                restraint
+%                       .samples sampling distribution
+%                       .target  target distribution (experimental distr.)
 %           .r_intern   distance restraints to other residues in the loop,
 %                       vector with subfields
 %                       .site   index of other site in the loop, always
@@ -52,6 +58,10 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %                               vectors
 %                       .par2   standard deviation or upper bound,
 %                               can be vectors
+%                       .r_axis  distance axis for full distribution
+%                                restraint
+%                       .samples sampling distribution
+%                       .target  target distribution (experimental distr.)
 %           .oligomer   homooligomer distance restraint, supposes that the
 %                       symmetry axis is the z axis
 %                       .n      number of protomers in homooligomer
@@ -60,6 +70,10 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %                               vectors
 %                       .par2   standard deviation or upper bound,
 %                               can be vectors
+%                       .r_axis  distance axis for full distribution
+%                                restraint
+%                       .samples sampling distribution
+%                       .target  target distribution (experimental distr.)
 %           .depth      membrane depth restraint, supposes that the
 %                       membrane normal is the z axis  
 %                       .site   'CA'(Calpha) or 'label
@@ -204,6 +218,38 @@ omega_trans = pi;
 sot = sin(omega_trans); cot = cos(omega_trans);
 omega_cis = 0;
 soc = sin(omega_cis); coc = cos(omega_cis);
+
+% initialize new sampling distributions
+for res = 1:length(restrain)
+    % checke whetehr there are beacon restraints
+    if isfield(restrain(res),'r_beacon')
+        % loop over all beacon restraints of this residue
+        for kr = 1:length(restrain(res).r_beacon)
+            % test whether we do have a full distribution restraint here
+            if ~isempty(restrain(res).r_beacon(kr).samples)
+                restrain(res).r_beacon(kr).new_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
+            end
+        end
+    end
+    if isfield(restrain(res),'r_intern')
+        % loop over all internal restraints of this residue
+        for kr = 1:length(restrain(res).r_intern)
+            % test whether we do have a full distribution restraint here
+            if ~isempty(restrain(res).r_intern(kr).samples)
+                restrain(res).r_intern(kr).new_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
+            end
+        end
+    end
+    if isfield(restrain(res),'oligomer')
+        % loop over all oligomer restraints of this residue
+        for kr = 1:length(restrain(res).oligomer)
+            % test whether we do have a full distribution restraint here
+            if ~isempty(restrain(res).oligomer(kr).samples)
+                restrain(res).oligomer(kr).new_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
+            end
+        end
+    end
+end
 
 % process propensity restraints, if any
 if isfield(restrain,'aprop')
@@ -461,7 +507,14 @@ while k <= kend1
         restrain(k-1).xyz = restrain(k-1).label*Rp + backbone(4*k-2,:);
         p_beacon = 1;
         for kr = 1:length(restrain(k-1).r_beacon)
-            r = norm(restrain(k-1).xyz-restrain(k-1).r_beacon(kr).xyz); 
+            r = norm(restrain(k-1).xyz-restrain(k-1).r_beacon(kr).xyz);
+            if isfield(restrain(k-1).r_beacon(kr),'new_samples') &&...
+                    ~isempty(restrain(k-1).r_beacon(kr).new_samples) &&...
+                    r >= min(restrain(k-1).r_beacon(kr).r_axis) &&...
+                    r <= max(restrain(k-1).r_beacon(kr).r_axis)            
+                [~,rpoi] = min(abs(restrain(k-1).r_beacon(kr).r_axis -r));
+                restrain(k-1).r_beacon(kr).new_samples(rpoi) = restrain(k-1).r_beacon(kr).new_samples(rpoi) + 1;
+            end
             switch restrain(k-1).r_beacon(kr).type
                 case 'Gaussian'
                     restrain(k-1).r_beacon(kr).p = ...
@@ -475,6 +528,12 @@ while k <= kend1
                        restrain(k-1).r_beacon(kr).p = 0;
                        p_beacon = 0;
                     end                        
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).r_beacon(kr).r_axis -r));
+                    if rand >= restrain(k-1).r_beacon(kr).target(rpoi)/...
+                            (restrain(k-1).r_beacon(kr).M*restrain(k-1).r_beacon(kr).samples(rpoi))
+                        p_beacon = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model:unknownRestraintType','Restraint type %s not known',restrain(k-1).r_beacon(kr).type);
             end
@@ -498,6 +557,13 @@ while k <= kend1
         for kr = 1:length(restrain(k-1).r_intern)
             site = restrain(k-1).r_intern(kr).site;
             r = norm(restrain(k-1).xyz-restrain(site).xyz); 
+            if isfield(restrain(k-1).r_intern(kr),'new_samples') &&...
+                    ~isempty(restrain(k-1).r_intern(kr).new_samples) &&...
+                    r >= min(restrain(k-1).r_intern(kr).r_axis) &&...
+                    r <= max(restrain(k-1).r_intern(kr).r_axis)
+                [~,rpoi] = min(abs(restrain(k-1).r_intern(kr).r_axis -r));
+                restrain(k-1).r_intern(kr).new_samples(rpoi) = restrain(k-1).r_intern(kr).new_samples(rpoi) + 1;
+            end
             switch restrain(k-1).r_intern(kr).type
                 case 'Gaussian'
                     restrain(k-1).r_intern(kr).p = ...
@@ -511,6 +577,12 @@ while k <= kend1
                         restrain(k-1).r_intern(kr).p = 0;
                         p_intern = 0;
                     end                        
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).r_intern(kr).r_axis -r));
+                    if rand >= restrain(k-1).r_intern(kr).target(rpoi)/...
+                            (restrain(k-1).r_intern(kr).M*restrain(k-1).r_intern(kr).samples(rpoi))
+                        p_intern = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model:unknownRestraintType','Restraint type %s not known',restrain(k-1).r_beacon(kr).type);
             end
@@ -534,6 +606,13 @@ while k <= kend1
         p_oligomer = 1;
         for kr = 1:length(restrain(k-1).oligomer)
             r = 2*sqrt(sum(restrain(k-1).xyz(1:2).^2))*sin(pi/restrain(k-1).oligomer(kr).n); 
+            if isfield(restrain(k-1).oligomer(kr),'new_samples') &&...
+                    ~isempty(restrain(k-1).oligomer(kr).new_samples) &&...
+                    r >= min(restrain(k-1).oligomer(kr).r_axis) &&...
+                    r <= max(restrain(k-1).oligomer(kr).r_axis)
+                [~,rpoi] = min(abs(restrain(k-1).oligomer(kr).r_axis -r));
+                restrain(k-1).oligomer(kr).new_samples(rpoi) = restrain(k-1).oligomer(kr).new_samples(rpoi) + 1;
+            end
             switch restrain(k-1).oligomer.type
                 case 'Gaussian'
                     restrain(k-1).oligomer(kr).p = ...
@@ -547,6 +626,12 @@ while k <= kend1
                         restrain(k-1).oligomer(kr).p = 0;
                         p_oligomer = 0;
                     end                        
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).oligomer(kr).r_axis -r));
+                    if rand >= restrain(k-1).oligomer(kr).target(rpoi)/...
+                            (restrain(k-1).oligomer(kr).M*restrain(k-1).oligomer(kr).samples(rpoi))
+                        p_oligomer = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model_reverse:unknownRestraintType','Restraint type %s not known',restrain(k).oligomer(kr).type);
             end
@@ -819,6 +904,13 @@ while k<ngap+1 && failed < options.max_attempts
         p_beacon = 1;
         for kr = 1:length(restrain(k-1).r_beacon)
             r = norm(restrain(k-1).xyz-restrain(k-1).r_beacon(kr).xyz); 
+            if isfield(restrain(k-1).r_beacon(kr),'new_samples') &&...
+                    ~isempty(restrain(k-1).r_beacon(kr).new_samples) &&...
+                    r >= min(restrain(k-1).r_beacon(kr).r_axis) &&...
+                    r <= max(restrain(k-1).r_beacon(kr).r_axis)
+                [~,rpoi] = min(abs(restrain(k-1).r_beacon(kr).r_axis -r));
+                restrain(k-1).r_beacon(kr).new_samples(rpoi) = restrain(k-1).r_beacon(kr).new_samples(rpoi) + 1;
+            end
             switch restrain(k-1).r_beacon(kr).type
                 case 'Gaussian'
                     restrain(k-1).r_beacon(kr).p = ...
@@ -832,6 +924,12 @@ while k<ngap+1 && failed < options.max_attempts
                         restrain(k-1).r_beacon(kr).p = 0;
                         p_beacon = 0;
                     end                       
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).r_beacon(kr).r_axis -r));
+                    if rand >= restrain(k-1).r_beacon(kr).target(rpoi)/...
+                            (restrain(k-1).r_beacon(kr).M*restrain(k-1).r_beacon(kr).samples(rpoi))
+                        p_beacon = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model:unknownRestraintType','Restraint type %s not known',restrain(k-1).r_beacon(kr).type);
             end
@@ -856,6 +954,13 @@ while k<ngap+1 && failed < options.max_attempts
         for kr = 1:length(restrain(k-1).r_intern)
             site = restrain(k-1).r_intern(kr).site;
             r = norm(restrain(k-1).xyz-restrain(site).xyz); 
+            if isfield(restrain(k-1).r_intern(kr),'new_samples') &&...
+                    ~isempty(restrain(k-1).r_intern(kr).new_samples) &&...
+                    r >= min(restrain(k-1).r_intern(kr).r_axis) &&...
+                    r <= max(restrain(k-1).r_intern(kr).r_axis)
+                [~,rpoi] = min(abs(restrain(k-1).r_intern(kr).r_axis -r));
+                restrain(k-1).r_intern(kr).new_samples(rpoi) = restrain(k-1).r_intern(kr).new_samples(rpoi) + 1;
+            end
             switch restrain(k-1).r_intern(kr).type
                 case 'Gaussian'
                     p_intern = p_intern * ...
@@ -868,6 +973,12 @@ while k<ngap+1 && failed < options.max_attempts
                         restrain(k-1).r_intern(kr).p = 0;
                         p_intern = 0;
                     end                       
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).r_intern(kr).r_axis -r));
+                    if rand >= restrain(k-1).r_intern(kr).target(rpoi)/...
+                            (restrain(k-1).r_intern(kr).M*restrain(k-1).r_intern(kr).samples(rpoi))
+                        p_intern = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model:unknownRestraintType','Restraint type %s not known',restrain(k-1).r_beacon(kr).type);
             end
@@ -890,6 +1001,13 @@ while k<ngap+1 && failed < options.max_attempts
         p_oligomer = 1;
         for kr = 1:length(restrain(k-1).oligomer)
             r = 2*sqrt(sum(restrain(k-1).xyz(1:2).^2))*sin(pi/restrain(k-1).oligomer(kr).n); 
+            if isfield(restrain(k-1).oligomer(kr),'new_samples') &&...
+                    ~isempty(restrain(k-1).oligomer(kr).new_samples) &&...
+                    r >= min(restrain(k-1).oligomer(kr).r_axis) &&...
+                    r <= max(restrain(k-1).oligomer(kr).r_axis)
+                [~,rpoi] = min(abs(restrain(k-1).oligomer(kr).r_axis -r));
+                restrain(k-1).oligomer(kr).new_samples(rpoi) = restrain(k-1).oligomer(kr).new_samples(rpoi) + 1;
+            end
             switch restrain(k-1).oligomer.type
                 case 'Gaussian'
                     restrain(k-1).oligomer(kr).p = ...
@@ -903,6 +1021,12 @@ while k<ngap+1 && failed < options.max_attempts
                         restrain(k-1).oligomer(kr).p = 0;
                         p_oligomer = 0;
                     end                        
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).oligomer(kr).r_axis -r));
+                    if rand >= restrain(k-1).oligomer(kr).target(rpoi)/...
+                            (restrain(k-1).oligomer(kr).M*restrain(k-1).oligomer(kr).samples(rpoi))
+                        p_oligomer = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model:unknownRestraintType','Restraint type %s not known',restrain(k-1).oligomer(kr).type);
             end

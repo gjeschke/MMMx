@@ -28,7 +28,7 @@ if isempty(ext)
     fname = strcat(fname,'.ens');
 end
 
-% open the PDB file, return exception if impossible
+% open the file, return exception if impossible
 try
     fid = fopen(fname);
 catch exception

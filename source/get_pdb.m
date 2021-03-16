@@ -1,4 +1,4 @@
-function [entity,exceptions] = get_pdb(ident,options)
+function [entity,exceptions] = get_pdb(ident,options,entity)
 %
 % GET_PDB Load structure from PDB server or local file
 %
@@ -18,6 +18,9 @@ function [entity,exceptions] = get_pdb(ident,options)
 %                   insertion codes or non-positive residue numbers
 %           .name   optional name for the entity, defaults: PDB identifier
 %                   upon download or if header line exists; MMMx otherwise
+% entity    optional, if present, models from the PDB file are added as
+%           conformers to an existing entity, the caller is responsible for
+%           consistency of primary structure of the conformers
 %
 % OUTPUT
 % entity       entity structure in MMMx:atomic representation
@@ -36,11 +39,13 @@ maxwater = 100000;
 maxmodels = 100000;
 
 % initialize empty outputs
-entity = [];
+if ~exist('entity','var')
+    entity = [];
+end
 exceptions{1} = [];
 warnings = 0; % counter for warnings
 
-if ~exist('options','var') || ~isfield(options,'dssp') || ...
+if ~exist('options','var') || isempty(options) || ~isfield(options,'dssp') || ...
         isempty(options.dssp)
     options.dssp = false;
 end
@@ -105,10 +110,25 @@ chains = '';
 curr_chain = '';
 models = 1;
 current_model = 1;
-old_resname = 'HOH'; % avoid location entry for water residues
+model_offset = 0;
 populations = zeros(maxmodels,1);
 conformers = 0;
-offset = 0; % residue number offset to avoid negativ residue numbers
+if ~isempty(entity)
+    model_offset = length(entity.populations);
+    current_model = model_offset + 1; 
+    atoms = length(entity.elements);
+    elements(1:atoms) = entity.elements;
+    occupancies(1:atoms) = entity.occupancies;
+    [indexed_atoms,~] = size(entity.index_array);
+    index_array(1:indexed_atoms,:) = entity.index_array;
+    xyz(1:atoms,:) = entity.xyz;
+    water_atoms = length(entity.water);
+    water_indices(1:water_atoms) = entity.water;
+    conformers = length(entity.populations);
+    populations(1:conformers) = entity.populations;
+end
+old_resname = 'HOH'; % avoid location entry for water residues
+offset = 0; % residue number offset to avoid negative residue numbers
 while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
@@ -118,7 +138,7 @@ while 1
         entity.name = tline(63:66);
     end
     if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL')
-        current_model = str2double(tline(7:14));
+        current_model = str2double(tline(7:14)) + model_offset;
         if current_model > models
             models = current_model;
         end
@@ -126,7 +146,7 @@ while 1
     end
     % read population information in MMMx:atomic PDB files
     if length(tline) >= 48 && contains(tline,'REMARK 400   MODEL') && contains(tline,'POPULATION')
-        conformer = str2double(tline(19:28));
+        conformer = str2double(tline(19:28)) + model_offset;
         if conformer > 0
             populations(conformer) = str2double(tline(40:48));
             if conformer > conformers
@@ -150,6 +170,9 @@ while 1
         atname = strtrim(upper(tline(13:16)));
         for kk = 1:length(atname)
             if atname(kk) == ''''
+                atname(kk) = '_';
+            end
+            if atname(kk) == '"'
                 atname(kk) = '_';
             end
         end

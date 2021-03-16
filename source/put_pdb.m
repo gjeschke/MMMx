@@ -233,6 +233,12 @@ for kconf = 1:length(conformer_order)
                                 for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                     indices(5) = rot_indices(kl); % set current rotamer index
                                     atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
+                                    if length(entity.populations) > 1
+                                        if length(entity.(chain).(residue).(atom).tab_indices) < length(entity.populations)
+                                            continue
+                                        end
+                                        atom_index = entity.(chain).(residue).(atom).tab_indices(indices(4));
+                                    end
                                     atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                 end
                             end
@@ -286,6 +292,12 @@ for kconf = 1:length(conformer_order)
                                     for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                         indices(:,5) = rot_indices(kl); % set current rotamer index
                                         atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
+                                        if length(entity.populations) > 1
+                                            if length(entity.(chain).(residue).(atom).tab_indices) < length(entity.populations)
+                                                continue
+                                            end
+                                            atom_index = entity.(chain).(residue).(atom).tab_indices(indices(4));
+                                        end
                                         atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                     end
                                 end
@@ -324,6 +336,12 @@ for kconf = 1:length(conformer_order)
                                         for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                             indices(5) = rot_indices(kl); % set current rotamer index
                                             atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
+                                            if length(entity.populations) > 1
+                                                if length(entity.(chain).(residue).(atom).tab_indices) < length(entity.populations)
+                                                    continue
+                                                end
+                                                atom_index = entity.(chain).(residue).(atom).tab_indices(indices(4));
+                                            end
                                             atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                         end
                                     end
@@ -382,8 +400,15 @@ if ~isempty(atom_index)
     else
         chg = '0';
     end
-    pdbline = sprintf('%s%5i%5s%4s%2s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s',...
-        pad(info.atomtype,6),atnum,info.atname,info.resname,info.cid,...
+    if atnum < 100000
+        atnum_str = sprintf('%5i',atnum);
+    elseif atnum < 1048576
+        atnum_str = dec2hex(atnum);
+    else
+        atnum_str = '*****';
+    end
+    pdbline = sprintf('%s%s%5s%4s%2s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s',...
+        pad(info.atomtype,6),atnum_str,info.atname,info.resname,info.cid,...
         info.resnum,xyz(1),xyz(2),xyz(3),occ,info.bfactor,info.element,chg);
     fprintf(fid,'%s\n',pdbline);
 end

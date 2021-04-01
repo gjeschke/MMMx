@@ -47,7 +47,8 @@ opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
 opt.interactive = false;
 maxlen = 1000; % maximum expected loop length for memory pre-allocation
-M_max = 10; % maximum factor for rejection sampling
+M_max = 10; % maximum factor for rejection sampling (default)
+f_update = 0.001; % update factor for sampling functions in rejection sampling (default)
 
 fname = 'mmmx_flex';
 pdbid = 'MMMX';
@@ -156,6 +157,11 @@ for d = 1:length(control.directives)
             else
                 restraints.ddr(ddr_poi).M_max = M_max;
             end
+            if length(control.directives(d).options) > 3 % specification of sampling update factor
+                restraints.ddr(ddr_poi).f_update = str2double(control.directives(d).options{4});
+            else
+                restraints.ddr(ddr_poi).f_update = f_update;
+            end
             [nr,args] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
                 restraints.ddr(ddr_poi).site1{nr} = ' ';
@@ -217,6 +223,11 @@ for d = 1:length(control.directives)
                 restraints.oligomer(oligomer_poi).M_max = str2double(control.directives(d).options{3});
             else
                 restraints.oligomer(oligomer_poi).M_max = M_max;
+            end
+            if length(control.directives(d).options) > 3 % maximum M for rejection sampling provided
+                restraints.oligomer(oligomer_poi).f_update = str2double(control.directives(d).options{4});
+            else
+                restraints.oligomer(oligomer_poi).f_update = f_update;
             end
             [nr,args] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
@@ -551,6 +562,7 @@ for ddr_poi = 1:length(restraints.ddr)
     label1 = restraints.ddr(ddr_poi).labels{1};
     label2 = restraints.ddr(ddr_poi).labels{2};
     curr_M_max = restraints.ddr(ddr_poi).M_max;
+    curr_f_update = restraints.ddr(ddr_poi).f_update;
     for kr = 1:length(restraints.ddr(ddr_poi).site1)
         % establish type
         % ### handling of full distance distributions needs to be
@@ -614,10 +626,10 @@ for ddr_poi = 1:length(restraints.ddr)
         end
         % load sampling and restraint distribution, if provided
         if ~isempty(restraints.ddr(ddr_poi).file(kr)) 
-            fname = restraints.ddr(ddr_poi).file(kr);
-            fname = fname{1};
-            if ~isempty(fname)
-                data = load(fname);
+            frname = restraints.ddr(ddr_poi).file(kr);
+            frname = frname{1};
+            if ~isempty(frname)
+                data = load(frname);
                 r_axis = data(:,1);
                 samples = data(:,2);
                 target = data(:,3);
@@ -671,6 +683,8 @@ for ddr_poi = 1:length(restraints.ddr)
                 restrain(kres).r_intern(1).samples = samples;
                 restrain(kres).r_intern(1).target = target;
                 restrain(kres).r_intern(1).M = M;
+                restrain(kres).r_intern(1).M_max = curr_M_max;
+                restrain(kres).r_intern(1).f_update = curr_f_update;
             else
                 kint = length(restrain(kres).r_intern) + 1;
                 restrain(kres).r_intern(kint).site = site;
@@ -681,6 +695,8 @@ for ddr_poi = 1:length(restraints.ddr)
                 restrain(kres).r_intern(kint).samples = samples;
                 restrain(kres).r_intern(kint).target = target;
                 restrain(kres).r_intern(kint).M = M;
+                restrain(kres).r_intern(kint).M_max = curr_M_max;
+                restrain(kres).r_intern(kint).f_update = curr_f_update;
             end
             continue
         end
@@ -700,6 +716,8 @@ for ddr_poi = 1:length(restraints.ddr)
             restrain(kres).r_beacon(1).samples = samples;
             restrain(kres).r_beacon(1).target = target;
             restrain(kres).r_beacon(1).M = M;
+            restrain(kres).r_beacon(1).M_max = curr_M_max;
+            restrain(kres).r_beacon(1).f_update = curr_f_update;
         else
             kint = length(restrain(kres).r_beacon) + 1;
             restrain(kres).r_beacon(kint).xyz = xyz;
@@ -710,6 +728,8 @@ for ddr_poi = 1:length(restraints.ddr)
             restrain(kres).r_beacon(kint).samples = samples;
             restrain(kres).r_beacon(kint).target = target;
             restrain(kres).r_beacon(kint).M = M;
+            restrain(kres).r_beacon(kint).M_max = curr_M_max;
+            restrain(kres).r_beacon(kint).f_update = curr_f_update;
         end
     end
 end
@@ -718,6 +738,7 @@ end
 for oli_poi = 1:length(restraints.oligomer)
     label = restraints.oligomer(oli_poi).label;
     curr_M_max = restraints.oligomer(oli_poi).M_max;
+    curr_f_update = restraints.oligomer(oli_poi).f_update;
     label_rel_coor = get_relative_label(label);
     multiplicity = restraints.oligomer(oli_poi).multiplicity;
     for kr = 1:length(restraints.oligomer(oli_poi).site)
@@ -760,10 +781,10 @@ for oli_poi = 1:length(restraints.oligomer)
         kres = str2double(site) - restraints.initial + 1;
         % load sampling and restraint distribution, if provided
         if ~isempty(restraints.oligomer(oli_poi).file(kr)) 
-            fname = restraints.oligomer(oli_poi).file(kr);
-            fname = fname{1};
-            if ~isempty(fname)
-                data = load(fname);
+            frname = restraints.oligomer(oli_poi).file(kr);
+            frname = frname{1};
+            if ~isempty(frname)
+                data = load(frname);
                 r_axis = data(:,1);
                 samples = data(:,2);
                 target = data(:,3);
@@ -790,6 +811,8 @@ for oli_poi = 1:length(restraints.oligomer)
                 restrain(kres).oligomer(1).samples = samples;
                 restrain(kres).oligomer(1).target = target;
                 restrain(kres).oligomer(1).M = M;
+                restrain(kres).oligomer(1).M_max = curr_M_max;
+                restrain(kres).oligomer(1).f_update = curr_f_update;
             else
                 kint = length(restrain(kres).oligomer) + 1;
                 restrain(kres).oligomer(kint).n = multiplicity;
@@ -800,6 +823,8 @@ for oli_poi = 1:length(restraints.oligomer)
                 restrain(kres).oligomer(kint).samples = samples;
                 restrain(kres).oligomer(kint).target = target;
                 restrain(kres).oligomer(kint).M = M;
+                restrain(kres).oligomer(kint).M_max = curr_M_max;
+                restrain(kres).oligomer(kint).f_update = curr_f_update;
             end 
         else
             warnings = warnings + 1;
@@ -1022,6 +1047,38 @@ while 1
         p_cumprob(kp) = cumprob; 
         p_kres(kp) = kres;
     end
+    % initialize new sampling updates
+    for res = 1:length(restrain)
+        % checke whetehr there are beacon restraints
+        if isfield(restrain(res),'r_beacon')
+            % loop over all beacon restraints of this residue
+            for kr = 1:length(restrain(res).r_beacon)
+                % test whether we do have a full distribution restraint here
+                if ~isempty(restrain(res).r_beacon(kr).samples)
+                    restrain(res).r_beacon(kr).new_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
+                end
+            end
+        end
+        if isfield(restrain(res),'r_intern')
+            % loop over all internal restraints of this residue
+            for kr = 1:length(restrain(res).r_intern)
+                % test whether we do have a full distribution restraint here
+                if ~isempty(restrain(res).r_intern(kr).samples)
+                    restrain(res).r_intern(kr).new_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
+                end
+            end
+        end
+        if isfield(restrain(res),'oligomer')
+            % loop over all oligomer restraints of this residue
+            for kr = 1:length(restrain(res).oligomer)
+                % test whether we do have a full distribution restraint here
+                if ~isempty(restrain(res).oligomer(kr).samples)
+                    restrain(res).oligomer(kr).new_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
+                end
+            end
+        end
+    end
+
     for kp = 1:opt.parnum
         % collect all sampling distributions
         % initialize new sampling distributions
@@ -1035,6 +1092,8 @@ while 1
                     if ~isempty(restrain(res).r_beacon(kr).samples)
                         restrain(res).r_beacon(kr).updated_samples = ...
                             restrain(res).r_beacon(kr).updated_samples + output_restrain(res).r_beacon(kr).new_samples;
+                        restrain(res).r_beacon(kr).new_samples = ...
+                            restrain(res).r_beacon(kr).new_samples + output_restrain(res).r_beacon(kr).new_samples;
                     end
                 end
             end
@@ -1045,6 +1104,8 @@ while 1
                     if ~isempty(restrain(res).r_intern(kr).samples)
                         restrain(res).r_intern(kr).updated_samples = ...
                             restrain(res).r_intern(kr).updated_samples + output_restrain(res).r_intern(kr).new_samples;
+                        restrain(res).r_intern(kr).new_samples = ...
+                            restrain(res).r_intern(kr).new_samples + output_restrain(res).r_intern(kr).new_samples;
                     end
                 end
             end
@@ -1055,6 +1116,8 @@ while 1
                     if ~isempty(restrain(res).oligomer(kr).samples)
                         restrain(res).oligomer(kr).updated_samples = ...
                             restrain(res).oligomer(kr).updated_samples + output_restrain(res).oligomer(kr).new_samples;  
+                        restrain(res).oligomer(kr).new_samples = ...
+                            restrain(res).oligomer(kr).new_samples + output_restrain(res).oligomer(kr).new_samples;  
                     end
                 end
             end
@@ -1155,6 +1218,77 @@ while 1
                 fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
             end
 
+        end
+    end
+    
+    % update sampling information
+    for res = 1:length(restrain)
+        % check whether there are beacon restraints
+        if isfield(restrain(res),'r_beacon')
+            % loop over all beacon restraints of this residue
+            for kr = 1:length(restrain(res).r_beacon)
+                % test whether we do have a full distribution restraint here
+                if ~isempty(restrain(res).r_beacon(kr).samples)
+                    f_update = restrain(res).r_beacon(kr).f_update;
+                    new_samples = restrain(res).r_beacon(kr).new_samples;
+                    if sum(new_samples) > 0
+                        new_samples = new_samples/sum(new_samples);
+                    end
+                    samples = (1-f_update)*restrain(res).r_beacon(kr).samples + f_update*new_samples;
+                    samples = samples/sum(samples);
+                    target = restrain(res).r_beacon(kr).target;
+                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                    if M > restrain(res).r_beacon(kr).M_max
+                        M = restrain(res).r_beacon(kr).M_max;
+                    end
+                    restrain(res).r_beacon(kr).samples = samples;
+                    restrain(res).r_beacon(kr).M = M;
+                end
+            end
+        end
+        if isfield(restrain(res),'r_intern')
+            % loop over all internal restraints of this residue
+            for kr = 1:length(restrain(res).r_intern)
+                % test whether we do have a full distribution restraint here
+                if ~isempty(restrain(res).r_intern(kr).samples)
+                    f_update = restrain(res).r_intern(kr).f_update;
+                    new_samples = restrain(res).r_intern(kr).new_samples;
+                    if sum(new_samples) > 0
+                        new_samples = new_samples/sum(new_samples);
+                    end
+                    samples = (1-f_update)*restrain(res).r_intern(kr).samples + f_update*new_samples;
+                    samples = samples/sum(samples);
+                    target = restrain(res).r_intern(kr).target;
+                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                    if M > restrain(res).r_intern(kr).M_max
+                        M = restrain(res).r_intern(kr).M_max;
+                    end
+                    restrain(res).r_intern(kr).samples = samples;
+                    restrain(res).r_intern(kr).M = M;
+                end
+            end
+        end
+        if isfield(restrain(res),'oligomer')
+            % loop over all oligomer restraints of this residue
+            for kr = 1:length(restrain(res).oligomer)
+                % test whether we do have a full distribution restraint here
+                if ~isempty(restrain(res).oligomer(kr).samples)
+                    f_update = restrain(res).oligomer(kr).f_update;
+                    new_samples = restrain(res).oligomer(kr).new_samples;
+                    if sum(new_samples) > 0
+                        new_samples = new_samples/sum(new_samples);
+                    end
+                    samples = (1-f_update)*restrain(res).oligomer(kr).samples + f_update*new_samples;
+                    samples = samples/sum(samples);
+                    target = restrain(res).oligomer(kr).target;
+                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                    if M > restrain(res).oligomer(kr).M_max
+                        M = restrain(res).oligomer(kr).M_max;
+                    end
+                    restrain(res).oligomer(kr).samples = samples;
+                    restrain(res).oligomer(kr).M = M;
+                end
+            end
         end
     end
     

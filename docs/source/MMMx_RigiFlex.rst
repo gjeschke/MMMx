@@ -22,17 +22,18 @@ Format
 
 Flexible sections are treated as in the `MMMx|atomic` format.
 
-Each rigid body has its separate coordinate array, corresponding to its *reference position and orientation*. 
-In Matlab, these arrays are organized in a cell vector, which is a field `rigidbodies` of the entity variable.
+The coordinates for atoms in rigid bodies are stored only once, corresponding to the *reference position and orientation* of the rigid body. 
+In addition, the entity variable holds index tables for all rigid bodies in a cell vector `rigidbodies`.
 
-Rigid bodies can be named. For this, there is a cell vector of strings `rigidbody\_names` at entity level. 
+Rigid bodies can be named. For this, there is a cell vector of strings `rigidbody\_names` at entity level. The assignment of chains to rigid bodies is stored at entity level in a cell string `rba\_chains`.
 
-The topology variable has an additional field `rigidbody` at residue level. The value is zero for residues in flexible sections.
+The topology variable has an additional field `rigidbody` at chain level. It is empty for residues in flexible sections.
 Otherwise, it is the number of the rigid body, which is also the index into the cell vectors `rigidbodies` and `rigidbody\_names`.
 
 The rigid-body arrangement information stored at entity level in a field `rba`. 
-For an entity with `c` conformers, `rba` is a `c \times 6` array `[\Delta x, \Delta y, \Delta z, \alpha, \beta, \gamma]` 
-where `\Delta x`, `\Delta y`, and `\Delta z` are Cartesian translations (in Angstroems) and `\alpha`, `\beta`, and `\gamma` are Euler angles (`zyz` convention) in radians.
+For an entity with `c` conformers, `rba` is a `c \times n_{rb} \times 6` array `[\Delta x, \Delta y, \Delta z, \alpha, \beta, \gamma]` 
+where `\Delta x`, `\Delta y`, and `\Delta z` are Cartesian translations (in Angstroems) and `\alpha`, `\beta`, and `\gamma` are Euler angles (`zyz` convention) in radians and `n_{rb}` is the number of rigid bodies.
+Rigid-body arrangements can be assigned populations, which are stored in field `rba\_populations` at entity level.
 
 Conversion to MMMx|atomic representation
 ----------------------------------------
@@ -45,9 +46,7 @@ In order to avoid information loss, the RigiFlex representation is converted to 
 
 In the latter case, the MMMx|atomic representation is only used in further expansion to the PDB representation.
 
-Expansion from `MMMx|RigiFlex` to `MMMx|atomic` explicitly creates the atom coordinates for all rigid-body arrangements, 
-appends them to coordinate array `\mathbf{C}` and correspondingly amends the index array `\mathbf{I}_\mathrm{c}`. 
+It is sufficuient and much more memory efficient to sequentially request atomic representations of only individual rigid-body arrangements.
+This is handled by the function ``get_rba`` which transforms atom coordinates for all rigid bodies.
 
-The fields `rigidbodies` and `rigidbody\_names` at entity level and `rigidbody` at residue level are removed only upon request. 
-They allow for later back conversion, if, to a sufficiently good approximation, the domains moved as rigid bodies during 
-processing by the method that requested the atomic representation.
+

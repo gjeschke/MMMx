@@ -1,14 +1,14 @@
 function [entity,exceptions,failed] = module_flex(control,logfid,entity)
 %
-% MMModel Run modelling pipeline
+% MODULE_FLEX Run Flex module for modelling a peptide loop
 %
-%   [exceptions,entity] = MMModel(control_file)
-%   Parses control file for modelling directives and arguments and runs the
-%   specified modelling pipeline
+%   [exceptions,entity] = MODULE_FLEX(control_file)
+%   processes Flex controls and restraints and runs the appropriate loop
+%   modeller
 %
 % INPUT
 % control       control structure with fields
-%               .name           'ensemblefit', unused
+%               .name           'flex', unused
 %               .options        options struct
 %               .directives     array of struct with directives
 %               .entity_output  number of the entity to be output
@@ -20,13 +20,26 @@ function [entity,exceptions,failed] = module_flex(control,logfid,entity)
 % entity        output entity, empty in NOFIT mode
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
-% failed        flag indicated whther the module failed
+% failed        flag indicating whether the module failed
 %
 % SUPPORTED DIRECTIVES
 %
+% sequence      amino acid sequence, mandatory, all others are optional
 % parallel      number of parallel runs per block
+% expand        expand an MMMx:RigiFlex model by computing flexible linker
+%               for each rigid-body arrangement
 % interactive   if present, information on progress is displayed
-%
+% loose         models with sidegroup clashes are not rejected
+% save [fn]     specify file name fn for output, defaults to mmmx_flex
+% n_anchor      N-terminal anchor residue
+% c_anchor      C-terminal anchor residue
+% a_prop        alpha-helix propensities
+% b_prop        beta-strand propensities
+% c_prop        cis-residue propensities
+% ddr           distance distribution restraints
+% oligomer      oligomer restraints
+% depth         bilayer immersion depth restraints
+% 
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
@@ -40,6 +53,9 @@ if ~exist('entity','var')
     entity = [];
 end
 % set defaults
+
+nent = 1; % number of entities to be processed
+expand_rba = false;
 
 keep_sidegroup_clashes = false; % delete models where side groups clash
 
@@ -80,6 +96,8 @@ for d = 1:length(control.directives)
             end
         case 'loose'
             keep_sidegroup_clashes = true;
+        case 'expand'
+            expand_rba = true;
         case 'parallel'
             opt.parnum = str2double(control.directives(d).options{1});
         case 'save'
@@ -369,685 +387,662 @@ if ~isempty(entity)
 else
     entity_xyz = [];
 end
-% get anchor information
-anchorC = [];
-anchorCn = [];
-anchorN = [];
-anchorNp = [];
-anchor_chain = 'A';
-% C-terminal anchor
-if isfield(restraints,'c_anchor') && ~isempty(restraints.c_anchor)
-    % determine anchor chain, if specified
-    poi1 = strfind(restraints.c_anchor,'(');
-    poi2 = strfind(restraints.c_anchor,')');
-    if ~isempty(poi1) && ~isempty(poi2)
-        anchor_chain = restraints.c_anchor(poi1+1:poi2-1);
-    end
-    anchorC = zeros(4,3);
-    failed = false;
-    % extract backbone coordinates of C-terminal anchor residue
-    argout = get_atom(entity,'xyz',[restraints.c_anchor '.N']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
+
+sequence0 = sequence;
+fname_basis = fname;
+
+if expand_rba
+    if isfield(entity,'rba_populations')
+        nent = length(entity.rba_populations);
+        entity0 = entity;
     else
-        anchorC(1,:) = argout{1};
+        warnings = warnings + 1;
+        exceptions{warnings} = MException('module_flex:no_rba',...
+                'Rigid-body expansion switched off, as there are no rigid bodies in input entity');   
+        record_exception(exceptions{warnings},logfid);
+        expand_rba = false;
     end
-    argout = get_atom(entity,'xyz',[restraints.c_anchor '.CA']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorC(2,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[restraints.c_anchor '.C']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorC(3,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[restraints.c_anchor '.O']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorC(4,:) = argout{1};
-    end
-    % extract backbone coordinates of the residue after the C-trminal
-    % anchor
-    poi = strfind(restraints.c_anchor,')');
-    if ~isempty(poi)
-        resstr = restraints.c_anchor(poi+1:end);
-        prefix = restraints.c_anchor(1:poi);
-    else
-        resstr = restraints.c_anchor;
-        prefix = '';
-    end
-    next_res = str2double(resstr) + 1;
-    c_anchor_next = sprintf('%s%i',prefix,next_res);
-    anchorCn = zeros(4,3);
-    argout = get_atom(entity,'xyz',[c_anchor_next '.N']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorCn(1,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[c_anchor_next '.CA']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorCn(2,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[c_anchor_next '.C']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorCn(3,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[c_anchor_next '.O']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorCn(4,:) = argout{1};
-    end
-    % add C anchor residue to sequence
-    argout = get_residue(entity,'info',restraints.c_anchor); 
-    slc = tlc2slc(argout{1}.tlc);
-    sequence = [sequence slc];
-    c_anchored = true;
-else
-    c_anchored = false;
 end
 
-if failed
-    warnings = warnings + 1;
-    exceptions{warnings} = MException('module_flex:c_anchor_unresolved',...
-        'not all backbone atoms found for C-terminal anchor %s (aborted)',...
-        restraints.c_anchor);
-    record_exception(exceptions{warning},logfid);
-    return
-end
-
-% N-terminal anchor
-if isfield(restraints,'n_anchor') && ~isempty(restraints.n_anchor)
-    % determine anchor chain, if specified
-    poi1 = strfind(restraints.n_anchor,'(');
-    poi2 = strfind(restraints.n_anchor,')');
-    if ~isempty(poi1) && ~isempty(poi2)
-        anchor_chain = restraints.n_anchor(poi1+1:poi2-1);
-    end
-    % determine backbone coordinates of N-terminal anchor residue
-    anchorN = zeros(4,3);
-    failed = false;
-    argout = get_atom(entity,'xyz',[restraints.n_anchor '.N']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
+N_anchor_chain = '';
+C_anchor_chain = '';
+for kent = 1:nent
+    if expand_rba
+        entity = get_rba(entity0,kent);
+        fname = sprintf('%s_rba_%i',fname_basis,kent);
     else
-        anchorN(1,:) = argout{1};
+        fname = fname_basis;
     end
-    argout = get_atom(entity,'xyz',[restraints.n_anchor '.CA']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorN(2,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[restraints.n_anchor '.C']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorN(3,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[restraints.n_anchor '.O']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorN(4,:) = argout{1};
-    end
-    poi = strfind(restraints.n_anchor,')');
-    if ~isempty(poi)
-        resstr = restraints.n_anchor(poi+1:end);
-        prefix = restraints.n_anchor(1:poi);
-    else
-        resstr = restraints.n_anchor;
-        prefix = '';
-    end
-    % determine backbone coordinates of residue before N-terminal anchor
-    % resiude
-    previous_res = str2double(resstr) - 1;
-    n_anchor_previous = sprintf('%s%i',prefix,previous_res);
-    anchorNp = zeros(4,3);
-    argout = get_atom(entity,'xyz',[n_anchor_previous '.N']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorNp(1,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[n_anchor_previous '.CA']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorNp(2,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[n_anchor_previous '.C']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorNp(3,:) = argout{1};
-    end
-    argout = get_atom(entity,'xyz',[n_anchor_previous '.O']);
-    if isempty(argout) || isempty(argout{1})
-        failed = true;
-    else
-        anchorNp(4,:) = argout{1};
-    end
-    % add N anchor residue to sequence
-    argout = get_residue(entity,'info',restraints.n_anchor); 
-    slc = tlc2slc(argout{1}.tlc);
-    sequence = [slc sequence];
-    n_anchored = true;
-else
-    n_anchored = false;
-end
-
-if failed
-    warnings = warnings + 1;
-    exceptions{warnings} = MException('module_flex:n_anchor_unresolved',...
-        'not all backbone atoms found for N-terminal anchor %s (aborted)',...
-        restraints.n_anchor);
-    record_exception(exceptions{warning},logfid);
-    return
-end
-
-n_restraints = 0;
-
-% process distance distribution restraints
-for ddr_poi = 1:length(restraints.ddr)
-    label1 = restraints.ddr(ddr_poi).labels{1};
-    label2 = restraints.ddr(ddr_poi).labels{2};
-    curr_M_max = restraints.ddr(ddr_poi).M_max;
-    curr_f_update = restraints.ddr(ddr_poi).f_update;
-    for kr = 1:length(restraints.ddr(ddr_poi).site1)
-        % establish type
-        % ### handling of full distance distributions needs to be
-        % considered later ###
-        r = restraints.ddr(ddr_poi).r(kr);
-        sigr = restraints.ddr(ddr_poi).sigr(kr);
-        if isempty(r) || isempty(sigr)
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:ddr_empty',...
-                'missing distance or standard deviation for ddr %s/%s (ignored)',...
-                restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
-            record_exception(exceptions{warning},logfid);
-            continue
+    sequenceC = sequence0; % initialize default sequence after N-terminal anchor
+    % get anchor information
+    anchorC = [];
+    anchorCn = [];
+    anchorN = [];
+    anchorNp = [];
+    anchor_chain = 'A';
+    % C-terminal anchor
+    if isfield(restraints,'c_anchor') && ~isempty(restraints.c_anchor)
+        % determine anchor chain, if specified
+        poi1 = strfind(restraints.c_anchor,'(');
+        poi2 = strfind(restraints.c_anchor,')');
+        if ~isempty(poi1) && ~isempty(poi2)
+            anchor_chain = restraints.c_anchor(poi1+1:poi2-1);
+            C_anchor_chain = anchor_chain;
         end
-        if r == 0 && sigr == 0
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:ddr_ignored',...
-                'zero distance and standard deviation for ddr %s/%s (ignored)',...
-                restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
-        n_restraints = n_restraints+1;
-        if ~isempty(restraints.ddr(ddr_poi).file{kr})
-            restraint_type = 'rejection';
-        elseif sigr < 0 % interpreted as lower/upper bound
-            restraint_type = 'bounds';
-            r = abs(r);
-            sigr = abs(sigr);
+        anchorC = zeros(4,3);
+        failed = false;
+        % extract backbone coordinates of C-terminal anchor residue
+        argout = get_atom(entity,'xyz',[restraints.c_anchor '.N']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
         else
-            restraint_type = 'Gaussian';
+            anchorC(1,:) = argout{1};
         end
-        % try to compute label coordinates at both sites
-        [argsout,entity] = get_label(entity,label1,'positions',restraints.ddr(ddr_poi).site1{kr});
-        if ~isempty(argsout) && ~isempty(argsout{1})
-            pos1 = argsout{1};
-            [argsout,entity] = get_label(entity,label1,'populations',restraints.ddr(ddr_poi).site1{kr});
-            pop1 = argsout{1};
-            kres1 = 0;
-        else % determine residue index in chain segment
-            site1 = restraints.ddr(ddr_poi).site1{kr};
-            poi = strfind(site1,')');
-            if ~isempty(poi)
-                site1 = site1(poi+1:end);
+        argout = get_atom(entity,'xyz',[restraints.c_anchor '.CA']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorC(2,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[restraints.c_anchor '.C']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorC(3,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[restraints.c_anchor '.O']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorC(4,:) = argout{1};
+        end
+        % extract backbone coordinates of the residue after the C-trminal
+        % anchor
+        poi = strfind(restraints.c_anchor,')');
+        if ~isempty(poi)
+            resstr = restraints.c_anchor(poi+1:end);
+            prefix = restraints.c_anchor(1:poi);
+        else
+            resstr = restraints.c_anchor;
+            prefix = '';
+        end
+        next_res = str2double(resstr) + 1;
+        c_anchor_next = sprintf('%s%i',prefix,next_res);
+        anchorCn = zeros(4,3);
+        argout = get_atom(entity,'xyz',[c_anchor_next '.N']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorCn(1,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[c_anchor_next '.CA']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorCn(2,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[c_anchor_next '.C']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorCn(3,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[c_anchor_next '.O']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorCn(4,:) = argout{1};
+        end
+        % add C anchor residue to sequence
+        argout = get_residue(entity,'info',restraints.c_anchor);
+        slc = tlc2slc(argout{1}.tlc);
+        sequence = [sequence0 slc];
+        sequenceC = sequence;
+        c_anchored = true;
+    else
+        c_anchored = false;
+    end
+    
+    if failed
+        warnings = warnings + 1;
+        exceptions{warnings} = MException('module_flex:c_anchor_unresolved',...
+            'not all backbone atoms found for C-terminal anchor %s (aborted)',...
+            restraints.c_anchor);
+        record_exception(exceptions{warning},logfid);
+        return
+    end
+    
+    % N-terminal anchor
+    if isfield(restraints,'n_anchor') && ~isempty(restraints.n_anchor)
+        % determine anchor chain, if specified
+        poi1 = strfind(restraints.n_anchor,'(');
+        poi2 = strfind(restraints.n_anchor,')');
+        if ~isempty(poi1) && ~isempty(poi2)
+            anchor_chain = restraints.n_anchor(poi1+1:poi2-1);
+            N_anchor_chain = anchor_chain;
+        end
+        % determine backbone coordinates of N-terminal anchor residue
+        anchorN = zeros(4,3);
+        failed = false;
+        argout = get_atom(entity,'xyz',[restraints.n_anchor '.N']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorN(1,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[restraints.n_anchor '.CA']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorN(2,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[restraints.n_anchor '.C']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorN(3,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[restraints.n_anchor '.O']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorN(4,:) = argout{1};
+        end
+        poi = strfind(restraints.n_anchor,')');
+        if ~isempty(poi)
+            resstr = restraints.n_anchor(poi+1:end);
+            prefix = restraints.n_anchor(1:poi);
+        else
+            resstr = restraints.n_anchor;
+            prefix = '';
+        end
+        % determine backbone coordinates of residue before N-terminal anchor
+        % resiude
+        previous_res = str2double(resstr) - 1;
+        n_anchor_previous = sprintf('%s%i',prefix,previous_res);
+        anchorNp = zeros(4,3);
+        argout = get_atom(entity,'xyz',[n_anchor_previous '.N']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorNp(1,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[n_anchor_previous '.CA']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorNp(2,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[n_anchor_previous '.C']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorNp(3,:) = argout{1};
+        end
+        argout = get_atom(entity,'xyz',[n_anchor_previous '.O']);
+        if isempty(argout) || isempty(argout{1})
+            failed = true;
+        else
+            anchorNp(4,:) = argout{1};
+        end
+        % add N anchor residue to sequence
+        argout = get_residue(entity,'info',restraints.n_anchor);
+        slc = tlc2slc(argout{1}.tlc);
+        sequence = [slc sequenceC];
+        n_anchored = true;
+    else
+        n_anchored = false;
+    end
+    
+    if failed
+        warnings = warnings + 1;
+        exceptions{warnings} = MException('module_flex:n_anchor_unresolved',...
+            'not all backbone atoms found for N-terminal anchor %s (aborted)',...
+            restraints.n_anchor);
+        record_exception(exceptions{warning},logfid);
+        return
+    end
+    
+    n_restraints = 0;
+    
+    % process distance distribution restraints
+    for ddr_poi = 1:length(restraints.ddr)
+        label1 = restraints.ddr(ddr_poi).labels{1};
+        label2 = restraints.ddr(ddr_poi).labels{2};
+        curr_M_max = restraints.ddr(ddr_poi).M_max;
+        curr_f_update = restraints.ddr(ddr_poi).f_update;
+        for kr = 1:length(restraints.ddr(ddr_poi).site1)
+            % establish type
+            % ### handling of full distance distributions needs to be
+            % considered later ###
+            r = restraints.ddr(ddr_poi).r(kr);
+            sigr = restraints.ddr(ddr_poi).sigr(kr);
+            if isempty(r) || isempty(sigr)
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:ddr_empty',...
+                    'missing distance or standard deviation for ddr %s/%s (ignored)',...
+                    restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
+                record_exception(exceptions{warning},logfid);
+                continue
             end
-            kres1 = str2double(site1) - restraints.initial + 1;
-        end
-        [argsout,entity] = get_label(entity,label2,'positions',restraints.ddr(ddr_poi).site2{kr});        
-        if ~isempty(argsout) && ~isempty(argsout{1})
-            pos2 = argsout{1};
-            [argsout,entity] = get_label(entity,label2,'populations',restraints.ddr(ddr_poi).site2{kr});
-            pop2 = argsout{1};
-            kres2 = 0;
-        else % determine residue index in chain segment
-            site2 = restraints.ddr(ddr_poi).site2{kr};
-            poi = strfind(site2,')');
-            if ~isempty(poi)
-                site2 = site2(poi+1:end);
+            if r == 0 && sigr == 0
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:ddr_ignored',...
+                    'zero distance and standard deviation for ddr %s/%s (ignored)',...
+                    restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
+                record_exception(exceptions{warning},logfid);
+                continue
             end
-            kres2 = str2double(site2) - restraints.initial + 1;
-        end
-        % load sampling and restraint distribution, if provided
-        if ~isempty(restraints.ddr(ddr_poi).file(kr)) 
-            frname = restraints.ddr(ddr_poi).file(kr);
-            frname = frname{1};
-            if ~isempty(frname)
-                data = load(frname);
-                r_axis = data(:,1);
-                samples = data(:,2);
-                target = data(:,3);
-                M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                if M > curr_M_max
-                    M = curr_M_max;
-                end
+            n_restraints = n_restraints+1;
+            if ~isempty(restraints.ddr(ddr_poi).file{kr})
+                restraint_type = 'rejection';
+            elseif sigr < 0 % interpreted as lower/upper bound
+                restraint_type = 'bounds';
+                r = abs(r);
+                sigr = abs(sigr);
             else
-                r_axis = [];
-                samples = [];
-                target = [];
-                M = [];
+                restraint_type = 'Gaussian';
             end
-        end
-        % determine type of restraint
-        if kres1 > 0 && kres1 <= nres
-            internal1 = true;
-            mean_pos = get_relative_label(label1);
-            restrain(kres1).label = mean_pos;
-        else
-            internal1 = false;
-        end
-        if kres2 > 0 && kres2 <= nres
-            internal2 = true;
-            mean_pos = get_relative_label(label2);
-            restrain(kres2).label = mean_pos;
-        else
-            internal2 = false;
-        end
-        if ~internal1 && ~internal2 % restraint outside modelled segment is ignored
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:ddr_outside_section',...
-                'for ddr, neither %s nor %s is inside modelled chain segment (ignored)',...
-                restraints.ddr(ddr_poi).site1{kres1},restraints.ddr(ddr_poi).site2{kres2});
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
-        if internal1 && internal2 % internal segment
-            kres = kres1;
-            site = kres2;
-            if site > kres
+            % try to compute label coordinates at both sites
+            [argsout,entity] = get_label(entity,label1,'positions',restraints.ddr(ddr_poi).site1{kr});
+            if ~isempty(argsout) && ~isempty(argsout{1})
+                pos1 = argsout{1};
+                [argsout,entity] = get_label(entity,label1,'populations',restraints.ddr(ddr_poi).site1{kr});
+                pop1 = argsout{1};
+                kres1 = 0;
+            else % determine residue index in chain segment
+                site1 = restraints.ddr(ddr_poi).site1{kr};
+                poi = strfind(site1,')');
+                if ~isempty(poi)
+                    site1 = site1(poi+1:end);
+                end
+                kres1 = str2double(site1) - restraints.initial + 1;
+            end
+            [argsout,entity] = get_label(entity,label2,'positions',restraints.ddr(ddr_poi).site2{kr});
+            if ~isempty(argsout) && ~isempty(argsout{1})
+                pos2 = argsout{1};
+                [argsout,entity] = get_label(entity,label2,'populations',restraints.ddr(ddr_poi).site2{kr});
+                pop2 = argsout{1};
+                kres2 = 0;
+            else % determine residue index in chain segment
+                site2 = restraints.ddr(ddr_poi).site2{kr};
+                poi = strfind(site2,')');
+                if ~isempty(poi)
+                    site2 = site2(poi+1:end);
+                end
+                kres2 = str2double(site2) - restraints.initial + 1;
+            end
+            % load sampling and restraint distribution, if provided
+            if ~isempty(restraints.ddr(ddr_poi).file(kr))
+                frname = restraints.ddr(ddr_poi).file(kr);
+                frname = frname{1};
+                if ~isempty(frname)
+                    data = load(frname);
+                    r_axis = data(:,1);
+                    samples = data(:,2);
+                    target = data(:,3);
+                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                    if M > curr_M_max
+                        M = curr_M_max;
+                    end
+                else
+                    r_axis = [];
+                    samples = [];
+                    target = [];
+                    M = [];
+                end
+            end
+            % determine type of restraint
+            if kres1 > 0 && kres1 <= nres
+                internal1 = true;
+                mean_pos = get_relative_label(label1);
+                restrain(kres1).label = mean_pos;
+            else
+                internal1 = false;
+            end
+            if kres2 > 0 && kres2 <= nres
+                internal2 = true;
+                mean_pos = get_relative_label(label2);
+                restrain(kres2).label = mean_pos;
+            else
+                internal2 = false;
+            end
+            if ~internal1 && ~internal2 % restraint outside modelled segment is ignored
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:ddr_outside_section',...
+                    'for ddr, neither %s nor %s is inside modelled chain segment (ignored)',...
+                    restraints.ddr(ddr_poi).site1{kres1},restraints.ddr(ddr_poi).site2{kres2});
+                record_exception(exceptions{warning},logfid);
+                continue
+            end
+            if internal1 && internal2 % internal segment
+                kres = kres1;
+                site = kres2;
+                if site > kres
+                    kres = kres2;
+                    site = kres1;
+                end
+                if ~isfield(restrain(kres),'r_intern') % this residue does not yet have an internal restraint
+                    restrain(kres).r_intern(1).site = site;
+                    restrain(kres).r_intern(1).type = restraint_type;
+                    restrain(kres).r_intern(1).par1 = r;
+                    restrain(kres).r_intern(1).par2 = sigr;
+                    restrain(kres).r_intern(1).r_axis = r_axis;
+                    restrain(kres).r_intern(1).samples = samples;
+                    restrain(kres).r_intern(1).target = target;
+                    restrain(kres).r_intern(1).M = M;
+                    restrain(kres).r_intern(1).M_max = curr_M_max;
+                    restrain(kres).r_intern(1).f_update = curr_f_update;
+                else
+                    kint = length(restrain(kres).r_intern) + 1;
+                    restrain(kres).r_intern(kint).site = site;
+                    restrain(kres).r_intern(kint).type = restraint_type;
+                    restrain(kres).r_intern(kint).par1 = r;
+                    restrain(kres).r_intern(kint).par2 = sigr;
+                    restrain(kres).r_intern(kint).r_axis = r_axis;
+                    restrain(kres).r_intern(kint).samples = samples;
+                    restrain(kres).r_intern(kint).target = target;
+                    restrain(kres).r_intern(kint).M = M;
+                    restrain(kres).r_intern(kint).M_max = curr_M_max;
+                    restrain(kres).r_intern(kint).f_update = curr_f_update;
+                end
+                continue
+            end
+            if internal1 % first site is in modelled segment
+                kres = kres1;
+                xyz = pop2'*pos2;
+            else % second site is in modelled segment
                 kres = kres2;
-                site = kres1;
+                xyz = pop1'*pos1;
             end
-            if ~isfield(restrain(kres),'r_intern') % this residue does not yet have an internal restraint
-                restrain(kres).r_intern(1).site = site;
-                restrain(kres).r_intern(1).type = restraint_type;
-                restrain(kres).r_intern(1).par1 = r;
-                restrain(kres).r_intern(1).par2 = sigr;
-                restrain(kres).r_intern(1).r_axis = r_axis;
-                restrain(kres).r_intern(1).samples = samples;
-                restrain(kres).r_intern(1).target = target;
-                restrain(kres).r_intern(1).M = M;
-                restrain(kres).r_intern(1).M_max = curr_M_max;
-                restrain(kres).r_intern(1).f_update = curr_f_update;
+            if ~isfield(restrain(kres),'r_beacon') % this residue does not yet have a beacon restraint
+                restrain(kres).r_beacon(1).xyz = xyz;
+                restrain(kres).r_beacon(1).type = restraint_type;
+                restrain(kres).r_beacon(1).par1 = r;
+                restrain(kres).r_beacon(1).par2 = sigr;
+                restrain(kres).r_beacon(1).r_axis = r_axis;
+                restrain(kres).r_beacon(1).samples = samples;
+                restrain(kres).r_beacon(1).target = target;
+                restrain(kres).r_beacon(1).M = M;
+                restrain(kres).r_beacon(1).M_max = curr_M_max;
+                restrain(kres).r_beacon(1).f_update = curr_f_update;
             else
-                kint = length(restrain(kres).r_intern) + 1;
-                restrain(kres).r_intern(kint).site = site;
-                restrain(kres).r_intern(kint).type = restraint_type;
-                restrain(kres).r_intern(kint).par1 = r;
-                restrain(kres).r_intern(kint).par2 = sigr;
-                restrain(kres).r_intern(kint).r_axis = r_axis;
-                restrain(kres).r_intern(kint).samples = samples;
-                restrain(kres).r_intern(kint).target = target;
-                restrain(kres).r_intern(kint).M = M;
-                restrain(kres).r_intern(kint).M_max = curr_M_max;
-                restrain(kres).r_intern(kint).f_update = curr_f_update;
+                kint = length(restrain(kres).r_beacon) + 1;
+                restrain(kres).r_beacon(kint).xyz = xyz;
+                restrain(kres).r_beacon(kint).type = restraint_type;
+                restrain(kres).r_beacon(kint).par1 = r;
+                restrain(kres).r_beacon(kint).par2 = sigr;
+                restrain(kres).r_beacon(kint).r_axis = r_axis;
+                restrain(kres).r_beacon(kint).samples = samples;
+                restrain(kres).r_beacon(kint).target = target;
+                restrain(kres).r_beacon(kint).M = M;
+                restrain(kres).r_beacon(kint).M_max = curr_M_max;
+                restrain(kres).r_beacon(kint).f_update = curr_f_update;
             end
-            continue
-        end
-        if internal1 % first site is in modelled segment
-            kres = kres1;
-            xyz = pop2'*pos2;
-        else % second site is in modelled segment
-            kres = kres2;
-            xyz = pop1'*pos1;
-        end
-        if ~isfield(restrain(kres),'r_beacon') % this residue does not yet have a beacon restraint
-            restrain(kres).r_beacon(1).xyz = xyz;
-            restrain(kres).r_beacon(1).type = restraint_type;
-            restrain(kres).r_beacon(1).par1 = r;
-            restrain(kres).r_beacon(1).par2 = sigr;
-            restrain(kres).r_beacon(1).r_axis = r_axis;
-            restrain(kres).r_beacon(1).samples = samples;
-            restrain(kres).r_beacon(1).target = target;
-            restrain(kres).r_beacon(1).M = M;
-            restrain(kres).r_beacon(1).M_max = curr_M_max;
-            restrain(kres).r_beacon(1).f_update = curr_f_update;
-        else
-            kint = length(restrain(kres).r_beacon) + 1;
-            restrain(kres).r_beacon(kint).xyz = xyz;
-            restrain(kres).r_beacon(kint).type = restraint_type;
-            restrain(kres).r_beacon(kint).par1 = r;
-            restrain(kres).r_beacon(kint).par2 = sigr;
-            restrain(kres).r_beacon(kint).r_axis = r_axis;
-            restrain(kres).r_beacon(kint).samples = samples;
-            restrain(kres).r_beacon(kint).target = target;
-            restrain(kres).r_beacon(kint).M = M;
-            restrain(kres).r_beacon(kint).M_max = curr_M_max;
-            restrain(kres).r_beacon(kint).f_update = curr_f_update;
         end
     end
-end
-
-% process oligomer restraints
-for oli_poi = 1:length(restraints.oligomer)
-    label = restraints.oligomer(oli_poi).label;
-    curr_M_max = restraints.oligomer(oli_poi).M_max;
-    curr_f_update = restraints.oligomer(oli_poi).f_update;
-    label_rel_coor = get_relative_label(label);
-    multiplicity = restraints.oligomer(oli_poi).multiplicity;
-    for kr = 1:length(restraints.oligomer(oli_poi).site)
-        % establish type
-        % ### handling of full distance distributions needs to be
-        % considered later ###
-        r = restraints.oligomer(oli_poi).r(kr);
-        sigr = restraints.oligomer(oli_poi).sigr(kr);
-        if isempty(r) || isempty(sigr)
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:oligomer_empty',...
-                'missing distance or standard deviation for oligomer restraint %s (ignored)',...
-                restraints.oligomers(oli_poi).site{kr});
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
-        if r == 0 && sigr == 0
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:oligomer_ignored',...
-                'zero distance and standard deviation for oligomer restraint %s (ignored)',...
-                restraints.oligomer(oli_poi).site{kr});
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
-        n_restraints = n_restraints+1;
-        if ~isempty(restraints.ddr(ddr_poi).file{kr})
-            restraint_type = 'rejection';
-        elseif sigr < 0 % interpreted as lower/upper bound
-            restraint_type = 'bounds';
-            r = abs(r);
-            sigr = abs(sigr);
-        else
-            restraint_type = 'Gaussian';
-        end
-        site = restraints.oligomer(oli_poi).site{kr};
-        poi = strfind(site,')');
-        if ~isempty(poi)
-            site = site(poi+1:end);
-        end
-        kres = str2double(site) - restraints.initial + 1;
-        % load sampling and restraint distribution, if provided
-        if ~isempty(restraints.oligomer(oli_poi).file(kr)) 
-            frname = restraints.oligomer(oli_poi).file(kr);
-            frname = frname{1};
-            if ~isempty(frname)
-                data = load(frname);
-                r_axis = data(:,1);
-                samples = data(:,2);
-                target = data(:,3);
-                M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                if M > curr_M_max
-                    M = curr_M_max;
+    
+    % process oligomer restraints
+    for oli_poi = 1:length(restraints.oligomer)
+        label = restraints.oligomer(oli_poi).label;
+        curr_M_max = restraints.oligomer(oli_poi).M_max;
+        curr_f_update = restraints.oligomer(oli_poi).f_update;
+        label_rel_coor = get_relative_label(label);
+        multiplicity = restraints.oligomer(oli_poi).multiplicity;
+        for kr = 1:length(restraints.oligomer(oli_poi).site)
+            % establish type
+            % ### handling of full distance distributions needs to be
+            % considered later ###
+            r = restraints.oligomer(oli_poi).r(kr);
+            sigr = restraints.oligomer(oli_poi).sigr(kr);
+            if isempty(r) || isempty(sigr)
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:oligomer_empty',...
+                    'missing distance or standard deviation for oligomer restraint %s (ignored)',...
+                    restraints.oligomers(oli_poi).site{kr});
+                record_exception(exceptions{warning},logfid);
+                continue
+            end
+            if r == 0 && sigr == 0
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:oligomer_ignored',...
+                    'zero distance and standard deviation for oligomer restraint %s (ignored)',...
+                    restraints.oligomer(oli_poi).site{kr});
+                record_exception(exceptions{warning},logfid);
+                continue
+            end
+            n_restraints = n_restraints+1;
+            if ~isempty(restraints.ddr(ddr_poi).file{kr})
+                restraint_type = 'rejection';
+            elseif sigr < 0 % interpreted as lower/upper bound
+                restraint_type = 'bounds';
+                r = abs(r);
+                sigr = abs(sigr);
+            else
+                restraint_type = 'Gaussian';
+            end
+            site = restraints.oligomer(oli_poi).site{kr};
+            poi = strfind(site,')');
+            if ~isempty(poi)
+                site = site(poi+1:end);
+            end
+            kres = str2double(site) - restraints.initial + 1;
+            % load sampling and restraint distribution, if provided
+            if ~isempty(restraints.oligomer(oli_poi).file(kr))
+                frname = restraints.oligomer(oli_poi).file(kr);
+                frname = frname{1};
+                if ~isempty(frname)
+                    data = load(frname);
+                    r_axis = data(:,1);
+                    samples = data(:,2);
+                    target = data(:,3);
+                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                    if M > curr_M_max
+                        M = curr_M_max;
+                    end
+                else
+                    r_axis = [];
+                    samples = [];
+                    target = [];
+                    M = [];
+                end
+            end
+            % check if site is inside modelled segment
+            if kres > 0 && kres <= nres
+                restrain(kres).label = label_rel_coor;
+                if ~isfield(restrain(kres),'oligomer') % this residue does not yet have an oligomer restraint
+                    restrain(kres).oligomer(1).n = multiplicity;
+                    restrain(kres).oligomer(1).type = restraint_type;
+                    restrain(kres).oligomer(1).par1 = r;
+                    restrain(kres).oligomer(1).par2 = sigr;
+                    restrain(kres).oligomer(1).r_axis = r_axis;
+                    restrain(kres).oligomer(1).samples = samples;
+                    restrain(kres).oligomer(1).target = target;
+                    restrain(kres).oligomer(1).M = M;
+                    restrain(kres).oligomer(1).M_max = curr_M_max;
+                    restrain(kres).oligomer(1).f_update = curr_f_update;
+                else
+                    kint = length(restrain(kres).oligomer) + 1;
+                    restrain(kres).oligomer(kint).n = multiplicity;
+                    restrain(kres).oligomer(kint).type = restraint_type;
+                    restrain(kres).oligomer(kint).par1 = r;
+                    restrain(kres).oligomer(kint).par2 = sigr;
+                    restrain(kres).oligomer(kint).r_axis = r_axis;
+                    restrain(kres).oligomer(kint).samples = samples;
+                    restrain(kres).oligomer(kint).target = target;
+                    restrain(kres).oligomer(kint).M = M;
+                    restrain(kres).oligomer(kint).M_max = curr_M_max;
+                    restrain(kres).oligomer(kint).f_update = curr_f_update;
                 end
             else
-                r_axis = [];
-                samples = [];
-                target = [];
-                M = [];
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:oligomer_restraint_outside_section',...
+                    'site %s for oligomer restraint is not inside modelled chain segment (ignored)',...
+                    restraints.oligomer(oli_poi).site);
+                record_exception(exceptions{warning},logfid);
+                continue
             end
         end
-        % check if site is inside modelled segment
-        if kres > 0 && kres <= nres
-            restrain(kres).label = label_rel_coor;
-            if ~isfield(restrain(kres),'oligomer') % this residue does not yet have an oligomer restraint
-                restrain(kres).oligomer(1).n = multiplicity;
-                restrain(kres).oligomer(1).type = restraint_type;
-                restrain(kres).oligomer(1).par1 = r;
-                restrain(kres).oligomer(1).par2 = sigr;
-                restrain(kres).oligomer(1).r_axis = r_axis;
-                restrain(kres).oligomer(1).samples = samples;
-                restrain(kres).oligomer(1).target = target;
-                restrain(kres).oligomer(1).M = M;
-                restrain(kres).oligomer(1).M_max = curr_M_max;
-                restrain(kres).oligomer(1).f_update = curr_f_update;
-            else
-                kint = length(restrain(kres).oligomer) + 1;
-                restrain(kres).oligomer(kint).n = multiplicity;
-                restrain(kres).oligomer(kint).type = restraint_type;
-                restrain(kres).oligomer(kint).par1 = r;
-                restrain(kres).oligomer(kint).par2 = sigr;
-                restrain(kres).oligomer(kint).r_axis = r_axis;
-                restrain(kres).oligomer(kint).samples = samples;
-                restrain(kres).oligomer(kint).target = target;
-                restrain(kres).oligomer(kint).M = M;
-                restrain(kres).oligomer(kint).M_max = curr_M_max;
-                restrain(kres).oligomer(kint).f_update = curr_f_update;
-            end 
+    end
+    
+    % process depth restraints
+    for depth_poi = 1:length(restraints.depth)
+        label = restraints.depth(depth_poi).label;
+        if strcmpi(label,'CA') % check whether the restraint is direct to CA
+            restraint_site = 'CA';
         else
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:oligomer_restraint_outside_section',...
-                'site %s for oligomer restraint is not inside modelled chain segment (ignored)',...
-                restraints.oligomer(oli_poi).site);
-            record_exception(exceptions{warning},logfid);
-            continue
+            restraint_site = 'label';
+            label_rel_coor = get_relative_label(label);
+        end
+        for kr = 1:length(restraints.depth(depth_poi).site)
+            % establish type
+            r = restraints.depth(depth_poi).r(kr);
+            sigr = restraints.depth(depth_poi).sigr(kr);
+            if isempty(r) || isempty(sigr)
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:depth_empty',...
+                    'missing distance or standard deviation for depth restraint %s (ignored)',...
+                    restraints.depth(depth_poi).site{kr});
+                record_exception(exceptions{warning},logfid);
+                continue
+            end
+            if r == 0 && sigr == 0
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:depth_ignored',...
+                    'zero distance and standard deviation for depth restraint %s (ignored)',...
+                    restraints.depth(depth_poi).site{kr});
+                record_exception(exceptions{warning},logfid);
+                continue
+            end
+            n_restraints = n_restraints+1;
+            if sigr < 0 % interpreted as lower/upper bound
+                restraint_type = 'bounds';
+                r = abs(r);
+                sigr = abs(sigr);
+            else
+                restraint_type = 'Gaussian';
+            end
+            site = restraints.depth(depth_poi).site{kr};
+            poi = strfind(site,')');
+            if ~isempty(poi)
+                site = site(poi+1:end);
+            end
+            kres = str2double(site) - restraints.initial + 1;
+            % check if site is inside modelled segment
+            if kres > 0 && kres <= nres
+                if strcmp(restraint_site,'label')
+                    restrain(kres).label = label_rel_coor;
+                end
+                if ~isfield(restrain(kres),'depth') % this residue does not yet have an oligomer restraint
+                    restrain(kres).depth(1).site = restraint_site;
+                    restrain(kres).depth(1).type = restraint_type;
+                    restrain(kres).depth(1).par1 = r;
+                    restrain(kres).depth(1).par2 = sigr;
+                else
+                    kint = length(restrain(kres).depth) + 1;
+                    restrain(kres).depth(kint).site = restraint_site;
+                    restrain(kres).depth(kint).type = restraint_type;
+                    restrain(kres).depth(kint).par1 = r;
+                    restrain(kres).depth(kint).par2 = sigr;
+                end
+            else
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_flex:depth_restraint_outside_section',...
+                    'site %s for depth restraint is not inside modelled chain segment (ignored)',...
+                    restraints.depth(depth_poi).site);
+                record_exception(exceptions{warning},logfid);
+                continue
+            end
         end
     end
-end
-
-% process depth restraints
-for depth_poi = 1:length(restraints.depth)
-    label = restraints.depth(depth_poi).label;
-    if strcmpi(label,'CA') % check whether the restraint is direct to CA
-        restraint_site = 'CA';
+    
+    defs = load('monomer_attributes.mat');
+    rescodes = zeros(1,length(sequence));
+    for k = 1:length(sequence)
+        rescodes(k) = strfind(defs.monomers.aa_slc,sequence(k));
+    end
+    
+    defs = load('Ramachandran_disordered.mat');
+    
+    Rama_res.me = defs.Ramachandran.me;
+    Rama_res.ephi = defs.Ramachandran.ephi;
+    Rama_res.epsi = defs.Ramachandran.epsi;
+    Rama_res.allowed_P = defs.Ramachandran.allowed_P;
+    Rama_res.allowed_G = defs.Ramachandran.allowed_G;
+    Rama_res.allowed_gen = defs.Ramachandran.allowed_gen;
+    
+    if ~isempty(control.options) || ~isempty(control.options{1})
+        pmodel = str2double(control.options{1});
     else
-        restraint_site = 'label';
-        label_rel_coor = get_relative_label(label);
+        pmodel = 0.5;
     end
-    for kr = 1:length(restraints.depth(depth_poi).site)
-        % establish type
-        r = restraints.depth(depth_poi).r(kr);
-        sigr = restraints.depth(depth_poi).sigr(kr);
-        if isempty(r) || isempty(sigr)
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:depth_empty',...
-                'missing distance or standard deviation for depth restraint %s (ignored)',...
-                restraints.depth(depth_poi).site{kr});
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
-        if r == 0 && sigr == 0
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:depth_ignored',...
-                'zero distance and standard deviation for depth restraint %s (ignored)',...
-                restraints.depth(depth_poi).site{kr});
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
-        n_restraints = n_restraints+1;
-        if sigr < 0 % interpreted as lower/upper bound
-            restraint_type = 'bounds';
-            r = abs(r);
-            sigr = abs(sigr);
-        else
-            restraint_type = 'Gaussian';
-        end
-        site = restraints.depth(depth_poi).site{kr};
-        poi = strfind(site,')');
-        if ~isempty(poi)
-            site = site(poi+1:end);
-        end
-        kres = str2double(site) - restraints.initial + 1;
-        % check if site is inside modelled segment
-        if kres > 0 && kres <= nres
-            if strcmp(restraint_site,'label')
-                restrain(kres).label = label_rel_coor;
-            end
-            if ~isfield(restrain(kres),'depth') % this residue does not yet have an oligomer restraint
-                restrain(kres).depth(1).site = restraint_site;
-                restrain(kres).depth(1).type = restraint_type;
-                restrain(kres).depth(1).par1 = r;
-                restrain(kres).depth(1).par2 = sigr;
-            else
-                kint = length(restrain(kres).depth) + 1;
-                restrain(kres).depth(kint).site = restraint_site;
-                restrain(kres).depth(kint).type = restraint_type;
-                restrain(kres).depth(kint).par1 = r;
-                restrain(kres).depth(kint).par2 = sigr;
-            end 
-        else
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_flex:depth_restraint_outside_section',...
-                'site %s for depth restraint is not inside modelled chain segment (ignored)',...
-                restraints.depth(depth_poi).site);
-            record_exception(exceptions{warning},logfid);
-            continue
-        end
+    pthr = exp(-erfinv(pmodel)^2);
+    min_prob = pthr^n_restraints;
+    
+    if length(control.options) >= 2
+        max_models = str2double(control.options{2});
+    else
+        max_models = 1;
     end
-end
-
-defs = load('monomer_attributes.mat');
-rescodes = zeros(1,length(sequence));
-for k = 1:length(sequence)
-    rescodes(k) = strfind(defs.monomers.aa_slc,sequence(k));
-end
-
-defs = load('Ramachandran_disordered.mat');
-
-Rama_res.me = defs.Ramachandran.me;
-Rama_res.ephi = defs.Ramachandran.ephi;
-Rama_res.epsi = defs.Ramachandran.epsi;
-Rama_res.allowed_P = defs.Ramachandran.allowed_P;
-Rama_res.allowed_G = defs.Ramachandran.allowed_G;
-Rama_res.allowed_gen = defs.Ramachandran.allowed_gen;
-
-if ~isempty(control.options) || ~isempty(control.options{1})
-    pmodel = str2double(control.options{1});
-else
-    pmodel = 0.5;
-end
-pthr = exp(-erfinv(pmodel)^2);
-min_prob = pthr^n_restraints;
-
-if length(control.options) >= 2
-    max_models = str2double(control.options{2});
-else
-    max_models = 1;
-end
-
-if length(control.options) >= 3
-    max_time = str2double(control.options{3});
-else
-    max_time = 1;
-end
-
-ntrials = 20000000; % number of Monte Carlo trials
-max_seconds = 3600*max_time; % maximum runtime in seconds
-
-free_standing = true;
-reverse = false;
-
-if n_anchored || c_anchored
-    free_standing = false;
-end
-
-if c_anchored && ~n_anchored 
-    reverse = true;
-end
-
-if c_anchored && n_anchored 
-    closed_loop = true;
-else
-    closed_loop = false;
-end
-
-res1 = restraints.initial;
-resend = restraints.final;
-        
-if ~free_standing
-    prot_coor = entity_xyz;
-else
-    prot_coor = [];
-end
-
-success = 0;
-err_count=zeros(1,11);
-Ram_fixed = 0;
-Ram_fix_clash = 0;
-resax = res1:resend;
-res_stat = zeros(1,length(resax));
-
-fprintf(logfid,'Saving models to %s_m#.pdb\n',fname);
-
-p_coor = cell(opt.parnum);
-p_restrain = cell(opt.parnum);
-p_errcode = zeros(1,opt.parnum);
-p_cumprob = zeros(1,opt.parnum);
-p_kres = zeros(1,opt.parnum);
-
-run_options.min_prob = min_prob;
-save_options.pdbid = pdbid;
-save_options.chainIDs{1,1} = 'Z';
-save_options.chainIDs{1,2} = chainid;
-
-
-k_MC = 0; % number of Monte Carlo trials
-tpm = NaN;
-
-for res = 1:length(restrain)
-    % checke whetehr there are beacon restraints
-    if isfield(restrain(res),'r_beacon')
-        % loop over all beacon restraints of this residue
-        for kr = 1:length(restrain(res).r_beacon)
-            % test whether we do have a full distribution restraint here
-            if ~isempty(restrain(res).r_beacon(kr).samples)
-                restrain(res).r_beacon(kr).updated_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
-            end
-        end
+    
+    if length(control.options) >= 3
+        max_time = str2double(control.options{3});
+    else
+        max_time = 1;
     end
-    if isfield(restrain(res),'r_intern')
-        % loop over all internal restraints of this residue
-        for kr = 1:length(restrain(res).r_intern)
-            % test whether we do have a full distribution restraint here
-            if ~isempty(restrain(res).r_intern(kr).samples)
-                restrain(res).r_intern(kr).updated_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
-            end
-        end
+    
+    ntrials = 20000000; % number of Monte Carlo trials
+    max_seconds = 3600*max_time; % maximum runtime in seconds
+    
+    free_standing = true;
+    reverse = false;
+    
+    if n_anchored || c_anchored
+        free_standing = false;
     end
-    if isfield(restrain(res),'oligomer')
-        % loop over all oligomer restraints of this residue
-        for kr = 1:length(restrain(res).oligomer)
-            % test whether we do have a full distribution restraint here
-            if ~isempty(restrain(res).oligomer(kr).samples)
-                restrain(res).oligomer(kr).updated_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
-            end
-        end
+    
+    if c_anchored && ~n_anchored
+        reverse = true;
     end
-end
-
-
-tic,
-while 1
-    parfor kp = 1:opt.parnum % parfor
-        if reverse
-            [coor,errcode,restrain1,cumprob,kres] = loop_model_reverse(sequence, anchorC, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
-        else
-            if rejection_sampling
-                [coor,errcode,restrain1,cumprob,kres] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
-            else
-                [coor,errcode,restrain1,cumprob,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
-            end
-            kres = kres-1;
-        end
-        p_coor{kp} = coor;
-        p_errcode(kp) = errcode;
-        p_restrain{kp} = restrain1; 
-        p_cumprob(kp) = cumprob; 
-        p_kres(kp) = kres;
+    
+    if c_anchored && n_anchored
+        closed_loop = true;
+    else
+        closed_loop = false;
     end
-    % initialize new sampling updates
+    
+    res1 = restraints.initial;
+    resend = restraints.final;
+    
+    if ~free_standing
+        prot_coor = entity_xyz;
+    else
+        prot_coor = [];
+    end
+    
+    success = 0;
+    err_count=zeros(1,11);
+    Ram_fixed = 0;
+    Ram_fix_clash = 0;
+    resax = res1:resend;
+    res_stat = zeros(1,length(resax));
+    
+    fprintf(logfid,'Saving models to %s_m#.pdb\n',fname);
+    
+    p_coor = cell(opt.parnum);
+    p_restrain = cell(opt.parnum);
+    p_errcode = zeros(1,opt.parnum);
+    p_kres = zeros(1,opt.parnum);
+    
+    run_options.min_prob = min_prob;
+    save_options.pdbid = pdbid;
+    save_options.chainIDs{1,1} = 'Z';
+    save_options.chainIDs{1,2} = chainid;
+    
+    
+    k_MC = 0; % number of Monte Carlo trials
+    tpm = NaN;
+    
     for res = 1:length(restrain)
         % checke whetehr there are beacon restraints
         if isfield(restrain(res),'r_beacon')
@@ -1055,7 +1050,7 @@ while 1
             for kr = 1:length(restrain(res).r_beacon)
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).r_beacon(kr).samples)
-                    restrain(res).r_beacon(kr).new_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
+                    restrain(res).r_beacon(kr).updated_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
                 end
             end
         end
@@ -1064,7 +1059,7 @@ while 1
             for kr = 1:length(restrain(res).r_intern)
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).r_intern(kr).samples)
-                    restrain(res).r_intern(kr).new_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
+                    restrain(res).r_intern(kr).updated_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
                 end
             end
         end
@@ -1073,27 +1068,40 @@ while 1
             for kr = 1:length(restrain(res).oligomer)
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).oligomer(kr).samples)
-                    restrain(res).oligomer(kr).new_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
+                    restrain(res).oligomer(kr).updated_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
                 end
             end
         end
     end
-
-    for kp = 1:opt.parnum
-        % collect all sampling distributions
-        % initialize new sampling distributions
-        output_restrain = p_restrain{kp};
+    
+    
+    tic,
+    while 1
+        parfor kp = 1:opt.parnum % parfor
+            if reverse
+                [coor,errcode,restrain1,~,kres] = loop_model_reverse(sequence, anchorC, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+            else
+                if rejection_sampling
+                    [coor,errcode,restrain1,~,kres] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+                else
+                    [coor,errcode,restrain1,~,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+                end
+                kres = kres-1;
+            end
+            p_coor{kp} = coor;
+            p_errcode(kp) = errcode;
+            p_restrain{kp} = restrain1;
+            p_kres(kp) = kres;
+        end
+        % initialize new sampling updates
         for res = 1:length(restrain)
-            % checke whether there are beacon restraints
+            % checke whetehr there are beacon restraints
             if isfield(restrain(res),'r_beacon')
                 % loop over all beacon restraints of this residue
                 for kr = 1:length(restrain(res).r_beacon)
                     % test whether we do have a full distribution restraint here
                     if ~isempty(restrain(res).r_beacon(kr).samples)
-                        restrain(res).r_beacon(kr).updated_samples = ...
-                            restrain(res).r_beacon(kr).updated_samples + output_restrain(res).r_beacon(kr).new_samples;
-                        restrain(res).r_beacon(kr).new_samples = ...
-                            restrain(res).r_beacon(kr).new_samples + output_restrain(res).r_beacon(kr).new_samples;
+                        restrain(res).r_beacon(kr).new_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
                     end
                 end
             end
@@ -1102,10 +1110,7 @@ while 1
                 for kr = 1:length(restrain(res).r_intern)
                     % test whether we do have a full distribution restraint here
                     if ~isempty(restrain(res).r_intern(kr).samples)
-                        restrain(res).r_intern(kr).updated_samples = ...
-                            restrain(res).r_intern(kr).updated_samples + output_restrain(res).r_intern(kr).new_samples;
-                        restrain(res).r_intern(kr).new_samples = ...
-                            restrain(res).r_intern(kr).new_samples + output_restrain(res).r_intern(kr).new_samples;
+                        restrain(res).r_intern(kr).new_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
                     end
                 end
             end
@@ -1114,114 +1119,261 @@ while 1
                 for kr = 1:length(restrain(res).oligomer)
                     % test whether we do have a full distribution restraint here
                     if ~isempty(restrain(res).oligomer(kr).samples)
-                        restrain(res).oligomer(kr).updated_samples = ...
-                            restrain(res).oligomer(kr).updated_samples + output_restrain(res).oligomer(kr).new_samples;  
-                        restrain(res).oligomer(kr).new_samples = ...
-                            restrain(res).oligomer(kr).new_samples + output_restrain(res).oligomer(kr).new_samples;  
+                        restrain(res).oligomer(kr).new_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
                     end
                 end
             end
         end
-
-        k_MC = k_MC + 1;
-        coor = p_coor{kp};
-        errcode = p_errcode(kp);
-        kres = p_kres(kp);
-        res_stat(kres) = res_stat(kres)+1;
-        runtime = toc;
-        if errcode == -1
-            Ram_fixed = Ram_fixed + 1;
-            errcode = 0;
-        end
-        if errcode == -4
-            Ram_fixed = Ram_fixed + 1;
-            Ram_fix_clash = Ram_fix_clash + 1;
-            errcode = 4;
-        end
-        err_count(errcode+1) = err_count(errcode+1) + 1;
-
-        if ~errcode
-            tpm = runtime/err_count(1);
-            success = success + 1;
-            if success == 1
-                bb0 = coor;
-            elseif free_standing
-                [rms,coor] = rmsd_superimpose(bb0,coor);
-                fprintf(logfid,'Model superimposes onto first model with rmsd of %4.1f Angstroem\n',rms);
-            end
-             loopname = write_pdb_backbone(coor,restraints.sequence,fname,success,res1);
-             pmodel = make_SCWRL4_sidegroups(loopname);
-             if ~isempty(pmodel)
-                 delete(loopname);
-             else
-                 fprintf(logfid,'Warning: Model %s could not be decorated with sidegroups\n',loopname);
-                 pmodel = loopname;
-             end
-             [pclash,iclash] = check_decorated_loop(pmodel,prot_coor,res1,resend);
-
-            if pclash
-                err_count(10) = err_count(10) + 1;
-                success = success - 1;
-                fprintf(logfid,'Warning: Side groups in model %s clash with protein\n',pmodel);
-                if ~keep_sidegroup_clashes
-                    delete(pmodel);
-                end
-            elseif iclash
-                err_count(11) = err_count(11) + 1;
-                success = success - 1; 
-                fprintf(logfid,'Warning: Side groups in model %s clash internally\n',pmodel);
-                if ~keep_sidegroup_clashes
-                    delete(pmodel);
-                end
-            else
-                m_entity = get_pdb(pmodel);
-                fname_valid = sprintf('%s_valid_m%i',fname,success);
-                if n_anchored || c_anchored
-                    entity1 = entity;
-                    for resnum = res1:resend
-                        resname = sprintf('R%i',resnum);
-                        entity1 = add_residue(entity1,anchor_chain,resnum,m_entity.Z.(resname),m_entity.xyz);
+        
+        for kp = 1:opt.parnum
+            % collect all sampling distributions
+            % initialize new sampling distributions
+            output_restrain = p_restrain{kp};
+            for res = 1:length(restrain)
+                % checke whether there are beacon restraints
+                if isfield(restrain(res),'r_beacon')
+                    % loop over all beacon restraints of this residue
+                    for kr = 1:length(restrain(res).r_beacon)
+                        % test whether we do have a full distribution restraint here
+                        if ~isempty(restrain(res).r_beacon(kr).samples)
+                            restrain(res).r_beacon(kr).updated_samples = ...
+                                restrain(res).r_beacon(kr).updated_samples + output_restrain(res).r_beacon(kr).new_samples;
+                            restrain(res).r_beacon(kr).new_samples = ...
+                                restrain(res).r_beacon(kr).new_samples + output_restrain(res).r_beacon(kr).new_samples;
+                        end
                     end
-                    put_pdb(entity1,fname_valid,save_options);
+                end
+                if isfield(restrain(res),'r_intern')
+                    % loop over all internal restraints of this residue
+                    for kr = 1:length(restrain(res).r_intern)
+                        % test whether we do have a full distribution restraint here
+                        if ~isempty(restrain(res).r_intern(kr).samples)
+                            restrain(res).r_intern(kr).updated_samples = ...
+                                restrain(res).r_intern(kr).updated_samples + output_restrain(res).r_intern(kr).new_samples;
+                            restrain(res).r_intern(kr).new_samples = ...
+                                restrain(res).r_intern(kr).new_samples + output_restrain(res).r_intern(kr).new_samples;
+                        end
+                    end
+                end
+                if isfield(restrain(res),'oligomer')
+                    % loop over all oligomer restraints of this residue
+                    for kr = 1:length(restrain(res).oligomer)
+                        % test whether we do have a full distribution restraint here
+                        if ~isempty(restrain(res).oligomer(kr).samples)
+                            restrain(res).oligomer(kr).updated_samples = ...
+                                restrain(res).oligomer(kr).updated_samples + output_restrain(res).oligomer(kr).new_samples;
+                            restrain(res).oligomer(kr).new_samples = ...
+                                restrain(res).oligomer(kr).new_samples + output_restrain(res).oligomer(kr).new_samples;
+                        end
+                    end
+                end
+            end
+            
+            k_MC = k_MC + 1;
+            coor = p_coor{kp};
+            errcode = p_errcode(kp);
+            kres = p_kres(kp);
+            res_stat(kres) = res_stat(kres)+1;
+            runtime = toc;
+            if errcode == -1
+                Ram_fixed = Ram_fixed + 1;
+                errcode = 0;
+            end
+            if errcode == -4
+                Ram_fixed = Ram_fixed + 1;
+                Ram_fix_clash = Ram_fix_clash + 1;
+                errcode = 4;
+            end
+            err_count(errcode+1) = err_count(errcode+1) + 1;
+            
+            if ~errcode
+                tpm = runtime/err_count(1);
+                success = success + 1;
+                if success == 1
+                    bb0 = coor;
+                elseif free_standing
+                    [rms,coor] = rmsd_superimpose(bb0,coor);
+                    fprintf(logfid,'Model superimposes onto first model with rmsd of %4.1f Angstroem\n',rms);
+                end
+                loopname = write_pdb_backbone(coor,restraints.sequence,fname,success,res1);
+                pmodel = make_SCWRL4_sidegroups(loopname);
+                if ~isempty(pmodel)
+                    delete(loopname);
                 else
-                    put_pdb(m_entity,fname_valid,save_options);
+                    fprintf(logfid,'Warning: Model %s could not be decorated with sidegroups\n',loopname);
+                    pmodel = loopname;
                 end
-                delete(pmodel);
+                [pclash,iclash] = check_decorated_loop(pmodel,prot_coor,res1,resend);
+                
+                if pclash
+                    err_count(10) = err_count(10) + 1;
+                    success = success - 1;
+                    fprintf(logfid,'Warning: Side groups in model %s clash with protein\n',pmodel);
+                    if ~keep_sidegroup_clashes
+                        delete(pmodel);
+                    end
+                elseif iclash
+                    err_count(11) = err_count(11) + 1;
+                    success = success - 1;
+                    fprintf(logfid,'Warning: Side groups in model %s clash internally\n',pmodel);
+                    if ~keep_sidegroup_clashes
+                        delete(pmodel);
+                    end
+                else
+                    m_entity = get_pdb(pmodel);
+                    fname_valid = sprintf('%s_valid_m%i',fname,success);
+                    if n_anchored || c_anchored
+                        entity1 = entity;
+                        for resnum = res1:resend
+                            resname = sprintf('R%i',resnum);
+                            entity1 = add_residue(entity1,anchor_chain,resnum,m_entity.Z.(resname),m_entity.xyz);
+                        end
+                        if ~isempty(N_anchor_chain) && ~isempty(C_anchor_chain)...
+                                && ~strcmp(N_anchor_chain,C_anchor_chain) % chain must be stitched
+                            residues = fieldnames(entity1.(C_anchor_chain));
+                            % the following does not produce a consistent
+                            % MMMx entity, but entity1 can be correctly
+                            % saved as PDB file
+                            for kres = 1:length(residues)
+                                resname = residues{kres};
+                                if resname(1) == 'R'
+                                    entity1.(N_anchor_chain).(resname) = entity1.(C_anchor_chain).(resname);
+                                end
+                            end
+                            entity1 = rmfield(entity1,C_anchor_chain);
+                        end
+                        put_pdb(entity1,fname_valid,save_options);
+                    else
+                        put_pdb(m_entity,fname_valid,save_options);
+                    end
+                    delete(pmodel);
+                end
+                
+                if success >= max_models
+                    break
+                end
             end
-
-            if success >= max_models
-                break
+            if opt.interactive && mod(k_MC,opt.disp_update) == 0
+                ftr = (1 - k_MC/ntrials)*max_seconds;
+                fti = max_seconds - runtime;
+                fmo = runtime*(max_models-success)/success;
+                time_left = min([fti fmo ftr]);
+                hours = floor(time_left/3600);
+                minutes = round((time_left-3600*floor(time_left/3600))/60);
+                if minutes == 60
+                    hours = hours + 1;
+                    minutes = 0;
+                end
+                fprintf(1,'Time per model: %8.1f s\n',tpm);
+                fprintf(1,'%i h %i min estimated run time to completion\n',hours,minutes);
+                fprintf(logfid,'Successful trials: %i\n',success);
+                fprintf(logfid,'Successful backbone trials: %i\n',err_count(1));
+                fprintf(logfid,'Restraint violations: %5.2f%%\n',100*err_count(6)/k_MC);
+                fprintf(logfid,'Internal loop clashes: %5.2f%%\n',100*(err_count(3)+err_count(8))/k_MC);
+                fprintf(logfid,'Clashes with protein: %5.2f%%\n',100*(err_count(5)+err_count(7))/k_MC);
+                fprintf(logfid,'Internal sidegroup clashes: %5.2f%%\n',100*err_count(11)/err_count(1));
+                fprintf(logfid,'Sidegroup clashes with protein: %5.2f%%\n',100*err_count(10)/err_count(1));
+                if closed_loop
+                    fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
+                    fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
+                end
+                
             end
         end
-        if opt.interactive && mod(k_MC,opt.disp_update) == 0
-            ftr = (1 - k_MC/ntrials)*max_seconds;
-            fti = max_seconds - runtime;
-            fmo = runtime*(max_models-success)/success;
-            time_left = min([fti fmo ftr]);
-            hours = floor(time_left/3600);
-            minutes = round((time_left-3600*floor(time_left/3600))/60);
-            if minutes == 60
-                hours = hours + 1;
-                minutes = 0;
+        
+        % update sampling information
+        for res = 1:length(restrain)
+            % check whether there are beacon restraints
+            if isfield(restrain(res),'r_beacon')
+                % loop over all beacon restraints of this residue
+                for kr = 1:length(restrain(res).r_beacon)
+                    % test whether we do have a full distribution restraint here
+                    if ~isempty(restrain(res).r_beacon(kr).samples)
+                        f_update = restrain(res).r_beacon(kr).f_update;
+                        new_samples = restrain(res).r_beacon(kr).new_samples;
+                        if sum(new_samples) > 0
+                            new_samples = new_samples/sum(new_samples);
+                        end
+                        samples = (1-f_update)*restrain(res).r_beacon(kr).samples + f_update*new_samples;
+                        samples = samples/sum(samples);
+                        target = restrain(res).r_beacon(kr).target;
+                        M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                        if M > restrain(res).r_beacon(kr).M_max
+                            M = restrain(res).r_beacon(kr).M_max;
+                        end
+                        restrain(res).r_beacon(kr).samples = samples;
+                        restrain(res).r_beacon(kr).M = M;
+                    end
+                end
             end
-            fprintf(1,'Time per model: %8.1f s\n',tpm);
-            fprintf(1,'%i h %i min estimated run time to completion\n',hours,minutes);
-            fprintf(logfid,'Successful trials: %i\n',success);
-            fprintf(logfid,'Successful backbone trials: %i\n',err_count(1));
-            fprintf(logfid,'Restraint violations: %5.2f%%\n',100*err_count(6)/k_MC);
-            fprintf(logfid,'Internal loop clashes: %5.2f%%\n',100*(err_count(3)+err_count(8))/k_MC);
-            fprintf(logfid,'Clashes with protein: %5.2f%%\n',100*(err_count(5)+err_count(7))/k_MC);
-            fprintf(logfid,'Internal sidegroup clashes: %5.2f%%\n',100*err_count(11)/err_count(1));
-            fprintf(logfid,'Sidegroup clashes with protein: %5.2f%%\n',100*err_count(10)/err_count(1));
-            if closed_loop
-                fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
-                fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
+            if isfield(restrain(res),'r_intern')
+                % loop over all internal restraints of this residue
+                for kr = 1:length(restrain(res).r_intern)
+                    % test whether we do have a full distribution restraint here
+                    if ~isempty(restrain(res).r_intern(kr).samples)
+                        f_update = restrain(res).r_intern(kr).f_update;
+                        new_samples = restrain(res).r_intern(kr).new_samples;
+                        if sum(new_samples) > 0
+                            new_samples = new_samples/sum(new_samples);
+                        end
+                        samples = (1-f_update)*restrain(res).r_intern(kr).samples + f_update*new_samples;
+                        samples = samples/sum(samples);
+                        target = restrain(res).r_intern(kr).target;
+                        M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                        if M > restrain(res).r_intern(kr).M_max
+                            M = restrain(res).r_intern(kr).M_max;
+                        end
+                        restrain(res).r_intern(kr).samples = samples;
+                        restrain(res).r_intern(kr).M = M;
+                    end
+                end
             end
-
+            if isfield(restrain(res),'oligomer')
+                % loop over all oligomer restraints of this residue
+                for kr = 1:length(restrain(res).oligomer)
+                    % test whether we do have a full distribution restraint here
+                    if ~isempty(restrain(res).oligomer(kr).samples)
+                        f_update = restrain(res).oligomer(kr).f_update;
+                        new_samples = restrain(res).oligomer(kr).new_samples;
+                        if sum(new_samples) > 0
+                            new_samples = new_samples/sum(new_samples);
+                        end
+                        samples = (1-f_update)*restrain(res).oligomer(kr).samples + f_update*new_samples;
+                        samples = samples/sum(samples);
+                        target = restrain(res).oligomer(kr).target;
+                        M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                        if M > restrain(res).oligomer(kr).M_max
+                            M = restrain(res).oligomer(kr).M_max;
+                        end
+                        restrain(res).oligomer(kr).samples = samples;
+                        restrain(res).oligomer(kr).M = M;
+                    end
+                end
+            end
+        end
+        
+        if success >= max_models
+            break
+        end
+        if runtime >= max_seconds
+            fprintf(logfid,'Warning: Computation stopped since maximum runtime of %5.2f h was reached.\n',max_seconds/3600);
+            break
         end
     end
+    fprintf(logfid,'\nFlex module has run its course:\n');
+    fprintf(logfid,'\nRuntime was %i s (%8.1f s per full model):\n',round(runtime),runtime/success);
+    fprintf(logfid,'Successful trials: %i\n',success);
+    fprintf(logfid,'Successful backbone trials: %i\n',err_count(1));
+    fprintf(logfid,'Restraint violations: %5.2f%%\n',100*err_count(6)/k_MC);
+    fprintf(logfid,'Internal loop clashes: %5.2f%%\n',100*(err_count(3)+err_count(8))/k_MC);
+    fprintf(logfid,'Clashes with protein: %5.2f%%\n',100*(err_count(5)+err_count(7))/k_MC);
+    fprintf(logfid,'Internal sidegroup clashes: %5.2f%%\n',100*err_count(11)/err_count(1));
+    fprintf(logfid,'Sidegroup clashes with protein: %5.2f%%\n',100*err_count(10)/err_count(1));
+    if closed_loop
+        fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
+        fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
+    end
     
-    % update sampling information
     for res = 1:length(restrain)
         % check whether there are beacon restraints
         if isfield(restrain(res),'r_beacon')
@@ -1229,20 +1381,12 @@ while 1
             for kr = 1:length(restrain(res).r_beacon)
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).r_beacon(kr).samples)
-                    f_update = restrain(res).r_beacon(kr).f_update;
-                    new_samples = restrain(res).r_beacon(kr).new_samples;
-                    if sum(new_samples) > 0
-                        new_samples = new_samples/sum(new_samples);
-                    end
-                    samples = (1-f_update)*restrain(res).r_beacon(kr).samples + f_update*new_samples;
-                    samples = samples/sum(samples);
-                    target = restrain(res).r_beacon(kr).target;
-                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                    if M > restrain(res).r_beacon(kr).M_max
-                        M = restrain(res).r_beacon(kr).M_max;
-                    end
-                    restrain(res).r_beacon(kr).samples = samples;
-                    restrain(res).r_beacon(kr).M = M;
+                    data = [restrain(res).r_beacon(kr).r_axis...
+                        restrain(res).r_beacon(kr).samples...
+                        restrain(res).r_beacon(kr).updated_samples...
+                        restrain(res).r_beacon(kr).target];
+                    outname = sprintf('updated_samples_beacon_%i_%i.dat',res,kr);
+                    save(outname,'data','-ascii');
                 end
             end
         end
@@ -1251,20 +1395,12 @@ while 1
             for kr = 1:length(restrain(res).r_intern)
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).r_intern(kr).samples)
-                    f_update = restrain(res).r_intern(kr).f_update;
-                    new_samples = restrain(res).r_intern(kr).new_samples;
-                    if sum(new_samples) > 0
-                        new_samples = new_samples/sum(new_samples);
-                    end
-                    samples = (1-f_update)*restrain(res).r_intern(kr).samples + f_update*new_samples;
-                    samples = samples/sum(samples);
-                    target = restrain(res).r_intern(kr).target;
-                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                    if M > restrain(res).r_intern(kr).M_max
-                        M = restrain(res).r_intern(kr).M_max;
-                    end
-                    restrain(res).r_intern(kr).samples = samples;
-                    restrain(res).r_intern(kr).M = M;
+                    data = [restrain(res).r_intern(kr).r_axis...
+                        restrain(res).r_intern(kr).samples...
+                        restrain(res).r_intern(kr).updated_samples...
+                        restrain(res).r_intern(kr).target];
+                    outname = sprintf('updated_samples_intern_%i_%i.dat',res,kr);
+                    save(outname,'data','-ascii');
                 end
             end
         end
@@ -1273,93 +1409,18 @@ while 1
             for kr = 1:length(restrain(res).oligomer)
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).oligomer(kr).samples)
-                    f_update = restrain(res).oligomer(kr).f_update;
-                    new_samples = restrain(res).oligomer(kr).new_samples;
-                    if sum(new_samples) > 0
-                        new_samples = new_samples/sum(new_samples);
-                    end
-                    samples = (1-f_update)*restrain(res).oligomer(kr).samples + f_update*new_samples;
-                    samples = samples/sum(samples);
-                    target = restrain(res).oligomer(kr).target;
-                    M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                    if M > restrain(res).oligomer(kr).M_max
-                        M = restrain(res).oligomer(kr).M_max;
-                    end
-                    restrain(res).oligomer(kr).samples = samples;
-                    restrain(res).oligomer(kr).M = M;
+                    data = [restrain(res).oligomer(kr).r_axis...
+                        restrain(res).oligomer(kr).samples...
+                        restrain(res).oligomer(kr).updated_samples...
+                        restrain(res).oligomer(kr).target];
+                    outname = sprintf('updated_samples_oligomer_%i_%i.dat',res,kr);
+                    save(outname,'data','-ascii');
                 end
             end
         end
     end
-    
-    if success >= max_models
-        break
-    end
-    if runtime >= max_seconds
-        fprintf(logfid,'Warning: Computation stopped since maximum runtime of %5.2f h was reached.\n',max_seconds/3600);
-        break
-    end
-end
-fprintf(logfid,'\nFlex module has run its course:\n');
-fprintf(logfid,'\nRuntime was %i s (%8.1f s per full model):\n',round(runtime),runtime/success);
-fprintf(logfid,'Successful trials: %i\n',success);
-fprintf(logfid,'Successful backbone trials: %i\n',err_count(1));
-fprintf(logfid,'Restraint violations: %5.2f%%\n',100*err_count(6)/k_MC);
-fprintf(logfid,'Internal loop clashes: %5.2f%%\n',100*(err_count(3)+err_count(8))/k_MC);
-fprintf(logfid,'Clashes with protein: %5.2f%%\n',100*(err_count(5)+err_count(7))/k_MC);
-fprintf(logfid,'Internal sidegroup clashes: %5.2f%%\n',100*err_count(11)/err_count(1));
-fprintf(logfid,'Sidegroup clashes with protein: %5.2f%%\n',100*err_count(10)/err_count(1));
-if closed_loop
-    fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
-    fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
-end
 
-for res = 1:length(restrain)
-    % check whether there are beacon restraints
-    if isfield(restrain(res),'r_beacon')
-        % loop over all beacon restraints of this residue
-        for kr = 1:length(restrain(res).r_beacon)
-            % test whether we do have a full distribution restraint here
-            if ~isempty(restrain(res).r_beacon(kr).samples)
-                data = [restrain(res).r_beacon(kr).r_axis...
-                    restrain(res).r_beacon(kr).samples...
-                    restrain(res).r_beacon(kr).updated_samples...
-                    restrain(res).r_beacon(kr).target];
-                outname = sprintf('updated_samples_beacon_%i_%i.dat',res,kr);
-                save(outname,'data','-ascii');
-            end
-        end
-    end
-    if isfield(restrain(res),'r_intern')
-        % loop over all internal restraints of this residue
-        for kr = 1:length(restrain(res).r_intern)
-            % test whether we do have a full distribution restraint here
-            if ~isempty(restrain(res).r_intern(kr).samples)
-                data = [restrain(res).r_intern(kr).r_axis...
-                    restrain(res).r_intern(kr).samples...
-                    restrain(res).r_intern(kr).updated_samples...
-                    restrain(res).r_intern(kr).target];
-                outname = sprintf('updated_samples_intern_%i_%i.dat',res,kr);
-                save(outname,'data','-ascii');
-            end
-        end
-    end
-    if isfield(restrain(res),'oligomer')
-        % loop over all oligomer restraints of this residue
-        for kr = 1:length(restrain(res).oligomer)
-            % test whether we do have a full distribution restraint here
-            if ~isempty(restrain(res).oligomer(kr).samples)
-                data = [restrain(res).oligomer(kr).r_axis...
-                    restrain(res).oligomer(kr).samples...
-                    restrain(res).oligomer(kr).updated_samples...
-                    restrain(res).oligomer(kr).target];
-                outname = sprintf('updated_samples_oligomer_%i_%i.dat',res,kr);
-                save(outname,'data','-ascii');
-            end
-        end
-    end
 end
-
 
 
 function mean_pos = get_relative_label(label)

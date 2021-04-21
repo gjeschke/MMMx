@@ -1,6 +1,6 @@
-function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(control,logfid)
+function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(control,logfid,entity0)
 %
-% MODULE_ENSEMBLE_FIT Run modelling pipeline
+% MODULE_ENSEMBLE_FIT Runs the ensemble fit module
 %
 %   [exceptions,entity] = MODULE_ENSEMBLE_FIT(control,logfid)
 %   Fits an ensemble by integrating distance distribution, small-angle
@@ -15,6 +15,8 @@ function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(co
 %               .directives     array of struct with directives
 %               .entity_output  number of the entity to be output
 % logfid        file handle for log file
+% entity0       optional MMMx entity with rigid-body arrangments, used only
+%               with 'expand' directive
 %
 % OUTPUT
 % entity        output entity, empty in NOFIT mode
@@ -45,8 +47,13 @@ function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(co
 % initialize empty output
 exceptions = {[]};
 warnings = 0;
+if ~exist('entity0','var')
+    entity0 = [];
+end
 entity = [];
 failed = false;
+expand_rba = false;
+fname_basis = 'MMMx_expand';
 
 % set defaults
 
@@ -87,6 +94,11 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case 'nofit'
             run_fit = false;
+        case 'expand'
+            expand_rba = true;
+            if ~isempty(control.directives(d).options{1})
+                fname_basis = control.directives(d).options{1};
+            end
         case 'plot'
             plot_result = true;
         case 'initial'
@@ -245,18 +257,35 @@ restraints.ddr = restraints.ddr(1:ddr_poi);
 restraints.sas = restraints.sas(1:sas_poi);
 restraints.pre = restraints.pre(1:pre_poi);
 
-% make file list of conformers
-
-[initial_files,pop] = rd_ensemble_definition(initial_ensemble);
-[~,~,ext] = fileparts(added_conformers);
-if isempty(ext)
-    added_conformers = strcat(added_conformers,'.pdb');
+if expand_rba
+    if isfield(entity0,'rba_populations')
+        C = length(entity0.rba_populations);
+    else
+        warnings = warnings + 1;
+        exceptions{warnings} = MException('module_ensemble_fit:no_rba',...
+                'Rigid-body expansion switched off, as there are no rigid bodies in input entity');   
+        record_exception(exceptions{warnings},logfid);
+        expand_rba = false;
+    end
 end
-added_files = dir(added_conformers); % find all files that match the pattern
 
-C = length(initial_files) + length(added_files);
+if ~expand_rba
+    % make file list of conformers
 
-fprintf(logfid,'Ensemble fit with %i conformers\n',C);
+    [initial_files,pop] = rd_ensemble_definition(initial_ensemble);
+    [~,~,ext] = fileparts(added_conformers);
+    if isempty(ext)
+        added_conformers = strcat(added_conformers,'.pdb');
+    end
+    added_files = dir(added_conformers); % find all files that match the pattern
+
+    C = length(initial_files) + length(added_files);
+    expand_str = '';
+else
+    expand_str = ' by rigid-body arrangment expansion';
+end
+
+fprintf(logfid,'Ensemble fit with %i conformers%s\n',C,expand_str);
 
 C0 = length(initial_files); % number of conformers that must be included
 
@@ -362,8 +391,14 @@ for nr_pre = 1:length(restraints.pre)
 end
 valid_conformers = true(1,C); % for logical indexing of conformers
 for c = 1:C
-    fprintf(1,'Working on conformer: %s\n',fit_task.file_list{c});
-    fname = fit_task.file_list{c};
+    if expand_rba
+        entity1 = get_rba(entity0,c);
+        fname = sprintf('%s_rba_%i.pdb',fname_basis,kent);
+        put_pdb(entity1,fname);
+    else
+        fname = fit_task.file_list{c};
+    end
+    fprintf(1,'Working on conformer: %s\n',fname);
     poi = strfind(fname,'.pdb');
     if ~isempty(poi)
         fname = fname(1:poi-1);

@@ -44,14 +44,20 @@ for module = 1:length(controller)
             logfid = fopen(controller(module).options{1},'wt');
         case 'getpdb'
             [entity,module_exceptions] = get_pdb(controller(module).options{1});
-            failed = isempty(entity);  
+            failed = isempty(entity);
+        case 'rigi'
+            if ~exist('entity','var')
+                fprintf(logfid,'Error: Rigi requires that an entity was loaded that defines rigid bodies.\n\n');
+            else
+                [entity,exceptions,failed] = module_rigi(controller(module),logfid,entity);
+            end
         case 'flex'
             if ~exist('entity','var')
                 entity = [];
             end
             [entity,module_exceptions,failed] = module_flex(controller(module),logfid,entity);
         case 'ensemblefit'
-            [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid);
+            [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid,entity);
         otherwise
             fprintf(logfid,'Warning: Unknown module %s was ignored.\n\n',controller(module).name);
     end

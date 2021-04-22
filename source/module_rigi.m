@@ -565,6 +565,10 @@ fprintf(logfid,'%i models were generated in %i trials\n',diagnostics.success,dia
 if diagnostics.solutions > diagnostics.success 
     fprintf(logfid,'They were selected from %i initials solutions by clustering with resolution %4.1f Angstroem.\n',...
         diagnostics.solutions,diagnostics.cluster_resolution);
+    hours = floor(diagnostics.cluster_time/3600);
+    minutes = floor((diagnostics.cluster_time-3600*hours)/60);
+    seconds = round(diagnostics.cluster_time - 3600*hours - 60*minutes);
+    fprintf(logfid,'Clustering took %i h %i min %i s\n',hours,minutes,seconds);
 end
 fprintf(logfid,'The worst encountered resolution was %4.1f Angstroem\n\n',diagnostics.resolution);
 

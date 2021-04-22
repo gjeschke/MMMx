@@ -505,7 +505,9 @@ transforms = transforms(1:success,:);
 probabilities = probabilities(1:success);
 
 cluster_resolution = NaN;
+cluster_time = 0;
 if success > max_models
+    tic,
     cluster_resolution = 0;
     % hierarchical clustering
     % make distance matrix between 
@@ -548,8 +550,8 @@ if success > max_models
     transforms = transforms(selected_models,:);
     probabilities = probabilities(selected_models);
     success = max_models;
+    cluster_time = toc;
 end
-
 
 diagnostics.runtime = runtime;
 diagnostics.trials = bask;
@@ -566,5 +568,6 @@ diagnostics.solutions = solutions;
 diagnostics.probabilities = probabilities;
 diagnostics.resolution = worst_res;
 diagnostics.cluster_resolution = cluster_resolution;
+diagnostics.cluster_time = cluster_time;
 diagnostics.completed = bask >= trials;
 

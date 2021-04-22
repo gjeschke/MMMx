@@ -164,10 +164,26 @@ while ischar(tline)
                     % store options
                     controller(task).directives(directive).options = ...
                         cell(1,length(arguments)- argument_pointer +1); %#ok<AGROW>
+                    controller(task).directives(directive).modifiers = ...
+                        cell(1,length(arguments)- argument_pointer +1); %#ok<AGROW>
+                    kopt = 0;
+                    kmod = 0;
                     for karg =  argument_pointer:length(arguments)
-                        controller(task).directives(directive).options{karg-argument_pointer+1}...
-                            = strtrim(char(arguments{karg}));
+                        curr_argument = strtrim(char(arguments{karg}));
+                        if curr_argument(1) ~= ':'
+                            kopt = kopt + 1;
+                            controller(task).directives(directive).options{kopt}...
+                                = curr_argument;
+                        else
+                            kmod = kmod + 1;
+                            controller(task).directives(directive).modifiers{kmod}...
+                                = curr_argument(2:end);
+                        end
                     end
+                    controller(task).directives(directive).options = ...
+                        controller(task).directives(directive).options(1:kopt); %#ok<AGROW>
+                    controller(task).directives(directive).modifiers = ...
+                        controller(task).directives(directive).modifiers(1:kmod); %#ok<AGROW>
                     controller(task).directives(directive).block = cell(1,1);  %#ok<AGROW>
                 case 2
                     argline = argline+1;

@@ -70,6 +70,7 @@ opt.threshold = 0.01; % conformers wih population below this threshold are disca
 opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
+opt.fit_rates = false; % by default, PRE fits are done with intensity ratios
 
 fit_mean_distances = false;
 
@@ -105,6 +106,8 @@ for d = 1:length(control.directives)
             initial_ensemble = control.directives(d).options{1};
         case 'interactive'
             opt.interactive = true;
+        case 'prerates'
+            opt.fit_rates = true;
         case 'blocksize'
             opt.blocksize = str2double(control.directives(d).options{1});
         case 'addpdb'
@@ -223,7 +226,8 @@ for d = 1:length(control.directives)
             [nr,args] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
                 restraints.ddr(pre_poi).residue{nr} = ' ';
-                restraints.ddr(pre_poi).data = ones(1,nr);
+                restraints.ddr(pre_poi).data = ones(2,nr);
+                restraints.ddr(pre_poi).data(2,:) = 0;
             else % empty block
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_ensemble_fit:empty_pre_block', 'pre block %i is empty',d);
@@ -238,7 +242,10 @@ for d = 1:length(control.directives)
             end
             for kr = 1:nr
                 restraints.pre(pre_poi).residue{kr} = control.directives(d).block{kr,1};
-                restraints.pre(pre_poi).data(kr) = str2double(control.directives(d).block{kr,2});
+                restraints.pre(pre_poi).data(kr,1) = str2double(control.directives(d).block{kr,2});
+                if args > 2
+                    restraints.pre(pre_poi).data(kr,2) = str2double(control.directives(d).block{kr,3});
+                end                    
                 for karg = 1:args
                     fprintf(logfid,'  %s',control.directives(d).block{kr,karg});
                 end
@@ -269,16 +276,15 @@ if expand_rba
     end
 end
 
+[initial_files,pop] = rd_ensemble_definition(initial_ensemble);
+[~,~,ext] = fileparts(added_conformers);
+if isempty(ext)
+    added_conformers = strcat(added_conformers,'.pdb');
+end
+added_files = dir(added_conformers); % find all files that match the pattern
+
 if ~expand_rba
     % make file list of conformers
-
-    [initial_files,pop] = rd_ensemble_definition(initial_ensemble);
-    [~,~,ext] = fileparts(added_conformers);
-    if isempty(ext)
-        added_conformers = strcat(added_conformers,'.pdb');
-    end
-    added_files = dir(added_conformers); % find all files that match the pattern
-
     C = length(initial_files) + length(added_files);
     expand_str = '';
 else
@@ -393,13 +399,14 @@ valid_conformers = true(1,C); % for logical indexing of conformers
 for c = 1:C
     if expand_rba
         entity1 = get_rba(entity0,c);
-        fname = sprintf('%s_rba_%i.pdb',fname_basis,kent);
+        fname = sprintf('%s_rba_%i.pdb',fname_basis,c);
         put_pdb(entity1,fname);
     else
         fname = fit_task.file_list{c};
     end
     fprintf(1,'Working on conformer: %s\n',fname);
     poi = strfind(fname,'.pdb');
+    fname0 = fname;
     if ~isempty(poi)
         fname = fname(1:poi-1);
     end
@@ -410,12 +417,12 @@ for c = 1:C
         if isfield(properties,'entity')
             entity = properties.entity;
         else
-            entity = get_pdb(fit_task.file_list{c});
+            entity = get_pdb(fname0);
         end
     else
         clear properties
         properties.initialized = true;
-        entity = get_pdb(fit_task.file_list{c});
+        entity = get_pdb(fname0);
     end
     block_offset = 0;
     for ddr_poi = 1:length(restraints.ddr)
@@ -1146,7 +1153,11 @@ if plot_result
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
             end
             plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0]);
-            overlap = overlap*overlap_E;
+            if ~isempty(overlap_E)
+                overlap = overlap*overlap_E;
+            else
+                overlap = overlap*overlap_G;
+            end
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
             title_str = sprintf('%s-%s Overlaps:',site1,site2);

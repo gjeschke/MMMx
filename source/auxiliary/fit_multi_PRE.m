@@ -46,6 +46,10 @@ if ~isfield(opt,'old_size')
     opt.old_size = 0;
 end
 
+if ~isfield(opt,'fit_rates')
+    opt.fit_rates = false;
+end
+
 persistent call_count
 if isempty(call_count)
     call_count = 0;
@@ -60,7 +64,11 @@ for kr = 1:length(parameters)
     n = n + 1 + range(2) - range(1);
     coeff = v/sum(v);
     Gamma2 = predictions(range(1):range(2),2:end)*coeff';
-    all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
+    if opt.fit_rates
+        all_pre = Gamma2;
+    else
+        all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
+    end
     fom = fom + sum((all_pre-predictions(range(1):range(2),1)).^2);
 end
 fom = fom/n;

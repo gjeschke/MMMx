@@ -103,6 +103,9 @@ function [coor,errcode,restrain,p_model,k] = loop_model_rs(sequence, anchorN, an
 %                               half loop, defaults to 100
 %           .max_res            maximum attempts for a single-residue step,
 %                               defaults to 100
+%           .clash_test         number of residues after which a clash test
+%                               between backbone and protein is performed,
+%                               defaults to 200
 %
 % Output:
 % coor      Cartesian backbone coordinates of the loop in the order N, CA,
@@ -164,6 +167,10 @@ end
 
 if ~isfield(options,'res_attempts') % attempts for single-residue step
     options.res_attempts = 100;
+end
+
+if ~isfield(options,'clash_test') % number of residues between backbone clash tests
+    options.clash_test = 200;
 end
 
 % alpha-helical region according to Hovm?ller et al.
@@ -493,6 +500,22 @@ while k <= kend1
     A=A*A12;
     acoor=acoor+A*b2vec'; % coordinates of C
     backbone(4*k-1,:)=acoor';
+    if ~isempty(prot_coor) && k > 1+options.clash_test && mod(k,options.clash_test) == 0
+        % check for clashes with protein
+        segment = zeros(3*options.clash_test,3);
+        kpoi = 0;
+        for kseg = k-options.clash_test+1:k
+            kpoi = kpoi + 1;
+            segment(3*kpoi-2:3*kpoi,:) = backbone(4*kseg-3:4*kseg-1,:);
+        end
+        pair_dist = get_all_pair_dist(segment,prot_coor);
+        min_dist = min(min(pair_dist));
+        if min_dist < options.clash_threshold_lp
+            errcode = 6;
+            coor = [];
+            return
+        end
+    end
     if ~isempty(restrain(k-1).label) 
         % make spin label coordinate
         x= backbone(4*k-3,:) - backbone(4*k-2,:); % x axis is along C_alpha-N bond
@@ -861,6 +884,22 @@ while k<ngap+1 && failed < options.max_attempts
         A=A*A12;
         acoor=acoor+A*b2vec'; % coordinates of C
         backbone(4*k-1,:)=acoor';
+        if ~isempty(prot_coor) && k > 1+options.clash_test && mod(k,options.clash_test) == 0
+            % check for clashes with protein
+            segment = zeros(3*options.clash_test,3);
+            kpoi = 0;
+            for kseg = k-options.clash_test+1:k
+                kpoi = kpoi + 1;
+                segment(3*kpoi-2:3*kpoi,:) = backbone(4*kseg-3:4*kseg-1,:);
+            end
+            pair_dist = get_all_pair_dist(segment,prot_coor);
+            min_dist = min(min(pair_dist));
+            if min_dist < options.clash_threshold_lp
+                errcode = 6;
+                coor = [];
+                return
+            end
+        end
         ctau=cos(rpsi);
         stau=sin(rpsi);
         A23=[-cfi2,-sfi2,0;sfi2*ctau,-cfi2*ctau,-stau;sfi2*stau,-cfi2*stau,ctau];

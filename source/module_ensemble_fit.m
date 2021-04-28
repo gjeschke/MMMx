@@ -70,7 +70,6 @@ opt.threshold = 0.01; % conformers wih population below this threshold are disca
 opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
-opt.fit_rates = false; % by default, PRE fits are done with intensity ratios
 
 fit_mean_distances = false;
 
@@ -106,8 +105,6 @@ for d = 1:length(control.directives)
             initial_ensemble = control.directives(d).options{1};
         case 'interactive'
             opt.interactive = true;
-        case 'prerates'
-            opt.fit_rates = true;
         case 'blocksize'
             opt.blocksize = str2double(control.directives(d).options{1});
         case 'addpdb'
@@ -193,10 +190,15 @@ for d = 1:length(control.directives)
                 fprintf(logfid,'\n');
             end
             fprintf(logfid,'\n\n');
-        case 'pre'
+        case {'pre','prerates'}
             pre_poi = pre_poi + 1; % increase pre block counter
             fprintf(logfid,'pre %s',control.directives(d).options{1}); % echo directive to log file
             restraints.pre(pre_poi).label = control.directives(d).options{1};
+            if strcmpi(control.directives(d).name,'prerates')
+                restraints.pre(pre_poi).fit_rates = true;
+            else
+                restraints.pre(pre_poi).fit_rates = false;
+            end                
             for karg = 2:length(control.directives(d).options) % echo additional arguments
                 fprintf(logfid,' %s',control.directives(d).options{karg});
             end
@@ -223,6 +225,11 @@ for d = 1:length(control.directives)
             else
                 restraints.pre(pre_poi).taur = NaN; % computation will be attempted, if taur is missing
             end
+            if length(control.directives(d).options) > 7
+                restraints.pre(pre_poi).max_Gamma2 = str2double(control.directives(d).options{8}); 
+            else
+                restraints.pre(pre_poi).max_Gamma2 = pre_max_Gamma2; % enhancement, where signal is broadened beyond detection
+            end
             [nr,args] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
                 restraints.ddr(pre_poi).residue{nr} = ' ';
@@ -245,6 +252,8 @@ for d = 1:length(control.directives)
                 restraints.pre(pre_poi).data(kr,1) = str2double(control.directives(d).block{kr,2});
                 if args > 2
                     restraints.pre(pre_poi).data(kr,2) = str2double(control.directives(d).block{kr,3});
+                else
+                    restraints.pre(pre_poi).data(kr,2) = 0;
                 end                    
                 for karg = 1:args
                     fprintf(logfid,'  %s',control.directives(d).block{kr,karg});
@@ -377,7 +386,13 @@ kft = 0;
 for pre_poi = 1:length(restraints.pre)
     for kr = 1:length(restraints.pre(pre_poi).residue)
         kft = kft + 1;
-        fit_task.pre(kft).exp_data = restraints.pre(pre_poi).data(kr); 
+        fit_task.pre(kft).exp_data = restraints.pre(pre_poi).data(kr,:); 
+        if restraints.pre(pre_poi).fit_rates && fit_task.pre(kft).exp_data(1) > restraints.pre(pre_poi).max_Gamma2
+            fit_task.pre(kft).exp_data(1) = restraints.pre(pre_poi).max_Gamma2;
+            fprintf(logfid,'Warning: PRE rate for %s@%s.%s truncated to maximum value of %6.1f/s\n',...
+                restraints.pre(pre_poi).label,restraints.pre(pre_poi).site,restraints.pre(pre_poi).residue{kr},...
+                restraints.pre(pre_poi).max_Gamma2);
+        end
         fit_task.pre(kft).residue = restraints.pre(pre_poi).residue{kr};
     end
 end
@@ -506,6 +521,8 @@ for c = 1:C
         larmor = restraints.pre(pre_poi).larmor;
         pre_parameters(pre_poi).td = td;
         pre_parameters(pre_poi).R2dia = R2dia;
+        pre_parameters(pre_poi).fit_rates = restraints.pre(pre_poi).fit_rates;
+        pre_parameters(pre_poi).max_Gamma2 = restraints.pre(pre_poi).max_Gamma2;
         for kr = 1:length(restraints.pre(pre_poi).residue)
             fit_task.pre(block_offset+kr).assignment = [pre_poi,kr];
             residue = restraints.pre(pre_poi).residue{kr};
@@ -700,7 +717,7 @@ all_sas_predictions = all_sas_predictions(1:nr_sas);
 % prepare PRE fit by arranging fit target and computed Gamma2 values
 % predicted for all conformers into matrices for all restraints
 nr_pre = 0;
-all_pre_predictions = zeros(length(fit_task.pre_valid),2);
+all_pre_predictions = zeros(length(fit_task.pre_valid),C+2);
 for kr = 1:length(fit_task.pre_valid) % all restraints
     if fit_task.pre_valid(kr) % this is a valid restraint
         nr_pre = nr_pre + 1;
@@ -711,8 +728,8 @@ for kr = 1:length(fit_task.pre_valid) % all restraints
         if nr_pre > pre_parameters(block).range(2)
             pre_parameters(block).range(2) = nr_pre;
         end
-        all_pre_predictions(nr_pre,1) = fit_task.pre(kr).exp_data;
-        all_pre_predictions(nr_pre,2:C+1) = fit_task.pre(kr).Gamma2;
+        all_pre_predictions(nr_pre,1:2) = fit_task.pre(kr).exp_data;
+        all_pre_predictions(nr_pre,3:C+2) = fit_task.pre(kr).Gamma2;
     end
 end
 all_pre_predictions = all_pre_predictions(1:nr_pre,:);
@@ -847,6 +864,7 @@ if run_fit
         end
         
         curr_sas_predictions = {};
+        predictions.sas = curr_sas_predictions;
         
         if nr_sas > 0 % small-angle scattering curve fit, if there are such restraints
             clear fit_multi_SAS % initialize iteration counter
@@ -913,7 +931,7 @@ if run_fit
         if nr_pre > 0 % PRE fit, if there are such restraints
             clear fit_multi_PRE % initialize iteration counter
             
-            curr_pre_predictions = [all_pre_predictions(:,1) all_pre_predictions(:,1+conformers)];
+            curr_pre_predictions = [all_pre_predictions(:,1:2) all_pre_predictions(:,2+conformers)];
             
             fanonym_pre = @(v_opt)fit_multi_PRE(v_opt,curr_pre_predictions,pre_parameters,opt);
             
@@ -1000,7 +1018,7 @@ if run_fit
             end
             
             if ~isnan(fom.pre)
-                fom_pre = sim_multi_pre(v,curr_pre_predictions,pre_parameters);
+                [fom_pre,pre_fit_type] = sim_multi_pre(v,curr_pre_predictions,pre_parameters);
             end
             
             th = floor(integrative_time/3600);
@@ -1045,7 +1063,7 @@ if run_fit
                 fprintf(logfid,'Integrative SAS chi^2 is: %6.3f with %i conformers\n\n',fom_sas,C0_all);            
             end
             if ~isnan(fom.pre)
-                fprintf(logfid,'Integrative PRE mean square deviation is: %6.4f with %i conformers\n\n',fom_pre,C0_all);            
+                fprintf(logfid,'Integrative PRE %s deviation is: %6.4f with %i conformers\n\n',pre_fit_type,fom_pre,C0_all);            
             end
             fprintf(logfid,'Loss of merit is: %6.3f with %i conformers\n\n',loss_of_merit,C0_all);            
         end
@@ -1061,6 +1079,8 @@ if run_fit
         opt.old_size = C0;
     end
 end
+
+fprintf(logfid,'%i conformers remain included\n',C0);          
 
 % save ensemble
 ofid = fopen(outname,'wt');
@@ -1105,15 +1125,34 @@ if nr_pre > 0
     kft = 0;
     fom_pre = 0;
     for kr = 1:length(pre_parameters)
+        kft0 = 0;
         td = pre_parameters(kr).td;
         R2dia = pre_parameters(kr).R2dia;
         range = pre_parameters(kr).range;
+        pre_std = all_pre_predictions(:,2);
+        if sum(pre_std == 0) > 0
+            do_chi2 = false;
+            pre_fit_type = 'mean-square';
+        else
+            do_chi2 = true;
+            pre_fit_type = 'chi-square';
+        end
         for nr_pre = range(1):range(2)
             kft = kft + 1;
-            Gamma2 = sum(fit_task.ensemble_populations.*all_pre_predictions(nr_pre,1+fit_task.remaining_conformers));
-            sim_pre = R2dia*exp(-td*Gamma2)/(Gamma2+R2dia);
-            fit_task.pre(kft).fit_data = sim_pre;
-            fom_pre = fom_pre + (fit_task.pre(kft).fit_data - fit_task.pre(kft).exp_data)^2;
+            kft0 = kft0+1;
+            if do_chi2
+                pre_std = fit_task.pre(kft).exp_data(2);
+            else
+                pre_std = 1;
+            end
+            Gamma2 = sum(fit_task.ensemble_populations.*all_pre_predictions(kft,2+fit_task.remaining_conformers));
+            if pre_parameters(kr).fit_rates
+                fit_task.pre(kft).fit_data = Gamma2;
+            else
+                sim_pre = R2dia*exp(-td*Gamma2)/(Gamma2+R2dia);
+                fit_task.pre(kft).fit_data = sim_pre;
+            end
+            fom_pre = fom_pre + ((fit_task.pre(kft).fit_data - fit_task.pre(kft).exp_data(1))/pre_std)^2;
         end
     end
     fom_pre = fom_pre/kft;
@@ -1205,20 +1244,44 @@ if plot_result
         for kr = 1:length(pre_parameters)
             figure(10000+kr); clf; hold on;
             range = pre_parameters(kr).range;
+            plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
             kx = 0;
+            max_exp = 0;
+            max_fit = 0;
             for nr_pre = range(1):range(2)
                 kft = kft + 1;
                 kx = kx + 1;
-                plot(kx,fit_task.pre(kft).exp_data,'k.','MarkerSize',12);
+                pre_std = fit_task.pre(kft).exp_data(2);
+                minbar = fit_task.pre(kft).exp_data(1) - pre_std;
+                if minbar < 0
+                    minbar = 0;
+                end
+                maxbar = fit_task.pre(kft).exp_data(1) + pre_std;
+                if ~pre_parameters(kr).fit_rates && maxbar > 1
+                    maxbar = 1;
+                end
+                plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
+                plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
                 plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+                if max_exp < fit_task.pre(kft).exp_data(1)
+                    max_exp = fit_task.pre(kft).exp_data(1);
+                end
+                if max_fit < fit_task.pre(kft).fit_data
+                    max_fit = fit_task.pre(kft).fit_data;
+                end
             end
             title(sprintf('PRE for labelling site %s',restraints.pre(kr).site));
             xlabel('Residue');
-            ylabel('I_{para}/I_{dia}');
             set(gca,'FontSize',14);
-            axis([1,kx,0,1.05]);
+            if pre_parameters(kr).fit_rates
+                axis([1,kx,0,max([max_exp,max_fit])]);
+                ylabel('\Gamma_2 [s^{-1}]');
+            else
+                ylabel('I_{para}/I_{dia}');
+                axis([1,kx,0,1.05]);
+            end
         end
-        fprintf(1,'PRE mean square deviation: %6.4f\n',fom_pre);
+        fprintf(1,'PRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
     end
 end
 
@@ -1271,7 +1334,7 @@ for k = 1:length(fit)
     fom = fom + chi2;
 end
 
-function fom = sim_multi_pre(v,predictions,parameters)
+function [fom,fit_type] = sim_multi_pre(v,predictions,parameters)
 
 fom = 0;
 n = 0;
@@ -1280,12 +1343,26 @@ for kr = 1:length(parameters)
     R2dia = parameters(kr).R2dia;
     range = parameters(kr).range;
     n = n + 1 + range(2) - range(1);
+    % standard deviations of input parameters 
+    pre_std = predictions(range(1):range(2),2);
+    % if at least one of them is zero, mean-square deviation is fitted instead of chi^2
+    if sum(pre_std == 0) > 0
+        pre_std = ones(size(pre_std));
+        fit_type = 'mean-square';
+    else
+        fit_type = 'chi-square';
+    end
     coeff = v/sum(v);
-    Gamma2 = predictions(range(1):range(2),2:end)*coeff';
-    all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
-    fom = fom + sum((all_pre-predictions(range(1):range(2),1)).^2);
+    Gamma2 = predictions(range(1):range(2),3:end)*coeff';
+    if parameters(kr).fit_rates
+        all_pre = Gamma2;
+    else
+        all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
+    end
+    fom = fom + sum(((all_pre-predictions(range(1):range(2),1))./pre_std).^2);
 end
 fom = fom/n;
+
 
 function record_exception(exception,logfile)
 

@@ -138,6 +138,9 @@ while 1
         entity.name = tline(63:66);
     end
     if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL')
+        if length(tline) < 14
+            tline = pad(tline,14); % because PED does not check for correct format
+        end
         current_model = str2double(tline(7:14)) + model_offset;
         if current_model > models
             models = current_model;

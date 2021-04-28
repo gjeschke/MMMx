@@ -55,21 +55,36 @@ if isempty(call_count)
     call_count = 0;
 end
 
+fit_type = 'none';
+
+% figure(666); clf; hold on;
+
 fom = 0;
 n = 0;
 for kr = 1:length(parameters)
     td = parameters(kr).td;
     R2dia = parameters(kr).R2dia;
     range = parameters(kr).range;
+    pre_std = predictions(range(1):range(2),2); % standard deviations
+    % if at least one of them is zero, mean-square deviation is fitted instead of chi^2
+    if sum(pre_std == 0) > 0
+        pre_std = ones(size(pre_std));
+        fit_type = 'mean-square';
+    else
+        fit_type = 'chi-square';
+    end
     n = n + 1 + range(2) - range(1);
     coeff = v/sum(v);
-    Gamma2 = predictions(range(1):range(2),2:end)*coeff';
-    if opt.fit_rates
+    Gamma2 = predictions(range(1):range(2),3:end)*coeff';
+    if parameters(kr).fit_rates
         all_pre = Gamma2;
+        all_pre(all_pre > parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
     else
         all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
     end
-    fom = fom + sum((all_pre-predictions(range(1):range(2),1)).^2);
+    fom = fom + sum(((all_pre-predictions(range(1):range(2),1))./pre_std).^2);
+%     plot(range(1):range(2),predictions(range(1):range(2),1),'k.');
+%     plot(range(1):range(2),all_pre,'ro');
 end
 fom = fom/n;
 
@@ -85,7 +100,7 @@ if isfield(opt,'interactive') && opt.interactive
         plot(1:opt.old_size,v(1:opt.old_size),'o','Color',[0.6,0,0]);
         plot(opt.old_size+1:length(v),v(opt.old_size+1:length(v)),'.','Color',[0.6,0,0]);
         coeff = v(v > opt.threshold*max(v));
-        title(sprintf('PRE mean square dev. (%i): %5.3f with %i conformers',call_count/1000,fom,length(coeff)));
+        title(sprintf('PRE %s dev. (%i): %5.3f with %i conformers',fit_type,call_count/1000,fom,length(coeff)));
         drawnow
     end
     call_count = call_count + 1;

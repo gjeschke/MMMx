@@ -61,6 +61,7 @@ keep_sidegroup_clashes = false; % delete models where side groups clash
 
 opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
+opt.clash_test = 200; % number of residues before a backbone clashtest is performed 
 opt.interactive = false;
 maxlen = 1000; % maximum expected loop length for memory pre-allocation
 M_max = 10; % maximum factor for rejection sampling (default)
@@ -100,6 +101,8 @@ for d = 1:length(control.directives)
             expand_rba = true;
         case 'parallel'
             opt.parnum = str2double(control.directives(d).options{1});
+        case 'clashtest'
+            opt.clash_test = str2double(control.directives(d).options{1});
         case 'save'
             fname = control.directives(d).options{1};
             if length(control.directives(d).options) >= 2
@@ -1035,6 +1038,7 @@ for kent = 1:nent
     p_kres = zeros(1,opt.parnum);
     
     run_options.min_prob = min_prob;
+    run_options.clash_test = opt.clash_test;
     save_options.pdbid = pdbid;
     save_options.chainIDs{1,1} = 'Z';
     save_options.chainIDs{1,2} = chainid;
@@ -1422,6 +1426,12 @@ for kent = 1:nent
 
 end
 
+resax = restraints.initial:restraints.final;
+if reverse
+    res_stat = fliplr(res_stat);
+end
+data = [resax' res_stat'];
+save('rejection_statistics.dat','data','-ascii');
 
 function mean_pos = get_relative_label(label)
 

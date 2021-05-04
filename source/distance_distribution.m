@@ -249,9 +249,11 @@ if options.coupled
             [pair_distribution,missing] = get_pair_distribution(r_axis,...
                 positions1,populations1,positions2,populations2,options.smoothing);
             if sum(isnan(pair_distribution))
-                disp('Aber hallo!');
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('distance_distribution:failed_site_pair', 'For %s-%s, the distance distribution contains NaN.',site1,site2);
+            else
+                distribution = distribution + (1-missing)*pair_distribution;
             end
-            distribution = distribution + (1-missing)*pair_distribution;
         end
         if missing > 0.5e-2
             warnings = warnings + 1;

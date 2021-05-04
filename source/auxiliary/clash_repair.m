@@ -123,10 +123,5 @@ while min_dist < clash_thr && cycles < maxcycles
     end
 end
 
-% if min_dist < clash_thr
-%     figure(1); clf;
-%     plot(mdvec(1:cycles+1));
-%     disp('Aber hallo!');
-% end
 
 

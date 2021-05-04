@@ -1,37 +1,103 @@
-function [ecoor,atomtags,seq,options,correction,err] = RNA_loop_model(seq,fragments,...
-    shortfrag,non_clash_table,anchor,acodes,transmat,ecodes,options,ntoffset,environ)
-% function [ecoor,atomtags,seq,options] = mk_RNA_loop(seq,fragments,...
-%    shortfrag,non_clash_table,anchor,acodes,transmat,ecodes,options)
+function [ecoor,atomtags,seq,options,correction,err] = RNA_loop_model(logfid,seq,HNP_lib,...
+    anchor,acodes,transmat,ecodes,options,ntoffset,environ)
+% function [ecoor,atomtags,seq,options,correction,err] = RNA_loop_model(logfid,seq,HNP_lib,...
+%    anchor,acodes,transmat,ecodes,options,ntoffset,environ)
 %
-% err   error code
-%       -1  clashes could not be corrected
-%       -2  run out of time
-%       -3  distance between anchors too large for number of nucleotides
+% Generates a model of an RNA loop with given sequence and anchor
+% nucleotide(s) that does not clash with an environment
+%
+% Input:
+%
+% logfid        file identifier for log file
+% seq           sequence in single letter code, allowed nucleotides A,C,G,U
+%               modelled loop must be at least two nucleotides long
+%               the code for the previous (anchor) nt and, if targeted,
+%               next anchor nt must be included, use any base code for
+%               non-existing anchors
+% HNP_lib       HNP (Humphrey-Naranyan/Pyle) fragment library with fields
+%               .fragments          full fragments
+%               .shortfrag          short version of fragments
+%               .non_clash_table    table of noc-clashing nucleotide pairs
+% anchor        coordinates of the P(j),C4'(j),P(j+1) atoms of the
+%               final anchor nucleotide, defaults to empty array, which is
+%               interpreted as absence of a final anchor
+% acodes        vector of fragment indices in the library that are allowed
+%               for the initial anchor, defaults to all fragments in the
+%               library; if not present or empty, no initial anchor is
+%               assumed
+% transmat      4x4 affine transformation matrix for rotation and
+%               translation from the standard frame to the initial anchor
+%               frame, defaults to identity transformation; if not present 
+%               or empty, no initial anchor is assumed
+% ecodes        vector of fragment indices in the library that are allowed
+%               for the final nucleotide, used if the segment has a 
+%               terminal anchor, defaults to all fragments in the library
+% options       computation options, struct with fields
+%               .attempts   maximum number of attempts for getting into the
+%                           convergence radius of the final anchor,
+%                           defaults to 100
+%               .max_rot    maximum rotation of the loop end for matching 
+%                           final anchor fragment, defaults to 20° per 4 nt
+%               .anchor_acc RMSD accuracy of anchor coordinate fit,
+%                           defaults to 0.25 Å
+%               .fit_tol    contribution of a nucleotide to the convergence
+%                           radius for a final anchor P atom, defaults to
+%                           0.2 Å
+%               .LoN        length per nt, defaults to 7 Å
+%               .maxtime    maximum runtime in hours, defaults to 15 min
+%               .anchor0    vector (1,4) defining an initial anchor of a 
+%                           longer RNA segment by its nucleotide number and
+%                           P atom coordinates; if present and if the loop
+%                           is an insert, deformation of the whole segment
+%                           is allowed for reaching the target anchor, the
+%                           nucleotide number is relative to the first nt
+%                           of the loop
+%               .clahs_thr  clash threshold, defaults to 1.4 Angstroem
+% ntoffset      offset for the number of the first nucleotide, default: 0
+% environ       coordinates of environment atoms with which the loop should
+%               not clash, default to empty array
+%
+% Output:
+%
+% ecoor         extended coordinates (residue number, xyz) for atoms of the
+%               RNA  model
+% atomtags      cell vector of atom tag strings corresponding to ecoor
+% seq           nucleotide sequence with the anchor nucleotides removed
+% options       as the input options, but augmented by defaults
+% correction    defines the transformation that superimposes the projected
+%               C5'-terminal anchor fragment with the true C5'-terminal
+%               anchor coordinates, structure with field
+%               .trans      translation vector
+%               .rot        vector defining a rotation axis (first 3 values)
+%                           and rotation angle (in degree) about this axis
+%               .length     length from first atom to anchor point
+%               .Pinitial   coordinates of initial P atom  
+% err           error code
+%                 -1  clashes could not be corrected
+%                 -2  run out of time
+%                 -3  distance between anchors too large for number of
+%                     nucleotides
+%
+% G. Jeschke, 2017-2021
 
 atomtags = cell(0,1);
 ecoor = [];
-max_rpnt = 7;
+max_rpnt = 7; % maximum distance per nucleotide , 7 Angstroem
 err = 0;
 correction = [];
 
 % Check whether the loop has two anchors, and if so, if the anchors are
 % sufficiently close
-if exist('transmat','var') && ~isempty(transmat) 
-    if exist('anchor','var') && ~isempty(anchor)
-        rpnt = norm(transmat(1:3,4)'-anchor(1,:))/(length(seq)-1); % distance per nt
+if exist('transmat','var') && ~isempty(transmat) % there exists an initial anchor
+    if exist('anchor','var') && ~isempty(anchor) % there exists a terminal anchor
+        rpnt = norm(transmat(1:3,4)'-anchor(1,:))/(length(seq)-1); % distance per nucleotide
         if rpnt > max_rpnt
-            seq = seq(2:end-1);
-%             fprintf(1,'Distance per nt is %4.1f Å\n',rpnt);
+            seq = seq(2:end-1); % remove anchor nucleotides from sequence
             err = -3;
             return
         end
     end
 end
-
-% if ntoffset > 40
-%     profile viewer
-%     disp('Aber hallo!');
-% end
 
 if ~exist('environ','var')
     environ = [];
@@ -46,7 +112,11 @@ if ~exist('options','var') || ~isfield(options,'clash_thr')
 end
 
 if ~isfield(options,'maxtime') || isempty(options.maxtime)
-    options.maxtime = 0.1;
+    options.maxtime = 0.25;
+end
+
+if ~isfield(options,'attempts') || isempty(options.attempts)
+    options.attempts = 100;
 end
 
 tstart = tic;
@@ -55,37 +125,42 @@ runtime = toc(tstart);
 while isempty(ecoor) && runtime < 3600*options.maxtime
     
     [~,code,~,correction,lerr,statistics] = mk_RNA_loop_backbone(seq,...
-        fragments,shortfrag,non_clash_table,anchor,acodes,transmat,ecodes,options);
+        HNP_lib,anchor,acodes,transmat,ecodes,options);
     if lerr == 0
-        % fprintf(1,'Successful RNA loop modelling after %5.1f s and %i trials\n',3600*statistics.runtime,statistics.trials);
+        fprintf(logfid,'Successful RNA loop modelling after %5.1f s and %i trials\n',3600*statistics.runtime,statistics.trials);
     else
-        fprintf(1,'RNA modelling failed after  %5.1f s and %i trials\n',3600*statistics.runtime,statistics.trials);
+        fprintf(logfid,'RNA modelling failed after  %5.1f s and %i trials\n',3600*statistics.runtime,statistics.trials);
         for ke = 1:length(statistics.errors)
             if statistics.errors(ke) > 0.5/statistics.trials                
-                fprintf(1,'error %i accounts for %6.2f%%\n',statistics.errnum(ke),100*statistics.errors(ke));
+                fprintf(logfid,'For %6.2f%% of the attempts, %s\n',100*statistics.errors(ke),statistics.errmsg{ke});
             end
         end
+        % the following messages apply only if there is a terminal anchor
         if statistics.min_convg < 1e5
-            fprintf(1,'Best convergence was %4.2f Å\n',statistics.min_convg);
+            fprintf(logfid,'Best convergence was %4.2f Å\n',statistics.min_convg);
         end
         if statistics.amin_rmsd < 1e5
-            fprintf(1,'Best anchor rmsd was %4.2f Å\n',statistics.amin_rmsd);
+            fprintf(logfid,'Best anchor rmsd was %4.2f Å\n',statistics.amin_rmsd);
         end
         if statistics.amin_rot < 1e5
-            fprintf(1,'Minimum rotation was %4.2f degree\n',statistics.amin_rot);
+            fprintf(logfid,'Minimum rotation was %4.2f degree\n',statistics.amin_rot);
         end
         if statistics.amin_shift < 1e5
-            fprintf(1,'Minimum translation was %4.2f Å\n',statistics.amin_shift);
+            fprintf(logfid,'Minimum translation was %4.2f Å\n',statistics.amin_shift);
         end
         runtime = toc(tstart);
+        % if backbone generation was unsuccessful, but there is still time,
+        % try again
         continue
     end
 
-    [ecoor,atomtags] = mk_RNA(fragments,seq(1:end-1),code(1:end-1),non_clash_table,ntoffset,transmat);
+    [ecoor,atomtags] = mk_RNA(HNP_lib.fragments,seq(1:end-1),code(1:end-1),HNP_lib.non_clash_table,ntoffset,transmat);
        
     if isempty(ecoor)
-        % fprintf(1,'mk_RNA failed\n');
+        fprintf(logfid,'RNA backbone could not be decorated with bases.\n');
         runtime = toc(tstart);
+        % if full RNA generation was unsuccessful, but there is still time,
+        % try again
         continue
     else
         valid = find(ecoor(:,1)>ecoor(1,1)); % atoms not in the initial anchor nt
@@ -93,12 +168,14 @@ while isempty(ecoor) && runtime < 3600*options.maxtime
         ecoor = ecoor(valid,:);
     end
 
+    % distribute correction of translation and rotation of the final
+    % nucleotide (if any) over the whole loop
     if correction.corrected && ~isfield(options,'anchor0')
         ecoor = anchor_correction(ecoor,correction);
     end
 
-        % try to repair clashes, if requested
-    if ~isempty(environ) && ~isfield(options,'anchor0')
+    % try to repair clashes, if requested
+    if ~isempty(environ) % && ~isfield(options,'anchor0')
         coor = ecoor(:,2:4);
         if ~isempty(anchor)
             fixed = anchor(1,:);
@@ -112,16 +189,12 @@ while isempty(ecoor) && runtime < 3600*options.maxtime
         options.max_shift = 2;
         [coor,min_dist,~,max_shift] = clash_repair(coor,environ,fixed,options);
         ecoor(:,2:4) = coor;
-        % fprintf(1,'Clash repair required %i cycles and lead to a maximum shift of %6.2f Å\n',cycles,max_shift);
         if min_dist < options.clash_thr || max_shift > options.max_shift
-%             pair_dist = get_all_pair_dist(coor,environ);
-%             [mdv,mdp] = min(pair_dist);
-%             [min_dist,mdp2] = min(mdv);
-%             mdp1 = mdp(mdp2);
-%             fprintf(1,'RNA loop atom %s of nt %i clashed with environment atom %i at distance %6.3f Å.\n',atomtags{mdp1},ecoor(mdp1,1),mdp2,min_dist);
+            fprintf(logfid,'Clash repair failed\n');
             ecoor = [];
             err = -1;
         else
+            fprintf(logfid,'Clash repair led to a maximum shift of %6.2f Å\n',max_shift);
             err = 0;
         end
     end
@@ -135,8 +208,8 @@ end
 
 seq = seq(2:end-1);
 
-function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(seq,fragments,shortfrag,nct,anchor,acodes,transmat,ecodes,options)
-% function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(seq,fragments,shortfrag,nct,anchor,acodes,transmat,ecodes,options)
+function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(seq,HNP_lib,anchor,acodes,transmat,ecodes,options)
+% function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(seq,HNP_lib,anchor,acodes,transmat,ecodes,options)
 %
 % Generates an RNA backbone by random selection of conformers from a 
 % fragment library, 
@@ -149,11 +222,10 @@ function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(s
 %               the code for the previous (anchor) nt and, if targeted,
 %               next anchor nt must be included, use any base code for
 %               non-existing anchors
-% fragments     fragment library, as generated by recompile_library.m
-% shortfrag     fragment library, as generated by recompile_library.m
-% nct           table of non-clashing pairs, as generated by
-%               find_non_clshing.m, if given, clashes between immediate
-%               neighbor residues are automatically avoided
+% HNP_lib       HNP (Humphrey-Naranyan/Pyle) fragment library with fields
+%               .fragments          full fragments
+%               .shortfrag          short version of fragments
+%               .non_clash_table    table of noc-clashing nucleotide pairs
 % anchor        coordinates of the P(j),C4'(j),P(j+1) atoms of the
 %               final anchor nucleotide, defaults to empty array, which is
 %               interpreted as absence of a final anchor
@@ -180,7 +252,7 @@ function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(s
 %                           radius for a final anchor P atom, defaults to
 %                           0.2 Å
 %               .LoN        length per nt, defaults to 7 Å
-%               .maxtime    maximum runtime in hours, defaults to 1 h
+%               .maxtime    maximum runtime in hours, defaults to 25 min
 %               .anchor0    vector (1,4) defining an initial anchor of a 
 %                           longer RNA segment by its nucleotide number and
 %                           P atom coordinates; if present and if the loop
@@ -219,9 +291,16 @@ function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(s
 %               .trials     number of trials used
 %               .errnum     axis for error code
 %               .errors     error code statistics
+%               .errmsg     error messages
 %               
 %
 % G. Jeschke, 1/2017-25.12.2017
+
+% initialize error messages
+
+statistics.errmsg{1} = 'P atom of terminal anchor was not reached';
+statistics.errmsg{2} = 'orientation of terminal anchor could not be matched';
+statistics.errmsg{3} = 'no final nucleotide was allowed and non-clashing';
 
 verbose = false;
 
@@ -238,7 +317,7 @@ ntinit = seq(1); % nucleotide code for C3' (previous segment) anchor
 nttarget = seq(end); % nucleotide code for C5' (next segment) anchor
 seq = seq(1:end-1); % sequence for only the modelled loop segment
 
-if ~exist('nct','var') || isempty(nct)
+if ~isfield('HNP_lib','non_clash_table') || isempty(HNP_lib.non_clash_table)
     clash_test = false;
 else
     clash_test = true;
@@ -249,7 +328,7 @@ if ~exist('anchor','var')
 end
 
 if ~exist('acodes','var') || isempty(acodes)
-    acodes = 1:length(shortfrag);
+    acodes = 1:length(HNP_lib.shortfrag);
     initial_anchored = false;
 end
 
@@ -259,11 +338,11 @@ if ~exist('transmat','var') || isempty(transmat)
 end
 
 if ~exist('ecodes','var') || isempty(ecodes)
-    ecodes = 1:length(shortfrag);
+    ecodes = 1:length(HNP_lib.shortfrag);
 end
 
 if ~exist('options','var') || ~isfield(options,'attempts')
-    options.attempts = 100;
+    options.attempts = 100; % number of attempts before declaring failure
 end
 
 if ~exist('options','var') || ~isfield(options,'max_rot')
@@ -279,7 +358,7 @@ if ~exist('options','var') || ~isfield(options,'fit_tol')
 end
 
 if ~isfield(options,'maxtime')
-    options.maxtime = 1; % maximum runtime in hours
+    options.maxtime = 0.25; % maximum runtime in hours
 end
 
 if ~isfield(options,'LoN')
@@ -288,7 +367,6 @@ end
 
 if isfield(options,'anchor0')
     len = length(seq) - options.anchor0(1) - 2;
-%     disp('Aber hallo');
 else
     len = length(seq);
 end
@@ -305,7 +383,7 @@ trials = 0;
 tstart = tic;
 runtime = toc(tstart);
 if length(seq) < 4
-    maxtrials = 4*length(acodes)*length(shortfrag)^(length(seq)-2);
+    maxtrials = 4*length(acodes)*length(HNP_lib.shortfrag)^(length(seq)-2);
 else
     maxtrials = 1e6;
 end
@@ -325,7 +403,6 @@ if ~isempty(anchor)
         end
     end
 end
-% fprintf(1,'\nLoop backbone modelling with a maximum of %i trials for fit threshold %6.3f Å\n',maxtrials,fit_thresh);
 
 bcode = zeros(1,length(seq)+1);
 bcode(1) = strfind(slc,upper(ntinit));
@@ -341,7 +418,7 @@ statistics.amin_shift = 1e6;
 min_approaches = 1e6*ones(1,length(seq)-1);
 while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
 
-    nl = length(shortfrag);
+    nl = length(HNP_lib.shortfrag);
     coor = zeros(2*length(seq)+2,3);
     code = zeros(1,length(seq)+1);
     
@@ -350,8 +427,8 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
     na = length(acodes);
     acode = 1 + floor(na*rand-eps);
     code(1) = acodes(acode);
-    sfrag = [fragments(code(1)).(ntinit).coor(fragments(code(1)).(ntinit).assign.previous(2:3),:);...
-        fragments(code(1)).(ntinit).coor(fragments(code(1)).(ntinit).assign.next(2:3),:);];
+    sfrag = [HNP_lib.fragments(code(1)).(ntinit).coor(HNP_lib.fragments(code(1)).(ntinit).assign.previous(2:3),:);...
+        HNP_lib.fragments(code(1)).(ntinit).coor(HNP_lib.fragments(code(1)).(ntinit).assign.next(2:3),:);];
     
     % amend to coordinate array for affine transformation and transform to
     % initial anchor frame
@@ -380,7 +457,6 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
         det = rP5p - length(seq)*options.LoN; % P atom must within contour length to the target
         % if the target cannot be reached, return empty coordinates
         if det > fit_thresh  
-            fprintf(1,'Approach %4.1f(%4.1f)\n',det,fit_thresh);
             err = -1;
             code = [];
             coor = [];
@@ -406,14 +482,14 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
         while det > fit_thresh && count < options.attempts
             if initial_anchored && clash_test % allow only for non-clashing pair with previous nt
                 pair = 4*(bcode(k-1)-1) + bcode(k);
-                non_clash_table = nct{pair};
+                non_clash_table = HNP_lib.non_clash_table{pair};
                 non_clashing = non_clash_table{code(k-1)};
                 code_pointer = 1 + floor(length(non_clashing)*rand-eps);
                 code(k) = non_clashing(code_pointer);
             else % allow for any new fragment
                 code(k) = 1 + floor(nl*rand-eps);
             end
-            coor2 = shortfrag{code(k)}; % coordinates of current fragment
+            coor2 = HNP_lib.shortfrag{code(k)}; % coordinates of current fragment
             coor2 = coor2*Rp + origmat; % transform to local frame
             if targeted % check whether inside convergence radius
                 rP5p = norm(coor2(3,:)-Ptarget); % distance to the target P atom
@@ -441,6 +517,7 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
         poi = poi + 2; % count up coordinate pointer
         initial_anchored = true; % switch on clash tests if requested
     end
+    % if something went wrong and there is still time, make another attempt
     if ~passed
         continue;
     end
@@ -459,7 +536,7 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
         if clash_test
             bcode(k) = strfind(slc,base);
             pair = 4*(bcode(k-1)-1) + bcode(k);
-            non_clash_table = nct{pair};
+            non_clash_table = HNP_lib.non_clash_table{pair};
             available = non_clash_table{code(k-1)};
             apoi = 0;
             % check which non-clashing fragments are allowed to target
@@ -480,9 +557,9 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
                 continue;
             end
         end
-        rP5_vec = 1e6*ones(1,length(fragments));
+        rP5_vec = 1e6*ones(1,length(HNP_lib.fragments));
         for kf = available
-            coor2 = shortfrag{kf};
+            coor2 = HNP_lib.shortfrag{kf};
             coor2 = coor2*Rp + repmat(orig,4,1);
             rP5_vec(kf) = norm(coor2(3,:)-Ptarget); % distance to the target P atom
         end
@@ -493,25 +570,25 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
             statistics.min_convg = mi;
         end
         if mi < fit_thresh % P atom within convergence radius
-            coor2 = shortfrag{bf};
+            coor2 = HNP_lib.shortfrag{bf};
             coor2 = coor2*Rp + repmat(orig,4,1);
             code(k) = bf;
             coor(poi+1:poi+4,:) = coor2;
             % find best matching anchor fragment (minimum rotation at target)
-            available = 1:length(fragments);
+            available = 1:length(HNP_lib.fragments);
             if clash_test
                 % which fragments are non-clashing
                 bc5p = strfind(slc,nttarget);
                 pair = 4*(bcode(k)-1) +bc5p;
-                non_clash_table = nct{pair};
+                non_clash_table = HNP_lib.non_clash_table{pair};
                 available = non_clash_table{code(k-1)};
             end
             coort = coor2(2:4,:);
             min_rot = options.max_rot + eps;
             for kf = available
-                fanchor = fragments(kf).A.coor([fragments(kf).A.assign.previous(2:3) fragments(kf).A.assign.next(2)],:);
+                fanchor = HNP_lib.fragments(kf).A.coor([HNP_lib.fragments(kf).A.assign.previous(2:3) HNP_lib.fragments(kf).A.assign.next(2)],:);
                 [~, ~, transmat0] = superimpose_3points(anchor,fanchor);
-                linkage = fragments(kf).A.coor(fragments(kf).A.assign.previous,:);
+                linkage = HNP_lib.fragments(kf).A.coor(HNP_lib.fragments(kf).A.assign.previous,:);
                 linkage = [linkage ones(3,1)]*transmat0';
                 [rmsd, ~, transmat_link] = superimpose_3points(linkage(:,1:3),coort);
                 EV = affine2EV(transmat_link);
@@ -535,10 +612,6 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
                         fprintf(1,'rotation %4.1f°\n',EV(4));
                     end
                 end
-%                 if abs(EV(4)) < min_rot && norm(transmat_link(1:3,4))/fit_thresh < 3
-%                     fprintf(1,'rotation %4.1f°, translation %4.2f Å, RMSD %4.2f Å\n',EV(4),norm(transmat_link(1:3,4)),rmsd);
-%                     fprintf(1,'rel. rot. %4.2f, rel. trans. %4.2f, rel. RMSD %4.2f\n',EV(4)/min_rot,norm(transmat_link(1:3,4))/fit_thresh,rmsd/2*options.anchor_acc);
-%                 end
                 if abs(EV(4)) < min_rot && rmsd < 2*options.anchor_acc && norm(transmat_link(1:3,4)) < fit_thresh
                     err = 0;
                     correction.trans = transmat_link(1:3,4)';
@@ -570,7 +643,7 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
         if clash_test
             bcode(k) = strfind(slc,base);
             pair = 4*(bcode(k-1)-1) + bcode(k);
-            non_clash_table = nct{pair};
+            non_clash_table = HNP_lib.non_clash_table{pair};
             available = non_clash_table{code(k-1)};
             apoi = 0;
             % check which non-clashing fragments are allowed to target
@@ -593,7 +666,7 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
         end
         code_pointer = 1 + floor(length(available)*rand-eps);
         code(k) = available(code_pointer);
-        coor2 = shortfrag{code(k)}; % coordinates of current fragment
+        coor2 = HNP_lib.shortfrag{code(k)}; % coordinates of current fragment
         coor2 = coor2*Rp + repmat(orig,4,1); % transform to local frame
         coor(poi+1:poi+4,:) = coor2; % store current fragment coordinates
         Pfinal = coor2(2,:);
@@ -604,11 +677,6 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
     trials = trials+1;
     error_statistics(4+err) = error_statistics(4+err) + 1;
 end
-
-for k = 2:length(seq)-1
-    fprintf(1,'ma(%i): %4.1f Å ',k,min_approaches(k));
-end
-fprintf(1,'\n');
 
 statistics.runtime = runtime/3600;
 statistics.trials = trials;

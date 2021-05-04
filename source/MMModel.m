@@ -56,6 +56,11 @@ for module = 1:length(controller)
                 entity = [];
             end
             [entity,module_exceptions,failed] = module_flex(controller(module),logfid,entity);
+        case 'flexrna'
+            if ~exist('entity','var')
+                entity = [];
+            end
+            [entity,module_exceptions,failed] = module_flexRNA(controller(module),logfid,entity);
         case 'ensemblefit'
             [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid,entity);
         otherwise

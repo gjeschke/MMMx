@@ -24,11 +24,15 @@ function [entity,exceptions,failed] = module_flex(control,logfid,entity)
 %
 % SUPPORTED DIRECTIVES
 %
+% acceptance    requested acceptance (>0, <1) for rejection sampling
+%               default: unspecified or specified via maximum
+%               sampling-to-target ratio
 % sequence      amino acid sequence, mandatory, all others are optional
 % parallel      number of parallel runs per block
 % expand        expand an MMMx:RigiFlex model by computing flexible linker
 %               for each rigid-body arrangement
-% interactive   if present, information on progress is displayed
+% interactive   if present, information on progress is displayed, optional
+%               argument: trials between updates
 % loose         models with sidegroup clashes are not rejected
 % save [fn]     specify file name fn for output, defaults to mmmx_flex
 % n_anchor      N-terminal anchor residue
@@ -57,15 +61,20 @@ end
 nent = 1; % number of entities to be processed
 expand_rba = false;
 
+acceptance = []; % no acceptance threshold
+acceptance_mode = 'uniform';
+
 keep_sidegroup_clashes = false; % delete models where side groups clash
 
 opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
 opt.clash_test = 200; % number of residues before a backbone clashtest is performed 
 opt.interactive = false;
+opt.acceptance_update = 1000; % trials between updating acceptance level
 maxlen = 1000; % maximum expected loop length for memory pre-allocation
 M_max = 10; % maximum factor for rejection sampling (default)
-f_update = 0.001; % update factor for sampling functions in rejection sampling (default)
+mean_M = 1;
+f_update = 0.01; % update factor for sampling functions in rejection sampling (default)
 
 fname = 'mmmx_flex';
 pdbid = 'MMMX';
@@ -85,6 +94,14 @@ rejection_sampling = false;
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
+        case 'acceptance'
+            acceptance = str2double(control.directives(d).options{1});
+            acceptance0 = acceptance;
+            if length(control.directives(d).options) > 1 % acceptance mode
+                acceptance_mode = control.directives(d).options{2};
+            end
+        case 'update'
+            f_update = str2double(control.directives(d).options{1});
         case 'sequence'
             % first, last residue number and sequence
             restraints.initial =  str2double(control.directives(d).options{1});
@@ -608,6 +625,17 @@ for kent = 1:nent
     
     n_restraints = 0;
     
+    if ~isempty(acceptance) % determine requested sampling success
+        ndr = 0;
+        for ddr_poi = 1:length(restraints.ddr)
+            ndr = ndr + length(restraints.ddr(ddr_poi).site1);
+        end
+        for oli_poi = 1:length(restraints.oligomer)
+            ndr = ndr + length(restraints.oligomer(oli_poi).site1);
+        end
+        min_success = acceptance^(1/ndr); 
+    end
+    
     % process distance distribution restraints
     for ddr_poi = 1:length(restraints.ddr)
         label1 = restraints.ddr(ddr_poi).labels{1};
@@ -616,8 +644,6 @@ for kent = 1:nent
         curr_f_update = restraints.ddr(ddr_poi).f_update;
         for kr = 1:length(restraints.ddr(ddr_poi).site1)
             % establish type
-            % ### handling of full distance distributions needs to be
-            % considered later ###
             r = restraints.ddr(ddr_poi).r(kr);
             sigr = restraints.ddr(ddr_poi).sigr(kr);
             if isempty(r) || isempty(sigr)
@@ -676,14 +702,24 @@ for kent = 1:nent
                 kres2 = str2double(site2) - restraints.initial + 1;
             end
             % load sampling and restraint distribution, if provided
+            sampling_provided = false;
             if ~isempty(restraints.ddr(ddr_poi).file(kr))
                 frname = restraints.ddr(ddr_poi).file(kr);
                 frname = frname{1};
                 if ~isempty(frname)
                     data = load(frname);
+                    [~,nd] = size(data);
                     r_axis = data(:,1);
-                    samples = data(:,2);
-                    target = data(:,3);
+                    if nd < 4 && max(r_axis) > 20 % these are data with sampling distribution (unit Angstroem, distance, sampling, target)
+                        samples = data(:,2);
+                        target = data(:,3);
+                        sampling_provided = true;
+                    else % these are Deerlab data (unit nm, distance, distribution, lower bound, upper bound)
+                        target = data(:,2);
+                        target = target/sum(target);
+                        samples = target;
+                        r_axis = 10*r_axis;
+                    end
                     M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
                     if M > curr_M_max
                         M = curr_M_max;
@@ -719,6 +755,18 @@ for kent = 1:nent
                 continue
             end
             if internal1 && internal2 % internal segment
+                % make random coil distribution, if sampling is not
+                % provided
+                if ~sampling_provided
+                    samples = random_coil_sampling(r_axis,kres2-kres1);
+                    fprintf(logfid,'Sampling distribution for internal restraint %s-%s by random-coil estimate\n',...
+                        restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
+                end
+                if ~isempty(acceptance) % acceptance specification overrides M_max
+                    M = find_M_max(samples,target,min_success);
+                    fprintf(logfid,'Sampling factor for %s-%s is M = %6.3f, as determined from requested success rate %5.3f\n',...
+                        restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr},M,min_success);
+                end
                 kres = kres1;
                 site = kres2;
                 if site > kres
@@ -757,6 +805,11 @@ for kent = 1:nent
             else % second site is in modelled segment
                 kres = kres2;
                 xyz = pop1'*pos1;
+            end
+            if ~isempty(acceptance) % acceptance specification overrides M_max
+                M = find_M_max(samples,target,min_success);
+                fprintf(logfid,'Sampling factor for %s-%s is M = %6.3f, as determined from requested success rate %5.3f%%\n',...
+                    restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr},M,100*min_success);
             end
             if ~isfield(restrain(kres),'r_beacon') % this residue does not yet have a beacon restraint
                 restrain(kres).r_beacon(1).xyz = xyz;
@@ -815,7 +868,7 @@ for kent = 1:nent
                 continue
             end
             n_restraints = n_restraints+1;
-            if ~isempty(restraints.ddr(ddr_poi).file{kr})
+            if ~isempty(restraints.oligomers(oli_poi).file{kr})
                 restraint_type = 'rejection';
             elseif sigr < 0 % interpreted as lower/upper bound
                 restraint_type = 'bounds';
@@ -836,12 +889,25 @@ for kent = 1:nent
                 frname = frname{1};
                 if ~isempty(frname)
                     data = load(frname);
+                    [~,nd] = size(data);
                     r_axis = data(:,1);
-                    samples = data(:,2);
-                    target = data(:,3);
+                    if nd < 4 && max(r_axis) > 20 % these are data with sampling distribution (unit Angstroem, distance, sampling, target)
+                        samples = data(:,2);
+                        target = data(:,3);
+                    else % these are Deerlab data (unit nm, distance, distribution, lower bound, upper bound)
+                        target = data(:,2);
+                        target = target/sum(target);
+                        samples = target;
+                        r_axis = 10*r_axis;
+                    end
                     M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
                     if M > curr_M_max
                         M = curr_M_max;
+                    end
+                    if ~isempty(acceptance) % acceptance specification overrides M_max
+                        M = find_M_max(samples,target,min_success);
+                        fprintf(logfid,'Sampling factor for oligomer restraint %s is M = %6.3f, as determined from requested success rate %5.3f\n',...
+                            restraints.oligomer(oli_poi).site{kr},M,min_success);
                     end
                 else
                     r_axis = [];
@@ -1055,6 +1121,7 @@ for kent = 1:nent
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).r_beacon(kr).samples)
                     restrain(res).r_beacon(kr).updated_samples = zeros(length(restrain(res).r_beacon(kr).samples),1);
+                    restrain(res).r_beacon(kr).samples0 = restrain(res).r_beacon(kr).samples;
                 end
             end
         end
@@ -1064,6 +1131,7 @@ for kent = 1:nent
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).r_intern(kr).samples)
                     restrain(res).r_intern(kr).updated_samples = zeros(length(restrain(res).r_intern(kr).samples),1);
+                    restrain(res).r_intern(kr).samples0 = restrain(res).r_intern(kr).samples;
                 end
             end
         end
@@ -1073,12 +1141,14 @@ for kent = 1:nent
                 % test whether we do have a full distribution restraint here
                 if ~isempty(restrain(res).oligomer(kr).samples)
                     restrain(res).oligomer(kr).updated_samples = zeros(length(restrain(res).oligomer(kr).samples),1);
+                    restrain(res).oligomer(kr).samples0 = restrain(res).oligomer(kr).samples;
                 end
             end
         end
     end
     
-    
+    acceptance_counter = 0;
+    rejected = 0;
     tic,
     while 1
         parfor kp = 1:opt.parnum % parfor
@@ -1179,6 +1249,10 @@ for kent = 1:nent
             kres = p_kres(kp);
             res_stat(kres) = res_stat(kres)+1;
             runtime = toc;
+            acceptance_counter = acceptance_counter + 1;
+            if errcode == 5
+                rejected = rejected + 1;
+            end
             if errcode == -1
                 Ram_fixed = Ram_fixed + 1;
                 errcode = 0;
@@ -1257,7 +1331,9 @@ for kent = 1:nent
                     break
                 end
             end
+            report_update = false;
             if opt.interactive && mod(k_MC,opt.disp_update) == 0
+                report_update = true;
                 ftr = (1 - k_MC/ntrials)*max_seconds;
                 fti = max_seconds - runtime;
                 fmo = runtime*(max_models-success)/success;
@@ -1281,10 +1357,29 @@ for kent = 1:nent
                     fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
                     fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
                 end
-                
+                if ~isempty(acceptance)
+                    fprintf(logfid,'Minimum individual restraint success is: %5.3f%%\n',100*min_success);
+                    fprintf(logfid,'Mean maximum sampling/target ratio is  : %5.3f\n',mean_M);
+                end
             end
         end
         
+        % adjust minimum expected success
+        if ~isempty(acceptance) && acceptance_counter >= opt.acceptance_update
+            actual_acceptance = 1 - rejected/acceptance_counter;
+            corr_acc = acceptance/actual_acceptance;
+            corr_M = (actual_acceptance/acceptance0)^(1/ndr);
+            if actual_acceptance > 0
+                acceptance = acceptance0*corr_acc;
+                mean_M = mean_M*corr_M;
+            else
+                acceptance = 2*acceptance;
+                mean_M = mean_M/2^(1/ndr);
+            end
+            min_success = acceptance^(1/ndr);
+            rejected = 0;
+            acceptance_counter = 0;
+        end
         % update sampling information
         for res = 1:length(restrain)
             % check whether there are beacon restraints
@@ -1294,16 +1389,36 @@ for kent = 1:nent
                     % test whether we do have a full distribution restraint here
                     if ~isempty(restrain(res).r_beacon(kr).samples)
                         f_update = restrain(res).r_beacon(kr).f_update;
-                        new_samples = restrain(res).r_beacon(kr).new_samples;
+                        new_samples = restrain(res).r_beacon(kr).updated_samples;
+                        N = sum(new_samples);
                         if sum(new_samples) > 0
                             new_samples = new_samples/sum(new_samples);
                         end
-                        samples = (1-f_update)*restrain(res).r_beacon(kr).samples + f_update*new_samples;
+                        f = N/(1/f_update^2+N);
+                        samples = (1-f)*restrain(res).r_beacon(kr).samples + f*new_samples;
                         samples = samples/sum(samples);
                         target = restrain(res).r_beacon(kr).target;
-                        M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                        if M > restrain(res).r_beacon(kr).M_max
-                            M = restrain(res).r_beacon(kr).M_max;
+                        M0 = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                        if ~isempty(acceptance) % acceptance specification overrides M_max
+                            if strcmpi(acceptance_mode,'individual')
+                                M = find_M_max(samples,target,min_success);
+                            else
+                                M = mean_M;
+                            end
+                            if M > M0
+                                M = M0;
+                                M_mode = 'maximum value';
+                            else
+                                M_mode = 'by acceptance rate';
+                            end
+                        else
+                            M = M0;
+                        end
+                        if report_update
+                            fprintf(logfid,'Sampling factor for %i-%i updated to M = %6.3f (%s)\n',...
+                                res,kr,M,M_mode);
+                            fprintf(logfid,'Sampling distribution for %i-%i updated by %6.3f%% new samples\n',...
+                                res,kr,100*f);
                         end
                         restrain(res).r_beacon(kr).samples = samples;
                         restrain(res).r_beacon(kr).M = M;
@@ -1316,16 +1431,36 @@ for kent = 1:nent
                     % test whether we do have a full distribution restraint here
                     if ~isempty(restrain(res).r_intern(kr).samples)
                         f_update = restrain(res).r_intern(kr).f_update;
-                        new_samples = restrain(res).r_intern(kr).new_samples;
+                        new_samples = restrain(res).r_intern(kr).updated_samples;
+                        N = sum(new_samples);
                         if sum(new_samples) > 0
                             new_samples = new_samples/sum(new_samples);
                         end
-                        samples = (1-f_update)*restrain(res).r_intern(kr).samples + f_update*new_samples;
+                        f = N/(1/f_update^2+N);
+                        samples = (1-f)*restrain(res).r_intern(kr).samples0 + f*new_samples;
                         samples = samples/sum(samples);
                         target = restrain(res).r_intern(kr).target;
-                        M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                        if M > restrain(res).r_intern(kr).M_max
-                            M = restrain(res).r_intern(kr).M_max;
+                        M0 = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                        if ~isempty(acceptance) % acceptance specification overrides M_max
+                            if strcmpi(acceptance_mode,'individual')
+                                M = find_M_max(samples,target,min_success);
+                            else
+                                M = mean_M;
+                            end
+                            if M > M0
+                                M = M0;
+                                M_mode = 'maximum value';
+                            else
+                                M_mode = 'by acceptance rate';
+                            end
+                        else
+                            M = M0;
+                        end
+                        if report_update
+                            fprintf(logfid,'Sampling factor for %i-%i updated to M = %6.3f (%s)\n',...
+                                res,kr,M,M_mode);
+                            fprintf(logfid,'Sampling distribution for %i-%i updated by %6.3f%% new samples\n',...
+                                res,kr,100*f);
                         end
                         restrain(res).r_intern(kr).samples = samples;
                         restrain(res).r_intern(kr).M = M;
@@ -1338,16 +1473,36 @@ for kent = 1:nent
                     % test whether we do have a full distribution restraint here
                     if ~isempty(restrain(res).oligomer(kr).samples)
                         f_update = restrain(res).oligomer(kr).f_update;
-                        new_samples = restrain(res).oligomer(kr).new_samples;
+                        new_samples = restrain(res).oligomer(kr).updated_samples;
+                        N = sum(new_samples);
                         if sum(new_samples) > 0
                             new_samples = new_samples/sum(new_samples);
                         end
-                        samples = (1-f_update)*restrain(res).oligomer(kr).samples + f_update*new_samples;
+                        f = N/(1/f_update^2+N);
+                        samples = (1-f)*restrain(res).oligomer(kr).samples + f*new_samples;
                         samples = samples/sum(samples);
                         target = restrain(res).oligomer(kr).target;
-                        M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
-                        if M > restrain(res).oligomer(kr).M_max
-                            M = restrain(res).oligomer(kr).M_max;
+                        M0 = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+                        if ~isempty(acceptance) % acceptance specification overrides M_max
+                            if strcmpi(acceptance_mode,'individual')
+                                M = find_M_max(samples,target,min_success);
+                            else
+                                M = mean_M;
+                            end
+                            if M > M0
+                                M = M0;
+                                M_mode = 'maximum value';
+                            else
+                                M_mode = 'by acceptance rate';
+                            end
+                        else
+                            M = M0;
+                        end
+                        if report_update
+                            fprintf(logfid,'Sampling factor for oligomer %i-%i updated to M = %6.3f (%s)\n',...
+                                res,kr,M,M_mode);
+                            fprintf(logfid,'Sampling distribution for %i-%i updated by %6.3f%% new samples\n',...
+                                res,kr,100*f);
                         end
                         restrain(res).oligomer(kr).samples = samples;
                         restrain(res).oligomer(kr).M = M;
@@ -1388,6 +1543,7 @@ for kent = 1:nent
                     data = [restrain(res).r_beacon(kr).r_axis...
                         restrain(res).r_beacon(kr).samples...
                         restrain(res).r_beacon(kr).updated_samples...
+                        restrain(res).r_beacon(kr).samples0...
                         restrain(res).r_beacon(kr).target];
                     outname = sprintf('updated_samples_beacon_%i_%i.dat',res,kr);
                     save(outname,'data','-ascii');
@@ -1402,6 +1558,7 @@ for kent = 1:nent
                     data = [restrain(res).r_intern(kr).r_axis...
                         restrain(res).r_intern(kr).samples...
                         restrain(res).r_intern(kr).updated_samples...
+                        restrain(res).r_intern(kr).samples0...
                         restrain(res).r_intern(kr).target];
                     outname = sprintf('updated_samples_intern_%i_%i.dat',res,kr);
                     save(outname,'data','-ascii');
@@ -1416,6 +1573,7 @@ for kent = 1:nent
                     data = [restrain(res).oligomer(kr).r_axis...
                         restrain(res).oligomer(kr).samples...
                         restrain(res).oligomer(kr).updated_samples...
+                        restrain(res).oligomer(kr).samples0...
                         restrain(res).oligomer(kr).target];
                     outname = sprintf('updated_samples_oligomer_%i_%i.dat',res,kr);
                     save(outname,'data','-ascii');
@@ -1585,3 +1743,66 @@ if min_dist < min_approach
     iclash = 1;
 end
 
+function distr = random_coil_sampling(r0,N,nu)
+%
+% Random-coil model for an unfolded peptide/protein, end-to-end distance
+% distribution is approximated by a Gaussian coil with proper mean
+% distance, which is good for sufficiently large N
+% N. C. Fitzkee, G. D. Rose, PNAS 2004, 101(34), 12497-12502
+% equation (1) (has a typo, R has to be replaced by N) and value for R0 and
+% default value for nu from figure caption Figure 4
+%
+% (c) G. Jeschke, 2008-2021
+%
+% r0    distance axis in units of Angstroem
+% N     number of residues - 1
+% nu    scaling exponent, defaults to 0.59
+
+if ~exist('nu','var')
+    nu = 0.59;
+end
+
+R0 = 1.98; % 1.98 ?? per residue
+
+Rg = R0*N^nu;
+R2 = 6*Rg^2; % mean square end-to-end distance from radius of gyration
+c0 = 3/(2*pi*R2)^(3/2); % normalization prefactor
+shell = 4*pi*r0.^2; % spherical shell surface
+garg = 3*r0.^2/(2*R2); % argument for Gaussian distribution
+gauss = exp(-garg);
+distr = c0*shell.*gauss;
+distr = distr/sum(distr);
+
+function M = find_M_max(samples,target,min_success)
+
+M0 = max((target-0.01*max(target))./(samples+0.01*max(samples)));
+success = sum(samples(M0*samples<=target))/sum(samples);
+
+if success >= min_success
+    M = M0;
+    return
+end
+
+M_axis = 0.01:0.01:10;
+data = zeros(1,length(M_axis));
+for m = 1:length(M_axis)
+    data(m) = success_forecast(M_axis(m),samples,target);
+end
+
+M = fminsearch(@success_deviation,M0,[],samples,target,min_success);
+
+if M > M0
+    M = M0;
+end
+
+function sdev = success_deviation(M,samples,target,min_success)
+
+acceptance_probability = target./(M*samples);
+acceptance_probability(acceptance_probability > 1) = 1;
+success = sum(samples.*acceptance_probability);
+sdev = abs(success-min_success);
+
+function success = success_forecast(M,samples,target)
+
+scaled_samples = M*samples;
+success = sum(min([scaled_samples';target']))/M; 

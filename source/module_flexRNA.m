@@ -55,7 +55,6 @@ expand_rba = false;
 opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
 opt.interactive = false;
-maxlen = 1000; % maximum expected loop length for memory pre-allocation
 
 fname = 'mmmx_flexRNA';
 pdbid = 'MMMX';
@@ -139,7 +138,6 @@ for d = 1:length(control.directives)
                     restraints.ddr(ddr_poi).file(kr) = arg3(2:end);
                     restraints.ddr(ddr_poi).r(kr) = [];
                     restraints.ddr(ddr_poi).sigr(kr) = [];
-                    rejection_sampling = true;
                 else
                     restraints.ddr(ddr_poi).r(kr) = str2double(arg3);
                     restraints.ddr(ddr_poi).sigr(kr) = str2double(control.directives(d).block{kr,4});
@@ -148,7 +146,6 @@ for d = 1:length(control.directives)
                     arg5 = control.directives(d).block{kr,5};
                     if ~isempty(arg5) && arg5(1) == '@'
                         restraints.ddr(ddr_poi).file{kr} = arg5(2:end);
-                        rejection_sampling = true;
                     end
                 end
             end
@@ -179,11 +176,18 @@ restrain(nres).label = [];
 restrain(nres).r_beacon = [];
 restrain(nres).r_intern = [];
 
-% get entity coordinates
 if ~isempty(entity)
-    environment = entity.xyz;
+    entity = select(entity,'(*)*',true);
+    if ~isempty(restraints.anchor_5p)
+        entity = select(entity,restraints.anchor_5p,false,true);
+    end
+    if ~isempty(restraints.anchor_3p)
+        entity = select(entity,restraints.anchor_3p,false,true);
+    end
+    environment = get_coor(entity);
+    entity = select(entity,'',true);
 else
-    environment = [];
+    environment = false;
 end
 
 fname_basis = fname;
@@ -338,7 +342,10 @@ for kent = 1:nent
                     site = kres1;
                 end
                 if ~isfield(restrain(kres),'r_intern') % this residue does not yet have an internal restraint
-                    restrain(kres).r_intern(1).site = site;
+                    restrain(kres).r_intern(1).site1 = restraints.ddr(ddr_poi).site1{kr};
+                    restrain(kres).r_intern(1).site2 = restraints.ddr(ddr_poi).site2{kr};
+                    restrain(kres).r_intern(1).label1 = restraints.ddr(ddr_poi).labels{1};
+                    restrain(kres).r_intern(1).label2 = restraints.ddr(ddr_poi).labels{2};
                     restrain(kres).r_intern(1).type = restraint_type;
                     restrain(kres).r_intern(1).par1 = r;
                     restrain(kres).r_intern(1).par2 = sigr;
@@ -346,6 +353,10 @@ for kent = 1:nent
                     restrain(kres).r_intern(1).target = target;
                 else
                     kint = length(restrain(kres).r_intern) + 1;
+                    restrain(kres).r_intern(kint).site1 = restraints.ddr(ddr_poi).site1{kr};
+                    restrain(kres).r_intern(kint).site2 = restraints.ddr(ddr_poi).site2{kr};
+                    restrain(kres).r_intern(kint).label1 = restraints.ddr(ddr_poi).labels{1};
+                    restrain(kres).r_intern(kint).label2 = restraints.ddr(ddr_poi).labels{2};
                     restrain(kres).r_intern(kint).site = site;
                     restrain(kres).r_intern(kint).type = restraint_type;
                     restrain(kres).r_intern(kint).par1 = r;
@@ -362,6 +373,10 @@ for kent = 1:nent
             end
             if ~isfield(restrain(kres),'r_beacon') % this residue does not yet have a beacon restraint
                 restrain(kres).r_beacon(1).type = restraint_type;
+                restrain(kres).r_beacon(1).site1 = restraints.ddr(ddr_poi).site1{kr};
+                restrain(kres).r_beacon(1).site2 = restraints.ddr(ddr_poi).site2{kr};
+                restrain(kres).r_beacon(1).label1 = restraints.ddr(ddr_poi).labels{1};
+                restrain(kres).r_beacon(1).label2 = restraints.ddr(ddr_poi).labels{2};
                 restrain(kres).r_beacon(1).par1 = r;
                 restrain(kres).r_beacon(1).par2 = sigr;
                 restrain(kres).r_beacon(1).r_axis = r_axis;
@@ -369,6 +384,10 @@ for kent = 1:nent
             else
                 kint = length(restrain(kres).r_beacon) + 1;
                 restrain(kres).r_beacon(kint).type = restraint_type;
+                restrain(kres).r_beacon(kint).site1 = restraints.ddr(ddr_poi).site1{kr};
+                restrain(kres).r_beacon(kint).site2 = restraints.ddr(ddr_poi).site2{kr};
+                restrain(kres).r_beacon(kint).label1 = restraints.ddr(ddr_poi).labels{1};
+                restrain(kres).r_beacon(kint).label2 = restraints.ddr(ddr_poi).labels{2};
                 restrain(kres).r_beacon(kint).par1 = r;
                 restrain(kres).r_beacon(kint).par2 = sigr;
                 restrain(kres).r_beacon(kint).r_axis = r_axis;
@@ -405,7 +424,6 @@ for kent = 1:nent
        
     fprintf(logfid,'Saving models to %s_m#.pdb\n',fname);
     
-    run_options.min_prob = min_prob;
     save_options.pdbid = pdbid;
     
     % load the fragment library
@@ -433,15 +451,23 @@ for kent = 1:nent
             stitch = [chainid chainid];
         elseif isempty(anchor_3p)
             RNA_type = 'trailing';
-            [acodes,transmat] = get_RNA_initial_anchor(HNP.fragments,anchor_5p(1:3,:),upper(sequence(1)));
+            [acodes,transmat] = get_RNA_initial_anchor(logfid,HNP.fragments,anchor_5p,upper(sequence(1)));
+            if isempty(acodes)
+                failed = true;
+                return
+            end
             stitch = [chain1 chain1];
         elseif isempty(anchor_5p)
             RNA_type = 'leading';
-            ecodes = get_anchor_fragments(anchor_3p,'back',shortfrag);
+            ecodes = get_anchor_fragments(anchor_3p,'back',HNP.shortfrag);
             stitch = [chain2 chain2];
         else
             RNA_type = 'linker';
-            [acodes,transmat] = get_RNA_initial_anchor(HNP.fragments,anchor_5p(1:3,:),upper(sequence(1)));
+            [acodes,transmat] = get_RNA_initial_anchor(logfid,HNP.fragments,anchor_5p,upper(sequence(1)));
+            if isempty(acodes)
+                failed = true;
+                return
+            end
             ecodes = get_anchor_fragments(anchor_3p,'back',HNP.shortfrag);
             stitch = [chain1 chain2];
         end
@@ -451,12 +477,24 @@ for kent = 1:nent
             stitch = [chainid chainid];
         elseif isempty(anchor_5p)
             RNA_type = 'leading_nucleotide';
-            stitch = [chain1 chain1];
+            ecodes = get_anchor_fragments(anchor_3p,'back',HNP.shortfrag);
+            stitch = [chain2 chain2];
         elseif isempty(anchor_3p)
             RNA_type = 'trailing_nucleotide';
-            stitch = [chain2 chain2];
+            [acodes,transmat] = get_RNA_initial_anchor(logfid,HNP.fragments,anchor_5p,upper(sequence(1)));
+            if isempty(acodes)
+                failed = true;
+                return
+            end
+            stitch = [chain1 chain1];
         else
             RNA_type = 'linking_nucleotide';
+            [acodes,transmat] = get_RNA_initial_anchor(logfid,HNP.fragments,anchor_5p,upper(sequence(1)));
+            if isempty(acodes)
+                failed = true;
+                return
+            end
+            ecodes = get_anchor_fragments(anchor_3p,'back',HNP.shortfrag);
             stitch = [chain1 chain2];
         end
     end
@@ -467,40 +505,50 @@ for kent = 1:nent
     errors = zeros(3,1);
     
     success = 0;
-    tic,
+    tstart = tic;
     while 1
         for trial = 1:max_models-success
             switch RNA_type
-                case 'freestanding'
-                    fprintf(2,'Ooops. I am freestanding\n');
-                case 'leading'
-                    fprintf(2,'Ooops. I am leading\n');
-                case 'trailing'
-                    fprintf(2,'Ooops. I am trailing\n');
-                case 'linker'
-                    fprintf(2,'Hmm. I am a linker\n');
+                case {'freestanding','leading','trailing','linker','leading_nucleotide','trailing_nucleotide'}
                     [ecoor,atomtags,seq,~,~,err] = RNA_loop_model(logfid,sequence,HNP,anchor_3p,...
                         acodes,transmat,ecodes,options,ntoffset,environment);
                     if err < 0
                         errors(-err) = errors(-err) + 1;
                     end
                 case 'any_nucleotide'
-                    fprintf(2,'Ooops. I am any nucleotide\n');
-                case 'leading_nucleotide'
-                    fprintf(2,'Ooops. I am a leading nucleotide\n');
-                case 'trailing_nucleotide'
-                    fprintf(2,'Ooops. I am a trailing nucleotide\n');
+                    base = sequence(2);
+                    code = 1 + round(rand*(length(HNP.fragments)-1));
+                    coor = HNP.fragments(code).(base).coor;
+                    [m,~] = size(coor);
+                    atomtags = HNP.fragments(code).(base).atomtags;
+                    ecoor = [(1+ntoffset)*ones(m-3,1) coor(2:m-2,:)];
+                    atomtags = atomtags(2:end-2);
+                    seq = sequence(2);
+                    err = 0;
                 case 'linking_nucleotide'
-                    fprintf(2,'Ooops. I am a linking nucleotide\n');
+                    [ecoor,atomtags] = get_link_nt(logfid,sequence,HNP,anchor_3p,...
+                        anchor_5p,ntoffset,environment);
+                    seq = sequence(2);
+                    err = 0;
             end
         end
-        success = success + 1;
         if err == 0
             entity1 = insert_RNA(entity,ecoor,atomtags,seq,stitch);
-            fname_valid = sprintf('%s_valid_m%i',fname,success);
-            put_pdb(entity1,fname_valid,save_options);
+            fname_temp = sprintf('%s_temp_m%i',fname,success);
+            put_pdb(entity1,fname_temp,save_options);
+            entity1 = get_pdb([fname_temp '.pdb']);
+            prob = test_ddr(restrain,entity1,stitch);
+            if prob >= min_prob
+                success = success + 1;
+                fname_valid = sprintf('%s_valid_m%i',fname,success);
+                put_pdb(entity1,fname_valid,save_options);
+                fprintf(logfid,'Model %s with restraint fulfilment probability %5.3f was saved.\n',fname_valid,prob);
+            else
+                fprintf(logfid,'Model rejected by too low restraint fulfilment probability (%5.3f).\n',prob);
+            end
+            delete([fname_temp '.pdb']);
         end
-        runtime = toc;
+        runtime = toc(tstart);
 
         if opt.interactive && mod(k_MC,opt.disp_update) == 0
             ftr = (1 - k_MC/ntrials)*max_seconds;
@@ -529,9 +577,11 @@ for kent = 1:nent
     end
     fprintf(logfid,'\nFlexRNA module has run its course:\n');
     fprintf(logfid,'\nRuntime was %i s (%8.1f s per full model):\n',round(runtime),runtime/success);
-    fprintf(logfid,'Successful trials: %i\n',success);
+    fprintf(logfid,'Successful trials: %i\n\n',success);
 
 end
+
+entity = entity1;
 
 
 function record_exception(exception,logfile)
@@ -541,7 +591,7 @@ fprintf(logfile,'### flex exception %s ###\n',exception.message);
 
 function [anchor,slc] = get_anchor_5p(entity,address)
 
-[anchor,slc] = get_anchor_pseudo_torsion(entity,address);
+[anchor,slc] = get_anchor_pseudo_torsion(entity,address,true);
 
 function [anchor,slc] = get_anchor_3p(entity,address)
 
@@ -652,16 +702,39 @@ function entity = insert_RNA(entity,ecoor,atomtags,seq,stitch)
 %
 % G. Jeschke, 4.5.2021
 
+if isempty(entity) || ~isfield(entity,'xyz')
+    entity = [];
+end
+
 chain = stitch(1);
 [nat,~] = size(ecoor);
 res_offset = ecoor(1,1) - 1; % residue offset
-[nat0,~] = size(entity.xyz);
+if ~isempty(entity)
+    [nat0,~] = size(entity.xyz);
+    [~,cid] = get_coor(entity,sprintf('(%s)',chain));
+    index_array = zeros(nat0+nat,5);
+    index_array(1:nat0,:) = entity.index_array;
+    cid = index_array(cid(1),1);
+else
+    nat0 = 0;
+    index_array = zeros(nat0+nat,5);
+    cid = 1;
+end
 xyz = zeros(nat0+nat,3);
-xyz(1:nat0,:) = entity.xyz;
-occ0 = entity.occupancies;
 occ = zeros(nat0+nat,1,'uint8');
-occ(1:nat0) = occ0;
 
+if ~isempty(entity)
+    xyz(1:nat0,:) = entity.xyz;
+    occ0 = entity.occupancies;
+    occ(1:nat0) = occ0;
+else
+    entity.populations = 1;
+    entity.name = 'MMMx';
+    entity.selected = 1;
+    entity.water_selected = 0;
+    entity.(stitch(1)).selected = 0; 
+    entity.(stitch(1)).index = cid; 
+end
 resnum = -1e6;
 atom_index = 0;
 for kat = 1:nat
@@ -681,6 +754,11 @@ for kat = 1:nat
     atom_index = atom_index + 1;
     xyz(xyz_index,:) = ecoor(kat,2:4);
     occ(xyz_index) = 100;
+    index_array(xyz_index,1) = cid;
+    index_array(xyz_index,2) = ecoor(kat,1);
+    index_array(xyz_index,3) = atom_index;
+    index_array(xyz_index,4) = 1;
+    index_array(xyz_index,5) = 1;
     atname = atomtags{kat};
     for kk = 1:length(atname)
         if atname(kk) == ''''
@@ -697,6 +775,7 @@ for kat = 1:nat
 end
 entity.xyz = xyz;
 entity.occupancies = occ;
+entity.index_array = index_array;
 
 % if this is a linker, rename second chain
 if stitch(2) ~= stitch(1) % chain must be stitched
@@ -711,3 +790,85 @@ if stitch(2) ~= stitch(1) % chain must be stitched
     end
     entity = rmfield(entity,stitch(2));
 end
+
+function prob = test_ddr(restrain,entity,stitch)
+
+prob = 1;
+
+nres = length(restrain);
+n_ddr = 0;
+for kres = 1:nres
+    for kb = 1:length(restrain(kres).r_beacon)
+        site1 = restrain(kres).r_beacon(kb).site1;
+        site2 = restrain(kres).r_beacon(kb).site2;
+        if stitch(2) ~= stitch(1)
+            poi = strfind(site1,stitch(2));
+            if ~isempty(poi)
+                site1(poi) = stitch(1);
+            end
+            poi = strfind(site2,stitch(2));
+            if ~isempty(poi)
+                site2(poi) = stitch(1);
+            end
+        end
+        if ~contains(site1,')')
+            site1 = sprintf('(%s)%s',stitch(1),site1);
+        end
+        if ~contains(site2,')')
+            site2 = sprintf('(%s)%s',stitch(1),site2);
+        end
+        [r_axis0,distribution,entity] = distance_distribution(entity,site1,...
+            restrain(kres).r_beacon(kb).label1,site2,restrain(kres).r_beacon(kb).label2);
+        % reject cases where the conformer cannot be labelled
+        if isempty(distribution)
+            prob = 0;
+            return
+        end
+        overlap = restraint_overlap(r_axis0,distribution,restrain(kres).r_beacon(kb));        
+        prob = prob*overlap;
+        n_ddr = n_ddr + 1;
+    end
+    for kb = 1:length(restrain(kres).r_intern)
+        site1 = restrain(kres).r_intern(kb).site1;
+        site2 = restrain(kres).r_intern(kb).site2;
+        [r_axis0,distribution,entity] = distance_distribution(entity,site1,...
+            restrain(kres).r_intern(kb).label1,site2,restrain(kres).r_intern(kb).label2);
+        % reject cases where the conformer cannot be labelled
+        if isempty(distribution)
+            prob = 0;
+            return
+        end
+        overlap = restraint_overlap(r_axis0,distribution,restrain(kres).r_intern(kb));
+        prob = prob*overlap;
+        n_ddr = n_ddr + 1;
+    end
+end
+
+prob = prob^(1/n_ddr);
+
+function overlap = restraint_overlap(r_axis0,distribution,restraint)
+
+switch restraint.type
+    case 'distribution'
+        r_axis = restraint.r_axis;
+        target = restraint.target;
+    case 'Gaussian'
+        r_axis = r_axis0';
+        arg = (r_axis-restraint.par1)/(sqrt(2)*restraint.par2);
+        target = exp(-arg.^2);
+        target = target/sum(target);
+    case 'bounds'
+        r_axis = r_axis0';
+        target = ones(size(r_axis));
+        target(r_axis<restraint.par1) = 0;
+        target(r_axis>restraint.par2) = 0;
+        target = target/sum(target);
+ end
+% figure; clf; hold on;
+distribution = interp1(r_axis0,distribution,r_axis,'pchip',0);
+distribution = distribution/sum(distribution);
+max_distr = max(distribution);
+target = max_distr*target/max(target);
+% plot(r_axis,distribution);
+% plot(r_axis,target);
+overlap = sum(min([distribution.';target.']));

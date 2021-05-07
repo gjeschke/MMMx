@@ -63,6 +63,8 @@ for module = 1:length(controller)
             [entity,module_exceptions,failed] = module_flexRNA(controller(module),logfid,entity);
         case 'ensemblefit'
             [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid,entity);
+        case 'yasara'
+            [entity,module_exceptions,failed] = module_yasara(controller(module),logfid,entity);
         otherwise
             fprintf(logfid,'Warning: Unknown module %s was ignored.\n\n',controller(module).name);
     end

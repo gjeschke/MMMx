@@ -68,7 +68,7 @@ keep_sidegroup_clashes = false; % delete models where side groups clash
 
 opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
-opt.clash_test = 200; % number of residues before a backbone clashtest is performed 
+opt.clash_test = 10000; % number of residues before a backbone clashtest is performed 
 opt.interactive = false;
 opt.acceptance_update = 1000; % trials between updating acceptance level
 maxlen = 1000; % maximum expected loop length for memory pre-allocation
@@ -1395,7 +1395,7 @@ for kent = 1:nent
                             new_samples = new_samples/sum(new_samples);
                         end
                         f = N/(1/f_update^2+N);
-                        samples = (1-f)*restrain(res).r_beacon(kr).samples + f*new_samples;
+                        samples = (1-f)*restrain(res).r_beacon(kr).samples0 + f*new_samples;
                         samples = samples/sum(samples);
                         target = restrain(res).r_beacon(kr).target;
                         M0 = max((target-0.01*max(target))./(samples+0.01*max(samples)));

@@ -343,6 +343,11 @@ if ~isempty(ei)
     apoi = 0;
     for k = 1:length(delimited)-1
         atom_type = atomstr(delimited(k)+1:delimited(k+1)-1);
+        for kchar = 1:length(atom_type)
+            if atom_type(kchar) == ''''
+                atom_type(kchar) = '_';
+            end
+        end
         if strcmpi(atom_type,'backbone')
             atom_fields{apoi+1} = 'N';
             atom_fields{apoi+2} = 'CA';

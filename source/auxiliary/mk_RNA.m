@@ -108,8 +108,8 @@ for k = 2:length(seq)
     ecoor(poi+1:poi+m-3,1) = k + ntoffset -1;
     ecoor(poi+1:poi+m-1,2:4) = coor2;
     pair_dist = get_all_pair_dist(ecoor(1:poi,2:4),coor2(2:m-3,:));
-    [midi1,mip1] = min(pair_dist);
-    [min_dist,mip2] = min(midi1);
+    midi1 = min(pair_dist);
+    min_dist = min(midi1);
     if min_dist < clash_threshold
         % fprintf(1,'Clash at distance %4.2f Å between %i:%s and %i:%s\n',min_dist,ecoor(mip1(mip2),1),atomtags{mip1(mip2)},k+ntoffset-1,fragment.atomtags{2+mip2});
         ecoor = [];

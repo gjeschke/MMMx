@@ -1151,8 +1151,8 @@ for kent = 1:nent
     acceptance_counter = 0;
     rejected = 0;
     tic,
-    sc = parallel.pool.Constant(RandStream('Threefry','Seed','shuffle'));
     while 1
+        sc = parallel.pool.Constant(RandStream('Threefry','Seed','shuffle'));
         parfor kp = 1:opt.parnum % parfor
             stream = sc.Value;        % Extract the stream from the Constant
             stream.Substream = kp;

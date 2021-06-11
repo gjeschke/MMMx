@@ -1,4 +1,4 @@
-function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
+function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options, stream)
 % [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_res, options)
 % Generates a closed loop model conforming to residue-specific Ramachandran plots
 % backbone based on: H. Sugeta, T. Miyazawa, Biopolymers, 1967, 5, 673-679.
@@ -89,6 +89,8 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 %                               half loop, defaults to 100
 %           .max_res            maximum attempts for a single-residue step,
 %                               defaults to 100
+% stream    random number (sub)stream, needed for independent random
+%           numbers on parallel workers
 %
 % Output:
 % coor      Cartesian backbone coordinates of the loop in the order N, CA,
@@ -112,9 +114,6 @@ function [coor,errcode,restrain,p_model,k] = loop_model(sequence, anchorN, ancho
 % k         residue where failure was detected
 %
 % G. Jeschke, 2007-2020
-
-% start with new random numbers
-rng('shuffle');
 
 % set default output
 errcode = 0;
@@ -209,7 +208,7 @@ soc = sin(omega_cis); coc = cos(omega_cis);
 if isfield(restrain,'aprop')
     for k = 1:length(restrain)
         if restrain(k).secondary == 0 && ~isempty(restrain(k).aprop)
-            if rand <= restrain(k).aprop
+            if rand(stream) <= restrain(k).aprop
                 restrain(k).secondary = 1;
             end
         end
@@ -244,7 +243,7 @@ end
 if isfield(restrain,'bprop')
     for k = 1:length(restrain)
         if restrain(k).secondary == 0 && ~isempty(restrain(k).bprop)
-            if rand <= restrain(k).bprop
+            if rand(stream) <= restrain(k).bprop
                 restrain(k).secondary = 2;
             end
         end
@@ -254,7 +253,7 @@ end
 if isfield(restrain,'cprop')
     for k = 1:length(restrain)
         if restrain(k).secondary == 0 && ~isempty(restrain(k).cprop)
-            if rand <= restrain(k).cprop
+            if rand(stream) <= restrain(k).cprop
                 restrain(k).secondary = 4;
             end
         end
@@ -297,7 +296,7 @@ if ~isempty(anchorN)
     C = anchorN(3,:);
     phi = dihedral_mmmx(C_back,N,CA,C);
 
-    poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+    poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
     ephi=Rama_res.ephi{rescodes(k)}(poi);
     epsi=Rama_res.epsi{rescodes(k)}(poi);
 
@@ -331,7 +330,7 @@ if ~isempty(anchorN)
     % decide whether cis or trans peptide
     so = sot;
     co = cot;
-    dice = rand;
+    dice = rand(stream);
     if upper(sequence(2))~='P'
         if dice < cis_Xaa_non_Pro
             so = soc; co = coc;
@@ -374,12 +373,12 @@ while k <= kend1
     if restrain(k-1).secondary == 3
         [rphi,rpsi] = get_phi_psi_in_helix(sequence(k));
     elseif restrain(k-1).secondary == 5
-        phi = PPII_phi + 5*randn;
+        phi = PPII_phi + 5*randn(stream);
         rphi = pi*phi/180;
-        psi = PPII_psi + 5*randn;
+        psi = PPII_psi + 5*randn(stream);
         rpsi = pi*psi/180;
     else
-        poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+        poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
         rphi=Rama_res.ephi{rescodes(k)}(poi);
         rpsi=Rama_res.epsi{rescodes(k)}(poi);
     end
@@ -387,7 +386,7 @@ while k <= kend1
     psivec(k) = 180*rpsi/pi;
     so = sot;
     co = cot;
-    dice = rand;
+    dice = rand(stream);
     if upper(sequence(k+1))~='P'
         if dice < cis_Xaa_non_Pro
             so = soc; co = coc;
@@ -408,7 +407,7 @@ while k <= kend1
                   psivec(k) < alpha_psi_LB || psivec(k) > alpha_psi_UB || ...
                   phivec(k) + psivec(k) < alpha_phi_psi_LB || ...
                   phivec(k) + psivec(k) > alpha_phi_psi_UB
-                    poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+                    poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
                     rphi=Rama_res.ephi{rescodes(k)}(poi);
                     rpsi=Rama_res.epsi{rescodes(k)}(poi);
                     phivec(k) = 180*rphi/pi;
@@ -418,7 +417,7 @@ while k <= kend1
             if upper(sequence(k+1))~='P'
                 while phivec(k) < beta_phi_LB || phivec(k) > beta_phi_UB || ...
                       psivec(k) < beta_psi_LB || psivec(k) > beta_psi_UB
-                        poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+                        poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
                         rphi=Rama_res.ephi{rescodes(k)}(poi);
                         rpsi=Rama_res.epsi{rescodes(k)}(poi);
                         phivec(k) = 180*rphi/pi;
@@ -428,7 +427,7 @@ while k <= kend1
             else % special handling for proline case
                 while phivec(k) < beta_phi_LB || phivec(k) > beta_phi_UB_proline || ...
                       psivec(k) < beta_psi_LB || psivec(k) > beta_psi_UB
-                        poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+                        poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
                         rphi=Rama_res.ephi{rescodes(k)}(poi);
                         rpsi=Rama_res.epsi{rescodes(k)}(poi);
                         phivec(k) = 180*rphi/pi;
@@ -703,12 +702,12 @@ while k<ngap+1 && failed < options.max_attempts
         if restrain(k-1).secondary == 3
             [rphi,rpsi] = get_phi_psi_in_helix(sequence(k));
         elseif restrain(k-1).secondary == 5
-            phi = PPII_phi + 5*randn;
+            phi = PPII_phi + 5*randn(stream);
             rphi = pi*phi/180;
-            psi = PPII_psi + 5*randn;
+            psi = PPII_psi + 5*randn(stream);
             rpsi = pi*psi/180;
         else
-            poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+            poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
             rphi=Rama_res.ephi{rescodes(k)}(poi);
             rpsi=Rama_res.epsi{rescodes(k)}(poi);
         end
@@ -716,7 +715,7 @@ while k<ngap+1 && failed < options.max_attempts
         psivec(k) = 180*rpsi/pi;
         so = sot;
         co = cot;
-        dice = rand;
+        dice = rand(stream);
         if upper(sequence(k+1))~='P'
             if dice < cis_Xaa_non_Pro
                 so = soc; co = coc;
@@ -737,7 +736,7 @@ while k<ngap+1 && failed < options.max_attempts
                       psivec(k) < alpha_psi_LB || psivec(k) > alpha_psi_UB || ...
                       phivec(k) + psivec(k) < alpha_phi_psi_LB || ...
                       phivec(k) + psivec(k) > alpha_phi_psi_UB
-                        poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+                        poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
                         rphi=Rama_res.ephi{rescodes(k)}(poi);
                         rpsi=Rama_res.epsi{rescodes(k)}(poi);
                         phivec(k) = 180*rphi/pi;
@@ -747,7 +746,7 @@ while k<ngap+1 && failed < options.max_attempts
                 if upper(sequence(k+1))~='P'
                     while phivec(k) < beta_phi_LB || phivec(k) > beta_phi_UB || ...
                           psivec(k) < beta_psi_LB || psivec(k) > beta_psi_UB
-                            poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+                            poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
                             rphi=Rama_res.ephi{rescodes(k)}(poi);
                             rpsi=Rama_res.epsi{rescodes(k)}(poi);
                             phivec(k) = 180*rphi/pi;
@@ -757,7 +756,7 @@ while k<ngap+1 && failed < options.max_attempts
                 else % special handling for proline case
                     while phivec(k) < beta_phi_LB || phivec(k) > beta_phi_UB_proline || ...
                           psivec(k) < beta_psi_LB || psivec(k) > beta_psi_UB
-                            poi = round(rand*Rama_res.me{rescodes(k)}+0.5);
+                            poi = round(rand(stream)*Rama_res.me{rescodes(k)}+0.5);
                             rphi=Rama_res.ephi{rescodes(k)}(poi);
                             rpsi=Rama_res.epsi{rescodes(k)}(poi);
                             phivec(k) = 180*rphi/pi;
@@ -1145,14 +1144,14 @@ function [phi,psi] = get_phi_psi_in_helix(res)
 
 switch res
     case 'P'
-        phi = 4*(rand-0.5) - 61.0;
-        psi = 4*(rand-0.5) - 36.5;
+        phi = 4*(rand(stream)-0.5) - 61.0;
+        psi = 4*(rand(stream)-0.5) - 36.5;
     case 'G'
-        phi = 4*(rand-0.5) - 59.1;
-        psi = 4*(rand-0.5) - 42.4;
+        phi = 4*(rand(stream)-0.5) - 59.1;
+        psi = 4*(rand(stream)-0.5) - 42.4;
     otherwise
-        phi = 4*(rand-0.5) - 63.8;
-        psi = 4*(rand-0.5) - 41.1;
+        phi = 4*(rand(stream)-0.5) - 63.8;
+        psi = 4*(rand(stream)-0.5) - 41.1;
 end
 phi = pi*phi/180;
 psi = pi*psi/180;

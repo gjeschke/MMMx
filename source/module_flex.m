@@ -1098,10 +1098,11 @@ for kent = 1:nent
     
     fprintf(logfid,'Saving models to %s_m#.pdb\n',fname);
     
-    p_coor = cell(opt.parnum);
-    p_restrain = cell(opt.parnum);
+    p_coor = cell(1,opt.parnum);
+    p_restrain = cell(1,opt.parnum);
     p_errcode = zeros(1,opt.parnum);
     p_kres = zeros(1,opt.parnum);
+    p_seed = zeros(1,opt.parnum);
     
     run_options.min_prob = min_prob;
     run_options.clash_test = opt.clash_test;
@@ -1150,15 +1151,18 @@ for kent = 1:nent
     acceptance_counter = 0;
     rejected = 0;
     tic,
+    sc = parallel.pool.Constant(RandStream('Threefry','Seed','shuffle'));
     while 1
         parfor kp = 1:opt.parnum % parfor
+            stream = sc.Value;        % Extract the stream from the Constant
+            stream.Substream = kp;
             if reverse
-                [coor,errcode,restrain1,~,kres] = loop_model_reverse(sequence, anchorC, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+                [coor,errcode,restrain1,~,kres] = loop_model_reverse(sequence, anchorC, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options,stream);
             else
                 if rejection_sampling
-                    [coor,errcode,restrain1,~,kres] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+                    [coor,errcode,restrain1,~,kres] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options,stream);
                 else
-                    [coor,errcode,restrain1,~,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options);
+                    [coor,errcode,restrain1,~,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options,stream);
                 end
                 kres = kres-1;
             end
@@ -1276,25 +1280,29 @@ for kent = 1:nent
                 loopname = write_pdb_backbone(coor,restraints.sequence,fname,success,res1);
                 pmodel = make_SCWRL4_sidegroups(loopname);
                 if ~isempty(pmodel)
+                    scwrl4_success = true;
                     delete(loopname);
+                    [pclash,iclash] = check_decorated_loop(pmodel,prot_coor,res1,resend);
                 else
+                    scwrl4_success = false;
                     fprintf(logfid,'Warning: Model %s could not be decorated with sidegroups\n',loopname);
-                    pmodel = loopname;
+                    delete(loopname);
+                    pclash = 1;
+                    iclash = 1;
                 end
-                [pclash,iclash] = check_decorated_loop(pmodel,prot_coor,res1,resend);
                 
                 if pclash
                     err_count(10) = err_count(10) + 1;
                     success = success - 1;
                     fprintf(logfid,'Warning: Side groups in model %s clash with protein\n',pmodel);
-                    if ~keep_sidegroup_clashes
+                    if ~keep_sidegroup_clashes || ~scwrl4_success
                         delete(pmodel);
                     end
                 elseif iclash
                     err_count(11) = err_count(11) + 1;
                     success = success - 1;
                     fprintf(logfid,'Warning: Side groups in model %s clash internally\n',pmodel);
-                    if ~keep_sidegroup_clashes
+                    if ~keep_sidegroup_clashes || ~scwrl4_success
                         delete(pmodel);
                     end
                 else

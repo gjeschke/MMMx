@@ -71,6 +71,7 @@ for d = 1:length(control.directives)
 end
 
 opt.fname = fname;
+temporary_input = false;
 if ~isempty(inname)
     poi = strfind(inname,'.pdb');
     if ~isempty(poi)
@@ -92,10 +93,17 @@ else
         now_string = datestr(now,'HH-MM-SS');
         inname = sprintf('to_be_optimized_%s_%i.pdb',now_string,round(10000*rand));
         put_pdb(entity,inname);
+        temporary_input = true;
     end
 end
 
 exceptions = optimize_by_yasara(logfid,inname,opt);
+
+if temporary_input
+    if exist(inname,'file')
+        delete(inname);
+    end
+end
 
 % read Yasara result into current entity, if output is requested
 if nargout > 0 && isempty(exceptions{1})

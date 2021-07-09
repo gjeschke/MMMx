@@ -108,7 +108,7 @@ if ~exist('ntoffset','var') || isempty(ntoffset)
 end
 
 if ~exist('options','var') || ~isfield(options,'clash_thr')
-    options.clash_thr = 1.4;
+    options.clash_thr = 2;
 end
 
 if ~isfield(options,'maxtime') || isempty(options.maxtime)

@@ -53,6 +53,9 @@ exceptions = {[]};
 warnings = 0;
 failed = false;
 
+initial_ensemble = '';
+added_conformers = '';
+
 if ~exist('entity','var')
     entity = [];
 end
@@ -60,6 +63,7 @@ end
 
 nent = 1; % number of entities to be processed
 expand_rba = false;
+use_file_list = false;
 
 acceptance = []; % no acceptance threshold
 acceptance_mode = 'uniform';
@@ -116,6 +120,10 @@ for d = 1:length(control.directives)
             keep_sidegroup_clashes = true;
         case 'expand'
             expand_rba = true;
+        case 'initial'
+            initial_ensemble = control.directives(d).options{1};
+        case 'addpdb'
+            added_conformers = control.directives(d).options{1};
         case 'parallel'
             opt.parnum = str2double(control.directives(d).options{1});
         case 'clashtest'
@@ -366,6 +374,16 @@ if ~isfield(restraints,'initial') || ~isfield(restraints,'final')...
     return
 end
 
+initial_files = rd_ensemble_definition(initial_ensemble);
+[~,~,ext] = fileparts(added_conformers);
+if isempty(ext)
+    added_conformers = strcat(added_conformers,'.pdb');
+end
+added_files = dir(added_conformers); % find all files that match the pattern
+
+
+
+
 sequence = restraints.sequence;
 
 nres = restraints.final - restraints.initial + 1;
@@ -401,15 +419,9 @@ for kres = restraints.initial:restraints.final
     restrain(krel).cprop = restraints.cprop(kres);
 end
 
-% get entity coordinates
-if ~isempty(entity)
-    entity_xyz = entity.xyz;
-else
-    entity_xyz = [];
-end
-
 sequence0 = sequence;
 fname_basis = fname;
+
 
 if expand_rba
     if isfield(entity,'rba_populations')
@@ -422,6 +434,21 @@ if expand_rba
         record_exception(exceptions{warnings},logfid);
         expand_rba = false;
     end
+else
+    nent = length(initial_files) + length(added_files);
+    if nent > 0
+        use_file_list = true;
+        file_list = cell(1,nent);
+        for c = 1:length(initial_files)
+            file_list{c} = initial_files(c).name;
+        end
+        for c = 1:length(added_files)
+            file_list{length(initial_files)+c} = added_files(c).name;
+        end
+    else
+        nent = 1;
+        use_file_list = false;
+    end
 end
 
 N_anchor_chain = '';
@@ -430,9 +457,22 @@ for kent = 1:nent
     if expand_rba
         entity = get_rba(entity0,kent);
         fname = sprintf('%s_rba_%i',fname_basis,kent);
+    elseif use_file_list
+        fname = file_list{kent};
+        entity = get_pdb(fname);
+        % remove extension
+        [pathname,filename,~] = fileparts(fname);
+        fname = fullfile(pathname,filename);
     else
         fname = fname_basis;
     end
+    % get entity coordinates
+    if ~isempty(entity)
+        entity_xyz = entity.xyz;
+    else
+        entity_xyz = [];
+    end
+    
     sequenceC = sequence0; % initialize default sequence after N-terminal anchor
     % get anchor information
     anchorC = [];

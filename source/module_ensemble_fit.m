@@ -60,6 +60,7 @@ fname_basis = 'MMMx_expand';
 pre_default_td = 10e-3; % 10 ms default total INEPT time
 pre_default_tr = 20; % 20 ns default rotational correlation time
 pre_default_taui = 0.5; % 0.5 ns default label internal correlation time
+pre_max_Gamma2 = 170;
 
 run_fit = true;
 plot_result = false;
@@ -416,6 +417,7 @@ for c = 1:C
         entity1 = get_rba(entity0,c);
         fname = sprintf('%s_rba_%i.pdb',fname_basis,c);
         put_pdb(entity1,fname);
+        fit_task.file_list{c} = fname;
     else
         fname = fit_task.file_list{c};
     end

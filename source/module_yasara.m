@@ -33,6 +33,7 @@ function [entity,exceptions,failed] = module_yasara(control,logfid,entity)
 % initialize empty output
 exceptions = {[]};
 failed = false;
+warnings = 0;
 
 if ~exist('entity','var')
     entity = [];
@@ -55,9 +56,12 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case 'input'
             inname = control.directives(d).options{1};
-            fprintf(logfid,'Structure from PDB file %s will be optimized instead of input entity\n',inname);
+            fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
         case 'save'
             fname = control.directives(d).options{1};
+            % remove extension if any
+            [pathname,filename,~] = fileparts(fname);
+            fname = fullfile(pathname,filename);
             output_name = true;
         case 'console'
             opt.console = true;
@@ -70,45 +74,65 @@ for d = 1:length(control.directives)
     end
 end
 
-opt.fname = fname;
-temporary_input = false;
-if ~isempty(inname)
-    poi = strfind(inname,'.pdb');
-    if ~isempty(poi)
-        inname = inname(1:poi-1);
-    end
-    if ~output_name
-        opt.fname = strcat(inname,'_yasara');
-    end
+all_files = dir(inname); % find all files that match the pattern
+if isempty(all_files)
+    file_list{1} = inname;
 else
-    if ~exist('entity','var') || isempty(entity)
-            warnings = warnings + 1;
-            exceptions{warnings} = MException('module_yasara:no_input',...
-                'Neither input entity nor input file are defined.');
-        fprintf(logfid,'Errror in Yasara optimizer: Neither input entity nor input file are defined\n');
-        failed = true;
-        return
+    file_list = cell(1,length(all_files));
+    for c = 1:length(all_files)
+        file_list{c} = all_files(c).name;
+    end
+end
+
+for c = 1:length(file_list)
+    inname = file_list{c};
+    opt.fname = sprintf('%s_m%i',fname,c);
+    temporary_input = false;
+    if ~isempty(inname)
+        poi = strfind(inname,'.pdb');
+        if ~isempty(poi)
+            inname = inname(1:poi-1);
+        end
+        if ~output_name
+            opt.fname = strcat(inname,'_yasara');
+        end
     else
-        % make a file name that is hopefully unique
-        now_string = datestr(now,'HH-MM-SS');
-        inname = sprintf('to_be_optimized_%s_%i.pdb',now_string,round(10000*rand));
-        put_pdb(entity,inname);
-        temporary_input = true;
+        if ~exist('entity','var') || isempty(entity)
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_yasara:no_input',...
+                    'Neither input entity nor input file are defined.');
+            fprintf(logfid,'Errror in Yasara optimizer: Neither input entity nor input file are defined\n');
+            failed = true;
+            return
+        else
+            % make a file name that is hopefully unique
+            now_string = datestr(now,'HH-MM-SS');
+            inname = sprintf('to_be_optimized_%s_%i.pdb',now_string,round(10000*rand));
+            put_pdb(entity,inname);
+            temporary_input = true;
+        end
     end
-end
 
-exceptions = optimize_by_yasara(logfid,inname,opt);
+    exceptions = optimize_by_yasara(logfid,inname,opt);
 
-if temporary_input
-    if exist(inname,'file')
-        delete(inname);
+    if temporary_input
+        if exist(inname,'file')
+            delete(inname);
+        end
     end
-end
 
-% read Yasara result into current entity, if output is requested
-if nargout > 0 && isempty(exceptions{1})
-    if ~contains(fname,'.pdb')
-        fname = strcat(fname,'.pdb');
+    % read Yasara result into current entity, if output is requested
+    if nargout > 0 && isempty(exceptions{1})
+        if ~contains(fname,'.pdb')
+            fname = strcat(fname,'.pdb');
+        end
+        if ~exist(fname,'file')
+            warnings = warnings + 1;
+            exceptions{warnings} = MException('module_yasara:no_result',...
+                'ERROR: Yasara computation failed.');
+            entity = [];
+        else
+            entity = get_pdb(fname);
+        end
     end
-    entity = get_pdb(fname);
 end

@@ -38,6 +38,9 @@ function rotamers = get_rotamers_for_site(entity,site,rot_lib)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2010-2020: Yevhen O. Polyhach, Gunnar Jeschke
 
+% for testing, commented out
+% fprintf(1,'{%i}(%s)%s\n',site.conformer,site.chain,site.residue);
+
 % constants
 gas_un=8.314472;    % universal gas constant in CI (J/(mol*K)       
 T = 298; % ambient temperature [K]

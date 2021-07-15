@@ -29,7 +29,7 @@ maxcycles = 100;
 add_safety = 5; % additional safety margin beyond shift and clash threshold
 
 if ~exist('options','var') || ~isfield(options,'clash_thr') || isempty(options.clash_thr)
-    clash_thr = 2;
+    clash_thr = 1.4;
 else
     clash_thr = options.clash_thr;
 end

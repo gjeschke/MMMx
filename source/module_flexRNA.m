@@ -184,20 +184,6 @@ restrain(nres).label = [];
 restrain(nres).r_beacon = [];
 restrain(nres).r_intern = [];
 
-if ~isempty(entity)
-    entity = select(entity,'(*)*',true);
-    if ~isempty(restraints.anchor_5p)
-        entity = select(entity,restraints.anchor_5p,false,true);
-    end
-    if ~isempty(restraints.anchor_3p)
-        entity = select(entity,restraints.anchor_3p,false,true);
-    end
-    environment = get_coor(entity);
-    entity = select(entity,'',true);
-else
-    environment = false;
-end
-
 fname_basis = fname;
 
 
@@ -250,6 +236,20 @@ for kent = 1:nent
     else
         fname = fname_basis;
     end
+    if ~isempty(entity)
+        entity = select(entity,'(*)*',true);
+        if ~isempty(restraints.anchor_5p)
+            entity = select(entity,restraints.anchor_5p,false,true);
+        end
+        if ~isempty(restraints.anchor_3p)
+            entity = select(entity,restraints.anchor_3p,false,true);
+        end
+        environment = get_coor(entity);
+        entity = select(entity,'',true);
+    else
+        environment = false;
+    end
+
     anchor_3p = [];
     slc_3p = 'A';
     if ~isempty(restraints.anchor_3p)

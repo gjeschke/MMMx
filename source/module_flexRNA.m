@@ -84,6 +84,9 @@ for d = 1:length(control.directives)
             end
         case 'expand'
             expand_rba = true;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
+                load(control.directives(d).options{1});
+            end
         case 'initial'
             initial_ensemble = control.directives(d).options{1};
         case 'addpdb'

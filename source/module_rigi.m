@@ -59,6 +59,7 @@ failed = false;
 r_CACA = 3.8; % length between Calpha atoms
 
 save_name = 'MMMx_rigi'; % default name for saving output entity
+save_pdb_name = '';
 
 superimpose = 0;
 
@@ -111,6 +112,8 @@ for d = 1:length(control.directives)
             end
         case 'save'
             save_name = control.directives(d).options{1};
+        case 'savepdb'
+            save_pdb_name = control.directives(d).options{1};
         case 'maxsize'
             restraints.max_size = str2double(control.directives(d).options{1});
         case 'probability'
@@ -598,6 +601,15 @@ end
 
 % save generated entity
 save(save_name,'entity');
+
+% save individual PDB files if requested
+if ~isempty(save_pdb_name)
+    for kr = 1:diagnostics.success
+        entity1 = get_rba(entity,kr);
+        fname = sprintf('%s_rba_%i',save_pdb_name,kr);
+        put_pdb(entity1,fname);
+    end
+end
 
 function record_exception(exception,logfid)
 

@@ -80,7 +80,7 @@ M_max = 10; % maximum factor for rejection sampling (default)
 mean_M = 1;
 f_update = 0.01; % update factor for sampling functions in rejection sampling (default)
 
-fname = 'mmmx_flex';
+savename = 'mmmx_flex';
 pdbid = 'MMMX';
 chainid = 'A';
 
@@ -95,6 +95,7 @@ ddr_poi = 0;
 oligomer_poi = 0;
 depth_poi = 0;
 rejection_sampling = false;
+
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
@@ -120,6 +121,9 @@ for d = 1:length(control.directives)
             keep_sidegroup_clashes = true;
         case 'expand'
             expand_rba = true;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
+                load(control.directives(d).options{1});
+            end
         case 'initial'
             initial_ensemble = control.directives(d).options{1};
         case 'addpdb'
@@ -129,7 +133,7 @@ for d = 1:length(control.directives)
         case 'clashtest'
             opt.clash_test = str2double(control.directives(d).options{1});
         case 'save'
-            fname = control.directives(d).options{1};
+            savename = control.directives(d).options{1};
             if length(control.directives(d).options) >= 2
                 pdbid = control.directives(d).options{2};
                 if length(pdbid) > 4
@@ -420,7 +424,7 @@ for kres = restraints.initial:restraints.final
 end
 
 sequence0 = sequence;
-fname_basis = fname;
+fname_basis = savename;
 
 
 if expand_rba
@@ -1142,7 +1146,6 @@ for kent = 1:nent
     p_restrain = cell(1,opt.parnum);
     p_errcode = zeros(1,opt.parnum);
     p_kres = zeros(1,opt.parnum);
-    p_seed = zeros(1,opt.parnum);
     
     run_options.min_prob = min_prob;
     run_options.clash_test = opt.clash_test;
@@ -1193,7 +1196,7 @@ for kent = 1:nent
     tic,
     while 1
         sc = parallel.pool.Constant(RandStream('Threefry','Seed','shuffle'));
-        parfor kp = 1:opt.parnum % parfor
+        parfor kp = 1:opt.parnum % ### parfor
             stream = sc.Value;        % Extract the stream from the Constant
             stream.Substream = kp;
             if reverse
@@ -1347,7 +1350,7 @@ for kent = 1:nent
                     end
                 else
                     m_entity = get_pdb(pmodel);
-                    fname_valid = sprintf('%s_valid_m%i',fname,success);
+                    fname_valid = sprintf('%s_i%i_m%i',savename,kent,success);
                     if n_anchored || c_anchored
                         entity1 = entity;
                         for resnum = res1:resend
@@ -1580,6 +1583,7 @@ for kent = 1:nent
         fprintf(logfid,'Loop closure failures: %5.2f%%\n',100*err_count(2)/k_MC);
         fprintf(logfid,'Ramachandran mismatches: %5.2f%%\n',100*err_count(4)/k_MC);
     end
+    
     
     for res = 1:length(restrain)
         % check whether there are beacon restraints

@@ -1204,7 +1204,7 @@ if ~allowed
         return
     else
         backbone = backbone_f;
-        errcode = test_constraints(backbone,restrain,options,ngap+1);
+        errcode = test_constraints(backbone,restrain,options,ngap+1,stream);
         if errcode
             errcode = 8;
             coor = [];
@@ -1390,7 +1390,7 @@ while k > 1
     end
 end
 
-function errcode = test_constraints(backbone,restrain,options,kend)
+function errcode = test_constraints(backbone,restrain,options,kend,stream)
 
 p_model = 1;
 errcode = 0;
@@ -1422,6 +1422,12 @@ for k = 2:kend
                        restrain(k-1).r_beacon(kr).p = 1;
                        p_beacon = 1;
                     end                        
+                case 'rejection'
+                    [~,rpoi] = min(abs(restrain(k-1).r_beacon(kr).r_axis -r));
+                    if rand(stream) >= restrain(k-1).r_beacon(kr).target(rpoi)/...
+                            (restrain(k-1).r_beacon(kr).M*restrain(k-1).r_beacon(kr).samples(rpoi))
+                        p_beacon = 0;
+                    end
                 otherwise
                     error('MMMx:loop_model:unknownRestraintType','Restraint type %s not known',restrain(k-1).r_beacon(kr).type);
             end

@@ -560,6 +560,8 @@ for kent = 1:nent
         % add C anchor residue to sequence
         argout = get_residue(entity,'info',restraints.c_anchor);
         slc = tlc2slc(argout{1}.tlc);
+        argout = get_residue(entity,'info',c_anchor_next);
+        slcn = tlc2slc(argout{1}.tlc);
         sequence = [sequence0 slc];
         sequenceC = sequence;
         c_anchored = true;
@@ -652,8 +654,12 @@ for kent = 1:nent
         % add N anchor residue to sequence
         argout = get_residue(entity,'info',restraints.n_anchor);
         slc = tlc2slc(argout{1}.tlc);
-        sequence = [slc sequenceC];
         n_anchored = true;
+        if c_anchored
+            sequence = [slc sequenceC slcn];
+        else
+            sequence = [slc sequenceC];
+        end
     else
         n_anchored = false;
     end

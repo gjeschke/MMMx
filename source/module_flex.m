@@ -395,11 +395,6 @@ restrain(nres).secondary = 0;
 restrain(nres).aprop = 0;
 restrain(nres).bprop = 0;
 restrain(nres).cprop = 0;
-restrain(nres).label = [];
-restrain(nres).r_beacon = [];
-restrain(nres).r_intern = [];
-restrain(nres).oligomer = [];
-restrain(nres).depth = [];
 
 % store propensities
 % prolong propensity vectors if required
@@ -458,6 +453,13 @@ end
 N_anchor_chain = '';
 C_anchor_chain = '';
 for kent = 1:nent
+    for kres = 1:nres
+        restrain(kres).label = [];
+        restrain(kres).r_beacon = [];
+        restrain(kres).r_intern = [];
+        restrain(kres).oligomer = [];
+        restrain(kres).depth = [];
+    end
     if expand_rba
         entity = get_rba(entity0,kent);
         fname = sprintf('%s_rba_%i',fname_basis,kent);
@@ -1199,9 +1201,11 @@ for kent = 1:nent
     
     acceptance_counter = 0;
     rejected = 0;
+    
     tic,
+        
     while 1
-        sc = parallel.pool.Constant(RandStream('Threefry','Seed','shuffle'));
+        sc = parallel.pool.Constant(RandStream('threefry4x64_20','Seed','shuffle'));
         parfor kp = 1:opt.parnum % ### parfor
             stream = sc.Value;        % Extract the stream from the Constant
             stream.Substream = kp;
@@ -1211,7 +1215,7 @@ for kent = 1:nent
                 if rejection_sampling
                     [coor,errcode,restrain1,~,kres] = loop_model_rs(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options,stream);
                 else
-                    [coor,errcode,restrain1,~,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options,stream);
+                    [coor,errcode,restrain1,~,kres] = loop_model(sequence, anchorN, anchorC, anchorNp, anchorCn, prot_coor, restrain, Rama_res, rescodes, n_restraints, run_options, stream);
                 end
                 kres = kres-1;
             end

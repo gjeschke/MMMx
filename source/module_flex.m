@@ -373,7 +373,7 @@ if ~isfield(restraints,'initial') || ~isfield(restraints,'final')...
     warnings = warnings + 1;
     exceptions{warnings} = MException('module_flex:no_sequence_directive',...
         'sequence or residue range not specified');
-    record_exception(exceptions{warning},logfid);
+    record_exception(exceptions{warnings},logfid);
     failed = true;
     return
 end
@@ -576,7 +576,7 @@ for kent = 1:nent
         exceptions{warnings} = MException('module_flex:c_anchor_unresolved',...
             'not all backbone atoms found for C-terminal anchor %s (aborted)',...
             restraints.c_anchor);
-        record_exception(exceptions{warning},logfid);
+        record_exception(exceptions{warnings},logfid);
         return
     end
     
@@ -671,7 +671,7 @@ for kent = 1:nent
         exceptions{warnings} = MException('module_flex:n_anchor_unresolved',...
             'not all backbone atoms found for N-terminal anchor %s (aborted)',...
             restraints.n_anchor);
-        record_exception(exceptions{warning},logfid);
+        record_exception(exceptions{warnings},logfid);
         return
     end
     
@@ -688,6 +688,8 @@ for kent = 1:nent
         min_success = acceptance^(1/ndr); 
     end
     
+    can_be_labeled = true;
+    failed_residue = '(none)';
     % process distance distribution restraints
     for ddr_poi = 1:length(restraints.ddr)
         label1 = restraints.ddr(ddr_poi).labels{1};
@@ -703,7 +705,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:ddr_empty',...
                     'missing distance or standard deviation for ddr %s/%s (ignored)',...
                     restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             if r == 0 && sigr == 0
@@ -711,7 +713,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:ddr_ignored',...
                     'zero distance and standard deviation for ddr %s/%s (ignored)',...
                     restraints.ddr(ddr_poi).site1{kr},restraints.ddr(ddr_poi).site2{kr});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             n_restraints = n_restraints+1;
@@ -730,6 +732,11 @@ for kent = 1:nent
                 pos1 = argsout{1};
                 [argsout,entity] = get_label(entity,label1,'populations',restraints.ddr(ddr_poi).site1{kr});
                 pop1 = argsout{1};
+                if isempty(pop1)
+                    can_be_labeled = false;
+                    failed_residue = restraints.ddr(ddr_poi).site2{kr};
+                    continue;
+                end
                 kres1 = 0;
             else % determine residue index in chain segment
                 site1 = restraints.ddr(ddr_poi).site1{kr};
@@ -737,7 +744,13 @@ for kent = 1:nent
                 if ~isempty(poi)
                     site1 = site1(poi+1:end);
                 end
-                kres1 = str2double(site1) - restraints.initial + 1;
+                site1_nr = str2double(site1);
+                if site1_nr < restraints.initial || site1_nr > restraints.final
+                    can_be_labeled = false;
+                    failed_residue = restraints.ddr(ddr_poi).site1{kr};
+                    continue;
+                end
+                kres1 = site1_nr - restraints.initial + 1;
             end
             [argsout,entity] = get_label(entity,label2,'positions',restraints.ddr(ddr_poi).site2{kr});
             if ~isempty(argsout) && ~isempty(argsout{1})
@@ -745,11 +758,22 @@ for kent = 1:nent
                 [argsout,entity] = get_label(entity,label2,'populations',restraints.ddr(ddr_poi).site2{kr});
                 pop2 = argsout{1};
                 kres2 = 0;
+                if isempty(pop2)
+                    can_be_labeled = false;
+                    failed_residue = restraints.ddr(ddr_poi).site2{kr};
+                    continue;
+                end
             else % determine residue index in chain segment
                 site2 = restraints.ddr(ddr_poi).site2{kr};
                 poi = strfind(site2,')');
                 if ~isempty(poi)
                     site2 = site2(poi+1:end);
+                end
+                site2_nr = str2double(site2);
+                if site2_nr < restraints.initial || site2_nr > restraints.final
+                    can_be_labeled = false;
+                    failed_residue = restraints.ddr(ddr_poi).site2{kr};
+                    continue;
                 end
                 kres2 = str2double(site2) - restraints.initial + 1;
             end
@@ -803,7 +827,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:ddr_outside_section',...
                     'for ddr, neither %s nor %s is inside modelled chain segment (ignored)',...
                     restraints.ddr(ddr_poi).site1{kres1},restraints.ddr(ddr_poi).site2{kres2});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             if internal1 && internal2 % internal segment
@@ -888,6 +912,18 @@ for kent = 1:nent
                 restrain(kres).r_beacon(kint).f_update = curr_f_update;
             end
         end
+        if ~can_be_labeled
+            continue
+        end
+    end
+    
+    if ~can_be_labeled
+        warnings = warnings + 1;
+        exceptions{warnings} = MException('module_flex:cannot_bel_labeled',...
+            'residue %s cannot be labeled in %s (model skipped)',...
+            failed_residue,fname);
+        record_exception(exceptions{warnings},logfid);
+        continue
     end
     
     % process oligomer restraints
@@ -908,7 +944,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:oligomer_empty',...
                     'missing distance or standard deviation for oligomer restraint %s (ignored)',...
                     restraints.oligomers(oli_poi).site{kr});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             if r == 0 && sigr == 0
@@ -916,7 +952,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:oligomer_ignored',...
                     'zero distance and standard deviation for oligomer restraint %s (ignored)',...
                     restraints.oligomer(oli_poi).site{kr});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             n_restraints = n_restraints+1;
@@ -1000,7 +1036,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:oligomer_restraint_outside_section',...
                     'site %s for oligomer restraint is not inside modelled chain segment (ignored)',...
                     restraints.oligomer(oli_poi).site);
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
         end
@@ -1024,7 +1060,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:depth_empty',...
                     'missing distance or standard deviation for depth restraint %s (ignored)',...
                     restraints.depth(depth_poi).site{kr});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             if r == 0 && sigr == 0
@@ -1032,7 +1068,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:depth_ignored',...
                     'zero distance and standard deviation for depth restraint %s (ignored)',...
                     restraints.depth(depth_poi).site{kr});
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
             n_restraints = n_restraints+1;
@@ -1071,7 +1107,7 @@ for kent = 1:nent
                 exceptions{warnings} = MException('module_flex:depth_restraint_outside_section',...
                     'site %s for depth restraint is not inside modelled chain segment (ignored)',...
                     restraints.depth(depth_poi).site);
-                record_exception(exceptions{warning},logfid);
+                record_exception(exceptions{warnings},logfid);
                 continue
             end
         end
@@ -1646,6 +1682,9 @@ for kent = 1:nent
 
 end
 
+if ~exist('reverse','var') % this happens if no model could be labeled
+    return
+end
 resax = restraints.initial:restraints.final;
 if reverse
     res_stat = fliplr(res_stat);
@@ -1684,7 +1723,7 @@ mean_pos = pop'*pos;
 
 function record_exception(exception,logfile)
 
-fprintf(logfile,'### flex exception %s ###\n',exception.message);
+fprintf(logfile,'### flex exception: %s ###\n',exception.message);
 
 function loopname = write_pdb_backbone(coor,sequence,fname0,model,res1)
 

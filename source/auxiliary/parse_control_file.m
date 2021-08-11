@@ -81,6 +81,7 @@ while ischar(tline)
     end
     % remove trailing blanks
     tline = deblank(tline);
+    % convert 
     % determine new indent and current hierarchy level
     line_length = length(tline);
     tline = strtrim(tline);
@@ -95,6 +96,13 @@ while ischar(tline)
     arguments = arguments{1};
     arg1 = strtrim(char(arguments{1}));
     argument_pointer = 2;
+    % allow for block key syntax with colon
+    if arg(1) == ':'
+        explicit_block_key = true;
+        arg = arg(2:end);
+    else
+        explicit_block_key = false;
+    end
     % determine line type and check level
     switch arg1(1)
         case {'#','!'} % keyword or module call on top level
@@ -150,9 +158,11 @@ while ischar(tline)
                 end
             end
         otherwise % this must be level > 0
-            if new_indent < indent
-                level = level - 1;
-            end
+            % the following led to problems with editors using tabs
+            % block keys must be closed with .statements now
+            %             if new_indent < indent 
+            %                 level = level - 1;
+            %             end
             if new_indent > indent
                 level = level + 1;
             end
@@ -195,6 +205,9 @@ while ischar(tline)
     end
     
     indent = new_indent;
+    if explicit_block_key
+        level = level + 1;
+    end
     tline = fgetl(fid);
 end
 

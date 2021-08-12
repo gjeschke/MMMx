@@ -172,9 +172,9 @@ for d = 1:length(control.directives)
                 restraints.ddr(ddr_poi).file{kr} = '';
                 arg3 = control.directives(d).block{kr,3};
                 if arg3(1) == '@'
-                    restraints.ddr(ddr_poi).file(kr) = arg3(2:end);
-                    restraints.ddr(ddr_poi).r(kr) = [];
-                    restraints.ddr(ddr_poi).sigr(kr) = [];
+                    restraints.ddr(ddr_poi).file{kr} = arg3(2:end);
+                    restraints.ddr(ddr_poi).r(kr) = NaN;
+                    restraints.ddr(ddr_poi).sigr(kr) = NaN;
                 else
                     restraints.ddr(ddr_poi).r(kr) = str2double(arg3);
                     restraints.ddr(ddr_poi).sigr(kr) = str2double(control.directives(d).block{kr,4});

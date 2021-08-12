@@ -44,7 +44,9 @@ for module = 1:length(controller)
             logfid = fopen(controller(module).options{1},'wt');
         case 'getpdb'
             [entity,module_exceptions] = get_pdb(controller(module).options{1});
-            failed = isempty(entity);
+            failed = isempty(entity); % commands that are essential for further pipeline processing should report failure
+        case 'locate'
+            module_exceptions = module_locate(controller(module),logfid,entity);
         case 'rigi'
             if ~exist('entity','var')
                 fprintf(logfid,'Error: Rigi requires that an entity was loaded that defines rigid bodies.\n\n');

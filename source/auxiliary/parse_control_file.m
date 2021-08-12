@@ -97,9 +97,9 @@ while ischar(tline)
     arg1 = strtrim(char(arguments{1}));
     argument_pointer = 2;
     % allow for block key syntax with colon
-    if arg(1) == ':'
+    if arg1(1) == ':'
         explicit_block_key = true;
-        arg = arg(2:end);
+        arg1 = arg1(2:end);
     else
         explicit_block_key = false;
     end

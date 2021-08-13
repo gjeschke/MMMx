@@ -47,6 +47,8 @@ for module = 1:length(controller)
             failed = isempty(entity); % commands that are essential for further pipeline processing should report failure
         case 'locate'
             module_exceptions = module_locate(controller(module),logfid,entity);
+        case 'enm'
+            [entity,exceptions,failed] = module_enm(controller(module),logfid,entity);
         case 'rigi'
             if ~exist('entity','var')
                 fprintf(logfid,'Error: Rigi requires that an entity was loaded that defines rigid bodies.\n\n');

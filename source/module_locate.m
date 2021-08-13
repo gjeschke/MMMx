@@ -43,6 +43,9 @@ failed = false;
 save_name = 'MMMx_locate.mrc'; % default name for saving output entity
 
 restraints.p_model = 0.5;
+if ~isempty(control.options)
+    restraints.p_model = str2double(control.options{1});
+end
 
 if isempty(logfid)
     logfid = 1;
@@ -50,7 +53,6 @@ end
 
 
 restraints.reference(1).label = '';
-restraints.polyhedron(1).labels{1} = '';
 
 ref_poi = 0;
 % read restraints

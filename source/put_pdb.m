@@ -15,7 +15,7 @@ function exceptions = put_pdb(entity,fname,options)
 % INPUT
 % entity    entity structure in MMMx:atomic representation
 % fname     file name, '.pdb' is appended if it is missing
-% options   structure controlling what is output, all field are optional
+% options   structure controlling what is output, all fields are optional
 %           .selected  if true, only selected objects are output, defaults
 %                      to false
 %           .chainIDs  renames chains in PDB file as compared to entity,
@@ -230,7 +230,14 @@ for kconf = 1:length(conformer_order)
                                 else
                                     info.charge = [];
                                 end
+                                loc_str = entity.(chain).(residue).locations;
+                                if loc_str(1) == ' ' && length(loc_str) > 1
+                                    loc_str = loc_str(2:end);
+                                end
                                 for kl = 1:length(rot_indices) % expand over all rotamers/locations
+                                    if length(entity.(chain).(residue).(atom).tab_indices) < kl
+                                        continue
+                                    end
                                     indices(5) = rot_indices(kl); % set current rotamer index
                                     atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
                                     if length(entity.populations) > 1
@@ -239,6 +246,7 @@ for kconf = 1:length(conformer_order)
                                         end
                                         atom_index = entity.(chain).(residue).(atom).tab_indices(indices(4));
                                     end
+                                    info.loc = loc_str(kl);
                                     atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                 end
                             end
@@ -289,6 +297,10 @@ for kconf = 1:length(conformer_order)
                                     else
                                         info.charge = [];
                                     end
+                                    loc_str = entity.(chain).(residue).locations;
+                                    if loc_str(1) == ' ' && length(loc_str) > 1
+                                        loc_str = loc_str(2:end);
+                                    end
                                     for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                         indices(:,5) = rot_indices(kl); % set current rotamer index
                                         atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
@@ -298,6 +310,7 @@ for kconf = 1:length(conformer_order)
                                             end
                                             atom_index = entity.(chain).(residue).(atom).tab_indices(indices(4));
                                         end
+                                        info.loc = loc_str(kl);
                                         atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                     end
                                 end
@@ -333,6 +346,10 @@ for kconf = 1:length(conformer_order)
                                         else
                                             info.charge = [];
                                         end
+                                        loc_str = entity.(chain).(residue).locations;
+                                        if loc_str(1) == ' ' && length(loc_str) > 1
+                                            loc_str = loc_str(2:end);
+                                        end
                                         for kl = 1:length(rot_indices) % expand over all rotamers/locations
                                             indices(5) = rot_indices(kl); % set current rotamer index
                                             atom_index = entity.(chain).(residue).(atom).tab_indices(kl);
@@ -342,6 +359,7 @@ for kconf = 1:length(conformer_order)
                                                 end
                                                 atom_index = entity.(chain).(residue).(atom).tab_indices(indices(4));
                                             end
+                                            info.loc = loc_str(kl);
                                             atnum = wr_pdb_line(fid,entity,atom_index,info,atnum);
                                         end
                                     end
@@ -407,8 +425,8 @@ if ~isempty(atom_index)
     else
         atnum_str = '*****';
     end
-    pdbline = sprintf('%s%s%5s%4s%2s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s',...
-        pad(info.atomtype,6),atnum_str,info.atname,info.resname,info.cid,...
+    pdbline = sprintf('%s%s%5s%s%3s%2s%4i%12.3f%8.3f%8.3f%6.2f%6.2f%12s%2s',...
+        pad(info.atomtype,6),atnum_str,info.atname,info.loc,info.resname,info.cid,...
         info.resnum,xyz(1),xyz(2),xyz(3),occ,info.bfactor,info.element,chg);
     fprintf(fid,'%s\n',pdbline);
 end

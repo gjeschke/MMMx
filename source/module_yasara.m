@@ -124,9 +124,9 @@ for c = 1:length(file_list)
     % read Yasara result into current entity, if output is requested
     if nargout > 0 && isempty(exceptions{1})
         if ~contains(fname,'.pdb')
-            fname = strcat(fname,'.pdb');
+            fname1 = strcat(fname,'.pdb');
         end
-        if ~exist(fname,'file')
+        if ~exist(fname1,'file')
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_yasara:no_result',...
                 'ERROR: Yasara computation failed.');

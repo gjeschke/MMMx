@@ -134,3 +134,4 @@ switch ENM_param.parametrization
         ENM_param.p_connect=2;
         ENM_param.C_cart=6*kcal2kJ;
 end
+

@@ -27,6 +27,7 @@ function [entity,exceptions,failed] = module_enm(control,logfid,entity)
 %
 % getpdb        load PDB file as template entity
 % ensemble      number of target conformers in a thermal ensemble
+% remove        removes a residue from the input entity
 % chains        chains in the input entity that should be included in the
 %               model, defaults to all chains
 % save          basis file name for saving target conformers
@@ -74,12 +75,18 @@ restraints.chains = '*';
 
 ddr_poi = 0;
 drag_poi = 0;
+rm_poi = 0;
+removal = cell(1,100);
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case 'getpdb'
             entity = get_pdb(control.directives(d).options{1});
         case 'save'
+            save_name = control.directives(d).options{1};
+        case 'remove'
+            rm_poi = rm_poi + 1;
+            removal{rm_poi} = control.directives(d).options{1};
             save_name = control.directives(d).options{1};
         case 'ensemble'
             restraints.ensemble = str2double(control.directives(d).options{1});
@@ -163,6 +170,11 @@ for d = 1:length(control.directives)
             record_exception(exceptions{warnings},logfid);
 
     end
+end
+
+for k = 1:rm_poi
+    [ctag,rtag] = split_address(removal{k});
+    entity.(ctag) = rmfield(entity.(ctag),rtag);
 end
 
 [spath,sfile,~] = fileparts(save_name);
@@ -353,9 +365,9 @@ colors = parula(esize);
 max_rmsd = 0;
 max_it = 0;
 for k = 1:esize % loop for generating an ensemble
-    if restraints.uncertainty > 0 % add random deviations to distance constraints
+    if esize > 1 % add random deviations to distance constraints
         for kd = 1:length(ddr)
-            ddr(kd).r = ddr0(kd).r + restraints.uncertainty*randn;
+            ddr(kd).r = ddr0(kd).r + ddr0(kd).sigr*randn;
         end
     end
     options.color = colors(k,:);
@@ -450,4 +462,10 @@ for kblock = 1:length(restraints.ddr)
     end
 end
 
+function [ctag,rtag] = split_address(address)
+
+p1 = strfind(address,'(');
+p2 = strfind(address,')');
+ctag = address(p1+1:p2-1);
+rtag = strcat('R',address(p2+1:end));
 

@@ -129,6 +129,14 @@ if ~isempty(entity)
 end
 old_resname = 'HOH'; % avoid location entry for water residues
 offset = 0; % residue number offset to avoid negative residue numbers
+% initialize information on modified residues
+modres(1000).actual = '';
+modres(1000).clear_name = '';
+modres(1000).native = '';
+modres(1000).chain = '';
+modres(1000).residue = [];
+modified_residues = 0;
+
 while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
@@ -136,6 +144,14 @@ while 1
     end
     if length(tline) >= 66 && strcmpi(tline(1:6),'HEADER')
         entity.name = tline(63:66);
+    end
+    if length(tline) >= 30 && strcmpi(tline(1:6),'MODRES')
+        modified_residues = modified_residues + 1;
+        modres(modified_residues).actual = tline(13:15);
+        modres(modified_residues).clear_name = strtrim(tline(30:end));
+        modres(modified_residues).native = tline(25:27); 
+        modres(modified_residues).chain = tline(17); 
+        modres(modified_residues).residue = str2double(tline(18:22)); 
     end
     if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL')
         if length(tline) < 14
@@ -323,6 +339,11 @@ end
 if isfield(options,'name') && ~isempty(options.name)
     entity.name = options.name;
 end
+
+% add information on modified resisues
+modres = modres(1:modified_residues);
+entity.modres = modres;
+
 
 % close the PDB file
 try

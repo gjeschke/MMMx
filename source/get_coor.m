@@ -1,4 +1,4 @@
-function [coor,indices,exceptions,elements] = get_coor(entity,address,heavy,paradigm)
+function [coor,indices,elements,exceptions] = get_coor(entity,address,heavy,paradigm)
 %
 % GET_COOR Retrieves atom location coordinates for selected objects 
 %

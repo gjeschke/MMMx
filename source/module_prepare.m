@@ -26,6 +26,7 @@ function [entity,exceptions,failed] = module_prepare(control,logfid,entity)
 %
 % getpdb        load PDB file, several files can be loaded and named
 % center        center a structure, also with respect to part of it
+% renumber      renumber residues in a chain
 % symmetry      put structure into (pseudo)-symmetry frame
 % bilayer       determine optimal lipid bilayer plane and thickness,
 %               (optional) transformation of structure into bilayer frame
@@ -34,8 +35,6 @@ function [entity,exceptions,failed] = module_prepare(control,logfid,entity)
 % chains        restrict an entity to only selected chains
 % conformer     restrict an entity to one of its conformers
 % remove        remove residues from an entity
-% sidechains    [requires SCWRL4] replace non-native side chains by native
-%               equivalents, or add, or repack, or repair side chains
 % superimpose   superimpose one structure onto another one
 % replace       replace a chain in one structure by a chain of another
 %               structure
@@ -84,6 +83,7 @@ for d = 1:length(control.directives)
                 entity_descriptor.name = sprintf('E%i',entity_poi);
             end
             entity_descriptor.entity = get_pdb(cmd.input); % load the entity
+            entity_descriptor.conformer = conformer;
             entities{entity_poi} = entity_descriptor;
             commands{cmd_poi} = cmd;
         case 'center'
@@ -94,6 +94,16 @@ for d = 1:length(control.directives)
             end
             if length(control.directives(d).options) > 1 % a selected entity is centered
                 cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % the current entity is centered
+            end
+            commands{cmd_poi} = cmd;
+        case 'renumber'
+            cmd_poi = cmd_poi + 1;
+            cmd.address = strip(control.directives(d).options{1}); 
+            cmd.shift = str2double(control.directives(d).options{2}); % default is the whole structure
+            if length(control.directives(d).options) > 2 % a selected entity is centered
+                cmd.entity = control.directives(d).options{3};
             else
                 cmd.entity = '.'; % the current entity is centered
             end
@@ -120,14 +130,15 @@ for d = 1:length(control.directives)
             commands{cmd_poi} = cmd;
         case 'bilayer'
             cmd_poi = cmd_poi + 1;
+            cmd.type = control.directives(d).options{1};
             cmd.transform = false; % by default, coordinates are not transformed
             if ~isempty(control.directives(d).options)...
-                    && ~isempty(control.directives(d).options{1})...
-                    && strcmpi(control.directives(d).options{1},'transform')
+                    && ~isempty(control.directives(d).options{2})...
+                    && strcmpi(control.directives(d).options{2},'transform')
                 cmd.transform = true;
             end
-            if length(control.directives(d).options) > 1 % bilayer computation for a selected entity
-                cmd.entity = control.directives(d).options{2};
+            if length(control.directives(d).options) > 2 % bilayer computation for a selected entity
+                cmd.entity = control.directives(d).options{3};
             else
                 cmd.entity = '.'; % bilayer is computed for current entity
             end
@@ -152,47 +163,40 @@ for d = 1:length(control.directives)
             commands{cmd_poi} = cmd;
         case 'chains'
             cmd_poi = cmd_poi + 1;
-            cmd.chains = char(zeros(1,length(control.directives(d).options)));
-            for k = 1:length(control.directives(d).options)
-                cmd.chains(k) = control.directives(d).options{k}(1);
+            all_chains = char(zeros(1,length(control.directives(d).options{1})));
+            chains = control.directives(d).options{1};
+            cpoi = strfind(chains,')');
+            chains = chains(1:cpoi-1);
+            cpoi = 0;
+            for k = 1:length(chains)
+                if isstrprop(chains(k),'upper')
+                    cpoi = cpoi + 1;
+                    all_chains(cpoi) = chains(k);
+                end
+            end
+            cmd.chains = all_chains(1:cpoi);
+            if length(control.directives(d).options) > 1
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.';
             end
             commands{cmd_poi} = cmd;
         case 'conformer'
             cmd_poi = cmd_poi + 1;
-            cmd.conformer = round(str2double(control.directives(d).options{1}));
+            cmd.conformer = round(str2double(control.directives(d).options{1})); 
+            if length(control.directives(d).options) > 1
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.';
+            end
             commands{cmd_poi} = cmd;
         case 'remove'
             cmd_poi = cmd_poi + 1;
-            cmd.remove = cell(1,length(control.directives(d).options));
-            for k = 1:length(control.directives(d).options)
-                cmd.remove{k} = control.directives(d).options{k};
-            end
-            commands{cmd_poi} = cmd;
-        case 'sidechains'
-            cmd_poi = cmd_poi + 1;
-            cmd.mode = 'repack'; % by default, all sidechains are reoptimized
-            cmd.modres = false; % by default, replace applies to all non-native residues
-            for k = 1:length(control.directives(d).options)
-                switch control.directives(d).options{k}
-                    case 'replace'
-                        cmd.mode = 'replace';
-                    case 'repack'
-                        cmd.mode = 'repack';
-                    case 'repair'
-                        cmd.mode = 'repair';
-                    case 'modres'
-                        cmd.modres = true; % apply replace only to residues with MODRES record
-                end
-            end
-            if strcmp(cmd.mode,'repair') % repair mode allows for selections
-                [n,~] = size(control.directives(d).block);
-                cmd.selected = cell(1,n);
-                % extract chains, residues, maximum distances
-                for k = 1:n
-                    cmd.selected{k} = control.directives(d).block{k,1};
-                end
+            cmd.remove = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1
+                cmd.entity = control.directives(d).options{2};
             else
-                cmd.selected = {};
+                cmd.entity = '.';
             end
             commands{cmd_poi} = cmd;
         case 'superimpose'
@@ -227,10 +231,10 @@ for d = 1:length(control.directives)
             cmd_poi = cmd_poi + 1;
             split_argument = split(control.directives(d).options{1},'.');
             cmd.original = split_argument{1};
-            cmd.original_chain = split_argument{2};
+            cmd.original_chain = strip(split_argument{2});
             split_argument = split(control.directives(d).options{2},'.');
             cmd.substitute = split_argument{1};
-            cmd.substitute_chain = split_argument{2};
+            cmd.substitute_chain = strip(split_argument{2});
             commands{cmd_poi} = cmd;
         otherwise
             warnings = warnings + 1;
@@ -245,7 +249,6 @@ commands = commands(1:cmd_poi);
 
 fprintf(logfid,'\n%i commands will be executed on %i structures\n\n',cmd_poi,entity_poi);
 
-entity_poi = 0;
 entity_name = 'input';
 
 % run the command list
@@ -297,7 +300,7 @@ for c = 1:cmd_poi
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
             else
-                c_entity = get_entity(cmd.entity,entities,logfid);
+                [c_entity,conformer] = get_entity(cmd.entity,entities,logfid);
                 if isempty(c_entity)
                     warnings = warnings + 1;
                     exceptions{warnings} = MException('module_prepare:entity_unknown',...
@@ -347,6 +350,35 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             entities = put_entity(cmd.entity,c_entity,entities);
+        case 'bilayer'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                [c_entity,conformer] = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to compute bilayer for entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+                entity_name = cmd.entity;
+            end
+            [entity1,error] = bilayer_model(c_entity,conformer,cmd.type,logfid);
+            if ~isempty(error)
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_prepare:bilayer_not_computed',...
+                    'bilayer could bot be computed: %s',error);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            if cmd.transform
+                c_entity = entity1;
+                if strcmp(cmd.entity,'.')
+                    entity = c_entity;
+                end
+                entities = put_entity(cmd.entity,c_entity,entities);
+            end
         case 'save'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -368,12 +400,122 @@ for c = 1:cmd_poi
                 save_options.pdbid = cmd.pdbid;
                 put_pdb(c_entity,cmd.output,save_options);
             end
+        case 'chains'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to set conformer of entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            for k = 1:length(cmd.chains)
+                address = sprintf('(%s)',cmd.chains(k));
+                if k == 1
+                    % overwrite old selection in entity, if any
+                    [c_entity,exceptions] = select(c_entity,address,true);
+                else
+                    [c_entity,exceptions] = select(c_entity,address);
+                end
+            end
+            save_options.selected = true;
+            save_options.bfactor = true;
+            save_options.pdbid = c_entity.name(1:4);
+            put_pdb(c_entity,'temp.pdb',save_options);
+            % reload template PDB, a bit inefficient, but safe
+            c_entity = get_pdb('temp.pdb');
+            delete('temp.pdb');
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);            
+        case 'conformer'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to set conformer of entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            c_entity.conformer = cmd.conformer;
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);
+        case 'replace'
+            if strcmp(cmd.original,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.original,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to do substitution in entity %s, which is unknown',cmd.original);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            if strcmp(cmd.substitute,'.')
+                s_entity = entity;
+            else
+                s_entity = get_entity(cmd.substitute,entities,logfid);
+                if isempty(s_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to extract chain for substitution from entity %s, which is unknown',cmd.substitute);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            c_entity.(cmd.original_chain) = s_entity.(cmd.substitute_chain);
+            [c_nat,~] = size(c_entity.xyz);
+            c_entity.xyz = [c_entity.xyz; s_entity.xyz];
+            c_entity.elements = [c_entity.elements, s_entity.elements];
+            c_entity.occupancies = [c_entity.occupancies; s_entity.occupancies];
+            c_entity = update_atom_indices(c_entity,cmd.original_chain,s_entity.(cmd.substitute_chain),c_nat);
+            save_options.selected = false;
+            save_options.bfactor = true;
+            save_options.pdbid = c_entity.name(1:4);
+            put_pdb(c_entity,'temp.pdb',save_options);
+            % reload template PDB, a bit inefficient, but safe
+            c_entity = get_pdb('temp.pdb');
+            delete('temp.pdb');
+            if strcmp(cmd.original,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.original,c_entity,entities);            
+        case 'remove'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to remove residue %s from entity %s, which is unknown',cmd.remove,cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [ctag,rtag] = split_address(cmd.remove);
+            c_entity.(ctag) = rmfield(c_entity.(ctag),rtag);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);            
     end
 end
 
-disp('Aber hallo!');
-
-function entity = get_entity(name,entities,logfid)
+function [entity,conformer] = get_entity(name,entities,logfid)
 
 entity = [];
 e = 0;
@@ -382,6 +524,7 @@ while isempty(entity) && e < length(entities)
     entity_descriptor = entities{e};
     if strcmp(name,entity_descriptor.name)
         entity = entity_descriptor.entity;
+        conformer = entity_descriptor.conformer;
     end
 end
 if isempty(entity)
@@ -398,7 +541,7 @@ while ~found && e < length(entities)
     if strcmp(name,entity_descriptor.name)
         found = true;
         entity_descriptor.entity = entity;
-        entities{e} = entity_descriptor.entity;
+        entities{e} = entity_descriptor;
     end
 end
 
@@ -532,3 +675,40 @@ coor = coor/length(parts);
 function record_exception(exception,logfid)
 
 fprintf(logfid,'### prepare exception: %s ###\n',exception.message);
+
+function [ctag,rtag] = split_address(address)
+
+p1 = strfind(address,'(');
+p2 = strfind(address,')');
+ctag = address(p1+1:p2-1);
+rtag = strcat('R',address(p2+1:end));
+
+function entity = update_atom_indices(entity,chain,s_chain,offset)
+
+residues = fieldnames(entity.(chain));
+for kr = 1:length(residues) % expand over all residues
+    residue = residues{kr};
+    if strcmp(residue(1),'R') % these are residue fields
+        atoms = fieldnames(entity.(chain).(residue));
+        for ka = 1:length(atoms) % expand over all atoms
+            atom = atoms{ka};
+            if isstrprop(atom(1),'upper') % these are atom fields
+                indices = s_chain.(residue).(atom).tab_indices + offset;
+                entity.(chain).(residue).(atom).tab_indices = indices;
+            end
+        end
+    end
+end
+
+function chain = strip(chain_address)
+
+pa = strfind(chain_address,'(');
+if isempty(pa)
+    pa = 0;
+end
+pe = strfind(chain_address,')');
+if isempty(pe)
+    pe = lengtht(chain_address)+1;
+end
+chain = chain_address(pa+1:pe-1);
+

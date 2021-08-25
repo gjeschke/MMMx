@@ -128,7 +128,6 @@ if ~isempty(entity)
     populations(1:conformers) = entity.populations;
 end
 old_resname = 'HOH'; % avoid location entry for water residues
-offset = 0; % residue number offset to avoid negative residue numbers
 % initialize information on modified residues
 modres(1000).actual = '';
 modres(1000).clear_name = '';
@@ -136,6 +135,7 @@ modres(1000).native = '';
 modres(1000).chain = '';
 modres(1000).residue = [];
 modified_residues = 0;
+offset = 0; % residue number offset to avoid negative residue numbers
 
 while 1
     tline = fgetl(fid);
@@ -184,6 +184,7 @@ while 1
         if ~strcmp(chain,curr_chain)
             curr_chain = chain;
             curr_resnum = 0; % current residue number
+            offset = 0; % residue number offset to avoid negative residue numbers
         end
         atoms = atoms + 1;
         atname = strtrim(upper(tline(13:16)));

@@ -45,8 +45,6 @@ elseif isempty(logfid)
     logfid = 3;
 end
 
-energy = 1e10;
-
 maxit = 10; % maximum number of iterations
 
 energy_convergence = 1; % 1 kcal/mol energy convergence criterion

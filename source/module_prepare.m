@@ -24,20 +24,24 @@ function [entity,exceptions,failed] = module_prepare(control,logfid,entity)
 %
 % SUPPORTED DIRECTIVES (an ordered list is processed)
 %
-% getpdb        load PDB file, several files can be loaded and named
-% center        center a structure, also with respect to part of it
-% renumber      renumber residues in a chain
-% symmetry      put structure into (pseudo)-symmetry frame
 % bilayer       determine optimal lipid bilayer plane and thickness,
-%               (optional) transformation of structure into bilayer frame
-% save          save one of the loaded entities (by default the current
-%               entity)
+% center        center a structure, also with respect to part of it
 % chains        restrict an entity to only selected chains
 % conformer     restrict an entity to one of its conformers
+% deselenate    replaces selenocysteine and selenomethionine by their
+%               equivalents cysteine and methionine  
+% getpdb        load PDB file, several files can be loaded and named
 % remove        remove residues from an entity
-% superimpose   superimpose one structure onto another one
+% renumber      renumber residues in a chain
+% repack        repack all sidechains using SCWRL4
+% repair        repair incomplete sidechains by replacing them with SCWRL4
 % replace       replace a chain in one structure by a chain of another
 %               structure
+% save          save one of the loaded entities (by default the current
+%               entity)
+% superimpose   superimpose one structure onto another one
+% symmetry      put structure into (pseudo)-symmetry frame
+%               (optional) transformation of structure into bilayer frame
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -67,7 +71,7 @@ entities = cell(1,100); % entity list
 
 cmd_poi = 0; % command pointer
 entity_poi = 0; % entity pointer
-% read restraints
+% reorganize command line arguments
 for d = 1:length(control.directives)
     clear cmd
     cmd.name = lower(control.directives(d).name);
@@ -96,6 +100,30 @@ for d = 1:length(control.directives)
                 cmd.entity = control.directives(d).options{2};
             else
                 cmd.entity = '.'; % the current entity is centered
+            end
+            commands{cmd_poi} = cmd;
+        case 'deselenate'
+            cmd_poi = cmd_poi + 1;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1}) % a selected entity is deselenated
+                cmd.entity = control.directives(d).options{1};
+            else
+                cmd.entity = '.'; % the current entity is centered
+            end
+            commands{cmd_poi} = cmd;
+        case 'repair'
+            cmd_poi = cmd_poi + 1;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1}) % a selected entity is deselenated
+                cmd.entity = control.directives(d).options{1};
+            else
+                cmd.entity = '.'; % the current entity is repaired
+            end
+            commands{cmd_poi} = cmd;
+        case 'repack'
+            cmd_poi = cmd_poi + 1;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1}) % a selected entity is deselenated
+                cmd.entity = control.directives(d).options{1};
+            else
+                cmd.entity = '.'; % the current entity is repacked
             end
             commands{cmd_poi} = cmd;
         case 'renumber'
@@ -289,6 +317,26 @@ for c = 1:cmd_poi
             coor = c_entity.xyz;
             [n_atoms,~] = size(coor);
             c_entity.xyz = coor - repmat(center,n_atoms,1);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);
+        case 'deselenate'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to deselenate entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+                entity_name = cmd.entity;
+            end
+            [c_entity,num_Se] = deselenate(c_entity);
+            fprintf(logfid,'\n%i selenium atoms were replaced by sulfur and bond lengths were corrected\n',num_Se);
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end
@@ -567,35 +615,49 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            correspondence = get_correspondence(c_entity,c_conformer,cmd.moving_address,t_entity,t_conformer,cmd.template_address,cmd.mode,cmd.selection);
-            [nat,~] = size(correspondence);
-            if nat == 0
-                warnings = warnings + 1;
-                exceptions{warnings} = MException('module_prepare:no_match',...
-                    'superposition failed because no matching atoms are addressed');
-                record_exception(exceptions{warnings},logfid);
-                return
-            end
-            if nat < 3
-                warnings = warnings + 1;
-                exceptions{warnings} = MException('module_prepare:to_few_atoms',...
-                    'superposition failed because only %i atoms match between selections',nat);
-                record_exception(exceptions{warnings},logfid);
-                return
-            end
-            coor1 = c_entity.xyz(correspondence(:,1),:); % this is the moving entity
-            coor2 = t_entity.xyz(correspondence(:,2),:); % this is the template entity
-            if nat == 3
-                [rmsd,~,transmat] = superimpose_3points(coor2,coor1);
-            else
-                [rmsd,~,transmat] = rmsd_superimpose(coor2,coor1);
-            end
-            c_entity.xyz = affine_coor_set(c_entity.xyz,transmat);
-            fprintf(logfid,'\nSuperposition of %i atoms with rmsd of %4.1f %s succeeded\n',nat,rmsd,char(197));
+            c_entity = superimpose_entity(logfid,c_entity,c_conformer,cmd.moving_address,t_entity,t_conformer,cmd.template_address,cmd.mode,cmd.selection);
             if strcmp(cmd.moving,'.')
                 entity = c_entity;
             end
-            entities = put_entity(cmd.moving,c_entity,entities);     
+            entities = put_entity(cmd.moving,c_entity,entities);  
+        case 'repair'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to repair sidechains in entity %s, which is unknown',cmd.remove,cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [c_entity,repaired] = repair_sidechains(c_entity);
+            fprintf(logfid,'%i sidechains were repaired in entity %s\n',repaired,cmd.entity);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);     
+        case 'repack'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to repack sidechains in entity %s, which is unknown',cmd.remove,cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [c_entity,repaired] = repair_sidechains(c_entity,true);
+            fprintf(logfid,'%i sidechains were repacked in entity %s\n',repaired,cmd.entity);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);     
     end
 end
 
@@ -796,9 +858,7 @@ if isempty(pe)
 end
 chain = chain_address(pa+1:pe-1);
 
-function correspondence = get_correspondence(entity1,conformer1,address1,entity2,conformer2,address2,mode,selection)
-
-correspondence = [];
+function entity1 = superimpose_entity(logfid,entity1,conformer1,address1,entity2,conformer2,address2,mode,selection)
 
 peptide_backbone = {'N','CA','C','O'};
 nucleotide_backbone = {'P','O5_','C5_','C4_','C3_','O3_'};
@@ -824,6 +884,7 @@ switch mode
 end
 
 if length(chains1) ~= length(chains2) % number of addressed chains must match, otherwise correspondence cannot be established
+    fprintf(logfid,'\nSuperposition failed because %i chains were addressed in template and %i chains in the moving entity\n',length(chains2),length(chains1));
     return
 end
 
@@ -834,58 +895,60 @@ if length(conformers1) > 1 && length(conformers2) == 1
 end
 
 if length(conformers1) ~= length(conformers2) % number of addressed conformers must match
+    fprintf(logfid,'\nSuperposition failed because %i conformers were addressed in template and %i conformers in the moving entity\n',length(conformers2),length(conformers1));
     return
 end
 
-correspondence = zeros(50000,3);
-corr_poi = 0;
-% loop over all chain pairs
-for c = 1:length(chains1)
-    chain1 = chains1(c);
-    chain2 = chains2(c);
-    % if mode is align, we now need to align the two sequences
-    if strcmpi(selection(1:5),'align')
-        residue_correspondence = align_in_entity(entity1,chain1,entity2,chain2);
-    else
-        if length(residues1) ~= length(residues2) % without alignment, both residue ranges must have the same length
-            return
+for conf = 1:length(conformers1)
+    
+    correspondence = zeros(50000,3);
+    corr_poi = 0;
+    % loop over all chain pairs
+    for c = 1:length(chains1)
+        chain1 = chains1(c);
+        chain2 = chains2(c);
+        % if mode is align, we now need to align the two sequences
+        if strcmpi(selection(1:5),'align')
+            residue_correspondence = align_in_entity(entity1,chain1,entity2,chain2);
         else
-            residue_correspondence = [residues1' residues2'];
-        end
-    end
-    residues = fieldnames(entity1.(chain1));
-    for kr = 1:length(residues) % expand over all residues
-        residue1 = residues{kr};
-        if strcmp(residue1(1),'R') % these are residue fields
-            if strcmpi(mode,'backbone') % for backbone mode, get correct atom lists
-                slc = tlc2slc(entity1.(chain1).(residue1).name); % check whether residue is an amino acid
-                if ~isempty(slc)
-                    atoms1 = peptide_backbone;
-                    atoms2 = peptide_backbone;
-                else % otherwise assume that it is a nucleic acid
-                    atoms1 = nucleotide_backbone;
-                    atoms2 = nucleotide_backbone;
-                end
+            if length(residues1) ~= length(residues2) % without alignment, both residue ranges must have the same length
+                return
+            else
+                residue_correspondence = [residues1' residues2'];
             end
-            resnum1 = str2double(residue1(2:end));
-            resnum2 = residue_correspondence(residue_correspondence(:,1) == resnum1,2);
-            residue2 = sprintf('R%i',resnum2);
-            if isfield(entity2.(chain2),residue2) % check whether residue exists
-                % check whether the two residues have the same type
-                match = strcmpi(entity1.(chain1).(residue1).name,entity2.(chain2).(residue2).name);
-                % correspondence is signalled if the residue types match or strict alignment is not requested 
-                if match || ~strcmpi(selection,'align!')
-                    atoms = fieldnames(entity1.(chain1).(residue1));
-                    for ka = 1:length(atoms) % expand over all atoms
-                        atom = atoms{ka};
-                        if isstrprop(atom(1),'upper') % these are atom fields
-                            % check if this is an adressed atom
-                            match_atom = any(strcmp(atoms1,atom)) & any(strcmp(atoms2,atom));
-                            % if atm is selected or there is no atom
-                            % selection at all
-                            if match_atom || (isempty(atoms1) && isempty(atoms2))
-                                if isfield(entity2.(chain2).(residue2),atom) % check that it indeed exists in second entity
-                                    for conf = 1:length(conformers1)
+        end
+        residues = fieldnames(entity1.(chain1));
+        for kr = 1:length(residues) % expand over all residues
+            residue1 = residues{kr};
+            if strcmp(residue1(1),'R') % these are residue fields
+                if strcmpi(mode,'backbone') % for backbone mode, get correct atom lists
+                    slc = tlc2slc(entity1.(chain1).(residue1).name); % check whether residue is an amino acid
+                    if ~isempty(slc)
+                        atoms1 = peptide_backbone;
+                        atoms2 = peptide_backbone;
+                    else % otherwise assume that it is a nucleic acid
+                        atoms1 = nucleotide_backbone;
+                        atoms2 = nucleotide_backbone;
+                    end
+                end
+                resnum1 = str2double(residue1(2:end));
+                resnum2 = residue_correspondence(residue_correspondence(:,1) == resnum1,2);
+                residue2 = sprintf('R%i',resnum2);
+                if isfield(entity2.(chain2),residue2) % check whether residue exists
+                    % check whether the two residues have the same type
+                    match = strcmpi(entity1.(chain1).(residue1).name,entity2.(chain2).(residue2).name);
+                    % correspondence is signalled if the residue types match or strict alignment is not requested
+                    if match || ~strcmpi(selection,'align!')
+                        atoms = fieldnames(entity1.(chain1).(residue1));
+                        for ka = 1:length(atoms) % expand over all atoms
+                            atom = atoms{ka};
+                            if isstrprop(atom(1),'upper') % these are atom fields
+                                % check if this is an adressed atom
+                                match_atom = any(strcmp(atoms1,atom)) & any(strcmp(atoms2,atom));
+                                % if atm is selected or there is no atom
+                                % selection at all
+                                if match_atom || (isempty(atoms1) && isempty(atoms2))
+                                    if isfield(entity2.(chain2).(residue2),atom) % check that it indeed exists in second entity
                                         corr_poi = corr_poi + 1;
                                         correspondence(corr_poi,1) = entity1.(chain1).(residue1).(atom).tab_indices(conformers1(conf));
                                         correspondence(corr_poi,2) = entity2.(chain2).(residue2).(atom).tab_indices(conformers2(conf));
@@ -898,6 +961,25 @@ for c = 1:length(chains1)
             end
         end
     end
+    
+    correspondence = correspondence(1:corr_poi,:);
+    
+    if corr_poi == 0
+        fprintf(logfid,'\nSuperposition failed because no matching atoms were found\n');
+        return
+    end
+    if corr_poi < 3
+        return
+    end
+    coor1 = entity1.xyz(correspondence(:,1),:); % this is the moving entity
+    coor2 = entity2.xyz(correspondence(:,2),:); % this is the template entity
+    if corr_poi == 3
+        [rmsd,~,transmat] = superimpose_3points(coor2,coor1);
+    else
+        [rmsd,~,transmat] = rmsd_superimpose(coor2,coor1);
+    end
+    xyz = entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:);
+    xyz = affine_coor_set(xyz,transmat);
+    entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:) = xyz;
+    fprintf(logfid,'\nSuperposition of %i atoms in conformer %i with rmsd of %4.1f %s succeeded\n',corr_poi,conformers1(conf),rmsd,char(197));
 end
-
-correspondence = correspondence(1:corr_poi,:);

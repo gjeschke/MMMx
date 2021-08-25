@@ -37,6 +37,10 @@ function exceptions = put_pdb(entity,fname,options)
 %                      to the first four characters of entity.name, 
 %                      if entity.name is empty or shorter, it is MMMX
 %                      the orginal entity name is written as REMARK 400
+%           .hetframe  flag, if true, write out only HETATM records for
+%                      SCWRL4 heteroatom frame, defaults to false
+%           .cleaned   flag, if true, write out residues without side 
+%                      chains for SCWRL4 repacking, defaults to false 
 %
 % OUTPUT
 % exceptions   error message if something went wrong, cell containing an 
@@ -71,6 +75,14 @@ end
 
 if ~isfield(options,'charge') || isempty(options.charge)
     options.charge = false;
+end
+
+if ~isfield(options,'hetframe') || isempty(options.hetframe)
+    options.hetframe = false;
+end
+
+if ~isfield(options,'cleaned') || isempty(options.cleaned)
+    options.cleaned = false;
 end
 
 if ~isfield(options,'bfactor') || isempty(options.bfactor)
@@ -192,6 +204,12 @@ for kconf = 1:length(conformer_order)
                         info.resnum = str2double(residue(2:end));
                         info.resname = entity.(chain).(residue).name;
                         info.atomtype = get_atom_type(entity.(chain).(residue).name,biomer);
+                        if options.hetframe && strcmp(info.atomtype,'ATOM')
+                            continue;
+                        end
+                        if options.cleaned && strcmp(info.atomtype,'HETATM')
+                            continue;
+                        end
                         rot_indices = 1:length(entity.(chain).(residue).locations);
                         % rotamers overrule locations
                         if length(entity.(chain).(residue).populations) > 1
@@ -261,6 +279,12 @@ for kconf = 1:length(conformer_order)
                         info.resnum = str2double(residue(2:end));
                         info.resname = entity.(chain).(residue).name;
                         info.atomtype = get_atom_type(entity.(chain).(residue).name,biomer);
+                        if options.hetframe && strcmp(info.atomtype,'ATOM')
+                            continue;
+                        end
+                        if options.cleaned && strcmp(info.atomtype,'HETATM')
+                            continue;
+                        end
                         rot_indices = 1:length(entity.(chain).(residue).locations);
                         % rotamers overrule locations
                         if length(entity.(chain).(residue).populations) > 1
@@ -431,24 +455,6 @@ if ~isempty(atom_index)
     fprintf(fid,'%s\n',pdbline);
 end
 
-function index = get_atom_index(indices,index_array)
-
-[m,~] = size(index_array);
-all_indices = 1:m;
-sel1 = index_array(:,4) == indices(4);
-index_array = index_array(sel1,:);
-all_indices = all_indices(sel1);
-sel2 = index_array(:,1) == indices(1);
-index_array = index_array(sel2,:);
-all_indices = all_indices(sel2);
-sel3 = index_array(:,2) == indices(2);
-index_array = index_array(sel3,:);
-all_indices = all_indices(sel3);
-sel4 = index_array(:,3) == indices(3);
-index_array = index_array(sel4,:);
-all_indices = all_indices(sel4);
-sel5 = index_array(:,5) == indices(5);
-index = all_indices(sel5);
 
 function residue_sorting = sort_residues(residues)
 % sorts residue field names in acsending order
@@ -467,3 +473,9 @@ for kr = 1:length(residues)
 end
 [~,residue_sorting] = sort(sorter);
 residue_sorting = residue_sorting(1:true_residues);
+
+function flag = is_backbone(atom_tag)
+
+peptide_backbone = {'N','CA','C','O'};
+
+flag = any(strcmp(peptide_backbone,atom_tag));

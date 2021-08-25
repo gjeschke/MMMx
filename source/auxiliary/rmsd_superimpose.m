@@ -1,6 +1,6 @@
-function [rms,coor2b,transmat,rotmat,trans2]=rmsd_superimpose(coor1,coor2,weights)
+function [rms,coor2b,transmat,rotmat,trans2] = rmsd_superimpose(coor1,coor2,weights)
 %
-% function [rms,coor2b,transmat,rotmat,trans2]=rmsd_superimpose(coor1,coor2,weights)
+% function [rms,coor2b,transmat,rotmat,trans2] = rmsd_superimpose(coor1,coor2,weights)
 %
 % Least square fitting of two sets of atomic position vectors according to
 % A. D. McLachlan, J. Mol. Biol. 1979, 128, 49-79 "Gene Duplications in the

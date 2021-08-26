@@ -1,17 +1,23 @@
-function [entity,repaired] = repair_sidechains(entity,force)
-%  entity = REPAIR_SIDECHAINS(entity,force)
-%    Repairs sidechains with missing atoms using SCWRL4
+function [entity,modified] = modify_sidechains(entity,force,mutations)
+%  entity = MODIFY_SIDECHAINS(entity,force)
+%    Modify sidechains using SCWRL4
 %
 % INPUT:
 %
-% entity    input entity
-% force     optional flag indicating that all sidechains are replaced, used
+% entity    input entity, if this is the only argument, sidechains with
+%           missing atoms are repaired
+% force     optional flag, if true, all sidechains are replaced, used
 %           for complete repacking
+% mutations optional list of mutations to be performed, cell of strings:
+%           ctag.rtag.slc   ctag    chain tag, such as A
+%                           rtag    residue tag, such as R131
+%                           slc     single-letter amino acid code
+%           example A.R131.H mutates residue 131 in chain A to histidine
 %
 % OUTPUT:
 %
-% entity    entity with repaired sidechains
-% repaired  number of repaired sidechains, returns with -1 if SCWRL4 is not
+% entity    entity with modified sidechains
+% modified  number of modified sidechains, returns with -1 if SCWRL4 is not
 %           found
 %
 
@@ -22,13 +28,18 @@ if ~exist('force','var') || isempty(force)
     force = false;
 end
 
+if ~exist('mutations','var') || isempty(mutations)
+    mutations = {};
+end
+
+
 dospath=which('scwrl4.exe');
 if isempty(dospath)
-    repaired = -1;
+    modified = -1;
     return
 end
 
-repaired = 0;
+modified = 0;
 chains = fieldnames(entity);
 sequence = char(zeros(1,10000));
 seqpoi = 0;
@@ -46,12 +57,21 @@ for ch = 1:length(chains)
                     seqpoi = seqpoi + 1;
                     complete = check_sidechain_integrity(entity.(chain).(residue));
                     if ~complete || force
-                        repaired = repaired + 1;
+                        modified = modified + 1;
                         sequence(seqpoi) = upper(slc);
                         reppoi = reppoi + 1;
                         to_be_replaced{reppoi} = [chain '.' residue];
                     else
                         sequence(seqpoi) = lower(slc);
+                    end
+                    for m = 1:length(mutations)
+                        mutation = split(mutations{m},'.');
+                        if strcmpi(mutation{1},chain) && strcmpi(mutation{2},residue) && ~isempty(mutation{3})
+                            sequence(seqpoi) = upper(mutation{3});
+                            if ~force && complete
+                                modified = modified + 1;
+                            end
+                        end
                     end
                 end
             end
@@ -75,7 +95,7 @@ fclose(fid);
 comd=[dospath ' -i ' infile ' -o ' outfile ' -f ' framefile ' -s ' seqfile ' -h -t'];
 [s, ~] = dos(comd);
 if s~=0 
-    repaired = -1;
+    modified = -1;
     return
 end
 entity2 = get_pdb(outfile);
@@ -107,7 +127,7 @@ end
 entity.xyz = xyz(1:nat,:);
 entity.elements = elm(1:nat);
 entity.occupancies = occ(1:nat);
-outfile = fullfile(pwd,'SCWRL4_repaired.pdb');
+outfile = fullfile(pwd,'SCWRL4_modified.pdb');
 put_pdb(entity,outfile);
 entity = get_pdb(outfile);
 delete(outfile);

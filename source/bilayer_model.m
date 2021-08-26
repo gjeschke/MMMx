@@ -90,6 +90,7 @@ it = 0;
 converged = false;
 bilayer0 = bilayer;
 while it < maxit && ~converged
+    it = it + 1;
     [bilayer,energy] = fit_bilayer(entity,conformer,TM_addresses,propensities,accessibility,bilayer0);
     
     fprintf(logfid,'Iteration %i. Immersion free energy is %6.1f kcal/mol\n',it,energy);
@@ -214,7 +215,7 @@ fclose(fid);
 msmsfile = 'msms_tmp';
 msmsfile = fullfile(pwd,msmsfile);
 cmd=[dospath ' -if ' outfile ' -of ' msmsfile dstring radstr];
-s = dos(cmd);
+[s,~] = dos(cmd);
 if s ~= 0
     error = 'MSMS computation of solvent-accessible surface failed';
     access = [];

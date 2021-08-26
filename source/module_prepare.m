@@ -156,6 +156,34 @@ for d = 1:length(control.directives)
                 cmd.parts{k} = control.directives(d).block{k,1};
             end
             commands{cmd_poi} = cmd;
+        case 'mutate'
+            cmd_poi = cmd_poi + 1;
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
+                cmd.entity = control.directives(d).options{1};
+            else
+                cmd.entity = '.'; % mutation is performed in current entity
+            end
+            [n,~] = size(control.directives(d).block);
+            cmd.mutations = cell(1,n);
+            % store selections in the n symmetry-equivalent parts
+            for k = 1:n
+                address = control.directives(d).block{k,1};
+                [ctag,rtag] = split_chain_residue(address);
+                new_aa = control.directives(d).block{k,2};
+                if length(new_aa) == 3
+                    slc = tlc2slc(new_aa);
+                elseif length(new_aa) == 1
+                    slc = upper(new_aa);
+                else
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:unknown_residue',...
+                        'mutation to %s is ignored (not a valid amino acid identifier)',new_aa);
+                    record_exception(exceptions{warnings},logfid); 
+                    slc = '';
+                end
+                cmd.mutations{k} = sprintf('%s.%s.%s',ctag,rtag,slc);
+            end
+            commands{cmd_poi} = cmd;        
         case 'bilayer'
             cmd_poi = cmd_poi + 1;
             cmd.type = control.directives(d).options{1};
@@ -633,7 +661,7 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            [c_entity,repaired] = repair_sidechains(c_entity);
+            [c_entity,repaired] = modify_sidechains(c_entity);
             fprintf(logfid,'%i sidechains were repaired in entity %s\n',repaired,cmd.entity);
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
@@ -652,8 +680,27 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            [c_entity,repaired] = repair_sidechains(c_entity,true);
-            fprintf(logfid,'%i sidechains were repacked in entity %s\n',repaired,cmd.entity);
+            [c_entity,repacked] = modify_sidechains(c_entity,true);
+            fprintf(logfid,'%i sidechains were repacked in entity %s\n',repacked,cmd.entity);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            entities = put_entity(cmd.entity,c_entity,entities);     
+        case 'mutate'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = get_entity(cmd.entity,entities,logfid);
+                if isempty(c_entity)
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                        'tried to mutate in entity %s, which is unknown',cmd.remove,cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [c_entity,mutated] = modify_sidechains(c_entity,false,cmd.mutations);
+            fprintf(logfid,'%i sidechains were mutated in entity %s\n',mutated,cmd.entity);
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end

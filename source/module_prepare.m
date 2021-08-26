@@ -14,7 +14,7 @@ function [entity,exceptions,failed] = module_prepare(control,logfid,entity)
 %               .directives     array of struct with directives
 %               .entity_output  number of the entity to be output
 % logfid        file handle for log file, defaults to console output
-% entity        input entity, defines rigid-body coordinates, must exist
+% entity        input entity, can be missing if a getpdb directive exists
 %
 % OUTPUT
 % entity        output entity

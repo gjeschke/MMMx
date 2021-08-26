@@ -176,7 +176,7 @@ for d = 1:length(control.directives)
                 restraints.ddr(ddr_poi).site1{nr} = ' ';
                 restraints.ddr(ddr_poi).site2{nr} = ' ';
                 restraints.ddr(ddr_poi).r(nr) = 0;
-                restraints.ddr(ddr_poi).sigr(nr) = 0;
+                restraints.ddr(ddr_poi).fwhh(nr) = 0;
                 restraints.ddr(ddr_poi).file{nr} = '*';
             else % empty block
                 warnings = warnings + 1;
@@ -198,10 +198,12 @@ for d = 1:length(control.directives)
                 if arg3(1) == '@'
                     restraints.ddr(ddr_poi).file{kr} = arg3(2:end);
                     restraints.ddr(ddr_poi).r(kr) = NaN;
-                    restraints.ddr(ddr_poi).sigr(kr) = NaN;
+                    restraints.ddr(ddr_poi).fwhh(kr) = NaN;
                 else
                     restraints.ddr(ddr_poi).r(kr) = str2double(arg3);
-                    restraints.ddr(ddr_poi).sigr(kr) = str2double(control.directives(d).block{kr,4});
+                    % convert input from standrad deviation to full width
+                    % at half maximum
+                    restraints.ddr(ddr_poi).fwhh(kr) = sqrt(8*log(2))*str2double(control.directives(d).block{kr,4});
                 end
                 if args > 4
                     arg5 = control.directives(d).block{kr,5};
@@ -371,12 +373,12 @@ for kblock = 1:ddr_poi
             k2 = 3*(rb2-1)+rp2;
             restraints.dmat0(k1,k2) = restraints.ddr(kblock).r(kr);
             restraints.dmat0(k2,k1) = restraints.ddr(kblock).r(kr);
-            restraints.lb(k1,k2) = restraints.ddr(kblock).r(kr) - restraints.ddr(kblock).sigr(kr);
-            restraints.lb(k2,k1) = restraints.ddr(kblock).r(kr) - restraints.ddr(kblock).sigr(kr);
-            restraints.ub(k1,k2) = restraints.ddr(kblock).r(kr) + restraints.ddr(kblock).sigr(kr);
-            restraints.ub(k2,k1) = restraints.ddr(kblock).r(kr) + restraints.ddr(kblock).sigr(kr);
+            restraints.lb(k1,k2) = restraints.ddr(kblock).r(kr) - restraints.ddr(kblock).fwhh(kr);
+            restraints.lb(k2,k1) = restraints.ddr(kblock).r(kr) - restraints.ddr(kblock).fwhh(kr);
+            restraints.ub(k1,k2) = restraints.ddr(kblock).r(kr) + restraints.ddr(kblock).fwhh(kr);
+            restraints.ub(k2,k1) = restraints.ddr(kblock).r(kr) + restraints.ddr(kblock).fwhh(kr);
             core_poi = core_poi + 1;
-            restraints.core(core_poi,:) = [rb1 rp1 rb2 rp2 restraints.ddr(kblock).r(kr) restraints.ddr(kblock).sigr(kr)];
+            restraints.core(core_poi,:) = [rb1 rp1 rb2 rp2 restraints.ddr(kblock).r(kr) restraints.ddr(kblock).fwhh(kr)];
         else % this is an auxiliary restraint
             % check whether new points need to be recorded
             if isempty(pa1)
@@ -418,7 +420,7 @@ for kblock = 1:ddr_poi
                 restraints.points{rb2} = coor;
             end
             aux_poi = aux_poi + 1;
-            restraints.auxiliary(aux_poi,:) = [rb1 pa1 rb2 pa2 restraints.ddr(kblock).r(kr) restraints.ddr(kblock).sigr(kr)];
+            restraints.auxiliary(aux_poi,:) = [rb1 pa1 rb2 pa2 restraints.ddr(kblock).r(kr) restraints.ddr(kblock).fwhh(kr)];
         end
     end
 end

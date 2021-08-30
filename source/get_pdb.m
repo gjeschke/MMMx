@@ -41,6 +41,9 @@ maxmodels = 100000;
 % initialize empty outputs
 if ~exist('entity','var')
     entity = [];
+    add_to_entity = false;
+else
+    add_to_entity = true;
 end
 exceptions{1} = [];
 warnings = 0; % counter for warnings
@@ -326,7 +329,7 @@ entity.index_array = index_array(1:indexed_atoms,:);
 entity.water = water_indices(1:water_atoms);
 entity.water_selected = false;
 % add conformer populations
-if conformers == models
+if conformers == models || add_to_entity
     entity.populations = populations;
 else
     entity.populations = ones(models,1)/models;

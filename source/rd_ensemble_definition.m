@@ -46,7 +46,7 @@ end
 
 % pre-allocate memory
 all_files(10000).name = '';
-pop = zeros(1,10000);
+pop = zeros(10000,1);
 C = 0; % initialize number of conformers
 
 while 1

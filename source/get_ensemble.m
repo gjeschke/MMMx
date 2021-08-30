@@ -44,14 +44,12 @@ if ~isempty(exceptions) && ~isempty(exceptions{1})
     return
 end
 
-entity.populations = pop(1);
-
 for c = 2:length(pop)
     [entity,exceptions] = get_pdb(all_files(c).name,[],entity);
     if ~isempty(exceptions) && ~isempty(exceptions{1})
         return
     end
-    entity.populations(c) = pop(c);
 end
+entity.populations = pop;
 
 entity.name = name;

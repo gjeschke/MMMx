@@ -150,9 +150,14 @@ fprintf(fid,'%s\n',pad(pdbline,80));
 if isfield(options,'pop') && ~isempty(options.pop) && options.pop
     pdbline = 'REMARK 400  POPULATIONS';
     fprintf(fid,'%s\n',pad(pdbline,80));
+    save_conf = 0;
     for kconf = 1:length(conformer_order)
-        pdbline = sprintf('REMARK 400   MODEL %9i POPULATION %8.4f',kconf,entity.populations(conformer_order(kconf)));
-        fprintf(fid,'%s\n',pad(pdbline,80));
+        if min(abs(entity.selected-conformer_order(kconf))) == 0
+            save_conf = save_conf + 1;
+            curr_pop = entity.populations(conformer_order(kconf))/sum(entity.populations(entity.selected));
+            pdbline = sprintf('REMARK 400   MODEL %9i POPULATION %8.4f',save_conf,curr_pop);
+            fprintf(fid,'%s\n',pad(pdbline,80));
+        end
     end
 end
 
@@ -161,6 +166,7 @@ chains = fieldnames(entity);
 select_all = ~options.selected;
 indices = zeros(1,5);
 atnum = 0;
+save_conf = 0;
 for kconf = 1:length(conformer_order)
     % should all conformers be written?
     selected = select_all | all_conformers;
@@ -174,7 +180,8 @@ for kconf = 1:length(conformer_order)
     end
     % write MODEL line, if more than one conformer
     if length(conformer_order) > 1
-        pdbline = sprintf('MODEL %8i',kconf);
+        save_conf = save_conf + 1;
+        pdbline = sprintf('MODEL %8i',save_conf);
         fprintf(fid,'%s\n',pad(pdbline,80));
     end
     indices(4) = conformer_order(kconf);

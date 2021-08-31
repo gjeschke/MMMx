@@ -547,7 +547,10 @@ for kent = 1:nent
     
     success = 0;
     tstart = tic;
-    while 1
+    err = 0;
+    entity1 = [];
+    
+    while 1 && err ~= -3 % if anchor-anchor distance is too long, the loop finishes before maximum runtime
         for trial = 1:max_models-success
             switch RNA_type
                 case {'freestanding','leading','trailing','linker','leading_nucleotide','trailing_nucleotide'}

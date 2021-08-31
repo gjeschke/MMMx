@@ -28,8 +28,7 @@ function [entity,exceptions,failed] = module_ensemble_analysis(control,logfid)
 %               off, this is the default
 % flexibility   residue-specific flexibility by Ramachandran angle
 %               distribution
-% flory         residue-specific flexibility by Flory's characteristic
-%               ratio
+% order         local order of residues with respect to the whole structure 
 % getens        get ensemble file
 % gettraj       get ensemble from trajectory, requires mdtraj (actually
 %               mdconvert.exe on the Matlab path)
@@ -96,13 +95,13 @@ for d = 1:length(control.directives)
                 cmd.entity = '.'; % flexibility analysis is performed for current entity
             end
             commands{cmd_poi} = cmd;
-        case 'flory'
+        case 'order'
             cmd_poi = cmd_poi + 1;
             cmd.fname = control.directives(d).options{1};
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % Flory analysis is performed for current entity
+                cmd.entity = '.'; % Local order analysis is performed for current entity
             end
             commands{cmd_poi} = cmd;
         case 'subsample'
@@ -222,7 +221,7 @@ for c = 1:cmd_poi
             else
                 flexibility_analysis(c_entity,cmd.fname);
             end
-        case 'flory'
+        case 'order'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
             else
@@ -230,15 +229,15 @@ for c = 1:cmd_poi
                 if isempty(c_entity)
                     warnings = warnings +1;
                     exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'Flory analysis cannot be performed for entity %s, since entity is unknown',cmd.entity);
+                        'Local order analysis cannot be performed for entity %s, since entity is unknown',cmd.entity);
                     record_exception(exceptions{warnings},logfid);
                     return
                 end
             end
             if save_figures
-                flory_analysis(c_entity,cmd.fname,figure_format);
+                local_order(c_entity,cmd.fname,figure_format);
             else
-                flory_analysis(c_entity,cmd.fname);
+                local_order(c_entity,cmd.fname);
             end
         case 'subsample'
             if strcmp(cmd.entity,'.')
@@ -308,148 +307,3 @@ function record_exception(exception,logfid)
 
 fprintf(logfid,'### ensembleanalysis exception: %s ###\n',exception.message);
 
-function [ctag,rtag] = split_chain_residue(address)
-
-p1 = strfind(address,'(');
-p2 = strfind(address,')');
-ctag = address(p1+1:p2-1);
-rtag = strcat('R',address(p2+1:end));
-
-function chain = strip(chain_address)
-
-pa = strfind(chain_address,'(');
-if isempty(pa)
-    pa = 0;
-end
-pe = strfind(chain_address,')');
-if isempty(pe)
-    pe = length(chain_address)+1;
-end
-chain = chain_address(pa+1:pe-1);
-
-function entity1 = get_backbone(logfid,entity1,conformer1,address1,entity2,conformer2,address2,mode,selection)
-
-peptide_backbone = {'N','CA','C','O'};
-nucleotide_backbone = {'P','O5_','C5_','C4_','C3_','O3_'};
-
-[chains1,residues1,atoms1,conformers1] = split_address(address1);
-[chains2,residues2,atoms2,conformers2] = split_address(address2);
-
-entity1 = []; 
-% if no conformers are addressed, use default conformers
-if isempty(conformers1)
-    conformers1 = conformer1;
-end
-if isempty(conformers2)
-    conformers2 = conformer2;
-end
-
-switch mode
-    case 'CA'
-        atoms1 = {'CA'};
-        atoms2 = atoms1;
-    case 'C4_'
-        atoms1 = {'C4_'};
-        atoms2 = atoms1;
-end
-
-if length(chains1) ~= length(chains2) % number of addressed chains must match, otherwise correspondence cannot be established
-    fprintf(logfid,'\nSuperposition failed because %i chains were addressed in template and %i chains in the moving entity\n',length(chains2),length(chains1));
-    return
-end
-
-% allow for superimposing all members of an ensemble to a single conformer
-% in the template
-if length(conformers1) > 1 && length(conformers2) == 1
-    conformers2 = conformers2*ones(size(conformers1));
-end
-
-if length(conformers1) ~= length(conformers2) % number of addressed conformers must match
-    fprintf(logfid,'\nSuperposition failed because %i conformers were addressed in template and %i conformers in the moving entity\n',length(conformers2),length(conformers1));
-    return
-end
-
-for conf = 1:length(conformers1)
-    
-    correspondence = zeros(50000,3);
-    corr_poi = 0;
-    % loop over all chain pairs
-    for c = 1:length(chains1)
-        chain1 = chains1(c);
-        chain2 = chains2(c);
-        % if mode is align, we now need to align the two sequences
-        if strcmpi(selection(1:5),'align')
-            residue_correspondence = align_in_entity(entity1,chain1,entity2,chain2);
-        else
-            if length(residues1) ~= length(residues2) % without alignment, both residue ranges must have the same length
-                return
-            else
-                residue_correspondence = [residues1' residues2'];
-            end
-        end
-        residues = fieldnames(entity1.(chain1));
-        for kr = 1:length(residues) % expand over all residues
-            residue1 = residues{kr};
-            if strcmp(residue1(1),'R') % these are residue fields
-                if strcmpi(mode,'backbone') % for backbone mode, get correct atom lists
-                    slc = tlc2slc(entity1.(chain1).(residue1).name); % check whether residue is an amino acid
-                    if ~isempty(slc)
-                        atoms1 = peptide_backbone;
-                        atoms2 = peptide_backbone;
-                    else % otherwise assume that it is a nucleic acid
-                        atoms1 = nucleotide_backbone;
-                        atoms2 = nucleotide_backbone;
-                    end
-                end
-                resnum1 = str2double(residue1(2:end));
-                resnum2 = residue_correspondence(residue_correspondence(:,1) == resnum1,2);
-                residue2 = sprintf('R%i',resnum2);
-                if isfield(entity2.(chain2),residue2) % check whether residue exists
-                    % check whether the two residues have the same type
-                    match = strcmpi(entity1.(chain1).(residue1).name,entity2.(chain2).(residue2).name);
-                    % correspondence is signalled if the residue types match or strict alignment is not requested
-                    if match || ~strcmpi(selection,'align!')
-                        atoms = fieldnames(entity1.(chain1).(residue1));
-                        for ka = 1:length(atoms) % expand over all atoms
-                            atom = atoms{ka};
-                            if isstrprop(atom(1),'upper') % these are atom fields
-                                % check if this is an adressed atom
-                                match_atom = any(strcmp(atoms1,atom)) & any(strcmp(atoms2,atom));
-                                % if atm is selected or there is no atom
-                                % selection at all
-                                if match_atom || (isempty(atoms1) && isempty(atoms2))
-                                    if isfield(entity2.(chain2).(residue2),atom) % check that it indeed exists in second entity
-                                        corr_poi = corr_poi + 1;
-                                        correspondence(corr_poi,1) = entity1.(chain1).(residue1).(atom).tab_indices(conformers1(conf));
-                                        correspondence(corr_poi,2) = entity2.(chain2).(residue2).(atom).tab_indices(conformers2(conf));
-                                    end
-                                end
-                            end
-                        end
-                    end
-                end
-            end
-        end
-    end
-    
-    correspondence = correspondence(1:corr_poi,:);
-    
-    if corr_poi == 0
-        fprintf(logfid,'\nSuperposition failed because no matching atoms were found\n');
-        return
-    end
-    if corr_poi < 3
-        return
-    end
-    coor1 = entity1.xyz(correspondence(:,1),:); % this is the moving entity
-    coor2 = entity2.xyz(correspondence(:,2),:); % this is the template entity
-    if corr_poi == 3
-        [rmsd,~,transmat] = superimpose_3points(coor2,coor1);
-    else
-        [rmsd,~,transmat] = rmsd_superimpose(coor2,coor1);
-    end
-    xyz = entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:);
-    xyz = affine_coor_set(xyz,transmat);
-    entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:) = xyz;
-    fprintf(logfid,'\nSuperposition of %i atoms in conformer %i with rmsd of %4.1f %s succeeded\n',corr_poi,conformers1(conf),rmsd,char(197));
-end

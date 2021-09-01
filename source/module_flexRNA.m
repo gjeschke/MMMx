@@ -228,14 +228,13 @@ end
 
 for kent = 1:nent
     if expand_rba
-        entity = get_rba(entity0,kent);
         fname = sprintf('%s_rba_%i',fname_basis,kent);
+        entity = get_rba(entity0,kent);
     elseif use_file_list
-        fname = file_list{kent};
-        entity = get_pdb(fname);
-        % remove extension
-        [pathname,filename,~] = fileparts(fname);
-        fname = fullfile(pathname,filename);
+        fname = sprintf('%s_conformer_%i',fname_basis,kent);
+        inname = file_list{kent};
+        fprintf(logfid,'Conformer %i derived from input %s\n',kent,inname);
+        entity = get_pdb(inname);
     else
         fname = fname_basis;
     end
@@ -574,6 +573,9 @@ for kent = 1:nent
                         anchor_5p,ntoffset,environment);
                     seq = sequence(2);
                     err = 0;
+            end
+            if err == -3
+                break
             end
         end
         if err == 0

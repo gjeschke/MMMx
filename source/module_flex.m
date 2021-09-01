@@ -464,11 +464,10 @@ for kent = 1:nent
         entity = get_rba(entity0,kent);
         fname = sprintf('%s_rba_%i',fname_basis,kent);
     elseif use_file_list
-        fname = file_list{kent};
-        entity = get_pdb(fname);
-        % remove extension
-        [pathname,filename,~] = fileparts(fname);
-        fname = fullfile(pathname,filename);
+        inname = file_list{kent};
+        entity = get_pdb(inname);
+        fname = sprintf('%s_conformer_%i',fname_basis,kent);
+        fprintf(logfid,'Conformer %i derived from input %s\n',kent,inname);
     else
         fname = fname_basis;
     end

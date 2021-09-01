@@ -37,13 +37,13 @@ function [ecoor,atomtags,seq,options,correction,err] = RNA_loop_model(logfid,seq
 %                           convergence radius of the final anchor,
 %                           defaults to 100
 %               .max_rot    maximum rotation of the loop end for matching 
-%                           final anchor fragment, defaults to 8° per 4 nt
+%                           final anchor fragment, defaults to 8? per 4 nt
 %               .anchor_acc RMSD accuracy of anchor coordinate fit,
-%                           defaults to 0.25 Å
+%                           defaults to 0.25 ?
 %               .fit_tol    contribution of a nucleotide to the convergence
 %                           radius for a final anchor P atom, defaults to
-%                           0.5 Å
-%               .LoN        length per nt, defaults to 7 Å
+%                           0.5 ?
+%               .LoN        length per nt, defaults to 7 ?
 %               .maxtime    maximum runtime in hours, defaults to 15 min
 %               .anchor0    vector (1,4) defining an initial anchor of a 
 %                           longer RNA segment by its nucleotide number and
@@ -141,16 +141,16 @@ while isempty(ecoor) && runtime < 3600*options.maxtime
 %         end
         % the following messages apply only if there is a terminal anchor
         if statistics.min_convg < 1e5
-            fprintf(logfid,'Best convergence was %4.2f Å\n',statistics.min_convg);
+            fprintf(logfid,'Best convergence was %4.2f %s\n',statistics.min_convg,char(197));
         end
         if statistics.amin_rmsd < 1e5
-            fprintf(logfid,'Best anchor rmsd was %4.2f Å\n',statistics.amin_rmsd);
+            fprintf(logfid,'Best anchor rmsd was %4.2f %s\n',statistics.amin_rmsd,char(197));
         end
         if statistics.amin_rot < 1e5
             fprintf(logfid,'Minimum rotation was %4.2f degree\n',statistics.amin_rot);
         end
         if statistics.amin_shift < 1e5
-            fprintf(logfid,'Minimum translation was %4.2f Å\n',statistics.amin_shift);
+            fprintf(logfid,'Minimum translation was %4.2f %s\n',statistics.amin_shift,char(197));
         end
         runtime = toc(tstart);
         % if backbone generation was unsuccessful, but there is still time,
@@ -202,7 +202,7 @@ while isempty(ecoor) && runtime < 3600*options.maxtime
             ecoor = [];
             err = -1;
         else
-            fprintf(logfid,'Clash repair led to a maximum shift of %6.2f Å\n',max_shift);
+            fprintf(logfid,'Clash repair led to a maximum shift of %6.2f %s\n',max_shift,char(197));
             err = 0;
         end
     end
@@ -255,13 +255,13 @@ function [coor,code,transmat,correction,err,statistics] = mk_RNA_loop_backbone(s
 %                           convergence radius of the final anchor,
 %                           defaults to 100
 %               .max_rot    maximum rotation of the loop end for matching 
-%                           final anchor fragment, defaults to 20° per 4 nt
+%                           final anchor fragment, defaults to 20? per 4 nt
 %               .anchor_acc RMSD accuracy of anchor coordinate fit,
-%                           defaults to 0.25 Å
+%                           defaults to 0.25 ?
 %               .fit_tol    contribution of a nucleotide to the convergence
 %                           radius for a final anchor P atom, defaults to
-%                           0.2 Å
-%               .LoN        length per nt, defaults to 7 Å
+%                           0.2 ?
+%               .LoN        length per nt, defaults to 7 ?
 %               .maxtime    maximum runtime in hours, defaults to 25 min
 %               .anchor0    vector (1,4) defining an initial anchor of a 
 %                           longer RNA segment by its nucleotide number and
@@ -376,7 +376,7 @@ if ~isfield(options,'maxtime')
 end
 
 if ~isfield(options,'LoN')
-    options.LoN = 7; % maximum length per nucleotide in Å
+    options.LoN = 7; % maximum length per nucleotide in ?
 end
 
 if isfield(options,'anchor0')
@@ -623,19 +623,19 @@ while err ~= 0 && runtime < 3600*options.maxtime && trials < maxtrials
                 fail = fail + (abs(EV(4)) > max_rot);
                 if verbose && fail <= 1
                     if rmsd > 2*options.anchor_acc
-                        fprintf(2,'RMSD: %4.2f Å, ',rmsd);
+                        fprintf(2,'RMSD: %4.2f ?, ',rmsd);
                     else
-                        fprintf(1,'RMSD: %4.2f Å, ',rmsd);
+                        fprintf(1,'RMSD: %4.2f ?, ',rmsd);
                     end
                     if norm(transmat_link(1:3,4)) > fit_thresh
-                        fprintf(2,'translation %4.2f Å, ',norm(transmat_link(1:3,4)));
+                        fprintf(2,'translation %4.2f ?, ',norm(transmat_link(1:3,4)));
                     else
-                        fprintf(1,'translation %4.2f Å, ',norm(transmat_link(1:3,4)));
+                        fprintf(1,'translation %4.2f ?, ',norm(transmat_link(1:3,4)));
                     end
                     if abs(EV(4)) > max_rot
-                        fprintf(2,'rotation %4.1f°\n',EV(4));
+                        fprintf(2,'rotation %4.1f?\n',EV(4));
                     else
-                        fprintf(1,'rotation %4.1f°\n',EV(4));
+                        fprintf(1,'rotation %4.1f?\n',EV(4));
                     end
                 end
                 if ~initial_anchored || ...

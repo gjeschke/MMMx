@@ -287,6 +287,7 @@ if expand_rba
 end
 
 [initial_files,pop] = rd_ensemble_definition(initial_ensemble);
+pop = pop';
 [~,~,ext] = fileparts(added_conformers);
 if isempty(ext)
     added_conformers = strcat(added_conformers,'.pdb');

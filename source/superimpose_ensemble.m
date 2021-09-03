@@ -16,7 +16,8 @@ function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,templat
 % entity    entity that describes the ensemble
 % selected  MMMx address of the atoms that are to be superimposed, defaults
 %           to all atoms
-%           string: the same address is used in entity and template
+%           string: the same address is used in entity and template, if
+%                   empty, whole structure is selected
 %           cell string containing two strings: the first string is used in
 %           entity and the second string in template
 % template  template entity, defaults to none
@@ -26,7 +27,7 @@ function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,templat
 % exceptions   error message if something went wrong, entity is empty for
 %              errors but not for warnings, for warnings, only the last one
 %              is reported, cell containing an empty array, if no exception
-% rmsd         vector of roor mean square atom deviations for all
+% rmsd         vector of root mean square atom deviations for all
 %              conformers
 %
 
@@ -35,7 +36,7 @@ function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,templat
 
 rmsd = zeros(length(entity.populations),1);
 
-if ~exist('selected','var')
+if ~exist('selected','var') || isempty(selected)
     selected = '(*)';
 end
 
@@ -67,12 +68,14 @@ for c = 1:length(entity.populations)
     end
     [rms,~,transmat] = rmsd_superimpose(tcoor,ccoor);
     rmsd(c) = rms;
-    [ccoor,indices,exceptions] = get_coor(entity,sprintf('{%i}(*)',c));
-    if ~isempty(exceptions)
-        if ~isempty(exceptions{1})
-            return
-        end
-    end
+    indices = find(entity.index_array(:,4) == c);
+    ccoor = entity.xyz(indices,:);
+    % [ccoor,indices,exceptions] = get_coor(entity,sprintf('{%i}(*)',c));
+%     if ~isempty(exceptions)
+%         if ~isempty(exceptions{1})
+%             return
+%         end
+%     end
     xyz = [ccoor ones(length(indices),1)]*transmat';
     entity.xyz(indices,:) = xyz(:,1:3);
 end

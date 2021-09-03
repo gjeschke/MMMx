@@ -31,8 +31,8 @@ function [measures,correlations] = analyze_ensemble(backbones,pop,options)
 %                               defaults to true, effect only if .pair_rmsd
 %                               is true
 %               .sorted         Boolean, recursive hierarchical clustering
-%                               sorting, defaults to false, requires that
-%                               .pair_rmsd is true
+%                               sorting, defaults to false, forces
+%                               .pair_rmsd to true
 %               .pair_corr      Boolean, if true, compute residue pair
 %                               correlations, defaults to true 
 %               .compactness    Boolean, if true, compactness analysis is
@@ -121,6 +121,10 @@ if ~isfield(options,'sorted') || isempty(options.sorted)
     options.sorted = false;
 end
 
+if options.sorted
+    options.pair_rmsd = tryue;
+end
+
 if ~isfield(options,'pair_corr') || isempty(options.pair_corr)
     options.pair_corr = true;
 end
@@ -184,14 +188,14 @@ end
 for kc = 1:length(chains)
     % Radius of gyration
     if options.Rg
-        Rg_all = zeros(1,C);
+        Rg_all = zeros(size(pop));
         for c = 1:C
             coor = backbones.(chains{kc}).bb{c};
             Rg_all(c) = gyration_radius(coor);
         end
         measures.(chains{kc}).Rg = sqrt(sum(pop.*Rg_all.^2)); % we average the square of the radius of gyration
         measures.(chains{kc}).Rg_all = Rg_all;
-        measures.(chains{kc}).Rg_std = std(Rg_all-measures.(chains{kc}).Rg);
+        measures.(chains{kc}).Rg_std = std(Rg_all);
     end
     % pair rmsd, ensemble width, and ensemble density
     if options.pair_rmsd
@@ -217,7 +221,7 @@ for kc = 1:length(chains)
             rmsdsum = sum(pair_rmsd);
             [~,sorting] = sort(rmsdsum);
             pair_rmsd = pair_rmsd(sorting,sorting);
-            [new_pair_rmsd,new_ordering] = cluster_analysis(pair_rmsd,pop,sorting);
+            [new_pair_rmsd,new_ordering] = cluster_sorting(pair_rmsd,pop,1,sorting);
             measures.(chains{kc}).sorting = new_ordering;
             measures.(chains{kc}).pair_rmsd = new_pair_rmsd;
         else
@@ -251,6 +255,27 @@ for kc = 1:length(chains)
             [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,mean_R2,R0_seglen,nu_seglen,Rdev]...
                 = local_compactness(backbones.(chains{kc}),pop,options);
         end
+        % make a more compact version of sequence length distribution
+        seg_lengths = 1:max(all_k);
+        min_Rg = 1e6*ones(size(seg_lengths));
+        max_Rg = zeros(size(seg_lengths));
+        min_R2 = 1e6*ones(size(seg_lengths));
+        max_R2 = zeros(size(seg_lengths));
+        for j = 1:length(all_k)
+            k = all_k(j);
+            if all_Rg(j) < min_Rg(k)
+                min_Rg(k) = all_Rg(j);
+            end
+            if all_Rg(j) > max_Rg(k)
+                max_Rg(k) = all_Rg(j);
+            end
+            if all_R2(j) < min_R2(k)
+                min_R2(k) = all_R2(j);
+            end
+            if all_R2(j) > max_R2(k)
+                max_R2(k) = all_R2(j);
+            end
+        end
         measures.(chains{kc}).R0_g = R0;
         measures.(chains{kc}).nu_g = nu;
         measures.(chains{kc}).Rg_axis = raxis;
@@ -263,6 +288,11 @@ for kc = 1:length(chains)
         measures.(chains{kc}).mean_R2 = mean_R2;
         measures.(chains{kc}).R0_seglen = R0_seglen;
         measures.(chains{kc}).nu_seglen = nu_seglen;
+        measures.(chains{kc}).seg_lengths = seg_lengths;
+        measures.(chains{kc}).min_Rg = min_Rg;
+        measures.(chains{kc}).max_Rg = max_Rg;
+        measures.(chains{kc}).min_R2 = min_R2;
+        measures.(chains{kc}).max_R2 = max_R2;
         correlations.(chains{kc}).compact = Comp;
         correlations.(chains{kc}).proximity = Prox;        
         correlations.(chains{kc}).Rdev = Rdev;        
@@ -338,7 +368,7 @@ for c = 1:C
 end
 for r1 = 1:resnum
     for r2 = 1:resnum
-        rvec = zeros(1,C);
+        rvec = zeros(size(pop));
         for c = 1:C
             rvec(c) = dmats{c}(r1,r2);
         end

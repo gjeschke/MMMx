@@ -57,6 +57,9 @@ for d = 1:length(control.directives)
         case 'input'
             inname = control.directives(d).options{1};
             fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
+        case 'addpdb'
+            inname = control.directives(d).options{1};
+            fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
         case 'save'
             fname = control.directives(d).options{1};
             % remove extension if any

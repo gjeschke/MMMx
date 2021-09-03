@@ -129,6 +129,7 @@ if ~isempty(entity)
     water_indices(1:water_atoms) = entity.water;
     conformers = length(entity.populations);
     populations(1:conformers) = entity.populations;
+    populations(conformers+1) = mean(populations);
 end
 old_resname = 'HOH'; % avoid location entry for water residues
 % initialize information on modified residues
@@ -320,7 +321,7 @@ while 1
 %         end
     end % end atom loop
 end
-populations = populations(1:conformers);
+populations = populations(1:conformers+1);
 entity.original_residue_numbers = preserve_residue_numbers;
 entity.xyz = xyz(1:atoms,:);
 entity.elements = elements(1:atoms);

@@ -24,18 +24,26 @@ function [entity,exceptions,failed] = module_ensemble_analysis(control,logfid)
 %
 % addpdb        add conformers by reading pdb files
 % compare       compare two ensembles
+% density       density map
 % figures       format for saving figures, 'off' switches figure saving
 %               off, this is the default
 % flexibility   residue-specific flexibility by Ramachandran angle
 %               distribution
-% order         local order of residues with respect to the whole structure 
 % getens        get ensemble file
-% gettraj       get ensemble from trajectory, requires mdtraj (actually
-%               mdconvert.exe on the Matlab path)
-% order         order ensemble
-% paircorr      pair correlation matrix
-% segments      distribution of segment-wise root-mean square end-to-end
-%               distances and deviation from random-coil fit
+% measures      several measures of an ensemble:
+%                   Rg              radius of gyration analysis
+%                   width           ensemble width and density
+%                   correlation     pair correlation matrix
+%                   compactness     compactness analysis with Flory model
+%                   chains          analysis is performed for individual
+%                                   chains
+%                   oriented        conformers are assumed to be already
+%                                   superimposed
+%                   matlab          save output as matlab files
+%                   csv             save output as comma-separated value
+%                                   files
+% order         local order of residues with respect to the whole structure 
+% sort          sort ensemble
 % subsample     reduce ensemble (from a trajectory) by subsampling
 % superimpose   superimpose conformers
 %
@@ -104,6 +112,21 @@ for d = 1:length(control.directives)
                 cmd.entity = '.'; % Local order analysis is performed for current entity
             end
             commands{cmd_poi} = cmd;
+        case 'compare'
+            cmd_poi = cmd_poi + 1;
+            cmd.entity1 = control.directives(d).options{1};
+            cmd.entity2 = control.directives(d).options{2};
+            cmd.address = '';
+            cmd.resolved = false;
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.address = control.directives(d).options{3};
+            end
+            if length(control.directives(d).options) > 3 % chain and possibly range given
+                if strcmpi(control.directives(d).options{4},'resolved')
+                    cmd.resolved = true;
+                end
+            end
+            commands{cmd_poi} = cmd;
         case 'subsample'
             cmd_poi = cmd_poi + 1;
             cmd.stride = str2double(control.directives(d).options{1});
@@ -118,26 +141,99 @@ for d = 1:length(control.directives)
                 cmd.output = '.';
             end
             commands{cmd_poi} = cmd;
-        case 'symmetry'
+        case 'sort'
             cmd_poi = cmd_poi + 1;
-            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
-                cmd.mode = control.directives(d).options{1}; % superposition mode [backbone|CA|C4'|all]
-            else
-                cmd.mode = 'backbone'; % by default, the backbones are superimposed 
-            end
-            if length(control.directives(d).options) > 1 % a selected entity transformed
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % symmetry transform is performed for current entity
+                cmd.entity = '.'; % flexibility analysis is performed for current entity
+            end
+            commands{cmd_poi} = cmd;            
+        case 'measures'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % flexibility analysis is performed for current entity
+            end
+            cmd.options.chain_mode = false;
+            cmd.options.Rg = false;
+            cmd.options.pair_rmsd = false;
+            cmd.options.superimpose = true;
+            cmd.options.sorted = false;
+            cmd.options.pair_corr = false;
+            cmd.options.compactness = false;
+            cmd.options.matlab = false;
+            cmd.options.csv = false;
+            cmd.options.chain = '';
+            cmd.options.range = [];
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.options.chain_mode = true;
+                [chain,range] = split_chain_range(control.directives(d).options{3});
+                cmd.options.chain = chain;
+                cmd.options.range = range;
             end
             [n,~] = size(control.directives(d).block);
-            cmd.Cn = n; % order of symmetry axis
-            cmd.parts = cell(1,n);
-            % store selections in the n symmetry-equivalent parts
+            % set requested options
             for k = 1:n
-                cmd.parts{k} = control.directives(d).block{k,1};
+                switch lower(control.directives(d).block{k,1})
+                    case 'rg'
+                        cmd.options.Rg = true;
+                    case 'width'
+                        cmd.options.pair_rmsd = true;
+                    case 'correlation'
+                        cmd.options.pair_corr = true;
+                    case 'compactness'
+                        cmd.options.compactness = true;
+                    case 'oriented'
+                        cmd.options.superimpose = false;
+                    case 'matlab'
+                        cmd.options.matlab = true;
+                    case 'csv'
+                        cmd.options.csv = true;
+                end
             end
-            commands{cmd_poi} = cmd;
+            commands{cmd_poi} = cmd;            
+        case 'density'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % flexibility analysis is performed for current entity
+            end
+            cmd.address = '(*)'; % by default, all chains are selected
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.address = control.directives(d).options{3};
+            end
+            cmd.resolution = 1;
+            if length(control.directives(d).options) > 3 % chain and possibly range given
+                cmd.resolution = str2double(control.directives(d).options{4});
+            end
+            commands{cmd_poi} = cmd;            
+        case 'superimpose'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % flexibility analysis is performed for current entity
+            end
+            cmd.address = '';
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.address = control.directives(d).options{3};
+            end
+            cmd.template = '';
+            if length(control.directives(d).options) > 3 % superposition to a template
+                cmd.template = control.directives(d).options{4};
+            end
+            cmd.template_address = '';
+            if length(control.directives(d).options) > 4 % chain and possibly range given for template
+                cmd.template_address = control.directives(d).options{5};
+            end
+            commands{cmd_poi} = cmd;    
         otherwise
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_ensembleanalysis:unknown_directive',...
@@ -174,7 +270,6 @@ for c = 1:cmd_poi
                 return
             end
             if length(added_files) > 1
-                entity.populations = ones(1,length(added_files))/length(added_files);
                 for cf = 2:length(added_files)
                     [entity,exceptions] = get_pdb(added_files(cf).name,[],entity);
                     if ~isempty(exceptions) && ~isempty(exceptions{1})
@@ -185,6 +280,7 @@ for c = 1:cmd_poi
                         return
                     end
                 end
+                entity.populations = ones(1,length(added_files))/length(added_files);
             end
             ensemble_descriptor.entity = entity;
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
@@ -239,6 +335,51 @@ for c = 1:cmd_poi
             else
                 local_order(c_entity,cmd.fname);
             end
+        case 'compare'
+           entity1 = retrieve_ensemble(cmd.entity1,ensembles,logfid);
+           if isempty(entity1)
+               warnings = warnings +1;
+               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                   'tried to comparison with entity %s, which is unknown',cmd.entity1);
+               record_exception(exceptions{warnings},logfid);
+               return
+           end
+           entity2 = retrieve_ensemble(cmd.entity2,ensembles,logfid);
+           if isempty(entity2)
+               warnings = warnings +1;
+               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                   'tried to comparison with entity %s, which is unknown',cmd.entity2);
+               record_exception(exceptions{warnings},logfid);
+               return
+           end
+           if cmd.resolved
+               [chain,range] = split_chain_range(cmd.address);
+               residues = range(1):range(2);
+               overlaps = zeros(size(residues));
+               for r = residues
+                   address = sprintf('(%s)%i',chain,r);
+                   fprintf(1,'Computing overlap for %s\n',address);
+                   overlaps(r-residues(1)+1) = density_overlap(entity1,entity2,address);
+               end
+               h = figure;
+               plot(residues,overlaps,'.','MarkerSize',14,'Color',[0.25,0.25,0.25]);
+               xlabel('Residue number');
+               ylabel('Overlap');
+               axis([range(1),range(2),0,1]);
+               title(sprintf('Overlap between ensembles %s and %s',cmd.entity1,cmd.entity2));
+               if save_figures
+                   figname = sprintf('overlap_%s_%s.%s',cmd.entity1,cmd.entity2,figure_format);
+                   saveas(h,figname);
+               end
+               datname = sprintf('overlap_%s_%s.mat',cmd.entity1,cmd.entity2);
+               save(datname,'residues','overlaps');
+               data = [residues' overlaps'];
+               datname = sprintf('overlap_%s_%s.csv',cmd.entity1,cmd.entity2);
+               writematrix(data,datname);
+           else
+               overlap = density_overlap(entity1,entity2,cmd.address);
+               fprintf(logfid,'Ensemble density overlap bewteen %s and %s is %6.3f\n',cmd.entity1,cmd.entity2,overlap);
+           end
         case 'subsample'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -271,21 +412,282 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             ensembles = store_ensemble(cmd.output,c_entity,ensembles);
+        case 'sort'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
+            if ~isempty(exceptions0{1})
+                for k = 1:exceptions0
+                    warnings = warnings + 1;
+                    exceptions{warnings} = exceptions0{k};
+                end
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_ensembleanalysis:backbone_retrieval_failed',...
+                    'sorting of ensemble %s failed since backbone could not be retrieved',cmd.entity);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end                
+            [pair_rmsd,ordering,~,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
+            [pname,fname,~] = fileparts(cmd.outname);
+            basname = fullfile(pname,fname);
+            ensemble_name = strcat(basname,'.ens');
+            ens_fid = fopen(ensemble_name,'wt');
+            fprintf(ens_fid,'%% Sorted ensemble %s by MMMx\n',basname);
+            poi = 0;
+            for clust = 1:length(cluster_pop)
+                fprintf(logfid,'\nCluster %i with population %6.4f comprises the following %i conformers:\n',clust,cluster_pop(clust),cluster_sizes(clust));
+                for conf = 1:cluster_sizes(clust)
+                    poi = poi + 1;
+                    oname = sprintf('%s_m%i.pdb',basname,poi);
+                    fprintf(logfid,'%s (conformer %i in the input ensemble)\n',oname,ordering(poi));
+                    clear save_options
+                    save_options.order = ordering(poi);
+                    exceptions = put_pdb(c_entity,oname,save_options);
+                    fprintf(ens_fid,'%s  %8.6f %% cluster %i\n',oname,pop(ordering(poi)),clust);
+                end
+            end
+            fclose(ens_fid);
+            h = plot_pair_rmsd(pair_rmsd);
+            if save_figures
+                figname = sprintf('pair_rmsd_sorting_%s.%s',basname,figure_format);
+                saveas(h,figname);
+            end
+            c_entity = get_ensemble(ensemble_name);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'measures'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [pname,fname,~] = fileparts(cmd.outname);
+            basname = fullfile(pname,fname);
+            if cmd.options.chain_mode
+                [backbones,pop,exceptions0] = get_backbones_ensemble(c_entity,cmd.options.chain,cmd.options.range);
+            else
+                [backbones,pop,exceptions0] = get_backbones_ensemble(c_entity);
+            end
+            if ~isempty(exceptions0{1})
+                for k = 1:exceptions0
+                    warnings = warnings + 1;
+                    exceptions{warnings} = exceptions0{k};
+                end
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_ensembleanalysis:backbone_retrieval_failed',...
+                    'measures for ensemble %s cannot be computed since backbone could not be retrieved',cmd.entity);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            [measures,correlations] = analyze_ensemble(backbones,pop,cmd.options);
+            parts = fieldnames(measures);
+            for p = 1:length(parts)
+                part = parts{p};
+                if strcmp(part,'all')
+                    name = 'whole structure';
+                else
+                    name = sprintf('chain %s',part);
+                end
+                if cmd.options.Rg
+                    fprintf(logfid,'\nRadius of gyration analysis for %s\n',name);
+                    fprintf(logfid,'   Rg = %4.1f %s with standard deviation %4.1f %s\n',...
+                        measures.(part).Rg,char(197),measures.(part).Rg_std,char(197));
+                end
+                if cmd.options.pair_rmsd
+                    fprintf(logfid,'\nEnsemble width and density for %s\n',name);
+                    fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
+                        measures.(part).width,char(197),measures.(part).density,char(197));
+                    h = plot_pair_rmsd(measures.(part).pair_rmsd,cmd.options.superimpose);
+                    if save_figures
+                        figname = sprintf('pair_rmsd_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    if cmd.options.matlab
+                        pair_rmsd = measures.(part).pair_rmsd;
+                        datname = sprintf('pair_rmsd_%s_%s.mat',basname,part);
+                        save(datname,'pair_rmsd');
+                    end
+                    if cmd.options.csv
+                        pair_rmsd = measures.(part).pair_rmsd;
+                        datname = sprintf('pair_rmsd_%s_%s.csv',basname,part);
+                        writematrix(pair_rmsd,datname);
+                    end
+                end
+                if cmd.options.pair_corr
+                    h = plot_pair_corr(correlations.(part).pair_corr);
+                    if save_figures
+                        figname = sprintf('residue_pair_correlation_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    h = plot_pair_corr(correlations.(part).pair_corr,correlations.(part).dmat);
+                    if save_figures
+                        figname = sprintf('residue_pair_correlation_normalized_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    if cmd.options.matlab
+                        pair_corr = correlations.(part).pair_corr;
+                        dmat = correlations.(part).dmat;
+                        datname = sprintf('residue_pair_correlation_%s_%s.mat',basname,part);
+                        save(datname,'pair_corr','dmat');
+                    end
+                    if cmd.options.csv
+                        pair_corr = correlations.(part).pair_corr;
+                        dmat = correlations.(part).dmat;
+                        datname = sprintf('residue_pair_correlation_%s_%s.csv',basname,part);
+                        writematrix(pair_corr,datname);
+                        datname = sprintf('distance_matrix_%s_%s.csv',basname,part);
+                        writematrix(dmat,datname);
+                    end
+                end
+                if cmd.options.compactness
+                    offset = 0;
+                    if ~isempty(cmd.options.range)
+                        offset = cmd.options.range(1); 
+                    end                    
+                    compactness = correlations.(part).compact;
+                    h = plot_compactness(compactness,'Compactness matrix',[-1,1],offset);
+                    if save_figures
+                        figname = sprintf('compactness_matrix_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    proximity = correlations.(part).proximity;
+                    h = plot_compactness(proximity,'Proximity matrix',[-1,1],offset);                    
+                    if save_figures
+                        figname = sprintf('proximity_matrix_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    Rdev = correlations.(part).Rdev;
+                    extent = max([abs(min(min(Rdev))),max(max(Rdev))]);
+                    h = plot_compactness(Rdev,'Segment length deviation',1.05*[-extent,extent],offset);
+                    if save_figures
+                        figname = sprintf('segment_length_deviation_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    h = plot_segments(measures.(part));
+                    if save_figures
+                        figname = sprintf('segment_length_distribution_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    seg_lengths = measures.(part).seg_lengths;
+                    R2fct = measures.(part).R0_seglen*seg_lengths.^measures.(part).nu_seglen;
+                    mean_R2 = measures.(part).mean_R2;                    
+                    min_R2 = measures.(part).min_R2;                    
+                    max_R2 = measures.(part).min_R2;
+                    segment_data = [seg_lengths' mean_R2' min_R2' max_R2' R2fct']; 
+                    if cmd.options.matlab
+                        datname = sprintf('compactness_analysis_%s_%s.mat',basname,part);
+                        save(datname,'compactness','proximity','Rdev','seg_lengths','mean_R2','min_R2','max_R2','R2fct');
+                    end
+                    if cmd.options.csv
+                        datname = sprintf('compactness_matrix_%s_%s.csv',basname,part);
+                        writematrix(compactness,datname);
+                        datname = sprintf('proximity_matrix_%s_%s.csv',basname,part);
+                        writematrix(proximity,datname);
+                        datname = sprintf('segment_length_deviation_%s_%s.csv',basname,part);
+                        writematrix(Rdev,datname);
+                        datname = sprintf('segment_length_distribution_%s_%s.csv',basname,part);
+                        writematrix(segment_data,datname);
+                    end
+                end
+            end
+        case 'density'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            tic,
+            make_density(c_entity,cmd.outname,cmd.address,cmd.resolution);
+            toc,
+        case 'superimpose'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [pname,fname,~] = fileparts(cmd.outname);
+            basname = fullfile(pname,fname);
+            selected = '';
+            if ~isempty(cmd.address)
+                if isempty(cmd.template_address)
+                    selected = cmd.address;
+                else
+                    clear selected
+                    selected{1} = cmd.address;
+                    selected{2} = cmd.template_address;
+                end
+            end
+            [c_entity,~,exceptions0] = superimpose_ensemble(c_entity,selected,cmd.template);
+            for exci = 1:length(exceptions0)
+                if ~isempty(exceptions0{exci})
+                    warnings = warnings +1;
+                    exceptions{warnings} = exceptions0{exci};
+                    record_exception(exceptions{warnings},logfid);
+                end
+            end
+            pop = c_entity.populations;
+            ensemble_name = strcat(basname,'.ens');
+            ens_fid = fopen(ensemble_name,'wt');
+            for conf = 1:length(pop)
+                oname = sprintf('%s_m%i.pdb',basname,conf);
+                clear save_options
+                save_options.order = conf;
+                exceptions = put_pdb(c_entity,oname,save_options);
+                fprintf(ens_fid,'%s  %8.6f\n',oname,pop(conf));
+            end
+            fclose(ens_fid);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
     end
 end
 
 function entity = retrieve_ensemble(name,ensembles,logfid)
 
-ensemble = [];
+entity = [];
 e = 0;
-while isempty(ensemble) && e < length(ensembles)
+while isempty(entity) && e < length(ensembles)
     e = e + 1;
     ensemble_descriptor = ensembles{e};
     if strcmp(name,ensemble_descriptor.name)
         entity = ensemble_descriptor.entity;
     end
 end
-if isempty(ensemble)
+if isempty(entity)
     fprintf(logfid,'Ensemble %s has not been loaded.\n',name);
 end
 
@@ -307,3 +709,123 @@ function record_exception(exception,logfid)
 
 fprintf(logfid,'### ensembleanalysis exception: %s ###\n',exception.message);
 
+function [chain,range] = split_chain_range(address)
+
+range = [];
+
+poia = strfind(address,'(');
+poie = strfind(address,')');
+if isempty(poie)
+    chain = '';
+else
+    chain = address(poia+1:poie-1);
+    address = address(poie+1:end);
+end
+residues = split(address,'-');
+if ~isempty(residues{1})
+    range(1) = str2double(residues{1});
+end
+if ~isempty(residues{2})
+    range(2) = str2double(residues{2});
+end
+if length(range) == 1
+    range(2) = range(1);
+end
+
+
+function h = plot_pair_rmsd(pair_rmsd,superimposed)
+
+if ~exist('superimposed','var') || isempty(superimposed)
+    superimposed = true;
+end
+
+h = figure;
+
+[n1,n2] = size(pair_rmsd);
+plot(1,1,'k.');
+plot(n1,n2,'k.');
+image(pair_rmsd,'CDataMapping','scaled','ButtonDownFcn',@(hObject,eventdata,handles)axes_rmsd_ButtonDownFcn);
+curr_axis = gca;
+curr_axis.YDir = 'normal';
+colorbar;
+axis tight
+xlabel('Conformer number');
+ylabel('Conformer number');
+if superimposed
+    title('Pair rmsd upon optimal superposition');
+else
+    title('Pair rmsd for original orientation');
+end
+axis equal
+
+function h = plot_pair_corr(pair_corr,dmat)
+
+h = figure;
+[n1,n2] = size(pair_corr);
+plot(1,1,'k.');
+plot(n1,n2,'k.');
+
+if ~exist('dmat','var') || isempty(dmat)
+    image(pair_corr,'CDataMapping','scaled');
+    title('Pair correlation');
+else
+    image(pair_corr./dmat,'CDataMapping','scaled');
+    title('Pair correlation (normalized)');
+end
+
+curr_axis = gca;
+curr_axis.YDir = 'normal';
+colorbar;
+axis tight
+xlabel('Residue number');
+ylabel('Residue number');
+axis equal
+
+function h = plot_compactness(compactness,type,range,offset)
+
+if ~exist('type','var') || isempty(type)
+    type = 'Compactness matrix';
+end
+
+if ~exist('offset','var') || isempty(offset)
+    offset = 0;
+end
+
+% make blue-red color map
+mymap = ones(51,3);
+for k = 1:25
+    mymap(k,2:3) = k/26*[1,1];
+    mymap(k+26,1:2) = (25-k)/25*[1,1];
+end
+mymap = flipud(mymap);
+
+h = figure;
+image(offset,offset,compactness,'CDataMapping','scaled');
+hold on;
+curr_axis = gca;
+set(curr_axis,'CLim',range);
+set(curr_axis,'YDir','normal');
+colorbar;
+axis tight
+xlabel('Residue number');
+ylabel('Residue number');
+axis equal
+colormap(mymap)
+title(type);
+
+function h = plot_segments(segments)
+
+h = figure;
+
+kaxis = 1:max(segments.seg_len);
+
+% h1 = plot(segments.seg_len,segments.all_R2,'k.','MarkerSize',8);
+h1 = fill([segments.seg_lengths, fliplr(segments.seg_lengths)],[segments.max_R2, fliplr(segments.min_R2)],0.75*[1,1,1],'LineStyle','none');
+hold on
+R2fct = segments.R0_seglen*kaxis.^segments.nu_seglen;
+h2 = plot(kaxis,segments.mean_R2,'Color',[0,0.75,0],'LineWidth',2.5);
+h3 = plot(kaxis,R2fct,'Color',[0.8,0,0],'LineWidth',2.5);
+xlabel('Segment sequence length k');
+ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
+legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_ee,segments.nu_ee),'Location','southeast');
+axis([0,133,0,60]);

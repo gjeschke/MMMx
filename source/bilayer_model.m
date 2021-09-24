@@ -1,4 +1,4 @@
-function [entity,error] = bilayer_model(entity,conformer,type,logfid)
+function [entity,error] = bilayer_model(entity,conformer,type,oriented,logfid)
 %
 % BILAYER_MODEL Compute lipid bilayer plane and thickness that minimizes
 %               free energy of protein immersion 
@@ -14,6 +14,8 @@ function [entity,error] = bilayer_model(entity,conformer,type,logfid)
 % entity        protein structure in MMMx:atomic format
 % conformer     optional conformer number, defaults to 1
 % type          membrane protein type, 'bundle' or 'barrel'
+% oriented      flag indicating that the z axis of the input is the bilayer
+%               normal, defaults to false (orientation is fitted)
 % logfid        optional file identifier of a logfile, if missing, output
 %               is directed to the Matlab console, use empty logfid to
 %               suppress output
@@ -37,6 +39,10 @@ end
 
 if ~exist('type','var') || isempty(type)
     type = 'bundle';
+end
+
+if ~exist('oriented','var') || isempty(oriented)
+    oriented = false;
 end
 
 if ~exist('logfid','var')
@@ -91,7 +97,7 @@ converged = false;
 bilayer0 = bilayer;
 while it < maxit && ~converged
     it = it + 1;
-    [bilayer,energy] = fit_bilayer(entity,conformer,TM_addresses,propensities,accessibility,bilayer0);
+    [bilayer,energy] = fit_bilayer(entity,conformer,TM_addresses,propensities,accessibility,bilayer0,oriented);
     
     fprintf(logfid,'Iteration %i. Immersion free energy is %6.1f kcal/mol\n',it,energy);
     fprintf(logfid,'thickness   : %4.1f %s\n',bilayer.thickness,char(197));
@@ -413,7 +419,7 @@ else
     energy = RT*energy;
 end
 
-function [bilayer,energy] = fit_bilayer(entity,conformer,TM_addresses,propensities,accessibility,bilayer)
+function [bilayer,energy] = fit_bilayer(entity,conformer,TM_addresses,propensities,accessibility,bilayer,oriented)
 
 z_grid = linspace(-10,10,21);
 d_grid = linspace(25,50,21);
@@ -422,6 +428,9 @@ min_energy = 1e10;
 opt_z = bilayer.z;
 opt_d = bilayer.thickness;
 c_bilayer = bilayer;
+
+options = optimset('fminsearch');
+options = optimset(options,'TolFun',0.05,'TolX',0.05);
 
 for k = 1:length(z_grid)
     c_bilayer.z = z_grid(k);
@@ -438,38 +447,45 @@ end
 
 c_bilayer.z = opt_z;
 c_bilayer.thickness = opt_d;
-th_grid = linspace(-pi/4,pi/4,21);
-phi_grid = linspace(-pi,pi,41);
+c_bilayer.theta = 0;
+c_bilayer.phi = 0;
 
-min_energy = 1e10;
-opt_theta = bilayer.theta;
-opt_phi = bilayer.phi;
-
-for k = 1:length(th_grid)
-    c_bilayer.theta = th_grid(k);
-    for kk = 1:length(phi_grid)
-        c_bilayer.phi = phi_grid(kk);
-        energy = immersion_energy(entity,conformer,TM_addresses,propensities,accessibility,c_bilayer);
-        if energy < min_energy
-            min_energy = energy;
-            opt_theta = c_bilayer.theta;
-            opt_phi = c_bilayer.phi;
+if oriented
+    v0 = [opt_z opt_d];
+    [v,energy] = fminsearch(@energy_fit_oriented,v0,options,entity,conformer,TM_addresses,propensities,accessibility,c_bilayer);
+    bilayer.z = v(1);
+    bilayer.thickness = v(2);
+else
+    th_grid = linspace(-pi/4,pi/4,21);
+    phi_grid = linspace(-pi,pi,41);
+    
+    min_energy = 1e10;
+    opt_theta = bilayer.theta;
+    opt_phi = bilayer.phi;
+    
+    for k = 1:length(th_grid)
+        c_bilayer.theta = th_grid(k);
+        for kk = 1:length(phi_grid)
+            c_bilayer.phi = phi_grid(kk);
+            energy = immersion_energy(entity,conformer,TM_addresses,propensities,accessibility,c_bilayer);
+            if energy < min_energy
+                min_energy = energy;
+                opt_theta = c_bilayer.theta;
+                opt_phi = c_bilayer.phi;
+            end
         end
     end
+    
+    c_bilayer.theta = opt_theta;
+    c_bilayer.phi = opt_phi;
+    v0 = [opt_z opt_d opt_theta opt_phi];
+    [v,energy] = fminsearch(@energy_fit,v0,options,entity,conformer,TM_addresses,propensities,accessibility,c_bilayer);
+    bilayer.z = v(1);
+    bilayer.thickness = v(2);
+    bilayer.theta = v(3);
+    bilayer.phi = v(4);
 end
 
-c_bilayer.theta = opt_theta;
-c_bilayer.phi = opt_phi;
-
-v0 = [opt_z opt_d opt_theta opt_phi];
-options = optimset('fminsearch');
-options = optimset(options,'TolFun',0.05,'TolX',0.05);
-
-[v,energy] = fminsearch(@energy_fit,v0,options,entity,conformer,TM_addresses,propensities,accessibility,c_bilayer);
-bilayer.z = v(1);
-bilayer.thickness = v(2);
-bilayer.theta = v(3);
-bilayer.phi = v(4);
 
 
 
@@ -479,5 +495,12 @@ bilayer.z = v(1);
 bilayer.thickness = v(2);
 bilayer.theta = v(3);
 bilayer.phi = v(4);
+
+energy = immersion_energy(entity,conformer,TM_addresses,propensities,accessibility,bilayer);
+
+function energy = energy_fit_oriented(v,entity,conformer,TM_addresses,propensities,accessibility,bilayer)
+
+bilayer.z = v(1);
+bilayer.thickness = v(2);
 
 energy = immersion_energy(entity,conformer,TM_addresses,propensities,accessibility,bilayer);

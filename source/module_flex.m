@@ -789,11 +789,13 @@ for kent = 1:nent
                         samples = data(:,2);
                         target = data(:,3);
                         sampling_provided = true;
-                    else % these are Deerlab data (unit nm, distance, distribution, lower bound, upper bound)
+                    else % these might be Deerlab data (unit nm, distance, distribution, lower bound, upper bound)
                         target = data(:,2);
                         target = target/sum(target);
                         samples = target;
-                        r_axis = 10*r_axis;
+                        if max(r_axis) < 20
+                            r_axis = 10*r_axis;
+                        end
                     end
                     M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
                     if M > curr_M_max
@@ -985,7 +987,9 @@ for kent = 1:nent
                         target = data(:,2);
                         target = target/sum(target);
                         samples = target;
-                        r_axis = 10*r_axis;
+                        if max(r_axis) < 20
+                            r_axis = 10*r_axis;
+                        end
                     end
                     M = max((target-0.01*max(target))./(samples+0.01*max(samples)));
                     if M > curr_M_max

@@ -192,6 +192,7 @@ while 1
         end
         atoms = atoms + 1;
         atname = strtrim(upper(tline(13:16)));
+        atname0 = tline(13:16);
         for kk = 1:length(atname)
             if atname(kk) == ''''
                 atname(kk) = '_';
@@ -263,7 +264,7 @@ while 1
         if length(tline) >= 78
             element = strtrim(tline(77:78));
         else
-            element = get_element_by_atomname(atname);
+            element = get_element_by_atomname(atname0);
         end
         if length(tline) >= 80
             charge = str2double(tline(79:80));
@@ -275,7 +276,7 @@ while 1
             residues = trial_resnum;
         end
         xyz(atoms,:) = [x,y,z];
-        elements(atoms) = element_number(element);
+        [elements(atoms),element] = element_number(element);
         occupancies(atoms) = round(100*occupancy);
         if strcmpi(resname,'HOH') % special treatment for water
             water_atoms = water_atoms + 1;
@@ -415,19 +416,27 @@ for k = 1:length(element)
 end
 if element(1)=='H' && length(atom_tag)==4 % fix Biomer format
     element='H';
+elseif element(1)==' ' && element(2) == 'H' % fix CYANA
+    element = 'H';
 end
 if element(1)=='C' && length(atom_tag)==4 % fix Biomer format
     element='C';
+elseif element(1)==' ' && element(2) == 'C'
+    element = 'C'; % fix CYANA
 end
 if element(1)=='N' && length(atom_tag)==4 % fix Biomer format
     element='N';
+elseif element(1)==' ' && element(2) == 'N'
+    element = 'N'; % fix CYANA
 end
 if element(1)=='O' && length(atom_tag)==4 % fix Biomer format
     element='O';
+elseif element(1)==' ' && element(2) == 'O'
+    element = 'O'; % fix CYANA
 end
 element=strtrim(element);
 
-function elnum = element_number(element)
+function [elnum,element] = element_number(element)
 
 pse='#HHeLiBe#B#C#N#O#FNeNaMgAlSi#P#SClAr#KCaScTi#VCrMnFeCoNiCuZnGaGeAsSeBrKrRbSr#YZrNbMoTcRuRhPdAgCdInSnSbTe#IXeCsBaLaCePrNdPmSmEuGdTbDyHoErTmYbLuHfTa#WReOsIrPtAuHgTlPbBiPoAtRnFrRaAcThPaUNpPuAmCmBkCfEsFmMdNoLr';
 
@@ -437,4 +446,11 @@ else
     element(2) = lower(element(2));
 end
 elnum = (strfind(pse,element)+1)/2;
+if isempty(elnum)
+    element = element(1);
+    elnum = (strfind(pse,['#',element])+1)/2;
+end
+if element(1) == '#'
+    element = element(2:end);
+end
 

@@ -349,7 +349,9 @@ for kent = 1:nent
                     r_axis = data(:,1);
                     target = data(:,2);
                     target = target/sum(target);
-                    r_axis = 10*r_axis;
+                    if max(r_axis) < 20
+                        r_axis = 10*r_axis;
+                    end
                 else
                     r_axis = [];
                     target = [];

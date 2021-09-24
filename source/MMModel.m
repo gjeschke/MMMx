@@ -24,10 +24,21 @@ exceptions = {[]};
 warnings = 0;
 entity = [];
 
+if ~exist('control_file','var') || isempty(control_file)
+    [control_file,path] = uigetfile('*.mcx');
+    my_path = pwd;
+    cd(path);
+end
+
 [controller,parse_exceptions] = parse_control_file(control_file);
+
+[pname,bname,~] = fileparts(control_file);
+ext = '.log';
+def_logfile = fullfile(pname,[bname ext]);
 
 if ~isempty(parse_exceptions) && ~isempty(parse_exceptions{1})
     exceptions = parse_exceptions;
+    cd(my_path);
     return
 end
 
@@ -41,7 +52,13 @@ for module = 1:length(controller)
     switch lower(controller(module).name)
         case 'logfile'
             close_log = true;
-            logfid = fopen(controller(module).options{1},'wt');
+            if ~isempty(controller(module).options) && ~isempty(controller(module).options{1})
+                logfid = fopen(controller(module).options{1},'wt');
+            else
+                logfid = fopen(def_logfile,'wt');
+            end
+        case 'log'
+            logfid = fopen(def_logfile,'wt');
         case 'getpdb'
             [entity,module_exceptions] = get_pdb(controller(module).options{1});
             failed = isempty(entity); % commands that are essential for further pipeline processing should report failure
@@ -60,18 +77,18 @@ for module = 1:length(controller)
                 entity = [];
             end
             [entity,module_exceptions,failed] = module_flex(controller(module),logfid,entity);
-        case 'flexrna'
+        case {'flexrna','flex_rna'}
             if ~exist('entity','var')
                 entity = [];
             end
             [entity,module_exceptions,failed] = module_flexRNA(controller(module),logfid,entity);
-        case 'ensemblefit'
+        case {'ensemblefit','ensemble_fit'}
             [entity,module_exceptions,failed] = module_ensemble_fit(controller(module),logfid,entity);
-        case 'yasara'
+        case {'yasara','yasararefine','yasara_refine'}
             [entity,module_exceptions,failed] = module_yasara(controller(module),logfid,entity);
         case 'prepare'
             [entity,module_exceptions,failed] = module_prepare(controller(module),logfid);
-        case 'ensembleanalysis'
+        case {'ensembleanalysis','ensemble_analysis'}
             [entity,module_exceptions,failed] = module_ensemble_analysis(controller(module),logfid);
         otherwise
             fprintf(logfid,'Warning: Unknown module %s was ignored.\n\n',controller(module).name);
@@ -82,6 +99,7 @@ for module = 1:length(controller)
             exceptions{warnings} = module_exceptions{exci};
         end
         if failed
+            cd(my_path);
             return
         end
     end
@@ -91,4 +109,5 @@ if close_log
     fclose(logfid);
 end
 
+cd(my_path);
 

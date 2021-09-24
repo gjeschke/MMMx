@@ -78,7 +78,7 @@ for d = 1:length(control.directives)
     clear cmd
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
-        case {'addpdb','getens'}
+        case {'addpdb','getens','input'}
             cmd_poi = cmd_poi + 1;
             ensemble_poi = ensemble_poi + 1;
             cmd.input = control.directives(d).options{1};
@@ -233,6 +233,10 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 4 % chain and possibly range given for template
                 cmd.template_address = control.directives(d).options{5};
             end
+            cmd.central = false;
+            if length(control.directives(d).options) > 5 && strcmpi(control.directives(d).options{6},'central')
+                cmd.central = true;
+            end
             commands{cmd_poi} = cmd;    
         otherwise
             warnings = warnings + 1;
@@ -285,7 +289,7 @@ for c = 1:cmd_poi
             ensemble_descriptor.entity = entity;
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
             ensembles = store_ensemble(ensemble_name,entity,ensembles);
-        case 'getens'
+        case {'getens','input'}
             ensemble_poi = cmd.ensemble;
             ensemble_descriptor = ensembles{ensemble_poi};
             ensemble_name = ensemble_descriptor.name;
@@ -378,7 +382,7 @@ for c = 1:cmd_poi
                writematrix(data,datname);
            else
                overlap = density_overlap(entity1,entity2,cmd.address);
-               fprintf(logfid,'Ensemble density overlap bewteen %s and %s is %6.3f\n',cmd.entity1,cmd.entity2,overlap);
+               fprintf(logfid,'Ensemble density overlap between %s and %s is %6.3f\n',cmd.entity1,cmd.entity2,overlap);
            end
         case 'subsample'
             if strcmp(cmd.entity,'.')
@@ -517,6 +521,12 @@ for c = 1:cmd_poi
                     fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
                         measures.(part).width,char(197),measures.(part).density,char(197));
                     h = plot_pair_rmsd(measures.(part).pair_rmsd,cmd.options.superimpose);
+                    sum_msq = sum(measures.(part).pair_rmsd.^2);
+                    [C,~] = size(measures.(part).pair_rmsd);
+                    [msq,conf] = min(sum_msq);
+                    rmsd = sqrt(msq/C);
+                    fprintf(logfid,'\nCentral conformer %i has rmsd distance of %4.1f %s from other conformers\n',...
+                        conf,rmsd,char(197));
                     if save_figures
                         figname = sprintf('pair_rmsd_%s_%s.%s',basname,part,figure_format);
                         saveas(h,figname);
@@ -533,12 +543,12 @@ for c = 1:cmd_poi
                     end
                 end
                 if cmd.options.pair_corr
-                    h = plot_pair_corr(correlations.(part).pair_corr);
+                    h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr);
                     if save_figures
                         figname = sprintf('residue_pair_correlation_%s_%s.%s',basname,part,figure_format);
                         saveas(h,figname);
                     end
-                    h = plot_pair_corr(correlations.(part).pair_corr,correlations.(part).dmat);
+                    h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr,correlations.(part).dmat);
                     if save_figures
                         figname = sprintf('residue_pair_correlation_normalized_%s_%s.%s',basname,part,figure_format);
                         saveas(h,figname);
@@ -633,7 +643,19 @@ for c = 1:cmd_poi
                 if isempty(c_entity)
                     warnings = warnings +1;
                     exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                        'tried to suberimpose entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            if isempty(cmd.template)
+                t_entity = [];
+            else
+                t_entity = retrieve_ensemble(cmd.template,ensembles,logfid);
+                if isempty(t_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to superimpose onto template %s, which is unknown',cmd.template);
                     record_exception(exceptions{warnings},logfid);
                     return
                 end
@@ -650,7 +672,7 @@ for c = 1:cmd_poi
                     selected{2} = cmd.template_address;
                 end
             end
-            [c_entity,~,exceptions0] = superimpose_ensemble(c_entity,selected,cmd.template);
+            [c_entity,~,exceptions0] = superimpose_ensemble(c_entity,selected,t_entity,cmd.central);
             for exci = 1:length(exceptions0)
                 if ~isempty(exceptions0{exci})
                     warnings = warnings +1;
@@ -721,6 +743,10 @@ else
     chain = address(poia+1:poie-1);
     address = address(poie+1:end);
 end
+if strcmp(chain,'*')
+    range = [1,1e6];
+    return
+end
 residues = split(address,'-');
 if ~isempty(residues{1})
     range(1) = str2double(residues{1});
@@ -758,7 +784,7 @@ else
 end
 axis equal
 
-function h = plot_pair_corr(pair_corr,dmat)
+function h = plot_pair_corr(pair_axis,pair_corr,dmat)
 
 h = figure;
 [n1,n2] = size(pair_corr);
@@ -775,11 +801,32 @@ end
 
 curr_axis = gca;
 curr_axis.YDir = 'normal';
+step =floor(n1/5);
+curr_axis.XTick = 1:step:n2;
+curr_axis.YTick = 1:step:n1;
+XTickLabel = cell(1,10);
+poi = 0;
+for k = 1:step:n2
+    poi = poi + 1;
+    XTickLabel{poi} = pair_axis{k};
+end
+XTickLabel = XTickLabel(1:poi);
+curr_axis.XTickLabel = XTickLabel;
+
+YTickLabel = cell(1,10);
+poi = 0;
+for k = 1:step:n2
+    poi = poi + 1;
+    YTickLabel{poi} = pair_axis{k};
+end
+YTickLabel = YTickLabel(1:poi);
+curr_axis.YTickLabel = YTickLabel;
 colorbar;
 axis tight
 xlabel('Residue number');
 ylabel('Residue number');
 axis equal
+
 
 function h = plot_compactness(compactness,type,range,offset)
 
@@ -828,4 +875,4 @@ h3 = plot(kaxis,R2fct,'Color',[0.8,0,0],'LineWidth',2.5);
 xlabel('Segment sequence length k');
 ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
 legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_ee,segments.nu_ee),'Location','southeast');
-axis([0,133,0,60]);
+axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);

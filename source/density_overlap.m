@@ -92,7 +92,7 @@ cube1 = cube1/sum(sum(sum(cube1)));
 
 for c = 1:C2
     pop = entity2.populations(c);
-    coor = get_coor(entity1,sprintf('{%i}%s',c,address),true);
+    coor = get_coor(entity2,sprintf('{%i}%s',c,address),true);
     [n,~] = size(coor);
     for at = 1:n
         xpsf = exp(-(x-coor(at,1)).^2/(2*sig^2)); % point-spread function along x

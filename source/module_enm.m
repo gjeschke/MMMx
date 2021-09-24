@@ -59,6 +59,7 @@ conformer = 1;
 
 restraints.p_model = 0.5;
 restraints.uncertainty = 3;
+restraints.ensemble = 100;
 
 if ~isempty(control.options)
     restraints.p_model = str2double(control.options{1});
@@ -248,9 +249,9 @@ for kr = 1:length(restraints.ddr)
         coor2 = populations'*positions;
         restraints.ddr(kr).coor{nr} = [coor1; coor2];
         if ~isempty(restraints.ddr(kr).file{nr}) % if a distribution file exists, load distribution
-            exp_data = load(restraints.ddr(kr).file{nr});
-            rax = 10*exp_data(:,1)';
-            restraints.ddr(kr).rax{nr} = rax; % conversion to Angstroem
+            exp_data = load_distance_distribution(restraints.ddr(kr).file{nr});
+            rax = exp_data(:,1)';
+            restraints.ddr(kr).rax{nr} = rax; 
             distr = exp_data(:,2)';
             distr = distr/sum(distr);
             restraints.ddr(kr).distr{nr} = distr;

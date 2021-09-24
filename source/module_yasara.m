@@ -8,7 +8,7 @@ function [entity,exceptions,failed] = module_yasara(control,logfid,entity)
 %
 % INPUT
 % control       control structure with fields
-%               .name           'yasara', unused
+%               .name           'Yasara_Refine', unused
 %               .options        options struct
 %               .directives     array of struct with directives
 %               .entity_output  number of the entity to be output
@@ -23,7 +23,12 @@ function [entity,exceptions,failed] = module_yasara(control,logfid,entity)
 %
 % SUPPORTED DIRECTIVES
 %
-% input         file name of input PDB file
+% input         file name of input PDB file(s)
+% addpdb        file name of input PDB file(s), synonym to input
+% ensemble      file name of an MMMx ensemble list, overrides input/addpdb
+% repack        repack sidegroups by SCWRL4 before running Yasara, may help
+%               to prevent Yasara crashes
+% console       run Yasara in console mode
 % save [fn]     specify file name fn for output, defaults to mmmx_yasara
 % 
 
@@ -33,6 +38,7 @@ function [entity,exceptions,failed] = module_yasara(control,logfid,entity)
 % initialize empty output
 exceptions = {[]};
 failed = false;
+repack = false;
 warnings = 0;
 
 if ~exist('entity','var')
@@ -49,6 +55,7 @@ end
 
 fname = 'MMMx_yasara';
 inname = '';
+initial_ensemble = '';
 output_name = false;
 
 % read restraints
@@ -60,6 +67,11 @@ for d = 1:length(control.directives)
         case 'addpdb'
             inname = control.directives(d).options{1};
             fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
+        case 'ensemble'
+            initial_ensemble = control.directives(d).options{1};
+            fprintf(logfid,'Ensemble %s will be optimized instead of input entity\n',initial_ensemble);
+        case 'repack'
+            repack = true;
         case 'save'
             fname = control.directives(d).options{1};
             % remove extension if any
@@ -77,7 +89,21 @@ for d = 1:length(control.directives)
     end
 end
 
-all_files = dir(inname); % find all files that match the pattern
+pop = [];
+if ~isempty(initial_ensemble)
+    [all_files,pop,exceptions0] = rd_ensemble_definition(initial_ensemble);
+    if ~isempty(exceptions0) && ~isempty(exceptions{1})
+        warnings = warnings + 1;
+        exceptions{warnings} = exceptions0{1};
+        record_exception(exceptions{warnings},logfid);
+        return
+    end
+end
+
+
+if isempty(pop)
+    all_files = dir(inname); % find all files that match the pattern
+end
 if isempty(all_files)
     file_list{1} = inname;
 else
@@ -87,17 +113,30 @@ else
     end
 end
 
+if ~isempty(pop) % we are refining an ensemble
+    efid = fopen(sprintf('%s.ens',fname),'wt');
+    fprintf(efid,'%% MMMx ensemble %s refined by Yasara\n',fname);
+end
+one_failed = false;
 for c = 1:length(file_list)
     inname = file_list{c};
     opt.fname = sprintf('%s_m%i',fname,c);
     temporary_input = false;
+    if repack
+        entity = get_pdb(inname);
+        entity = modify_sidechains(entity,true);
+        now_string = datestr(now,'HH-MM-SS');
+        inname = sprintf('to_be_optimized_%s_%i.pdb',now_string,round(10000*rand));
+        put_pdb(entity,inname);
+        temporary_input = true;
+    end
     if ~isempty(inname)
         poi = strfind(inname,'.pdb');
         if ~isempty(poi)
-            inname = inname(1:poi-1);
+            inname1 = inname(1:poi-1);
         end
         if ~output_name
-            opt.fname = strcat(inname,'_yasara');
+            opt.fname = strcat(inname1,'_yasara');
         end
     else
         if ~exist('entity','var') || isempty(entity)
@@ -106,6 +145,9 @@ for c = 1:length(file_list)
                     'Neither input entity nor input file are defined.');
             fprintf(logfid,'Errror in Yasara optimizer: Neither input entity nor input file are defined\n');
             failed = true;
+            if ~isempty(pop)
+                fclose(efid);
+            end
             return
         else
             % make a file name that is hopefully unique
@@ -126,16 +168,28 @@ for c = 1:length(file_list)
 
     % read Yasara result into current entity, if output is requested
     if nargout > 0 && isempty(exceptions{1})
-        if ~contains(fname,'.pdb')
-            fname1 = strcat(fname,'.pdb');
+        if ~contains(opt.fname,'.pdb')
+            fname1 = strcat(opt.fname,'.pdb');
+        else
+            fname1 = opt.fname;
         end
         if ~exist(fname1,'file')
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_yasara:no_result',...
                 'ERROR: Yasara computation failed.');
+            one_failed = true;
             entity = [];
         else
-            entity = get_pdb(fname);
+            entity = get_pdb(fname1);
+            if ~isempty(pop)
+                fprintf(efid,'%s%10.6f\n',fname1,pop(c)); 
+            end
         end
     end
+end
+if ~isempty(pop)
+    fclose(efid);
+end
+if one_failed
+    fprintf(logfid,'### Output ensemble invalid, because at least one conformer could not be optimized ###\n');
 end

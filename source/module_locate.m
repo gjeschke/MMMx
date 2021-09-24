@@ -165,8 +165,8 @@ for kr = 1:length(restraints.reference)
         populations = populations/sum(populations);
         restraints.reference(kr).coor{nr} = populations'*positions;
         if ~isempty(restraints.reference(kr).file{nr}) % if a distribution file exists, load distribution
-            exp_data = load(restraints.reference(kr).file{nr});
-            rax = 10*exp_data(:,1)';
+            exp_data = load_distance_distribution(restraints.reference(kr).file{nr});
+            rax = exp_data(:,1)';
             restraints.reference(kr).rax{nr} = rax; % conversion to Angstroem
             distr = exp_data(:,2)';
             distr = distr/sum(distr);

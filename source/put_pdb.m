@@ -152,9 +152,13 @@ if isfield(options,'pop') && ~isempty(options.pop) && options.pop
     fprintf(fid,'%s\n',pad(pdbline,80));
     save_conf = 0;
     for kconf = 1:length(conformer_order)
-        if min(abs(entity.selected-conformer_order(kconf))) == 0
+        if ~options.selected || min(abs(entity.selected-conformer_order(kconf))) == 0
             save_conf = save_conf + 1;
-            curr_pop = entity.populations(conformer_order(kconf))/sum(entity.populations(entity.selected));
+            if options.selected
+                curr_pop = entity.populations(conformer_order(kconf))/sum(entity.populations(entity.selected));
+            else
+                curr_pop = entity.populations(conformer_order(kconf));
+            end
             pdbline = sprintf('REMARK 400   MODEL %9i POPULATION %8.4f',save_conf,curr_pop);
             fprintf(fid,'%s\n',pad(pdbline,80));
         end

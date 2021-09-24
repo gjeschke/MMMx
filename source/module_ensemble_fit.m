@@ -57,6 +57,11 @@ fname_basis = 'MMMx_expand';
 
 % set defaults
 
+save_figures = false; % default is to not save figures
+figure_format = 'pdf';
+
+pdbout = ''; % empty file name indicates not output of ensemble PDB 
+
 pre_default_td = 10e-3; % 10 ms default total INEPT time
 pre_default_tr = 20; % 20 ns default rotational correlation time
 pre_default_taui = 0.5; % 0.5 ns default label internal correlation time
@@ -104,6 +109,13 @@ for d = 1:length(control.directives)
             plot_result = true;
         case 'initial'
             initial_ensemble = control.directives(d).options{1};
+        case 'figures'
+            if strcmpi(control.directives(d).options{1},'off')
+                save_figures = false;
+            else
+                save_figures = true;
+                figure_format = control.directives(d).options{1};
+            end
         case 'interactive'
             opt.interactive = true;
         case 'blocksize'
@@ -112,6 +124,8 @@ for d = 1:length(control.directives)
             added_conformers = control.directives(d).options{1};
         case 'save'
             outname = control.directives(d).options{1};
+        case {'pdbsave','pdb_save'}
+            pdbout = control.directives(d).options{1};
         case 'rmean'
             fit_mean_distances = true;
         case 'saxs'
@@ -353,8 +367,8 @@ for ddr_poi = 1:length(restraints.ddr)
     for kr = 1:length(restraints.ddr(ddr_poi).site1)
         kft = kft + 1;
         if ~isempty(restraints.ddr(ddr_poi).file{kr})
-            exp_data = load(restraints.ddr(ddr_poi).file{kr});
-            rax_exp = 10*exp_data(:,1)'; % conversion to Angstroem
+            exp_data = load_distance_distribution(restraints.ddr(ddr_poi).file{kr});
+            rax_exp = exp_data(:,1)';
             distr_exp = exp_data(:,2)';
             lb_exp = exp_data(:,3)';
             ub_exp = exp_data(:,4)';
@@ -589,15 +603,29 @@ for c = 1:C
                 switch restraints.sas(sas_poi).type
                     case 'saxs'
                         [fit,chi2] = fit_SAXS(datafile,fit_task.file_list{c},options);
-                        figure(3); clf; hold on;
-                        plot(fit(:,1),fit(:,2),'k');
-                        plot(fit(:,1),fit(:,3),'r');
-                        title(sprintf('chi^2 = %6.3f\n',chi2));
-                        fprintf(1,'SAXS chi^2 = %6.3f\n',chi2);
-                        drawnow
+%                         h = figure; clf; hold on;
+%                         plot(fit(:,1),fit(:,2),'k');
+%                         plot(fit(:,1),fit(:,3),'r');
+%                         title(sprintf('chi^2 = %6.3f\n',chi2));
+%                         fprintf(1,'SAXS chi^2 = %6.3f\n',chi2);
+%                         drawnow
+%                         if save_figures
+%                             figure_title = sprintf('SAXS restraint set %i',sas_poi);
+%                             save_figure(h,figure_title,figure_format);
+%                         end
                     case 'sans'
                         illres = restraints.sas(sas_poi).illres;
                         [fit,chi2] = fit_SANS(datafile,fit_task.file_list{c},illres,options);
+%                         h = figure; clf; hold on;
+%                         plot(fit(:,1),fit(:,2),'k');
+%                         plot(fit(:,1),fit(:,3),'r');
+%                         title(sprintf('chi^2 = %6.3f\n',chi2));
+%                         fprintf(1,'SANS chi^2 = %6.3f\n',chi2);
+%                         drawnow
+%                         if save_figures
+%                             figure_title = sprintf('SANS restraint set %i',sas_poi);
+%                             save_figure(h,figure_title,figure_format);
+%                         end
                 end
             end
             if isempty(fit)
@@ -753,7 +781,14 @@ if run_fit
     included = 1:C0; % indices for conformers of initial ensemble
     first_run = true; % even if only the initial ensemble is given, it should be refitted
     
+    all_fom_ddr = zeros(1,C);
+    all_chi2_sas = zeros(1,C);
+    all_rmsd_pre = zeros(1,C);
+    iterations = 0;
+    
     while processed < C || first_run
+        
+        iterations = iterations + 1;
     
         first_run = false;
         
@@ -826,6 +861,7 @@ if run_fit
             
             % store information for multi-restraint fit
             fom.ddr = fom_ddr;
+            all_fom_ddr(iterations) = fom_ddr;
             predictions.ddr = curr_ddr_predictions;
             nr_sets = nr_sets + 1;
             
@@ -898,6 +934,7 @@ if run_fit
             
             % store information for multi-restraint fit
             fom.sas = fom_sas;
+            all_chi2_sas(iterations) = fom_sas;
             predictions.sas = curr_sas_predictions;
             nr_sets = nr_sets + 1;
             
@@ -955,6 +992,7 @@ if run_fit
             
             % store information for multi-restraint fit
             fom.pre = fom_pre;
+            all_rmsd_pre(iterations) = fom_pre;
             predictions.pre.predictions = curr_pre_predictions;
             predictions.pre.parameters = pre_parameters;
             nr_sets = nr_sets + 1;
@@ -1081,6 +1119,44 @@ if run_fit
         C0 = length(included);
         opt.old_size = C0;
     end
+    all_fom_ddr = all_fom_ddr(1:iterations);
+    all_chi2_sas = all_chi2_sas(1:iterations);
+    all_rmsd_pre = all_rmsd_pre(1:iterations);
+    if iterations > 1
+        if nr_ddr > 0
+            h = figure;
+            plot(1:iterations,all_fom_ddr,'k.','MarkerSize',14);
+            xlabel('Iterations');
+            ylabel('Geometric mean overlap');
+            title('Convergence of DDR fit');
+            if save_figures
+                figure_title = 'DDR_convergence';
+                save_figure(h,figure_title,figure_format);
+            end
+        end
+        if nr_sas > 0
+            h = figure;
+            plot(1:iterations,all_chi2_sas,'k.','MarkerSize',14);
+            xlabel('Iterations');
+            ylabel('SAS chi-squared');
+            title('Convergence of SAS fit');
+            if save_figures
+                figure_title = 'SAS_convergence';
+                save_figure(h,figure_title,figure_format);
+            end
+        end
+        if nr_pre > 0
+            h = figure;
+            plot(1:iterations,all_rmsd_pre,'k.','MarkerSize',14);
+            xlabel('Iterations');
+            ylabel('PRE rmsd');
+            title('Convergence of PRE fit');
+            if save_figures
+                figure_title = 'PRE_convergence';
+                save_figure(h,figure_title,figure_format);
+            end
+        end
+    end
 end
 
 fprintf(logfid,'%i conformers remain included\n',C0);          
@@ -1097,6 +1173,17 @@ else
         fprintf(ofid,'%s%10.6f\n',fit_task.file_list{fit_task.remaining_conformers(c)},fit_task.ensemble_populations(c));
     end
     fclose(ofid);
+end
+
+% save ensemble PDB if requested
+if ~isempty(pdbout)
+    e_entity = get_pdb(fit_task.file_list{fit_task.remaining_conformers(1)});
+    for c = 2:length(fit_task.remaining_conformers)
+        e_entity = get_pdb(fit_task.file_list{fit_task.remaining_conformers(c)},[],e_entity);
+    end
+    e_entity.populations = fit_task.ensemble_populations';
+    save_options.pop = true;
+    put_pdb(e_entity,pdbout,save_options);
 end
 
 for kr = 1:nr
@@ -1178,7 +1265,7 @@ if plot_result
     overlap = 1;
     for kr = 1:nr
         if fit_task.ddr_valid(kr)
-            figure(kr); clf; hold on
+            h = figure; clf; hold on
             overlap_G = [];
             overlap_E = [];
             if ~isempty(fit_task.ddr(kr).exp_distr)
@@ -1213,39 +1300,55 @@ if plot_result
             title(title_str);
             xlabel('Distance (Angstroem)');
             ylabel('Probability density');
+            if save_figures
+                figure_title = sprintf('overlap_%s-%s',site1,site2);
+                save_figure(h,figure_title,figure_format);
+            end
         end
     end
     overlap = overlap^(1/nr);
     fprintf(1,'Overlap deficiency: %6.3f\n',1-overlap);
     for kr = 1:nr_sas
         if fit_task.sas_valid(kr)
-            figure(kr+1000); clf; hold on
+            h = figure; clf; hold on
             data = all_sas_predictions{kr};
             fitted_curve = fit_task.sas(kr).fitted_curve;
             plot(data(:,1),data(:,2),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(data(:,1),fitted_curve,'-','LineWidth',2.5,'Color',[0.7,0,0]);
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
-            xlabel('s [Angstroem^{-1}]');
+            xlabel(sprintf('s [%s^{-1}]',char(197)));
             ylabel('I(s)');
-            figure(kr+2000); clf; hold on
+            if save_figures
+                figure_title = sprintf('SAS_fit_%i',kr);
+                save_figure(h,figure_title,figure_format);
+            end
+            h = figure; clf; hold on
             data = all_sas_predictions{kr};
             plot(data(:,1),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(data(:,1),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
-            xlabel('s [Angstroem^{-1}]');
+            xlabel(sprintf('s [%s^{-1}]',char(197)));
             ylabel('log(I(s))');
-            figure(kr+3000); clf; hold on
+            if save_figures
+                figure_title = sprintf('SAS_log_fit_%i',kr);
+                save_figure(h,figure_title,figure_format);
+            end
+            h = figure; clf; hold on
             data = all_sas_predictions{kr};
             plot(data(:,1),data(:,2)-fitted_curve,'.','MarkerSize',14,'Color',[0,0,0.8]);
             title(sprintf('Fit residual: chi^2 = %6.3f',fit_task.sas(kr).chi2));
             xlabel('s [Angstroem^{-1}]');
             ylabel('log(I(s))');
+            if save_figures
+                figure_title = sprintf('SAS_log_fit_residual_%i',kr);
+                save_figure(h,figure_title,figure_format);
+            end
         end
     end
     if nr_pre > 0
         kft = 0;
         for kr = 1:length(pre_parameters)
-            figure(10000+kr); clf; hold on;
+            h = figure; clf; hold on;
             range = pre_parameters(kr).range;
             plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
             kx = 0;
@@ -1282,6 +1385,10 @@ if plot_result
             else
                 ylabel('I_{para}/I_{dia}');
                 axis([1,kx,0,1.05]);
+            end
+            if save_figures
+                figure_title = sprintf('PRE_fit_%i',kr);
+                save_figure(h,figure_title,figure_format);
             end
         end
         fprintf(1,'PRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
@@ -1370,3 +1477,8 @@ fom = fom/n;
 function record_exception(exception,logfile)
 
 fprintf(logfile,'### ensemble fit exception %s ###\n',exception.message);
+
+function save_figure(h,title,format)
+
+figname = sprintf('%s.%s',title,format);
+saveas(h,figname);

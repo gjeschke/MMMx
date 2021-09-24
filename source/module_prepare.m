@@ -90,6 +90,24 @@ for d = 1:length(control.directives)
             entity_descriptor.conformer = conformer;
             entities{entity_poi} = entity_descriptor;
             commands{cmd_poi} = cmd;
+        case 'getcyana'
+            cmd_poi = cmd_poi + 1;
+            entity_poi = entity_poi + 1;
+            cmd.input = control.directives(d).options{1};
+            cmd.entity = entity_poi;
+            options.maxch = 26;
+            if length(control.directives(d).options) > 1 % the entity has an explicit internal name
+                entity_descriptor.name = control.directives(d).options{2};
+            else % the internal name is derived from the order of loading entities
+                entity_descriptor.name = sprintf('E%i',entity_poi);
+            end
+            if length(control.directives(d).options) > 2 % the entity has an explicit internal name
+                options.maxch = str2double(control.directives(d).options{3});
+            end
+            entity_descriptor.entity = get_cyana_pdb(cmd.input,options); % load the entity
+            entity_descriptor.conformer = conformer;
+            entities{entity_poi} = entity_descriptor;
+            commands{cmd_poi} = cmd;
         case 'center'
             cmd_poi = cmd_poi + 1;
             cmd.address = '*'; % default is the whole structure
@@ -187,11 +205,12 @@ for d = 1:length(control.directives)
         case 'bilayer'
             cmd_poi = cmd_poi + 1;
             cmd.type = control.directives(d).options{1};
-            cmd.transform = false; % by default, coordinates are not transformed
+            cmd.transform = true; % by default, coordinates are transformed
+            cmd.oriented = false; % by default, bilayer orientatuion is also fitted
             if ~isempty(control.directives(d).options)...
                     && ~isempty(control.directives(d).options{2})...
-                    && strcmpi(control.directives(d).options{2},'transform')
-                cmd.transform = true;
+                    && strcmpi(control.directives(d).options{2},'oriented')
+                cmd.oriented = true;
             end
             if length(control.directives(d).options) > 2 % bilayer computation for a selected entity
                 cmd.entity = control.directives(d).options{3};
@@ -215,6 +234,11 @@ for d = 1:length(control.directives)
                 cmd.pdbid = control.directives(d).options{3};
             else
                 cmd.pdbid = ''; % this means that the original PDB identifier from the loaded structure is used
+            end
+            if length(control.directives(d).options) > 3 % only a selection is saved
+                cmd.selection = control.directives(d).options{4};
+            else
+                cmd.selection = '*'; % this means that everything is saved
             end
             commands{cmd_poi} = cmd;
         case 'chains'
@@ -309,7 +333,7 @@ entity_name = 'input';
 for c = 1:cmd_poi
     cmd = commands{c};
     switch cmd.name
-        case 'getpdb'
+        case {'getpdb','getcyana'}
             entity_poi = cmd.entity;
             entity_descriptor = entities{entity_poi};
             entity_name = entity_descriptor.name;
@@ -437,7 +461,7 @@ for c = 1:cmd_poi
                 end
                 entity_name = cmd.entity;
             end
-            [entity1,error] = bilayer_model(c_entity,conformer,cmd.type,logfid);
+            [entity1,error] = bilayer_model(c_entity,conformer,cmd.type,cmd.oriented,logfid);
             if ~isempty(error)
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_prepare:bilayer_not_computed',...
@@ -466,12 +490,18 @@ for c = 1:cmd_poi
                 end
                 entity_name = cmd.entity;
             end
-            if isempty(cmd.pdbid)
-                put_pdb(c_entity,cmd.output);
-            else
-                clear save_options
+            clear save_options
+            if cmd.selection ~= '*'
+                save_options.selected = true;
+                c_entity = select(c_entity,cmd.selection,true);
+            end
+            if ~isempty(cmd.pdbid)
                 save_options.pdbid = cmd.pdbid;
+            end
+            if exist('save_options','var')
                 put_pdb(c_entity,cmd.output,save_options);
+            else
+                put_pdb(c_entity,cmd.output);
             end
         case 'chains'
             if strcmp(cmd.entity,'.')

@@ -1,4 +1,4 @@
-function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,template)
+function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,template,central)
 %
 % SUPERIMPOSE_ENSEMBLE Superimposes conformers in an ensemble
 %
@@ -21,6 +21,9 @@ function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,templat
 %           cell string containing two strings: the first string is used in
 %           entity and the second string in template
 % template  template entity, defaults to none
+% central   flag that requests superposition onto the central structure
+%           if a template is provided, superposition is onto the common
+%           central structure, defaults to false
 %
 % OUTPUT
 % entity       entity after superposition, only coordinates have changed
@@ -53,6 +56,22 @@ else
     [tcoor,~,exceptions] = get_coor(template,selection_template);
 end
 
+if ~exist('central','var') || isempty(central)
+    central = false;
+end
+
+% superposition to central structure overrides template selection or
+% selection in first conformer
+if central
+    [chain1,range1] = split_chain_range(selected);
+    if ~exist('template','var') || isempty(template)
+        tcoor = central_structure_coor(entity,chain1,range1);
+    else
+        [chain2,range2] = split_chain_range(selection_template);
+        tcoor = central_structure_coor(entity,selected,template,selection_template);
+    end
+end
+
 if ~isempty(exceptions) 
     if ~isempty(exceptions{1})
         return
@@ -78,4 +97,155 @@ for c = 1:length(entity.populations)
 %     end
     xyz = [ccoor ones(length(indices),1)]*transmat';
     entity.xyz(indices,:) = xyz(:,1:3);
+end
+
+function coor = central_structure_coor(entity1,selected1,entity2,selected2)
+% for selecting everything, chain and range identifiers should be empty
+
+C = length(entity1.populations);
+if exist('entity2','var') && ~isempty(entity2) && exist('selected2','var')
+    C2 = length(entity2.populations);
+else
+    C2 =0;
+end
+all_coor = cell(1,C+C2);
+for c = 1:C
+    % combine coordinate arrays
+    coor = get_coor(entity1,[sprintf('{%i}',c) selected1]);
+    all_coor{c} = coor;
+end
+
+for c = C+1:C+C2
+    % combine coordinate arrays
+    coor = get_coor(entity2,[sprintf('{%i}',c-C) selected2]);
+    all_coor{c} = coor;
+end
+C = C + C2;
+
+pair_rmsd = zeros(C);
+for c1 = 1:C-1
+    coor1 = all_coor{c1};
+    for c2 = c1+1:C
+        coor2 = all_coor{c2};
+        rmsd = rmsd_superimpose(coor1,coor2);
+        pair_rmsd(c1,c2) = rmsd;
+        pair_rmsd(c2,c1) = rmsd;
+    end
+end
+
+sum_msq = sum(pair_rmsd.^2);
+[~,conf] = min(sum_msq);
+coor = all_coor{conf};
+
+
+function coor = central_structure_coor_bb(entity1,chain1,range1,entity2,chain2,range2)
+% for selecting everything, chain and range identifiers should be empty
+
+backbones = get_backbones_ensemble(entity1,chain1,range1);
+chains = fieldnames(backbones);
+N = 0;
+for kc = 1:length(chains)
+    bb0 = backbones.(chains{kc}).bb{1};
+    [N0,~] = size(bb0);
+    N = N + N0;
+end
+backbones.all.chains = blanks(N);
+backbones.all.mono = zeros(1,N);
+backbones.all.slc = blanks(N);
+poi = 0;
+for kc = 1:length(chains)
+    for km = 1:length(backbones.(chains{kc}).mono)
+        backbones.all.chains(poi+km) = chains{kc};
+        backbones.all.slc(poi+km) = backbones.(chains{kc}).slc(km);
+        backbones.all.mono(poi+km) = backbones.(chains{kc}).mono(km);
+    end
+    poi = poi + length(backbones.(chains{kc}).mono);
+end
+C = length(backbones.(chains{1}).bb);
+for c = 1:C
+    % combine coordinate arrays
+    bb = zeros(N,3);
+    poi = 0;
+    for k = 1:length(chains)
+        bb0 = backbones.(chains{k}).bb{c};
+        [N0,~] = size(bb0);
+        bb(poi+1:poi+N0,:) = bb0;
+        poi = poi + N0;
+    end
+    % assign complete backbone
+    backbones.all.bb{c} = bb;
+end
+
+if exist('entity2','var') && ~isempty(entity2) && exist('chain2','var') && exist('range2','var')
+    backbones2 = get_backbones_ensemble(entity2,chain2,range2);
+    chains2 = fieldnames(backbones2);
+    N = 0;
+    for kc = 1:length(chains2)
+        bb0 = backbones2.(chains2{kc}).bb{1};
+        [N0,~] = size(bb0);
+        N = N + N0;
+    end
+    C2 = length(backbones.(chains{1}).bb);
+    for c = C+1:C+C2
+        % combine coordinate arrays
+        bb = zeros(N,3);
+        poi = 0;
+        for k = 1:length(chains)
+            bb0 = backbones.(chains{k}).bb{c-C};
+            [N0,~] = size(bb0);
+            bb(poi+1:poi+N0,:) = bb0;
+            poi = poi + N0;
+        end
+        % assign complete backbone
+        backbones.all.bb{c} = bb;
+    end
+    C = C + C2;
+end
+
+
+pair_rmsd = zeros(C);
+for c1 = 1:C-1
+    coor1 = backbones.all.bb{c1};
+    for c2 = c1+1:C
+        coor2 = backbones.all.bb{c2};
+        rmsd = rmsd_superimpose(coor1,coor2);
+        pair_rmsd(c1,c2) = rmsd;
+        pair_rmsd(c2,c1) = rmsd;
+    end
+end
+
+sum_msq = sum(pair_rmsd.^2);
+[~,conf] = min(sum_msq);
+coor = backbones.all.bb{conf};
+
+function [chain,range] = split_chain_range(address)
+
+range = [];
+
+if contains(address,'*')
+    chain = '';
+    return;
+end
+
+poia = strfind(address,'(');
+poie = strfind(address,')');
+if isempty(poie)
+    chain = '';
+else
+    chain = address(poia+1:poie-1);
+    address = address(poie+1:end);
+end
+if strcmp(chain,'*')
+    range = [1,1e6];
+    return
+end
+residues = split(address,'-');
+if ~isempty(residues{1})
+    range(1) = str2double(residues{1});
+end
+if ~isempty(residues{2})
+    range(2) = str2double(residues{2});
+end
+if length(range) == 1
+    range(2) = range(1);
 end

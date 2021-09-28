@@ -24,9 +24,10 @@ exceptions = {[]};
 warnings = 0;
 entity = [];
 
+my_path = pwd;
+
 if ~exist('control_file','var') || isempty(control_file)
     [control_file,path] = uigetfile('*.mcx');
-    my_path = pwd;
     cd(path);
 end
 
@@ -90,6 +91,8 @@ for module = 1:length(controller)
             [entity,module_exceptions,failed] = module_prepare(controller(module),logfid);
         case {'ensembleanalysis','ensemble_analysis'}
             [entity,module_exceptions,failed] = module_ensemble_analysis(controller(module),logfid);
+        case {'experimentdesign','experiment_design'}
+            [entity,module_exceptions,failed] = module_experiment_design(controller(module),logfid);
         otherwise
             fprintf(logfid,'Warning: Unknown module %s was ignored.\n\n',controller(module).name);
     end

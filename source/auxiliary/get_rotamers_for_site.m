@@ -3,7 +3,7 @@ function rotamers = get_rotamers_for_site(entity,site,rot_lib)
 % GET_ROTAMERS_FOR_SITE computes label rotamers at a single site
 %        
 %
-%   [rotamers,exceptions] = GET_ROTAMERS_FOR_SITE(entity,site,rot_lib)
+%   rotamers = GET_ROTAMERS_FOR_SITE(entity,site,rot_lib)
 %   Rotamer information for a site in entity for a label specified by a
 %   rotamer library rot_lib
 %
@@ -85,6 +85,9 @@ context = argouts{1}(:,1:4);
 address = sprintf('{%i}(%s)%s.%s',site.conformer,site.chain,site.residue(2:end),...
     rot_lib.std_frame_atoms{1});
 orig = get_atom(entity,'xyz',address);
+if isempty(orig)
+    return
+end
 orig = orig{1};
 address = sprintf('{%i}(%s)%s.%s',site.conformer,site.chain,site.residue(2:end),...
     rot_lib.std_frame_atoms{2});

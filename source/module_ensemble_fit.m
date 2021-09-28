@@ -1240,7 +1240,7 @@ if nr_pre > 0
             Gamma2 = sum(fit_task.ensemble_populations.*all_pre_predictions(kft,2+fit_task.remaining_conformers));
             if pre_parameters(kr).fit_rates
                 all_pre = Gamma2;
-                all_pre(all_pre > parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
+                all_pre(all_pre > pre_parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
                 fit_task.pre(kft).fit_data = all_pre;
             else
                 sim_pre = R2dia*exp(-td*Gamma2)/(Gamma2+R2dia);

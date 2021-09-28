@@ -173,8 +173,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).orientations{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).orientations{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'populations' % depends on attachment
@@ -186,8 +190,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).populations{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).populations{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'positions' % depends on attachment
@@ -199,8 +207,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).positions{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).positions{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'affine' % depends on attachment
@@ -212,8 +224,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).affine{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')                                           
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).affine{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'part_fun' % depends on attachment
@@ -225,8 +241,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).part_fun{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).part_fun{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'coor' % depends on attachment
@@ -238,8 +258,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).coor{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).coor{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'numbers' % depends on attachment
@@ -251,8 +275,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).numbers{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).numbers{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             case 'potentials' % depends on attachment
@@ -264,8 +292,12 @@ for kc = 1:length(chains)
                                         entity = label_if_required(entity,chain,...
                                             residue,conformers(kconf),tlc,lib,force);
                                         outputs = outputs + 1;
-                                        argout{outputs} = ...
-                                            entity.(chain).(residue).labels.(tlc).potentials{conformers(kconf)};
+                                        if isfield(entity.(chain).(residue),'labels')
+                                            argout{outputs} = ...
+                                                entity.(chain).(residue).labels.(tlc).potentials{conformers(kconf)};
+                                        else
+                                            argout{outputs} = [];
+                                        end
                                     end
                                 end
                             otherwise
@@ -369,12 +401,14 @@ if compute
     site.chain = chain;
     site.residue = residue;
     rotamers = get_rotamers_for_site(entity,site,lib.rot_lib);
-    entity.(chain).(residue).labels.(tlc).positions{conformer} = rotamers.positions;
-    entity.(chain).(residue).labels.(tlc).populations{conformer} = rotamers.populations;
-    entity.(chain).(residue).labels.(tlc).orientations{conformer} = rotamers.orientations;
-    entity.(chain).(residue).labels.(tlc).affine{conformer} = rotamers.affine;
-    entity.(chain).(residue).labels.(tlc).part_fun{conformer} = rotamers.part_fun;
-    entity.(chain).(residue).labels.(tlc).coor{conformer} = rotamers.coor;
-    entity.(chain).(residue).labels.(tlc).numbers{conformer} = rotamers.numbers;
-    entity.(chain).(residue).labels.(tlc).potentials{conformer} = rotamers.potentials;
+    if ~isempty(rotamers)
+        entity.(chain).(residue).labels.(tlc).positions{conformer} = rotamers.positions;
+        entity.(chain).(residue).labels.(tlc).populations{conformer} = rotamers.populations;
+        entity.(chain).(residue).labels.(tlc).orientations{conformer} = rotamers.orientations;
+        entity.(chain).(residue).labels.(tlc).affine{conformer} = rotamers.affine;
+        entity.(chain).(residue).labels.(tlc).part_fun{conformer} = rotamers.part_fun;
+        entity.(chain).(residue).labels.(tlc).coor{conformer} = rotamers.coor;
+        entity.(chain).(residue).labels.(tlc).numbers{conformer} = rotamers.numbers;
+        entity.(chain).(residue).labels.(tlc).potentials{conformer} = rotamers.potentials;
+    end
 end

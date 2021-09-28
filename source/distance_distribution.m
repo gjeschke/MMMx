@@ -31,7 +31,8 @@ function [r_axis,distribution,entity,exceptions] = distance_distribution(entity,
 %                         (1/Angstroem), default: 'density'
 %           .coupled      boolean, if true (default), only distributions
 %                         within the same conformer are added, otherwise
-%                         sites in different conformers are also combined
+%                         sites in different conformers are also combined,
+%                         defaults to true
 %           .smoothing    standard deviation for Gaussian smoothing,
 %                         defaults to twice options.resolution
 %

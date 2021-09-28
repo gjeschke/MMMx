@@ -3,8 +3,8 @@ function [entity,exceptions,failed] = module_ensemble_analysis(control,logfid)
 % MODULE_ENSEMBLE_ANALYSIS    Analyses an ensemble
 %
 %   [entity,exceptions] = MODULE_ENSEMBLE_ANALYSIS(control,logfid)
-%   Given a conformer (entity), coordinate transformations or sidechain
-%   modifications are applied
+%   Several functions for characterizing heterogeneous order in an ensemble
+%   and for comparing two ensembles
 %
 % INPUT
 % control       control structure with fields

@@ -343,6 +343,8 @@ else
     fit_task.pop = pop;
 end
 
+opt.pre_max_Gamma2 = pre_max_Gamma2;
+
 % evaluate restraints for individual conformers
 
 % distance distribution restraints
@@ -1237,7 +1239,9 @@ if nr_pre > 0
             end
             Gamma2 = sum(fit_task.ensemble_populations.*all_pre_predictions(kft,2+fit_task.remaining_conformers));
             if pre_parameters(kr).fit_rates
-                fit_task.pre(kft).fit_data = Gamma2;
+                all_pre = Gamma2;
+                all_pre(all_pre > parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
+                fit_task.pre(kft).fit_data = all_pre;
             else
                 sim_pre = R2dia*exp(-td*Gamma2)/(Gamma2+R2dia);
                 fit_task.pre(kft).fit_data = sim_pre;

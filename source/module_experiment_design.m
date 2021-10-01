@@ -32,6 +32,8 @@ function [entity,exceptions,failed] = module_experiment_design(control,logfid)
 % pairlist      list of generally suitable site pairs
 % plot          plot distrubtions (with basis file name for saving plots)
 % distributions compute and save distance distributions
+% enmPairs      predicts favorable site pairs for elastic network modeling
+%               of a conformation transition
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -148,6 +150,27 @@ for d = 1:length(control.directives)
                 cmd.r_max = max_distance; % use default
             end
             commands{cmd_poi} = cmd;
+        case {'hetpairlist','hetpairlist!'}
+            cmd_poi = cmd_poi + 1;
+            cmd.sitescan1 = control.directives(d).options{1};
+            cmd.sitescan2 = control.directives(d).options{2};
+            cmd.entity = control.directives(d).options{3};
+            if length(control.directives(d).options) > 3 % output filename is provided
+                cmd.fname = control.directives(d).options{4};
+            else
+                cmd.fname = 'MMMx_pair_list'; % default file name
+            end
+            if length(control.directives(d).options) > 4 % a minimum mean distance is provided
+                cmd.r_min = str2double(control.directives(d).options{5});
+            else
+                cmd.r_min = min_distance; % use default
+            end
+            if length(control.directives(d).options) > 5 % a maximum mean distance is provided
+                cmd.r_max = str2double(control.directives(d).options{6});
+            else
+                cmd.r_max = max_distance; % use default
+            end
+            commands{cmd_poi} = cmd;
         case 'distributions'
             cmd_poi = cmd_poi + 1;
             cmd.label = control.directives(d).options{1};
@@ -162,8 +185,8 @@ for d = 1:length(control.directives)
                 cmd.fname = 'MMMx_distribution'; % default basis output file name
             end
             [n,narg] = size(control.directives(d).block);
-            site_lists = cell(n,1);
-            sl_poi = 0;
+            pair_lists = cell(n,1);
+            pl_poi = 0;
             site_pairs = cell(n,2);
             sp_poi = 0;
             % record site lists and site pairs for which distributions
@@ -171,21 +194,41 @@ for d = 1:length(control.directives)
             for k = 1:n
                 if narg > 1 % argument list contains some site pairs
                     if isempty(control.directives(d).block{k,2})
-                        sl_poi = sl_poi + 1;
-                        site_lists{sl_poi} = control.directives(d).block{k,1};
+                        pl_poi = pl_poi + 1;
+                        pair_lists{pl_poi} = control.directives(d).block{k,1};
                     else
                         sp_poi = sp_poi + 1;
                         site_pairs{sp_poi,1} = control.directives(d).block{k,1};
                         site_pairs{sp_poi,2} = control.directives(d).block{k,2};
                     end
                 else % the argument list contains only site lists
-                    sl_poi = sl_poi + 1;
-                    site_lists{sl_poi} = control.directives(d).block{k,1};
+                    pl_poi = pl_poi + 1;
+                    pair_lists{pl_poi} = control.directives(d).block{k,1};
                 end
             end
-            cmd.site_lists = site_lists(1:sl_poi);
+            cmd.pair_lists = pair_lists(1:pl_poi);
             cmd.site_pairs = site_pairs(1:sp_poi,:);
             commands{cmd_poi} = cmd;            
+        case 'enmpairs'
+            cmd_poi = cmd_poi + 1;
+            cmd.sitescan = control.directives(d).options{1};
+            cmd.entity = control.directives(d).options{2};
+            if length(control.directives(d).options) > 2 % output filename is provided
+                cmd.fname = control.directives(d).options{3};
+            else
+                cmd.fname = 'MMMx_enm_pairs'; % default file name
+            end
+            if length(control.directives(d).options) > 3 % a minimum mean distance is provided
+                cmd.r_min = str2double(control.directives(d).options{4});
+            else
+                cmd.r_min = min_distance; % use default
+            end
+            if length(control.directives(d).options) > 4 % a maximum mean distance is provided
+                cmd.r_max = str2double(control.directives(d).options{5});
+            else
+                cmd.r_max = max_distance; % use default
+            end
+            commands{cmd_poi} = cmd;
         otherwise
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_experiment_design:unknown_directive',...
@@ -318,6 +361,35 @@ for c = 1:cmd_poi
                 record_exception(exceptions{warnings},logfid);
                 return
             end
+            if save_figures
+                figures = figure_format;
+            else
+                figures = '';
+            end
+            labels = split(cmd.label,'|');
+            if length(labels) == 1
+                labels{2} = labels{1};
+            end
+            for p = 1:length(cmd.site_pairs)
+               c_entity =  mk_distribution(c_entity,cmd.site_pairs{p,1},labels{1},cmd.site_pairs{p,2},labels{2},...
+                   cmd.fname,figures,figure_basname);
+            end
+            labels0 = labels;
+            for l = 1:length(cmd.pair_lists)
+                [pairs,labels] = rd_pair_list(cmd.pair_lists{l});
+                if ~strcmp(labels0{1},labels{1}) || ~strcmp(labels0{2},labels{2})
+                    fprintf(logfid,'\nIgnoring label specification %s for pair list %s\n',cmd.label,cmd.pair_lists{l});
+                    if ~strcmp(labels{1},labels{2})
+                        fprintf(logfid,'Labels %s and %s are specified in pair list\n',labels{1},labels{2});
+                    else
+                        fprintf(logfid,'Label %s is specified in pair list\n',labels{1});
+                    end
+                end
+                for p = 1:length(pairs)
+                    c_entity =  mk_distribution(c_entity,pairs(p).address1,labels{1},...
+                        pairs(p).address2,labels{2},cmd.fname,figures,figure_basname);
+                end
+            end
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end
@@ -345,6 +417,58 @@ for c = 1:cmd_poi
             fprintf(logfid,'   for %i pairs, the distribution is empty in the sensitive range\n',failures.empty);
             fprintf(logfid,'   for %i pairs, mean distance was below %5.1f %s\n',failures.too_short,pairlist_options.r_min,char(197));
             fprintf(logfid,'   for %i pairs, mean distance was above %5.1f %s\n',failures.too_long,pairlist_options.r_max,char(197));
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case {'hetpairlist','hetpairlist!'}
+            c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+            if isempty(c_entity)
+                warnings = warnings +1;
+                exceptions{warnings} = MException('module_experiment_design:entity_unknown',...
+                    'tried to generate site pair list for entity %s, which is unknown',cmd.entity);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            clear pairlist_options
+            pairlist_options.r_min = cmd.r_min;
+            pairlist_options.r_max = cmd.r_max;
+            if strcmpi(cmd.name,'hetpairlist!')
+                pairlist_options.coupled = false;
+            else
+                pairlist_options.coupled = true;
+            end
+            [sites1,label1] = rd_site_list(cmd.sitescan1);
+            [sites2,label2] = rd_site_list(cmd.sitescan2);
+            [c_entity,failures] = hetero_pair_list(c_entity,sites1,label1,sites2,label2,cmd.fname,pairlist_options);
+            fprintf(logfid,'\nPair list generated\n');
+            fprintf(logfid,'   for %i pairs, the distribution is empty in the sensitive range\n',failures.empty);
+            fprintf(logfid,'   for %i pairs, mean distance was below %5.1f %s\n',failures.too_short,pairlist_options.r_min,char(197));
+            fprintf(logfid,'   for %i pairs, mean distance was above %5.1f %s\n',failures.too_long,pairlist_options.r_max,char(197));
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'enmpairs'
+            c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+            if isempty(c_entity)
+                warnings = warnings +1;
+                exceptions{warnings} = MException('module_experiment_design:entity_unknown',...
+                    'tried to generate ENM pair list for entity %s, which is unknown',cmd.entity);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            [sites,label] = rd_site_list(cmd.sitescan);
+            labels{1} = label;
+            labels{2} = label;
+            tic,
+            [c_entity,pairs] = score_enm_pairs(c_entity,sites,labels,cmd.fname,cmd.r_min,cmd.r_max);
+            toc,
+            if ~isfield(pairs,'score')
+                fprintf(logfid,'\n### Pair scoring for enm modeling failed ###\n');
+            else
+                fprintf(logfid,'\n %i site pairs were scored for enm modeling\n',length(pairs));
+            end
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end
@@ -386,148 +510,52 @@ function record_exception(exception,logfid)
 
 fprintf(logfid,'### ensembleanalysis exception: %s ###\n',exception.message);
 
-function [chain,range] = split_chain_range(address)
+function entity = mk_distribution(entity,site1,label1,site2,label2,fname,figures,figname)
 
-range = [];
-
-poia = strfind(address,'(');
-poie = strfind(address,')');
-if isempty(poie)
-    chain = '';
-else
-    chain = address(poia+1:poie-1);
-    address = address(poie+1:end);
-end
-if strcmp(chain,'*')
-    range = [1,1e6];
-    return
-end
-residues = split(address,'-');
-if ~isempty(residues{1})
-    range(1) = str2double(residues{1});
-end
-if ~isempty(residues{2})
-    range(2) = str2double(residues{2});
-end
-if length(range) == 1
-    range(2) = range(1);
-end
-
-
-function h = plot_pair_rmsd(pair_rmsd,superimposed)
-
-if ~exist('superimposed','var') || isempty(superimposed)
-    superimposed = true;
+[~,site1] = split_conformer_site(site1);
+[~,site2] = split_conformer_site(site2);
+tag = sprintf('%s;%s-%s;%s',site1,label1,site2,label2);
+filename = sprintf('%s_%s_%s-%s_%s.csv',fname,site1,label1,site2,label2);
+figfilename = sprintf('%s_%s_%s-%s_%s.%s',figname,site1,label1,site2,label2,figures);
+[r_axis,distribution,entity] = distance_distribution(entity,site1,label1,site2,label2);
+if ~isempty(r_axis) && ~isempty(distribution) 
+    distribution = distribution/sum(distribution);
+    distribution = distribution/(r_axis(2)-r_axis(1));
+    r_cut = r_axis(distribution > 0.002*max(distribution));
+    r_span = max(r_cut) - min(r_cut);
+    r_min = min(r_cut) - 0.25*r_span;
+    r_max = max(r_cut) + 0.25*r_span;
+    h = figure;
+    plot(r_axis,distribution,'k','LineWidth',1);
+    xlabel(sprintf('distance (%s)',char(197)));
+    ylabel(sprintf('probability density (%s^{-1})',char(197)));
+    title(tag);
+    axis([r_min,r_max,-0.05*max(distribution),1.05*max(distribution)]);
+    data = [ r_axis' distribution'];
+    writematrix(data,filename);
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
 end
 
-h = figure;
+function [c,site] = split_conformer_site(address)
+% retrieves conformer number from site address
 
-[n1,n2] = size(pair_rmsd);
-plot(1,1,'k.');
-plot(n1,n2,'k.');
-image(pair_rmsd,'CDataMapping','scaled','ButtonDownFcn',@(hObject,eventdata,handles)axes_rmsd_ButtonDownFcn);
-curr_axis = gca;
-curr_axis.YDir = 'normal';
-colorbar;
-axis tight
-xlabel('Conformer number');
-ylabel('Conformer number');
-if superimposed
-    title('Pair rmsd upon optimal superposition');
-else
-    title('Pair rmsd for original orientation');
+c = 1;
+site = address;
+pa = strfind(address,'{');
+pe = strfind(address,'}');
+if ~isempty(pa) && ~isempty(pe)
+    c = str2double(address(pa+1:pe-1));
+    if pa > 1
+        pre = address(1:pa-1);
+    else
+        pre = '';
+    end
+    if pe < length(address)
+        past = address(pe+1:end);
+    else
+        past = '';
+    end
+    site = [pre past];
 end
-axis equal
-
-function h = plot_pair_corr(pair_axis,pair_corr,dmat)
-
-h = figure;
-[n1,n2] = size(pair_corr);
-plot(1,1,'k.');
-plot(n1,n2,'k.');
-
-if ~exist('dmat','var') || isempty(dmat)
-    image(pair_corr,'CDataMapping','scaled');
-    title('Pair correlation');
-else
-    image(pair_corr./dmat,'CDataMapping','scaled');
-    title('Pair correlation (normalized)');
-end
-
-curr_axis = gca;
-curr_axis.YDir = 'normal';
-step =floor(n1/5);
-curr_axis.XTick = 1:step:n2;
-curr_axis.YTick = 1:step:n1;
-XTickLabel = cell(1,10);
-poi = 0;
-for k = 1:step:n2
-    poi = poi + 1;
-    XTickLabel{poi} = pair_axis{k};
-end
-XTickLabel = XTickLabel(1:poi);
-curr_axis.XTickLabel = XTickLabel;
-
-YTickLabel = cell(1,10);
-poi = 0;
-for k = 1:step:n2
-    poi = poi + 1;
-    YTickLabel{poi} = pair_axis{k};
-end
-YTickLabel = YTickLabel(1:poi);
-curr_axis.YTickLabel = YTickLabel;
-colorbar;
-axis tight
-xlabel('Residue number');
-ylabel('Residue number');
-axis equal
-
-
-function h = plot_compactness(compactness,type,range,offset)
-
-if ~exist('type','var') || isempty(type)
-    type = 'Compactness matrix';
-end
-
-if ~exist('offset','var') || isempty(offset)
-    offset = 0;
-end
-
-% make blue-red color map
-mymap = ones(51,3);
-for k = 1:25
-    mymap(k,2:3) = k/26*[1,1];
-    mymap(k+26,1:2) = (25-k)/25*[1,1];
-end
-mymap = flipud(mymap);
-
-h = figure;
-image(offset,offset,compactness,'CDataMapping','scaled');
-hold on;
-curr_axis = gca;
-set(curr_axis,'CLim',range);
-set(curr_axis,'YDir','normal');
-colorbar;
-axis tight
-xlabel('Residue number');
-ylabel('Residue number');
-axis equal
-colormap(mymap)
-title(type);
-
-function h = plot_segments(segments)
-
-h = figure;
-
-kaxis = 1:max(segments.seg_len);
-
-% h1 = plot(segments.seg_len,segments.all_R2,'k.','MarkerSize',8);
-h1 = fill([segments.seg_lengths, fliplr(segments.seg_lengths)],[segments.max_R2, fliplr(segments.min_R2)],0.75*[1,1,1],'LineStyle','none');
-hold on
-R2fct = segments.R0_seglen*kaxis.^segments.nu_seglen;
-h2 = plot(kaxis,segments.mean_R2,'Color',[0,0.75,0],'LineWidth',2.5);
-h3 = plot(kaxis,R2fct,'Color',[0.8,0,0],'LineWidth',2.5);
-xlabel('Segment sequence length k');
-ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
-legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_ee,segments.nu_ee),'Location','southeast');
-axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);

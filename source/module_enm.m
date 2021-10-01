@@ -272,7 +272,7 @@ for kr = 1:length(restraints.ddr)
 end
 
 % make the elastic network model
-CA_model = get_CA_model(entity,conformer); % extract the Calpha model
+CA_model = get_CA_model(entity); % extract the Calpha model, conformer 1 assumed if there are several
 Hessian = get_ANM_Hessian(CA_model);
 ENM_param = get_ENM;
 

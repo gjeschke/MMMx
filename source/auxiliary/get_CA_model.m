@@ -1,5 +1,5 @@
 function CA_model = get_CA_model(entity,conformer)
-% CA_model = GET_CA_MODEL(entity)
+% CA_model = GET_CA_MODEL(entity,conformer)
 %
 % extracts Calpha coordinates, residue masses, assigned residue addresses, 
 % Bfactors, and residue types of a Calpha trace model from an MMMx entity

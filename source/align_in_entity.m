@@ -64,6 +64,9 @@ resnum2 = resnum2(1:spoi);
 seqs{1} = sequence1;
 seqs{2} = sequence2;
 alignment = sequence_alignment(seqs);
+if isempty(alignment)
+    return
+end
 [~,N] = size(alignment);
 res_corr = zeros(N,2);
 poi = 0;

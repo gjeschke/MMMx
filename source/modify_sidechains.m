@@ -70,6 +70,8 @@ for ch = 1:length(chains)
                             sequence(seqpoi) = upper(mutation{3});
                             if ~force && complete
                                 modified = modified + 1;
+                                reppoi = reppoi + 1;
+                                to_be_replaced{reppoi} = [chain '.' residue];
                             end
                         end
                     end

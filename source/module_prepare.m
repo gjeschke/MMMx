@@ -31,6 +31,7 @@ function [entity,exceptions,failed] = module_prepare(control,logfid,entity)
 % deselenate    replaces selenocysteine and selenomethionine by their
 %               equivalents cysteine and methionine  
 % getpdb        load PDB file, several files can be loaded and named
+% merge         build a combined structure from parts of other structures
 % remove        remove residues from an entity
 % renumber      renumber residues in a chain
 % repack        repack all sidechains using SCWRL4
@@ -174,6 +175,24 @@ for d = 1:length(control.directives)
                 cmd.parts{k} = control.directives(d).block{k,1};
             end
             commands{cmd_poi} = cmd;
+        case 'merge'
+            cmd_poi = cmd_poi + 1;
+            cmd.entity = control.directives(d).options{1};
+            [n,~] = size(control.directives(d).block);
+            cmd.parts(n).entity = '';
+            cmd.parts(n).conformer = [];
+            cmd.parts(n).chain = '';
+            cmd.parts(n).range = [];
+            % store selections
+            for k = 1:n
+                cmd.parts(k).entity = control.directives(d).block{k,1};
+                address = control.directives(d).block{k,2};
+                [conf,chain,range] = split_conf_chain_range(address);
+                cmd.parts(k).conformer = conf;
+                cmd.parts(k).chain = chain;
+                cmd.parts(k).range = range;
+            end
+            commands{cmd_poi} = cmd;        
         case 'mutate'
             cmd_poi = cmd_poi + 1;
             if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
@@ -183,7 +202,7 @@ for d = 1:length(control.directives)
             end
             [n,~] = size(control.directives(d).block);
             cmd.mutations = cell(1,n);
-            % store selections in the n symmetry-equivalent parts
+            % store list of mutations
             for k = 1:n
                 address = control.directives(d).block{k,1};
                 [ctag,rtag] = split_chain_residue(address);
@@ -646,6 +665,22 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             entities = put_entity(cmd.entity,c_entity,entities);     
+        case 'merge'
+            fprintf(logfid,'\nGenerating new entity %s by merging parts\n',cmd.entity);
+            [c_entity,failed] = merge_parts(entities,cmd.parts,logfid);
+            if ~failed
+                entity_descriptor.name = cmd.entity; 
+                entity_descriptor.entity = c_entity; 
+                entity_descriptor.conformer = 1;
+                entity_poi = entity_poi + 1;
+                entities{entity_poi} = entity_descriptor;
+            else
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_prepare:entity_unknown',...
+                    'tried to merge from an entity, which is unknown');
+                record_exception(exceptions{warnings},logfid);
+                return                
+            end
         case 'superimpose'
             if strcmp(cmd.moving,'.')
                 c_entity = entity;
@@ -1060,3 +1095,104 @@ for conf = 1:length(conformers1)
     entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:) = xyz;
     fprintf(logfid,'\nSuperposition of %i atoms in conformer %i with rmsd of %4.1f %s succeeded\n',corr_poi,conformers1(conf),rmsd,char(197));
 end
+
+function [conf,chain,range] = split_conf_chain_range(address)
+
+range = [];
+
+conf = 1;
+pa = strfind(address,'{');
+pe = strfind(address,'}');
+if ~isempty(pa) && ~isempty(pe)
+    conf = str2double(address(pa+1:pe-1));
+    if pa > 1
+        pre = address(1:pa-1);
+    else
+        pre = '';
+    end
+    if pe < length(address)
+        past = address(pe+1:end);
+    else
+        past = '';
+    end
+    address = [pre past];
+end
+
+poia = strfind(address,'(');
+poie = strfind(address,')');
+if isempty(poie)
+    chain = '';
+else
+    chain = address(poia+1:poie-1);
+    address = address(poie+1:end);
+end
+if strcmp(chain,'*')
+    range = [1,1e6];
+    return
+end
+residues = split(address,'-');
+if ~isempty(residues{1})
+    range(1) = str2double(residues{1});
+end
+if ~isempty(residues{2})
+    range(2) = str2double(residues{2});
+end
+if length(range) == 1
+    range(2) = range(1);
+end
+
+function [entity,failed] = merge_parts(entities,parts,logfid)
+
+failed = false;
+
+entity.name = 'MMMx';
+entity.populations = 1;
+entity.selected = 0;
+entity.index_array = zeros(100000,5,'uint16');
+xyz = zeros(100000,3);
+elements = zeros(1,100000,'uint8');
+occupancies = ones(100000,1,'uint8');
+atnum = 0;
+for p = 1:length(parts)
+    ctag = char(double('A')+p-1); % chain tag for this part in new entity
+    entity.(ctag).selected = false;
+    entity.(ctag).index = p;
+    conf = parts(p).conformer;
+    chain = parts(p).chain;
+    range = parts(p).range(1):parts(p).range(2);
+    c_entity = get_entity(parts(p).entity,entities,logfid);
+    if isempty(c_entity)
+        fprintf(logfid,'\nERROR: Entity %s could not be retrieved.\n',parts(p).entity);
+        failed = true;
+        entity = [];
+        return
+    else
+        fprintf(logfid,'New chain %s derived from [%s](%s)%i-%i\n',ctag,c_entity.name,chain,parts(p).range);
+    end
+    for r = range % loop over all selected residues
+        residue = sprintf('R%i',r);
+        entity.(ctag).(residue).index = 1 + r - range(1);
+        entity.(ctag).(residue).selected = false;
+        entity.(ctag).(residue).selected_rotamers = 1;
+        entity.(ctag).(residue).name = c_entity.(chain).(residue).name;
+        entity.(ctag).(residue).locations = ' ';
+        entity.(ctag).(residue).populations = 1;
+        atoms = fieldnames(c_entity.(chain).(residue));
+        for ka = 1:length(atoms)
+            atom = atoms{ka};
+            if isstrprop(atom(1),'upper') % these are atom fields
+                this_atom = c_entity.(chain).(residue).(atom);
+                at_index = this_atom.tab_indices(conf);
+                atnum = atnum + 1;
+                this_atom.tab_indices = atnum;
+                xyz(atnum,:) = c_entity.xyz(at_index,:);
+                elements(atnum) = c_entity.elements(at_index);
+                entity.(ctag).(residue).(atom) = this_atom;
+            end
+        end
+    end
+end
+entity.xyz = xyz(1:atnum,:);
+entity.elements = elements(1:atnum);
+entity.occupancies = occupancies(1:atnum);
+

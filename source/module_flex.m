@@ -1764,7 +1764,7 @@ function [outname,status,result] = make_SCWRL4_sidegroups(inname)
 poi = strfind(inname,'.pdb');
 outname = [inname(1:poi-1) '_SCWRL4.pdb'];
 
-s = which('scwrl4.exe');
+s = which_third_party_module('scwrl4');
 if isempty(s)
     outname = '';
     return

@@ -2,7 +2,7 @@ function [entity,failures] = site_scan(entity,label,fname,options)
 %
 % SITE_SCAN Spin labelling site scan
 %
-%   entity = SITE_SCAN(entity,label,fname,options)
+%   [entity,failures] = SITE_SCAN(entity,label,fname,options)
 %   Finds potential spin labelling sites matching certain conditions and
 %   saves them in a list file
 %
@@ -75,7 +75,7 @@ else
 end
 
 fid = fopen(fname,'wt');
-fprintf(fid,'%% MMMx spin labeling site scan for label: %s\n',label);
+fprintf(fid,'%% MMMx spin labeling site scan for chains (%s) and label: %s\n',options.chains,label);
 fprintf(fid,'%% Site       rotamers  partition function  position rmsd (%s)    residue\n',char(197));
 
 % scan over all chains 

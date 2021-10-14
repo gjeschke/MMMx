@@ -63,7 +63,7 @@ else
     to_be_deleted = strcat(pdbfile(1:poi-1),'00*.*');
 end
 
-s=which('cryson.exe');
+s = which_third_party_module('cryson');
 
 if isempty(s)
     return

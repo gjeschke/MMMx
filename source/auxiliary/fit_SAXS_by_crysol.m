@@ -18,7 +18,7 @@ else
     outname = [pdbfile(1:poi-1) '00.fit'];
 end
 
-s=which('crysol.exe');
+s = which_third_party_module('crysol');
 cmd=[s ' ' pdbfile ' ' datafile ' -cst'];
 
 if isfield(options,'sm')

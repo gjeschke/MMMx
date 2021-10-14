@@ -55,7 +55,7 @@ if ~exist('options','var') || ~isfield(options,'HYDROPRO') || isempty(options.HY
 end
 
 if options.HYDROPRO
-    options.executable = which('hydropro10-msd.exe');
+    options.executable = which_third_party_module('hydropro10');
     if ~isempty(options.executable)
         info.HYDROPRO = true;
     end
@@ -97,7 +97,7 @@ if ~exist('address','var') || isempty(address) % all conformers of the entity
     taur = zeros(1,C);
     info.Rh = zeros(1,C);
     for c = 1:C
-        entity = select(entity,sprintf('{%i}(*)',c),overwrite);
+        entity = select(entity,sprintf('{%i}(*).*',c),overwrite);
         [taurc,Rhc,Tr] = get_taurc(entity,options,info);
         taur(c) = taurc;
         info.Rh(c) = Rhc;
@@ -127,7 +127,7 @@ if info.HYDROPRO
     [HP_path,~] = fileparts(options.executable);
     my_path = pwd;
     cd(HP_path);
-    [~,~,~,elements] = get_coor(entity,'selected');
+    [~,~,elements] = get_coor(entity,'selected');
     MW = sum(pse.pse.mass(elements));
     put_pdb(entity,'mmmx.pdb',save_options);
     fid = fopen('hydropro.dat','wt');

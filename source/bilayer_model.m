@@ -177,7 +177,7 @@ tolerance = 1.2; % tolerance for surface distance in ?
 
 chemistry = load('element_attributes.mat');
 
-dospath=which('msms.exe');
+dospath = which_third_party_module('msms');
 if isempty(dospath)
     access = [];
     error = 'Bilayer computation requires MSMS by M. Sanner';

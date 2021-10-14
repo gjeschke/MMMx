@@ -34,9 +34,9 @@ if ~isfield(options,'max_time') || isempty(options.max_time)
 end
 
 % find Yasara executable
-yasara = which('yasara.exe');
+yasara = which_third_party_module('yasara');
 if isempty(yasara)
-    fprintf(logfile,'ERROR: Yasara is not on Matlab path. Skipping optimization');
+    fprintf(logfile,'ERROR: Yasara is not on path. Skipping optimization');
     return
 end
 
@@ -73,7 +73,10 @@ cd(yasara_path); % change to Yasara directory
 % read the Yasara optimization template control file and adapt it to
 % current file name
 ctrl_file = sprintf('%s.mcr',bname);
-iname = which('minimization_server.mcr');
+iname = 'minimization_server.mcr';
+if ~isdeployed
+    iname = which('minimization_server.mcr');
+end
 ifid = fopen(iname,'r');
 ofid = fopen(ctrl_file,'wt');
 fprintf(ofid,'LoadPDB %s\n',ffname);

@@ -2,14 +2,8 @@ function dssp = get_dssp(fname)
 
 dssp=[];
 
-dospath = which('dssp-2.0.4-win32.exe');
-if isempty(dospath)
-    dospath = which('dssp.exe');
-end
-if isempty(dospath)
-    dospath = which('dsspcmbi.exe');
-end
-if ~isempty(dospath) % suppress this if DSSP not known
+dospath = which_third_party_module('dssp');
+if ~isempty(dospath) % suppress this if no DSSP module is registered
     infile = which(fname);
     poi = strfind(infile,'.pdb');
     if isempty(poi)

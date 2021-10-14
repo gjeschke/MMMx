@@ -45,7 +45,7 @@ for k = 1:length(seqs)
     alignment(k).sequence = seqs{k};
 end
 
-dospath = which('muscle.exe');
+dospath = which_third_party_module('muscle');
 if isempty(dospath) % return with empty alignment if MUSCLE is missing
     return
 end

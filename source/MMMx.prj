@@ -1,0 +1,273 @@
+<deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
+  <configuration build-checksum="1493850212" file="G:\MMMx\source\MMMx.prj" location="G:\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+    <param.appname>MMMx</param.appname>
+    <param.icon>${PROJECT_ROOT}\MMMx_resources\icon.ico</param.icon>
+    <param.icons>
+      <file>${PROJECT_ROOT}\MMMx_resources\icon_48.png</file>
+      <file>${PROJECT_ROOT}\MMMx_resources\icon_32.png</file>
+      <file>${PROJECT_ROOT}\MMMx_resources\icon_24.png</file>
+      <file>${PROJECT_ROOT}\MMMx_resources\icon_16.png</file>
+    </param.icons>
+    <param.version>1.0</param.version>
+    <param.authnamewatermark>Gunnar Jeschke</param.authnamewatermark>
+    <param.email>gjeschke@ethz.ch</param.email>
+    <param.company>ETHZ</param.company>
+    <param.summary>MMMx runtime windows executable</param.summary>
+    <param.description>Package for running integrative ensemble structure modelling and ensemble analysis of proteins and protein complexes</param.description>
+    <param.screenshot>G:\MMMx\docs\images\MMMx_splash.png</param.screenshot>
+    <param.guid />
+    <param.installpath.string>\ETHZ\MMMx\</param.installpath.string>
+    <param.installpath.combo>option.installpath.appdata</param.installpath.combo>
+    <param.logo>G:\MMMx\docs\MMMx_stripe_logo.png</param.logo>
+    <param.install.notes />
+    <param.target.install.notes />
+    <param.intermediate>${PROJECT_ROOT}\MMMx\for_testing</param.intermediate>
+    <param.files.only>${PROJECT_ROOT}\MMMx\for_redistribution_files_only</param.files.only>
+    <param.output>${PROJECT_ROOT}\MMMx\for_redistribution</param.output>
+    <param.logdir>${PROJECT_ROOT}\MMMx</param.logdir>
+    <param.enable.clean.build>false</param.enable.clean.build>
+    <param.user.defined.mcr.options />
+    <param.target.type>subtarget.standalone</param.target.type>
+    <param.support.packages />
+    <param.web.mcr>true</param.web.mcr>
+    <param.package.mcr>false</param.package.mcr>
+    <param.no.mcr>false</param.no.mcr>
+    <param.web.mcr.name>MMMx_Installer_web</param.web.mcr.name>
+    <param.package.mcr.name>MyAppInstaller_mcr</param.package.mcr.name>
+    <param.no.mcr.name>MyAppInstaller_app</param.no.mcr.name>
+    <param.windows.command.prompt>true</param.windows.command.prompt>
+    <param.create.log>false</param.create.log>
+    <param.log.file />
+    <param.native.matlab>false</param.native.matlab>
+    <param.checkbox>false</param.checkbox>
+    <param.example />
+    <param.help.text>Syntax 
+	 MMMx -? 
+	 MMMx control_file 
+ Input Arguments 
+	 -?  print help on how to use the application 
+	 control_file  input arguments 
+ Description 
+ 	 Package for running integrative ensemble structure modelling and ensemble analysis of proteins and protein complexes</param.help.text>
+    <unset>
+      <param.version />
+      <param.guid />
+      <param.installpath.string />
+      <param.install.notes />
+      <param.target.install.notes />
+      <param.intermediate />
+      <param.files.only />
+      <param.output />
+      <param.logdir />
+      <param.enable.clean.build />
+      <param.user.defined.mcr.options />
+      <param.target.type />
+      <param.support.packages />
+      <param.web.mcr />
+      <param.package.mcr />
+      <param.no.mcr />
+      <param.package.mcr.name />
+      <param.no.mcr.name />
+      <param.windows.command.prompt />
+      <param.create.log />
+      <param.log.file />
+      <param.native.matlab />
+      <param.checkbox />
+      <param.example />
+    </unset>
+    <fileset.main>
+      <file>${PROJECT_ROOT}\MMMx.m</file>
+    </fileset.main>
+    <fileset.resources>
+      <file>G:\MMMx\defs\minimization_server.mcr</file>
+      <file>G:\MMMx\rotamer_libraries</file>
+    </fileset.resources>
+    <fileset.package />
+    <fileset.depfun>
+      <file>G:\MMMx\defs\element_attributes.mat</file>
+      <file>G:\MMMx\defs\monomer_attributes.mat</file>
+      <file>G:\MMMx\defs\monomers.mat</file>
+      <file>G:\MMMx\defs\Ramachandran_disordered.mat</file>
+      <file>${PROJECT_ROOT}\add_residue.m</file>
+      <file>${PROJECT_ROOT}\affine.m</file>
+      <file>${PROJECT_ROOT}\align_in_entity.m</file>
+      <file>${PROJECT_ROOT}\analyze_ensemble.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\affine2EV.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\affine2transrot.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\affine_coor_set.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\bound_refiner.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\check_sidechain_integrity.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\clash_cost.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\clash_cost_super_fast.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\clash_repair.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\cluster_sorting.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\coor2dmat.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\correct_yasara.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\cross_rowvec.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\DCM2Euler.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\deselenate.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\dihedral_mmmx.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\dmat2coor.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\energy_LJ.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\ensemble_std.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fibonacci_sphere.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_by_ANM_thermal.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_multi_ddr.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_multi_PRE.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_multi_restraints.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_multi_rmean.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_multi_SAS.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_SANS.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\fit_SAXS.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_all_pair_dist.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_anchor_fragments.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_ANM_Hessian.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_CA_model.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_dssp.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_ENM.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_link_nt.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_restraint_fractions.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_restraint_resolution.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_RNA_initial_anchor.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_rotamers_for_site.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\id2tag.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\inhull.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\label_by_synonym.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\load_distance_distribution.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\metric_matrix.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\metrize_exhaustive.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\mk_RNA.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\na2slc.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\parse_control_file.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\prob_Gaussian.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\rd_dssp.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\refine_rba.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\refine_rba_fast.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\regression_line_3D.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\reprowvector.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\rigid_multilateration.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\rmsd_superimpose.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\separate_rigid_bodies.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\sequence_alignment.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\SpinCalc.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\superimpose_3points.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\tag2id.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\tlc2slc.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\transrot2affine.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\triangle.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\triangle_bound_smoothing.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\which_third_party_module.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\writeMRC.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\WriteMRCHeader.m</file>
+      <file>${PROJECT_ROOT}\bilayer_model.m</file>
+      <file>${PROJECT_ROOT}\density_overlap.m</file>
+      <file>${PROJECT_ROOT}\distance_distribution.m</file>
+      <file>${PROJECT_ROOT}\flexibility_analysis.m</file>
+      <file>${PROJECT_ROOT}\get_atom.m</file>
+      <file>${PROJECT_ROOT}\get_backbone.m</file>
+      <file>${PROJECT_ROOT}\get_backbones_ensemble.m</file>
+      <file>${PROJECT_ROOT}\get_coor.m</file>
+      <file>${PROJECT_ROOT}\get_cyana_pdb.m</file>
+      <file>${PROJECT_ROOT}\get_ensemble.m</file>
+      <file>${PROJECT_ROOT}\get_label.m</file>
+      <file>${PROJECT_ROOT}\get_pdb.m</file>
+      <file>${PROJECT_ROOT}\get_rba.m</file>
+      <file>${PROJECT_ROOT}\get_residue.m</file>
+      <file>${PROJECT_ROOT}\get_selection.m</file>
+      <file>${PROJECT_ROOT}\gyration_radius.m</file>
+      <file>${PROJECT_ROOT}\hetero_pair_list.m</file>
+      <file>${PROJECT_ROOT}\hydrodynamic_radius.m</file>
+      <file>${PROJECT_ROOT}\local_order.m</file>
+      <file>${PROJECT_ROOT}\loop_model.m</file>
+      <file>${PROJECT_ROOT}\loop_model_reverse.m</file>
+      <file>${PROJECT_ROOT}\loop_model_rs.m</file>
+      <file>${PROJECT_ROOT}\make_density.m</file>
+      <file>${PROJECT_ROOT}\MMModel.m</file>
+      <file>${PROJECT_ROOT}\modify_sidechains.m</file>
+      <file>${PROJECT_ROOT}\module_enm.m</file>
+      <file>${PROJECT_ROOT}\module_ensemble_analysis.m</file>
+      <file>${PROJECT_ROOT}\module_ensemble_fit.m</file>
+      <file>${PROJECT_ROOT}\module_experiment_design.m</file>
+      <file>${PROJECT_ROOT}\module_flex.m</file>
+      <file>${PROJECT_ROOT}\module_flexRNA.m</file>
+      <file>${PROJECT_ROOT}\module_locate.m</file>
+      <file>${PROJECT_ROOT}\module_prepare.m</file>
+      <file>${PROJECT_ROOT}\module_rigi.m</file>
+      <file>${PROJECT_ROOT}\module_yasara.m</file>
+      <file>${PROJECT_ROOT}\optimize_by_yasara.m</file>
+      <file>${PROJECT_ROOT}\pair_list.m</file>
+      <file>${PROJECT_ROOT}\pair_rmsd_matrix.m</file>
+      <file>${PROJECT_ROOT}\pre.m</file>
+      <file>${PROJECT_ROOT}\pre_of_entity.m</file>
+      <file>${PROJECT_ROOT}\put_pdb.m</file>
+      <file>${PROJECT_ROOT}\rd_ensemble_definition.m</file>
+      <file>${PROJECT_ROOT}\rd_pair_list.m</file>
+      <file>${PROJECT_ROOT}\rd_site_list.m</file>
+      <file>${PROJECT_ROOT}\rigi_engine.m</file>
+      <file>${PROJECT_ROOT}\RNA_loop_model.m</file>
+      <file>${PROJECT_ROOT}\rotational_correlation_time.m</file>
+      <file>${PROJECT_ROOT}\score_enm_pairs.m</file>
+      <file>${PROJECT_ROOT}\select.m</file>
+      <file>${PROJECT_ROOT}\site_scan.m</file>
+      <file>${PROJECT_ROOT}\split_address.m</file>
+      <file>${PROJECT_ROOT}\superimpose_ensemble.m</file>
+      <file>${PROJECT_ROOT}\transform_structure.m</file>
+    </fileset.depfun>
+    <build-deliverables>
+      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="MMMx.exe" optional="false">G:\MMMx\source\MMMx\for_testing\MMMx.exe</file>
+      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="readme.txt" optional="true">G:\MMMx\source\MMMx\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="splash.png" optional="false">G:\MMMx\source\MMMx\for_testing\splash.png</file>
+    </build-deliverables>
+    <workflow />
+    <matlab>
+      <root>C:\Program Files\MATLAB\R2021a</root>
+      <toolboxes>
+        <toolbox name="matlabcoder" />
+        <toolbox name="gpucoder" />
+        <toolbox name="fixedpoint" />
+        <toolbox name="matlabhdlcoder" />
+        <toolbox name="neuralnetwork" />
+      </toolboxes>
+      <toolbox>
+        <matlabcoder>
+          <enabled>true</enabled>
+        </matlabcoder>
+      </toolbox>
+      <toolbox>
+        <gpucoder>
+          <enabled>true</enabled>
+        </gpucoder>
+      </toolbox>
+      <toolbox>
+        <fixedpoint>
+          <enabled>true</enabled>
+        </fixedpoint>
+      </toolbox>
+      <toolbox>
+        <matlabhdlcoder>
+          <enabled>true</enabled>
+        </matlabhdlcoder>
+      </toolbox>
+      <toolbox>
+        <neuralnetwork>
+          <enabled>true</enabled>
+        </neuralnetwork>
+      </toolbox>
+    </matlab>
+    <platform>
+      <unix>false</unix>
+      <mac>false</mac>
+      <windows>true</windows>
+      <win2k>false</win2k>
+      <winxp>false</winxp>
+      <vista>false</vista>
+      <linux>false</linux>
+      <solaris>false</solaris>
+      <osver>10.0</osver>
+      <os32>false</os32>
+      <os64>true</os64>
+      <arch>win64</arch>
+      <matlab>true</matlab>
+    </platform>
+  </configuration>
+</deployment-project>

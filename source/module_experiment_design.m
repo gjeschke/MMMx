@@ -34,6 +34,8 @@ function [entity,exceptions,failed] = module_experiment_design(control,logfid)
 % distributions compute and save distance distributions
 % enmPairs      predicts favorable site pairs for elastic network modeling
 %               of a conformation transition
+% rbReference   selects reference points in rigid bodies for a project that
+%               aims to use Rigi
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -148,6 +150,16 @@ for d = 1:length(control.directives)
                 cmd.r_max = str2double(control.directives(d).options{5});
             else
                 cmd.r_max = max_distance; % use default
+            end
+            commands{cmd_poi} = cmd;
+        case 'rbreference'
+            cmd_poi = cmd_poi + 1;
+            cmd.entity = control.directives(d).options{1};
+            cmd.r_min = str2double(control.directives(d).options{2});            
+            cmd.r_max = str2double(control.directives(d).options{3});            
+            cmd.sitescans = cell(1,length(control.directives(d).options)-3);
+            for k = 4:length(control.directives(d).options)
+                cmd.sitescans{k-3} = control.directives(d).options{k};
             end
             commands{cmd_poi} = cmd;
         case {'hetpairlist','hetpairlist!'}
@@ -449,6 +461,59 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'rbreference'
+            c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+            if isempty(c_entity)
+                warnings = warnings +1;
+                exceptions{warnings} = MException('module_experiment_design:entity_unknown',...
+                    'tried to generate reference sites for entity %s, which is unknown',cmd.entity);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            clear refpoint_options
+            refpoint_options.r_min = cmd.r_min;
+            refpoint_options.r_max = cmd.r_max;
+            all_site_coor_pop(10000).coor = [];
+            all_site_coor_pop(10000).pop = [];
+            all_site_coor_pop(10000).label = '';
+            all_site_coor_pop(10000).address = '';
+            poi = 0;
+            chains = '';
+            for k = 1:length(cmd.sitescans)
+                [sites,labels,chains0] = rd_site_list(cmd.sitescans{k});
+                if ~strcmp(chains0,'*')
+                    chains = strcat(chains,chains0);
+                end
+                [c_entity,site_coor_pop] = site_geometries(c_entity,sites,labels);
+                nsites = length(site_coor_pop);
+                all_site_coor_pop(poi+1:poi+nsites) = site_coor_pop;
+                poi = poi + nsites;
+            end
+            all_site_coor_pop = all_site_coor_pop(1:poi);
+            [refpoints,failed] = get_refpoints(all_site_coor_pop,refpoint_options);
+            fprintf(logfid,'\nReference points in entity %s using site scan lists\n',cmd.entity);
+            for k = 1:length(cmd.sitescans)
+                fprintf(logfid,'   %s\n',cmd.sitescans{k});
+            end
+            fprintf(logfid,'\n');
+            if failed
+                fprintf(logfid,'### No set of three sites found with (rmin,rmax) = (%4.1f,%4.1f) %s ###\n',...
+                    refpoint_options.r_min,refpoint_options.r_max,char(197));
+            else
+                chain_tags = '';
+                for k = 1:length(chains)
+                    chain_tags = sprintf('%s(%c) ',chain_tags,chains(k));
+                end
+                fprintf(logfid,'   rigid %s\n',chain_tags);
+                for k = 1:3
+                    fprintf(logfid,'      %s %s\n',refpoints(k).site,refpoints(k).label);
+                end
+                fprintf(logfid,'   .rigid\n');
+            end
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
         case 'enmpairs'
             c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
             if isempty(c_entity)
@@ -559,3 +624,95 @@ if ~isempty(pa) && ~isempty(pe)
     end
     site = [pre past];
 end
+
+function [c_entity,site_coor_pop] = site_geometries(c_entity,sites,label)
+
+site_coor_pop(length(sites)).coor = [];
+site_coor_pop(length(sites)).pop = [];
+site_coor_pop(length(sites)).label = '';
+site_coor_pop(length(sites)).address = '';
+
+poi = 0;
+for k = 1:length(sites)
+    [argsout,c_entity,exceptions] = get_label(c_entity,label,{'positions','populations'},sites(k).address);
+    if ~isempty(exceptions{1})
+        continue
+    end
+    poi = poi + 1;
+    site_coor_pop(poi).coor = argsout{1}{1};
+    site_coor_pop(poi).pop = argsout{2}{1};
+    site_coor_pop(poi).label = label;
+    site_coor_pop(poi).address = sites(k).address;
+end
+site_coor_pop = site_coor_pop(1:poi);
+
+function [refpoints,failed] = get_refpoints(all_site_coor_pop,refpoint_options)
+
+S = length(all_site_coor_pop); % total number of sites
+max_area = 0;
+best_sites = zeros(1,3);
+% check all triangles
+for s1 = 1:S-2
+    coor1 = all_site_coor_pop(s1).coor;
+    pop1 = all_site_coor_pop(s1).pop;
+    for s2 = s1+1:S-1
+        coor2 = all_site_coor_pop(s2).coor;
+        pop2 = all_site_coor_pop(s2).pop;
+        a = get_r_mean(coor1,pop1,coor2,pop2);
+        if a < refpoint_options.r_min || a > refpoint_options.r_max
+            continue
+        end
+        for s3 = s2+1:S
+            coor3 = all_site_coor_pop(s3).coor;
+            pop3 = all_site_coor_pop(s3).pop;
+            b = get_r_mean(coor1,pop1,coor3,pop3);
+            if b < refpoint_options.r_min || b > refpoint_options.r_max
+                continue
+            end
+            c = get_r_mean(coor2,pop2,coor3,pop3);
+            if c < refpoint_options.r_min || c > refpoint_options.r_max
+                continue
+            end
+            s = (a+b+c)/2; % half the circumference
+            area = sqrt(s*(s-a)*(s-b)*(s-c)); % area of the triangle, Heron's theorem
+            if area > max_area
+                max_area = area;
+                best_sites = [s1,s2,s3];
+            end
+        end
+    end
+end
+
+refpoints(1).site = '';
+refpoints(2).site = '';
+refpoints(3).site = '';
+refpoints(1).label = '';
+refpoints(2).label = '';
+refpoints(3).label = '';
+if prod(best_sites) == 0
+    failed = true;
+    return
+else
+    failed = false;
+    for k = 1:3
+        refpoints(k).site = all_site_coor_pop(best_sites(k)).address;
+        refpoints(k).label = all_site_coor_pop(best_sites(k)).label;
+    end
+end
+
+function r_mean = get_r_mean(positions1,populations1,positions2,populations2)
+% Computes a pair distance distribution as well as the fraction of missing
+% population, the distribution is normalized to unity
+
+% normalize population vectors
+populations1 = populations1/sum(populations1);
+populations2 = populations2/sum(populations2);
+
+[n_rot_1,~] = size(positions1);   % returns number of rotamers at position 1
+[n_rot_2,~] = size(positions2);   % -//- at position 2
+
+a2 = repmat(sum(positions1.^2,2),1,n_rot_2);
+b2 = repmat(sum(positions2.^2,2),1,n_rot_1).';
+pair_dist = sqrt(abs(a2 + b2 - 2*positions1*positions2.'));
+weights = populations1*populations2.';
+r_mean = sum(sum(pair_dist.*weights));

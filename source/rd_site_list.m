@@ -1,4 +1,4 @@
-function [sites,label,exceptions] = rd_site_list(fname)
+function [sites,label,chains,exceptions] = rd_site_list(fname)
 %
 % RD_SITE_LIST Read list of label sites (as written by site_scan.m)
 %
@@ -17,6 +17,8 @@ function [sites,label,exceptions] = rd_site_list(fname)
 %               .rmsd       label position rmsd (Angstroem)
 %               .residue    name of original residue
 % label         name of label (rotamer library)
+% chains        string with single-letter chain identifiers, can be '*' for
+%               all chains
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
 %
@@ -56,6 +58,24 @@ end
 
 S = 0; % initialize number of sites
 
+tline = fgetl(fid);
+pa = strfind(tline,'(');
+pe = strfind(tline,')');
+if ~isempty(pa) && ~isempty(pe)
+    chains = tline(pa+1:pe-1);
+else
+    chains = '*';
+end
+poi = strfind(tline,'%');
+if ~isempty(poi)
+    if poi(1) == 1
+        tokpoi = strfind(tline,'label:');
+        if ~isempty(tokpoi)
+            label = strtrim(tline(tokpoi+6:end));
+        end
+    end
+end
+
 while 1
     tline = fgetl(fid);
     if ~ischar(tline) 
@@ -63,13 +83,6 @@ while 1
     end
     poi = strfind(tline,'%');
     if ~isempty(poi)
-        if poi(1) == 1
-            tokpoi = strfind(tline,'label:');
-            if ~isempty(tokpoi)
-                label = strtrim(tline(tokpoi+6:end));
-            end
-            continue
-        end
         tline = tline(1:poi-1);
     end
     args = split(tline);

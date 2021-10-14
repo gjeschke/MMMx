@@ -71,10 +71,10 @@ else
 end
 
 if ~isfield(options,'crysol3') || ~options.crysol3
-    s=which('crysol.exe');
+    s = which_third_party_module('crysol');
     options.crysol3 = false;
 else
-    s=which('crysol_30.exe');
+    s = which_third_party_module('crysol3');
 end
 
 if isempty(s)

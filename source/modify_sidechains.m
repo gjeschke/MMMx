@@ -33,7 +33,7 @@ if ~exist('mutations','var') || isempty(mutations)
 end
 
 
-dospath=which('scwrl4.exe');
+dospath = which_third_party_module('scwrl4');
 if isempty(dospath)
     modified = -1;
     return

@@ -7,7 +7,8 @@ function [exceptions,entity] = MMModel(control_file)
 %   specified modelling pipeline
 %
 % INPUT
-% control_file control file in MMMx format, must be provided
+% control_file  control file in MMMx format, if missing, an 'open file'
+%               window is opened for control file selection
 %
 % OUTPUT
 % exceptions   cell vector of MException objects if something went wrong, 
@@ -107,6 +108,8 @@ for module = 1:length(controller)
         end
     end
 end
+
+fprintf(logfid,'\n*** MMMx modeling finished ***\n');
 
 if close_log
     fclose(logfid);

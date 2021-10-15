@@ -1,8 +1,8 @@
-function [entity,failures] = site_scan(entity,label,fname,options)
+function [entity,failures] = site_scan_labels(entity,label,fname,options)
 %
-% SITE_SCAN Spin labelling site scan
+% SITE_SCAN_LABELS Spin labelling site scan
 %
-%   [entity,failures] = SITE_SCAN(entity,label,fname,options)
+%   [entity,failures] = SITE_SCAN_LABELS(entity,label,fname,options)
 %   Finds potential spin labelling sites matching certain conditions and
 %   saves them in a list file
 %

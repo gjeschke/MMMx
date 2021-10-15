@@ -73,7 +73,7 @@ for d = 1:length(control.directives)
     clear cmd
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
-        case {'addpdb','getens','expand','import'}
+        case {'addpdb','getens','expand','import','input'}
             cmd_poi = cmd_poi + 1;
             ensemble_poi = ensemble_poi + 1;
             cmd.input = control.directives(d).options{1};
@@ -355,7 +355,7 @@ for c = 1:cmd_poi
             else
                 sitescan_options.ensemble = false;
             end
-            [c_entity,failures] = site_scan(c_entity,cmd.label,cmd.fname,sitescan_options);
+            [c_entity,failures] = site_scan_labels(c_entity,cmd.label,cmd.fname,sitescan_options);
             fprintf(logfid,'\nSite scan completed\n');
             fprintf(logfid,'   for %i sites labelling was impossible\n',failures.impossible);
             fprintf(logfid,'   for %i further sites, less than %i rotamer(s) are populated\n',failures.too_few,sitescan_options.min_rotamers);
@@ -540,7 +540,6 @@ for c = 1:cmd_poi
             ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
     end
 end
-disp('Aber hallo!');
 
 function entity = retrieve_ensemble(name,ensembles,logfid)
 

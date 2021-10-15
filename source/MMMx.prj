@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="1493850212" file="G:\MMMx\source\MMMx.prj" location="G:\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3165396600" file="G:\MMMx\source\MMMx.prj" location="G:\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>MMMx</param.appname>
     <param.icon>${PROJECT_ROOT}\MMMx_resources\icon.ico</param.icon>
     <param.icons>
@@ -80,6 +80,7 @@
     </fileset.main>
     <fileset.resources>
       <file>G:\MMMx\defs\minimization_server.mcr</file>
+      <file>G:\MMMx\documentation</file>
       <file>G:\MMMx\rotamer_libraries</file>
     </fileset.resources>
     <fileset.package />
@@ -208,7 +209,7 @@
       <file>${PROJECT_ROOT}\rotational_correlation_time.m</file>
       <file>${PROJECT_ROOT}\score_enm_pairs.m</file>
       <file>${PROJECT_ROOT}\select.m</file>
-      <file>${PROJECT_ROOT}\site_scan.m</file>
+      <file>${PROJECT_ROOT}\site_scan_labels.m</file>
       <file>${PROJECT_ROOT}\split_address.m</file>
       <file>${PROJECT_ROOT}\superimpose_ensemble.m</file>
       <file>${PROJECT_ROOT}\transform_structure.m</file>

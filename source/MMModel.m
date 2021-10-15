@@ -46,6 +46,8 @@ end
 
 logfid = 1;
 close_log = false;
+show_report = false;
+logfile_name = def_logfile;
 failed = false;
 module_exceptions ={};
 
@@ -56,11 +58,14 @@ for module = 1:length(controller)
             close_log = true;
             if ~isempty(controller(module).options) && ~isempty(controller(module).options{1})
                 logfid = fopen(controller(module).options{1},'wt');
+                logfile_name = controller(module).options{1};
             else
                 logfid = fopen(def_logfile,'wt');
             end
         case 'log'
             logfid = fopen(def_logfile,'wt');
+        case 'report'
+            show_report = true;
         case 'getpdb'
             [entity,module_exceptions] = get_pdb(controller(module).options{1});
             failed = isempty(entity); % commands that are essential for further pipeline processing should report failure
@@ -113,6 +118,11 @@ fprintf(logfid,'\n*** MMMx modeling finished ***\n');
 
 if close_log
     fclose(logfid);
+end
+
+if show_report
+    cmd = strtrim(sprintf('notepad %s\n',logfile_name));
+    system(cmd);
 end
 
 cd(my_path);

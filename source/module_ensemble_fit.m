@@ -1470,6 +1470,7 @@ for kr = 1:length(parameters)
     Gamma2 = predictions(range(1):range(2),3:end)*coeff';
     if parameters(kr).fit_rates
         all_pre = Gamma2;
+        all_pre(all_pre > parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
     else
         all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
     end

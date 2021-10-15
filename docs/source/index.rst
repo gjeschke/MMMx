@@ -3,36 +3,60 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-MMMx 0.0.0 Documentation
+MMMx 1.0 Documentation
 ========================
-
-.. warning:: MMMx is at an early design and prototyping stage. Version 0.0.0 is not functional.
 
 *    MMMx is the successor program of MMM (Multiscale Modeling of Macromolecules)
 
-*    Graphical user interface is separated from computation modules
+*    it implements pipelines for integrative ensemble modeling of structures of proteins and protein complexes 
 
-*    Methods can be implemented in any language. They communicate by a few defined data exchange formats
+*    modeling is based on distance distribution information for determining the width of ensembles and for enhanced sampling in raw ensemble generation 
+
+*    MMMx is an open-source Matlab package and is also available as compiled stand-alone Windows application
+
+*    it consists of modules that can be combined to modeling pipelines in control files (MMMx scripts) 
+
+
+.. image:: ../images/concept.png
+   :width: 400
+   :alt: module concept image
+   
+MMMx is available at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_ and `at GitHub <https://github.com/gjeschke/MMMx>`_
 
 .. toctree::
     :hidden:
-    :caption: Ensemble structure
+    :caption: Installation
     :maxdepth: 2
 
-    ./functional_entity
-    ./structure_representation
-    ./MMMx_addresses
-    ./MMMx_atomic
-    ./MMMx_RigiFlex
+    ./source_installation
+    ./executable_installation
+
+
+.. toctree::
+    :hidden:
+    :caption: Modules
+    :maxdepth: 2
+
+    ./experiment_design
+    ./prepare
+    ./rigi
+    ./flex
+    ./flex_RNA
+    ./enm
+    ./ensemble_fit
+    ./ensemble_analysis
+    ./locate
+    ./yasara_refine
 	
 .. toctree::
     :hidden:
-    :caption: Modelling
+    :caption: Input/output concept
     :maxdepth: 2
 
     ./control_files
     ./log_files
-    ./modelling_modules
+    ./ensemble_list
+    ./MMMx_addresses
 	
 .. toctree::
     :hidden:
@@ -44,25 +68,19 @@ MMMx 0.0.0 Documentation
 
 .. toctree::
     :hidden:
-    :caption: Programmer's Guide
+    :caption: Third-party software
     :maxdepth: 2
 
-    ./object_access
-    ./object_modification
-    ./property_functions
-    ./ChimeraX
-    ./python
-    ./dependencies
-
+    ./third_party
+    ./concept
+	
 .. toctree::
     :hidden:
-    :caption: Architecture
+    :caption: Examples
     :maxdepth: 2
 
-    ./concept
-    ./data
-    ./docs
-
+    ./examples
+	
 
 .. Indices and tables
 .. ==================

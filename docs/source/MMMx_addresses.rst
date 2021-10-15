@@ -6,20 +6,20 @@ Selection by address
 Topology and ensemble addressing
 ---------------------------------
 
-Addresses are used for selecting part of an entity (see :ref:`MMMx|atomic<MMMx_atomic>`) for display, processing, or analysis. 
-Such selection can refer to objects in the molecular structure (chains or molecules in a complex, residues, atoms) or to different realizations of an object (conformers of the whole structure, sidechain rotamers, atom locations).
+Addresses are used for selecting part of an entity (protein, nucleic acid, or complex). 
+Such selection can refer to objects in the molecular structure (chains or molecules in a complex, residues, atoms)
+or to different realizations of an object (conformers of the whole structure, atom locations).
 The first selection type is *topology addressing*  and the second selection type *ensemble addressing*.
 
 MMMx internally uses only one index for atom locations (old style) and rotamers (new style). 
-Since atom locations in crystal structure cannot generally and umabigously assigned to rotamers, addressing allows reference to either locations or rotamers in a given structure.
-Mixing both concepts is discouraged, but the address style and selection functions do not prevent it.
 MMMx stores occupation of water atoms from the PDB file, but does not allow to select water locations by address.
 
 Chains
 --------
 
-Chain identifiers should be upper-case letters for up to 26 chains and lower-case letters for chains 27-52 chains. Chain identifiers longer than on letter are not compatible with PDB format, but are allowed in MMMx if required.
-Chain identifiers in MMMx must start with a letter and must not contain an underscore ``_``. Chain addresses are enclosed in parentheses (*chain*). 
+Chain identifiers should be upper-case letters for up to 26 chains and lower-case letters for chains 27-52. 
+Chain identifiers longer than on letter are not compatible with PDB format and not allowed in MMMx.
+Chain addresses are enclosed in parentheses (*chain*). 
 
 .. admonition:: Chain address examples
 
@@ -33,7 +33,11 @@ Chain identifiers in MMMx must start with a letter and must not contain an under
 Residues
 ---------
 
-Residues can be addressed either by number or by type. Residue numbers are positive and do not neccessarily agree with the ones in the PDB file. Whether they do, is indicated in field ``original_residue_numbers`` at entity level.
+Residues can be addressed either by number or by type. Residue numbers are positive and do not neccessarily agree with the ones in the PDB file. 
+Whether they do, is internally indicated in field ``original_residue_numbers`` at entity level. The first residue
+in MMMx has number 1 if the PDB file contains negative residue numbers or the residue number zero. If the PDB file starts 
+with a residue number larger than 1, residue numbers do agree. The only exception to these rules are PDB structures that use the infamous 
+insertion code. MMMx counts up, so that all residues from the inserted residue on have numbers increased by one.
 
 Residue types are three-letter codes for amino acid residues, two-letter codes for DNA nucleotides, and single-letter codes for RNA nucleotides. Defined cofactors usually have three-letter codes. In MMMx as in ChimeraX, residue types are case-insensitive.
  
@@ -69,7 +73,8 @@ A list of atom addresses starts with a dot ``.``.
 Water molecules
 ----------------
 
-The address ``water`` can be used to select or unselect all water molecules. Selection of individual water molecules or water atom locations by address is not supported.
+The address ``water`` can be used to select or unselect all water molecules. 
+Selection of individual water molecules or water atom locations by address is not supported.
 
 Conformers
 ----------
@@ -106,6 +111,8 @@ Rotamer selection overrules location selection for atoms. In a rotameric structu
 	 
      ``glu|*`` addresses all rotamers for all glutamate residues in the entity
 
+Rotamer addressing is not currently used in modeling modules.
+
 Locations
 ----------
 
@@ -122,38 +129,6 @@ If you want to address a location by its tag, you must not address rotamers in t
 	 
      ``glu.OE1:*`` addresses all locations of OE1 atoms in all glutamate residues in chain A 
 	 
-Programmatic access
--------------------
-
-.. code-block:: matlab
-
-    [entity,exceptions] = select(entity,address,overwrite,unselect)
-    
-selects objects by ``address`` in an ``entity``. If ``overwrite`` (default: false) is true, a pre-existing selection is deleted. 
-If ``unselected`` (default: false) is true, the addressed objects are unselected rather than selected. An unselect request overrules a simultaneous overwrite request.
-For the address ``selected``, the value of ``overwrite`` is inconsequential, whereas ``unselect = true`` unselects the existing selection.
-
-.. code-block:: matlab
-
-    [atom_indices,complete] = get_selection(entity)
-    
-retrives sorted atom indices into the ``.xyz```, ``.elements``, and ``.occupancies``, and ``.index_array`` fields of ``entity``. 
-If requested, ``complete`` returns full indices (chain, residue, atom, conformer, rotamer/location), which are not sorted.
-
-.. code-block:: matlab
-     
-    [addresses,exceptions] = cx_to_mmmx_address(spec)	 
-
-translates the ChimeraX target specification ``spec`` into MMMx addresses (cell array, one entry for each structure identifier in ``spec``). See below.
-Error messages or warnings are reported as MException objects in cell array ``exceptions``.
-
-.. code-block:: matlab
-     
-    [spec,exceptions] = cx_from_mmmx_address(address,id)
-
-Projects an MMMx ``address`` to a ChimeraX target specification	``spec`` (see below), for which an optional structure identifier ``ìd`` in ChimeraX can be supplied.
-Error messages or warnings are reported as MException objects in cell array ``exceptions``.
-
 
 Changes compared to MMM
 -----------------------
@@ -172,7 +147,7 @@ This entailed the following changes:
 Correspondence with ChimeraX
 ----------------------------
 
-MMMx can translate a subset of basic ChimeraX target specifications into MMM addresses. The following functionality of ChimeraX target specifications is **not** translated:
+MMMx has a function that can translate a subset of basic ChimeraX target specifications into MMM addresses. The following functionality of ChimeraX target specifications is **not** translated:
 
 * usage of ``start`` and ``end`` in ranges, except for conformers
 * structure hierarchy with a depth of more than two (only structure and conformers allowed)
@@ -185,7 +160,5 @@ MMMx can translate a subset of basic ChimeraX target specifications into MMM add
 * zones
 * combinations
 
-Such selections can be made in ChimeraX, also via the ChimeraX interface of MMMx, and can then be imported into MMMx.
-
-MMMx can project its own addresses onto ChimeraX target specifications, as far as the ChimeraX target specification supports the type of addressing. 
+MMMx can also project its own addresses onto ChimeraX target specifications, as far as the ChimeraX target specification supports the type of addressing. 
 This excludes rotamer and atom location addressing.

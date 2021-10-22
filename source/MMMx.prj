@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="3165396600" file="G:\MMMx\source\MMMx.prj" location="G:\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="2891844742" file="G:\MMMx\source\MMMx.prj" location="G:\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>MMMx</param.appname>
     <param.icon>${PROJECT_ROOT}\MMMx_resources\icon.ico</param.icon>
     <param.icons>
@@ -14,7 +14,7 @@
     <param.company>ETHZ</param.company>
     <param.summary>MMMx runtime windows executable</param.summary>
     <param.description>Package for running integrative ensemble structure modelling and ensemble analysis of proteins and protein complexes</param.description>
-    <param.screenshot>G:\MMMx\docs\images\MMMx_splash.png</param.screenshot>
+    <param.screenshot>${PROJECT_ROOT}\splash.png</param.screenshot>
     <param.guid />
     <param.installpath.string>\ETHZ\MMMx\</param.installpath.string>
     <param.installpath.combo>option.installpath.appdata</param.installpath.combo>
@@ -85,6 +85,7 @@
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
+      <file>G:\MMMx\defs\color_defs.mat</file>
       <file>G:\MMMx\defs\element_attributes.mat</file>
       <file>G:\MMMx\defs\monomer_attributes.mat</file>
       <file>G:\MMMx\defs\monomers.mat</file>
@@ -131,6 +132,7 @@
       <file>${PROJECT_ROOT}\auxiliary\get_restraint_resolution.m</file>
       <file>${PROJECT_ROOT}\auxiliary\get_RNA_initial_anchor.m</file>
       <file>${PROJECT_ROOT}\auxiliary\get_rotamers_for_site.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\get_svg_color.m</file>
       <file>${PROJECT_ROOT}\auxiliary\id2tag.m</file>
       <file>${PROJECT_ROOT}\auxiliary\inhull.m</file>
       <file>${PROJECT_ROOT}\auxiliary\label_by_synonym.m</file>

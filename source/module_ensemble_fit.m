@@ -95,6 +95,9 @@ restraints.sas(1).data{1} = '';
 ddr_poi = 0;
 sas_poi = 0;
 pre_poi = 0;
+plot_groups(1).rgb = [];
+plot_groups(1).conformers = [];
+pg_poi = 0;
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
@@ -122,6 +125,11 @@ for d = 1:length(control.directives)
             opt.blocksize = str2double(control.directives(d).options{1});
         case 'addpdb'
             added_conformers = control.directives(d).options{1};
+        case 'plotgroup'
+            pg_poi = pg_poi + 1;
+            colname = control.directives(d).options{1};
+            plot_groups(pg_poi).rgb = get_svg_color(colname); %#ok<AGROW>
+            plot_groups(pg_poi).conformers = decode_number_list(control.directives(d).options{2}); %#ok<AGROW>
         case 'save'
             outname = control.directives(d).options{1};
         case {'pdbsave','pdb_save'}
@@ -1272,6 +1280,15 @@ if plot_result
             h = figure; clf; hold on
             overlap_G = [];
             overlap_E = [];
+            all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
+            for kpg = 1:length(plot_groups)
+                if ~isempty(plot_groups(kpg).rgb) && ~sum(isnan(plot_groups(kpg).conformers))
+                    pop = fit_task.ensemble_populations(plot_groups(kpg).conformers);
+                    all_distr_group = all_distr_ensemble(plot_groups(kpg).conformers,:);
+                    group_distr = pop*all_distr_group;
+                    plot(fit_task.r_axis,dr*group_distr,'Color',plot_groups(kpg).rgb);
+                end
+            end
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
                 if ~isempty(fit_task.ddr(kr).exp_distr_ub)
@@ -1487,3 +1504,23 @@ function save_figure(h,title,format)
 
 figname = sprintf('%s.%s',title,format);
 saveas(h,figname);
+
+function numbers = decode_number_list(list_string)
+
+numbers = zeros(1,5000);
+delimited = strfind(list_string,',');
+delimited = [0 delimited length(list_string)+1];
+rpoi = 0;
+for k = 1:length(delimited)-1
+    range = list_string(delimited(k)+1:delimited(k+1)-1);
+    hyphen = strfind(range,'-');
+    if isempty(hyphen) % single number
+        rpoi = rpoi + 1;
+        numbers(rpoi) = str2double(range);
+    else
+        rrange = str2double(range(1:hyphen-1)):str2double(range(hyphen+1:end));
+        numbers(rpoi+1:rpoi+length(rrange)) = rrange;
+        rpoi = rpoi + length(rrange);
+    end
+end
+numbers = numbers(1:rpoi);

@@ -54,9 +54,9 @@ for k = 1:length(modules)
             found = true;
         elseif ~isdeployed
             exe = 0;
-            while ~found && exe < length(modules(m).executable)
+            while ~found && exe < length(modules(k).executable)
                 exe = exe + 1;
-                executable = which(modules(m).executable{exe});
+                executable = which(modules(k).executable{exe});
                 if ~isempty(executable)
                     found = true;
                 end

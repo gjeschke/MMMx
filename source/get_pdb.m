@@ -114,7 +114,7 @@ curr_chain = '';
 models = 1;
 current_model = 1;
 model_offset = 0;
-populations = zeros(maxmodels,1);
+populations = ones(maxmodels,1);
 conformers = 0;
 if ~isempty(entity)
     model_offset = length(entity.populations);
@@ -322,7 +322,11 @@ while 1
 %         end
     end % end atom loop
 end
-populations = populations(1:conformers+1);
+if conformers == 0
+    conformers = 1;
+    populations(1) = 1;
+end
+populations = populations(1:conformers);
 entity.original_residue_numbers = preserve_residue_numbers;
 entity.xyz = xyz(1:atoms,:);
 entity.elements = elements(1:atoms);

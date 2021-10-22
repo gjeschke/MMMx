@@ -2,7 +2,7 @@ function [entity,exceptions,failed] = module_rigi(control,logfid,entity)
 %
 % MODULE_RIGI Runs Rigi module
 %
-%   [entity,exceptions,entity] = MODULE_RIGI(control,logfid,entity)
+%   [entity,exceptions,failed] = MODULE_RIGI(control,logfid,entity)
 %   Parses control file for modelling directives and arguments and runs the
 %   specified modelling pipeline
 %
@@ -13,7 +13,8 @@ function [entity,exceptions,failed] = module_rigi(control,logfid,entity)
 %               .directives     array of struct with directives
 %               .entity_output  number of the entity to be output
 % logfid        file handle for log file, defaults to console output
-% entity        input entity, defines rigid-body coordinates, must exist
+% entity        input entity, defines rigid-body coordinates, must exist or
+%               be loaded in control file
 %
 % OUTPUT
 % entity        output entity
@@ -112,6 +113,8 @@ for d = 1:length(control.directives)
             end
         case 'save'
             save_name = control.directives(d).options{1};
+        case {'rbtemplate','addpdb'}
+            entity = get_pdb(control.directives(d).options{1});
         case 'savepdb'
             save_pdb_name = control.directives(d).options{1};
         case 'maxsize'
@@ -201,8 +204,8 @@ for d = 1:length(control.directives)
                     restraints.ddr(ddr_poi).fwhh(kr) = NaN;
                 else
                     restraints.ddr(ddr_poi).r(kr) = str2double(arg3);
-                    % convert input from standrad deviation to full width
-                    % at half maximum
+                    % convert input from standard deviation to full width
+                    % at half height
                     restraints.ddr(ddr_poi).fwhh(kr) = sqrt(8*log(2))*str2double(control.directives(d).block{kr,4});
                 end
                 if args > 4

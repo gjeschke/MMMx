@@ -63,6 +63,7 @@ opt.interactive = false;
 fname = 'mmmx_flexRNA';
 pdbid = 'MMMX';
 chainid = 'A';
+first_conformer = 1;
 
 restraints.ddr(1).labels{1} = '';
 restraints.anchor_3p = '';
@@ -89,6 +90,8 @@ for d = 1:length(control.directives)
             end
         case 'initial'
             initial_ensemble = control.directives(d).options{1};
+        case 'skipto'
+            first_conformer = str2double(control.directives(d).options{1});
         case 'addpdb'
             added_conformers = control.directives(d).options{1};
         case 'parallel'
@@ -226,7 +229,7 @@ else
     end
 end
 
-for kent = 1:nent
+for kent = first_conformer:nent
     if expand_rba
         fname = sprintf('%s_rba_%i',fname_basis,kent);
         entity = get_rba(entity0,kent);

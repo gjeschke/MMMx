@@ -102,7 +102,7 @@ for d = 1:length(control.directives)
             else % the internal name is derived from the order of loading entities
                 entity_descriptor.name = sprintf('E%i',entity_poi);
             end
-            if length(control.directives(d).options) > 2 % the entity has an explicit internal name
+            if length(control.directives(d).options) > 2 % a maximum number of chains is processed
                 options.maxch = str2double(control.directives(d).options{3});
             end
             entity_descriptor.entity = get_cyana_pdb(cmd.input,options); % load the entity
@@ -225,7 +225,7 @@ for d = 1:length(control.directives)
             cmd_poi = cmd_poi + 1;
             cmd.type = control.directives(d).options{1};
             cmd.transform = true; % by default, coordinates are transformed
-            cmd.oriented = false; % by default, bilayer orientatuion is also fitted
+            cmd.oriented = false; % by default, bilayer orientation is also fitted
             if ~isempty(control.directives(d).options)...
                     && ~isempty(control.directives(d).options{2})...
                     && strcmpi(control.directives(d).options{2},'oriented')

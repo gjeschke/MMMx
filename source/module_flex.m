@@ -79,6 +79,7 @@ maxlen = 1000; % maximum expected loop length for memory pre-allocation
 M_max = 10; % maximum factor for rejection sampling (default)
 mean_M = 1;
 f_update = 0.01; % update factor for sampling functions in rejection sampling (default)
+first_conformer = 1; % first conformer to be computed
 
 savename = 'mmmx_flex';
 pdbid = 'MMMX';
@@ -126,6 +127,8 @@ for d = 1:length(control.directives)
             end
         case 'initial'
             initial_ensemble = control.directives(d).options{1};
+        case 'skipto'
+            first_conformer = str2double(control.directives(d).options{1});
         case 'addpdb'
             added_conformers = control.directives(d).options{1};
         case 'parallel'
@@ -452,7 +455,7 @@ end
 
 N_anchor_chain = '';
 C_anchor_chain = '';
-for kent = 1:nent
+for kent = first_conformer:nent
     for kres = 1:nres
         restrain(kres).label = [];
         restrain(kres).r_beacon = [];

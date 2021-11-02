@@ -90,7 +90,10 @@ fprintf(ofid,'SavePDB 2,%s_opt.pdb,Format=PDB,Transform=Yes\n',bname);
 fprintf(ofid,'Exit\n');
 fclose(ifid);
 fclose(ofid);
-cmd = sprintf('yasara %s',ctrl_file);
+cmd = sprintf('yasara %s &',ctrl_file);
+if isunix
+    cmd = strcat('./',cmd);
+end
 if options.console
     cmd = strcat(cmd,' -con');
 end
@@ -113,7 +116,7 @@ t.TasksToExecute = tasks;
 t.UserData.status = 'running';
 t.TimerFcn = @check_for_completion;
 start(t);
-[s, w] = dos(cmd);
+[s, w] = system(cmd);
 if s~=0
     fprintf(logfile,'\nERROR: Yasara did not complete successfully:\n%s\n\n',w);
     delete(ctrl_file);

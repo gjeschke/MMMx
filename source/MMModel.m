@@ -121,7 +121,7 @@ if close_log
 end
 
 if show_report
-    cmd = strtrim(sprintf('notepad %s\n',logfile_name));
+    cmd = strtrim(sprintf('notepad %s &\n',logfile_name));
     system(cmd);
 end
 

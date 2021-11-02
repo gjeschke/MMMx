@@ -120,6 +120,7 @@ end
 one_failed = false;
 for c = 1:length(file_list)
     inname = file_list{c};
+    fprintf(logfid,'\nOptimizing %s.\n',inname);
     opt.fname = sprintf('%s_m%i',fname,c);
     temporary_input = false;
     if repack
@@ -165,6 +166,8 @@ for c = 1:length(file_list)
             delete(inname);
         end
     end
+
+    fprintf(logfid,'Saving as %s.pdb\n',opt.fname);
 
     % read Yasara result into current entity, if output is requested
     if nargout > 0 && isempty(exceptions{1})

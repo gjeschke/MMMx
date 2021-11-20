@@ -219,7 +219,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % flexibility analysis is performed for current entity
+                cmd.entity = '.'; % superposition is performed for current entity
             end
             cmd.address = '';
             if length(control.directives(d).options) > 2 % chain and possibly range given

@@ -512,12 +512,12 @@ for c = 1:cmd_poi
                     name = sprintf('chain %s',part);
                 end
                 if cmd.options.Rg
-                    fprintf(logfid,'\nRadius of gyration analysis for %s\n',name);
+                    fprintf(logfid,'\nRadius of gyration analysis for %s (%s)\n',name,part);
                     fprintf(logfid,'   Rg = %4.1f %s with standard deviation %4.1f %s\n',...
                         measures.(part).Rg,char(197),measures.(part).Rg_std,char(197));
                 end
                 if cmd.options.pair_rmsd
-                    fprintf(logfid,'\nEnsemble width and density for %s\n',name);
+                    fprintf(logfid,'\nEnsemble width and density for %s (%s)\n',name,part);
                     fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
                         measures.(part).width,char(197),measures.(part).density,char(197));
                     h = plot_pair_rmsd(measures.(part).pair_rmsd,cmd.options.superimpose);
@@ -569,6 +569,7 @@ for c = 1:cmd_poi
                     end
                 end
                 if cmd.options.compactness
+                    fprintf(logfid,'\nCompactness analysis for %s (%s)\n',name,part);
                     offset = 0;
                     if ~isempty(cmd.options.range)
                         offset = cmd.options.range(1); 
@@ -601,7 +602,9 @@ for c = 1:cmd_poi
                     R2fct = measures.(part).R0_seglen*seg_lengths.^measures.(part).nu_seglen;
                     mean_R2 = measures.(part).mean_R2;                    
                     min_R2 = measures.(part).min_R2;                    
-                    max_R2 = measures.(part).min_R2;
+                    max_R2 = measures.(part).max_R2;
+                    fprintf(logfid,'   Random coil fit\n   R0 = %5.2f; nu %5.3f\n',...
+                        measures.(part).R0_seglen,measures.(part).nu_seglen);
                     segment_data = [seg_lengths' mean_R2' min_R2' max_R2' R2fct']; 
                     if cmd.options.matlab
                         datname = sprintf('compactness_analysis_%s_%s.mat',basname,part);
@@ -874,5 +877,5 @@ h2 = plot(kaxis,segments.mean_R2,'Color',[0,0.75,0],'LineWidth',2.5);
 h3 = plot(kaxis,R2fct,'Color',[0.8,0,0],'LineWidth',2.5);
 xlabel('Segment sequence length k');
 ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
-legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_ee,segments.nu_ee),'Location','southeast');
+legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_seglen,segments.nu_seglen),'Location','southeast');
 axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);

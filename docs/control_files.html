@@ -1,0 +1,547 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Control files &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Log files" href="log_files.html" />
+    <link rel="prev" title="YasaraRefine" href="yasara_refine.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source_installation.html">Source-code version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executable_installation.html">Executable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#windows-path">Windows path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="experiment_design.html">ExperimentDesign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#plot"><code class="docutils literal notranslate"><span class="pre">plot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#sitescan-sitescan"><code class="docutils literal notranslate"><span class="pre">sitescan</span></code>, <code class="docutils literal notranslate"><span class="pre">sitescan!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#pairlist-pairlist"><code class="docutils literal notranslate"><span class="pre">pairlist</span></code>, <code class="docutils literal notranslate"><span class="pre">pairlist!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#hetpairlist"><code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#distributions"><code class="docutils literal notranslate"><span class="pre">distributions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#enmpairs"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#id1"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#rbreference"><code class="docutils literal notranslate"><span class="pre">RBreference</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare.html">Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getcyana"><code class="docutils literal notranslate"><span class="pre">getcyana</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#center"><code class="docutils literal notranslate"><span class="pre">center</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#symmetry"><code class="docutils literal notranslate"><span class="pre">symmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#bilayer"><code class="docutils literal notranslate"><span class="pre">bilayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#mutate"><code class="docutils literal notranslate"><span class="pre">mutate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repair"><code class="docutils literal notranslate"><span class="pre">repair</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#deselenate"><code class="docutils literal notranslate"><span class="pre">deselenate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#renumber"><code class="docutils literal notranslate"><span class="pre">renumber</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#chains"><code class="docutils literal notranslate"><span class="pre">chains</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#replace"><code class="docutils literal notranslate"><span class="pre">replace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#merge"><code class="docutils literal notranslate"><span class="pre">merge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rigi.html">Rigi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#rbtemplate"><code class="docutils literal notranslate"><span class="pre">rbtemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#separate-off"><code class="docutils literal notranslate"><span class="pre">separate</span> <span class="pre">off</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex.html">Flex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flex_RNA.html">FlexRNA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enm.html">ENM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_fit.html">EnsembleFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_analysis.html">EnsembleAnalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="locate.html">Locate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Input/output concept</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_list.html">Ensemble lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Third-party software</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="third_party.html">Third-party software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#scwrl4">SCWRL4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#atsas">ATSAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#muscle">MUSCLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#msms">MSMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#hydropro">HYDROPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#dssp">DSSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#yasara">YASARA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Open concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-open-data-concept">Open source/ open data concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#branched-pipeline-concept">Branched pipeline concept</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Example set</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Control files</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="control-files">
+<span id="id1"></span><h1>Control files<a class="headerlink" href="#control-files" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="concept">
+<h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
+<p>Modelling with MMMx is controlled by an <code class="docutils literal notranslate"><span class="pre">.mcx</span></code> file:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">MMMx</span> <span class="s">control_file.mcx</span>
+</pre></div>
+</div>
+<p>Output is written to the console, if the control file does not contain a <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">log</span></code> directive. This is discouraged.
+If the <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">log</span></code> directive is present, a log file with the same name as the control file and extension <code class="docutils literal notranslate"><span class="pre">.log</span></code> is generated.
+If the control file also contains a <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">report</span></code> directive, this log file is opened in the Windows notepad application
+after completion. We recommend this when working with the executable, where it signals completion. When working from within Matlab,
+completion is signalled by the prompt in the Matlab command window.</p>
+<p>If MMMx is called without an argument, it opens a file browser window for selection a control file.</p>
+<p>Further output files may be generated depending on the modules that are called in the control file.</p>
+<p>The control file specifies a modelling task by a sequence of module calls, each having its own run options and list of restraints.</p>
+</div>
+<div class="section" id="syntax">
+<h2>Syntax<a class="headerlink" href="#syntax" title="Permalink to this headline">¶</a></h2>
+<p>Keywords are case-insensitive. Empty lines are allowed.</p>
+<p>The MMMx control file consists of blocks corresponding to individual modules. Outside such blocks, a few directives are supported.
+Directives have the form</p>
+<p><code class="docutils literal notranslate"><span class="pre">#</span></code> <em>directive</em> <img class="math" src="_images/math/89fe9fd780a7363ed726bc4c24dd23e313fefe89.svg" alt="argument"/></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">log</span></code> and <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">report</span></code> directives do not have arguments. <code class="docutils literal notranslate"><span class="pre">#</span> <span class="pre">logfile</span></code> <img class="math" src="_images/math/0b1a3114b72f1af26c7f800e493d22e6537cb2c5.svg" alt="filename"/> specifies a user-selected name for the logfile.</p>
+<p>Comments are initiated by <code class="docutils literal notranslate"><span class="pre">%</span></code> and can appear anywhere. The rest of the line after a <code class="docutils literal notranslate"><span class="pre">%</span></code> character is ignored.</p>
+<p>Module blocks are opened by <code class="docutils literal notranslate"><span class="pre">!</span></code><em>module</em>, where <em>module</em> is the name of the module. They are closed by <code class="docutils literal notranslate"><span class="pre">.</span></code><em>module</em>.
+If a new block is opened or the file ends before the closing line of a block, MMMx proceeds, but raises a warning.</p>
+<p>The control file ends with a <code class="docutils literal notranslate"><span class="pre">#end</span></code> statement. If it is missing, MMMx raises a warning. All lines after an <code class="docutils literal notranslate"><span class="pre">#end</span></code> statement are ignored.</p>
+<p>Keywords and restraint specifications of individual modules are described in section Modules of the documentation.
+Keywords inside blocks must be indented by at least two spaces. If a keyword contains a block of further arguments,
+such as restraints, these rguments lines must be indented by at least two spaces with respect to the keyword.
+Such a block must end with <code class="docutils literal notranslate"><span class="pre">.</span></code> <em>keyword</em>.</p>
+</div>
+<div class="section" id="restraint-specification">
+<h2>Restraint specification<a class="headerlink" href="#restraint-specification" title="Permalink to this headline">¶</a></h2>
+<p>The following restraint format applies to all modules.
+There can be multiple blocks of restraints of the same type within the same module section.
+Please note that there exist additional module-specific restraint types that are explained in keyword specifications of the modules.</p>
+<p><strong>Distance distribution restraints</strong></p>
+<p>Keyword: <code class="docutils literal notranslate"><span class="pre">ddr</span></code>  Legacy keyword: <code class="docutils literal notranslate"><span class="pre">deer</span></code></p>
+<p>The distance unit is <strong>Angstroem</strong>.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">ddr</span></code> <em>label_1</em> [<em>label_2</em>]</p>
+<blockquote>
+<div><p><em>site_1</em> <em>site_2</em> <em>&lt;r&gt;</em> <em>stdr</em> % example for (multi)Gaussian restraints``</p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">-lb</span></code> <em>lower_bound</em> <code class="docutils literal notranslate"><span class="pre">-ub</span></code> <em>upper_bound</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">lower-bound/upper-bound</span> <span class="pre">restraints</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> <em>distribution_data</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">parameter-free</span> <span class="pre">distributions</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <em>&lt;r&gt;</em> <em>stdr</em> <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> <em>distribution_data</em> % example for providing Gaussian restraints and distribution data``</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.ddr</span></code></p>
+</div>
+<p>Each combination of label types at the two sites requires its own <code class="docutils literal notranslate"><span class="pre">ddr</span></code> block. If both sites are labeled with the same label, it is sufficient to specify it once.
+The allowed label types <em>label_1</em> and <em>label_2</em> correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a>.
+The syntax <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code> specifies an atom, for instance, <code class="docutils literal notranslate"><span class="pre">atom.CA</span></code> the CA atom of the addressed site.</p>
+<p>The two labelled sites are specified by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx residue addresses</span></a> <em>site_1</em> and <em>site_2</em> .
+These addresses must refer to either a residue in an entity passed to the module or to a residue generated by the module.</p>
+<p>For a Gaussian restraint, the mean value <em>&lt;r&gt;</em> and standard deviation <em>stdr</em> need to be specified.
+If you wish to use multi-Gaussian restraints, please specify the full distance distribution (<code class="docutils literal notranslate"><span class="pre">&#64;</span></code> syntax).
+Note that some modules can process only single-Gaussian restraints.</p>
+<p>Upper/lower bound restraints require the option specifiers <code class="docutils literal notranslate"><span class="pre">-lb</span></code> and <code class="docutils literal notranslate"><span class="pre">ub</span></code>. These are hard restraints, i.e., any violation rejects the model.
+Use distributions if you expect that some restraints may be violated.</p>
+<p>Parameter-free distributions require an ASCII data file with name <em>distribution_data</em>.dat (extension may be included)
+that has at least two columns. The first column is the distance axis (Angstroem units) and the second column is the
+probability per distance bin. We advise to provide lower and upper confidence limits for the bin probabilities in columns 3 and 4.
+White space between <code class="docutils literal notranslate"><span class="pre">&#64;</span></code> and <em>distribution_data</em> is allowed, but not required. Bin probabilities are automatically normalized to unity sum,
+where necessary. A distance axis in units of nm is assumed if the longest distance value is maller than 20.</p>
+<p>Note that you can provide any parametrized distance distribution by first converting it to a binned distance distribution and saving it as <em>distribution_data</em>.dat.</p>
+<p><strong>Paramagnetic relaxation enhancement (PRE) restraints</strong></p>
+<p>Keyword: <code class="docutils literal notranslate"><span class="pre">pre</span></code></p>
+<p>The distance unit is <strong>Angstroem</strong>.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">pre</span></code> <em>label</em> <em>atom</em> [<em>taui</em> [<em>taur</em> [<em>taus</em>]]]</p>
+<blockquote>
+<div><p><em>site_1</em> <em>site_2</em> <em>ratio</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">ratio</span> <span class="pre">Ipara/Idia</span></code></p>
+<p><em>site_1</em> <em>site_2</em> <code class="docutils literal notranslate"><span class="pre">-Gamma2</span></code> <em>Gamma2</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">transverse</span> <span class="pre">relaxation</span> <span class="pre">enhancement</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.pre</span></code></p>
+</div>
+<p>Possible spin label types <em>label</em> correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a>. If the entity has explicit protons, they can be specified by <em>atom</em>.
+Otherwise, the heavy atom, for instance <img class="math" src="_images/math/3c01db19d2bea9adb52e8e0b68b2983f852ba49a.svg" alt="N"/> for a backbone NH atom should be specified. MMMx will attempt to generate the proton position.</p>
+<p>Correlation times can be provided as additional arguments. The default for the correlation time of internal motion (<em>taui</em>) is 250 ps,
+the one for global tumbling of the protein (<em>taur</em>) 3 ns, and the one for spin label relaxation (<em>taus</em>) 1 <img class="math" src="_images/math/fcd01bdc1a3b5e443eacc89a68da6b9dcadf3c35.svg" alt="\mu"/>s.</p>
+<p>The experimental restraints can be specified either by the intensity <em>ratio</em> between the paramagnetically and diamagnetically labelled sample or by the transverse relaxation enhancement rate <em>Gamma2</em>.</p>
+<p><strong>SAXS restraints</strong></p>
+<p>Small-angle x-ray scattering fits can be specified for the whole entity or for a subset of chains.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">saxs</span></code> <em>saxs_data</em> [<em>sm</em>] [<code class="docutils literal notranslate"><span class="pre">-v3</span></code>]</p>
+<blockquote>
+<div><p><em>chain_1</em> [<em>chain_2</em> …]</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.saxs</span></code></p>
+</div>
+<p>Usually, SAXS restraints are specified by a single line, giving only the file name of the SAXS data and optionally a maximum scattering vector <em>sm</em> for fitting till <em>sm</em>.
+SAXS fitting in MMMx uses <a class="reference external" href="https://www.embl-hamburg.de/biosaxs/manuals/crysol.html">crysol</a> of the ATSAS package. Option <code class="docutils literal notranslate"><span class="pre">-v3</span></code> specifies that <a class="reference external" href="https://www.embl-hamburg.de/biosaxs/manuals/crysol3.html">crysol3</a> is used instead.
+It is possible to specify only a subset of the chains of an enity for SAXS fitting.
+For this, <code class="docutils literal notranslate"><span class="pre">saxs</span></code> is used as a block restraint with a single additional line that specifies the included chains by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx chain addresses</span></a>.</p>
+<p><strong>SANS restraints</strong></p>
+<p>Small-angle neutron scattering fits can be specified for the whole entity or for a subset of chains.
+If an experimental selection of part of the entity was made by contrast matching,
+it is better to specify the deuterium content in the buffer than to specify the selected chains.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">sans</span></code> <em>sans_data</em> [<em>illres</em> [<code class="docutils literal notranslate"><span class="pre">*D2O*</span></code>]]</p>
+<blockquote>
+<div><p><em>chain_1</em> [<em>chain_2</em> …]</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.sans</span></code></p>
+</div>
+<p>Usually, SANS restraints are specified by a single line, giving only the file name of the SANS data and optionally the name of a resolution file,
+a fraction of D<sub>2</sub>O in the solution.
+If the second argument is a number instead of a string, it is interpreted as D<sub>2</sub>O content and the resolution file is considered to be missing (a warning is raised).</p>
+<p>SANS fitting in MMMx uses <a class="reference external" href="https://www.embl-hamburg.de/biosaxs/manuals/cryson.html">cryson</a> of the ATSAS package.
+It is possible to specify only a subset of the chains of an enity for SANS fitting.
+For this, <code class="docutils literal notranslate"><span class="pre">sans</span></code> is used as a block restraint with a single additional line that specifies the included chains by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx chain addresses</span></a>.</p>
+<p><strong>Crosslink restraints</strong></p>
+<p>Crosslink restraints can be specified as a fraction of potentially crosslinkable residue pairs that are sufficiently close to be actually crosslinked.
+The maximum distance (in Angstroem) and fraction (0… 1) apply to all crosslinks in one block.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">crosslink</span></code> <em>maxdist</em> <em>fraction</em> [<em>atom_a</em> [<em>atom_b</em>]]</p>
+<blockquote>
+<div><p><em>site_1_a</em> <em>site_1_b</em></p>
+<p><em>site_2_a</em> <em>site_2_b</em></p>
+<p>…</p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.crosslink</span></code></p>
+</div>
+<p>The distance is measured between CA atoms, unless the atom types in sites a and b of the crosslink are specified.
+The <code class="docutils literal notranslate"><span class="pre">crosslink</span></code> line is followed by <em>x</em> lines specifying individual pairs of residues for which crosslinks were found.
+The two linked sites are specified by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx residue addresses</span></a></p>
+<p>A conformer is rejected if more than <em>fraction</em>·<em>x</em> of the addressed atom pairs have a larger distance than <em>maxdist</em>.</p>
+<p><strong>Immersion depth restraints</strong></p>
+<p>The depth of immersion of sites into a lipid bilayer can be specified with this restraint.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">depth</span></code> <em>label</em> [<em>ox</em> <em>oy</em> <em>oz</em> [<em>dx</em> <em>dy</em> <em>dz</em>]]</p>
+<blockquote>
+<div><p><em>site</em> <em>&lt;r&gt;</em> <em>fwhm</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">Gaussian</span> <span class="pre">restraints</span></code></p>
+<p><em>site</em> <code class="docutils literal notranslate"><span class="pre">-lb</span></code> <em>lower_bound</em> <code class="docutils literal notranslate"><span class="pre">-ub</span></code> <em>upper_bound</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">lower-bound/upper-bound</span> <span class="pre">restraints</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.depth</span></code></p>
+</div>
+<p>The depth is measured as a distance from the center plane of the bilayer, i.e., large values correspond to low immersion depth or even positions outside the bilayer.</p>
+<p>Possible label types <em>label</em> correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a>.
+The syntax <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code> specifies an atom, for instance, <code class="docutils literal notranslate"><span class="pre">atom.CA</span></code> the CA atom of the addressed site.</p>
+<p>For a Gaussian restraint, the mean value <em>&lt;r&gt;</em> and full width at half maximum <em>fwhm</em> need to be specified.
+Upper/lower bound restraints require the option specifiers <code class="docutils literal notranslate"><span class="pre">-lb</span></code> and <code class="docutils literal notranslate"><span class="pre">ub</span></code>. These are hard restraints.
+Conformers are rejected, if the simulated distance is outside bounds. Use distributions if you expect that some restraints may be violated.</p>
+<p>By default, the bilayer normal is assumed to be the <em>z</em> axis and the center plane is assumed to pass through <em>z</em> = 0 of the coordinate frame of the entity.
+It is possible to specify a point on the center plane by coordinates <em>ox</em>, <em>oy</em>, and <em>oz</em> and the direction of the bilayer normal by coordinates <em>dx</em>, <em>dy</em>, and <em>dz</em>.</p>
+<p><strong>Secondary structure and cis peptide propensities</strong></p>
+<p>The keywords <code class="docutils literal notranslate"><span class="pre">alpha</span></code>, <code class="docutils literal notranslate"><span class="pre">beta</span></code>, <code class="docutils literal notranslate"><span class="pre">polypro</span></code>, and <code class="docutils literal notranslate"><span class="pre">cis</span></code> allow to specify propensities at a residue to adopt <img class="math" src="_images/math/108eadc3411b115de07d6fed1e21becdcfbf8a1a.svg" alt="{\alpha}"/>-helix, <img class="math" src="_images/math/731d0b74ca4cb889f6c344dcb1e0b97b0efb39e4.svg" alt="{\beta}"/>-strand, polyproline-helix, or cis-peptide backbone torsion angles.
+The following example is for <img class="math" src="_images/math/108eadc3411b115de07d6fed1e21becdcfbf8a1a.svg" alt="{\alpha}"/>-helix propensities.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">alpha</span></code></p>
+<blockquote>
+<div><p><em>site</em> <em>propensity</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">single</span> <span class="pre">site</span></code></p>
+<blockquote>
+<div><p><em>site_1</em><code class="docutils literal notranslate"><span class="pre">-</span></code><em>site_2</em> <em>propensity</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">example</span> <span class="pre">for</span> <span class="pre">a</span> <span class="pre">range</span> <span class="pre">of</span> <span class="pre">residues</span></code></p>
+</div></blockquote>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.alpha</span></code></p>
+</div>
+<p>The sites <em>site</em>, &amp;site_1*, and <em>site_2</em> are specified by <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx residue addresses</span></a> and <em>propensity</em>  is a value between 0 and 1.
+Use the range syntax with propensity 1 to strictly enforce secondary structure for a certain section of residues.</p>
+<p>Specifying propensities instead of physical ensemble mean restraints related to them (e.g. NMR chemical shifts and residual dipolar couplings)
+is prefereable in ensemble building, as it allows to adapt backbone torsions statistics, which in turn improves sampling of suitable conformations.</p>
+<p>In ensemble fitting, it is advisable to specify restraints as close as possible to primary experimental data.</p>
+<p><strong>Rigid bodies</strong></p>
+<p>In general, a rigid body can comprise one or more sections of one or more macromolecular chains, as well as cofactors or other ligands.
+Builder modules, such as <code class="docutils literal notranslate"><span class="pre">Rigi</span></code>, may require that the complete chain behaves as a rigid body. Template entities have to be prepared to ensure this.</p>
+<p>Syntax:</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code class="docutils literal notranslate"><span class="pre">rigid</span></code> <em>chain_1</em> [<em>chain_2</em> […]]</p>
+<blockquote>
+<div><p><em>refsite_1</em> <em>reflabel_1</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">origin</span></code></p>
+<p><em>refsite_2</em> <em>reflabel_2</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">point</span> <span class="pre">on</span> <span class="pre">*x*</span> <span class="pre">axis</span></code></p>
+<p><em>refsite_3</em> <em>reflabel_3</em> <code class="docutils literal notranslate"><span class="pre">%</span> <span class="pre">point</span> <span class="pre">in</span> <span class="pre">*xy*</span> <span class="pre">plane</span></code></p>
+</div></blockquote>
+<p><code class="docutils literal notranslate"><span class="pre">.rigid</span></code></p>
+</div>
+<p>Rigid bodies are internally numbered in the sequence of the corresponding <code class="docutils literal notranslate"><span class="pre">rigid</span></code> blocks. This numbering is internal to a module.</p>
+<p>The chain specifiers <em>chain_1</em>, <em>chain_2</em>, … are <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx chain or residue-range addresses</span></a>, such as <code class="docutils literal notranslate"><span class="pre">(B)</span></code>.
+If only part of a chain defines the rigid body or rigid bodies are derived from various structure, use keyword <code class="docutils literal notranslate"><span class="pre">merge</span></code> in module
+<a class="reference internal" href="prepare.html#prepare"><span class="std std-ref">Prepare</span></a> to generate a rigid-body file first.</p>
+<p>The three reference sites <em>refsite_1</em>, <em>refsite_2</em>. and <em>refsite_3</em> are obligatory and should not be situated on a line.
+They specify a local frame and can be used for computing rigid-body arrangements by distance geometry.</p>
+<p>The labels <em>reflabel_1</em>, <em>reflabel_2</em>, and <em>reflabel_3</em> either correspond to existing <a class="reference internal" href="rotamer_concept.html#label-set"><span class="std std-ref">rotamer libraries</span></a> or
+have the syntax <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code>. The latter syntax specifies an atom, for instance, <code class="docutils literal notranslate"><span class="pre">atom.CA</span></code> the CA atom of the reference site.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="log_files.html" class="btn btn-neutral float-right" title="Log files" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="yasara_refine.html" class="btn btn-neutral float-left" title="YasaraRefine" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

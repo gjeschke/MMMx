@@ -1,0 +1,381 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Distance distributions &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Third-party software" href="third_party.html" />
+    <link rel="prev" title="Rotamer libraries" href="rotamer_concept.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source_installation.html">Source-code version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executable_installation.html">Executable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#windows-path">Windows path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="experiment_design.html">ExperimentDesign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#plot"><code class="docutils literal notranslate"><span class="pre">plot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#sitescan-sitescan"><code class="docutils literal notranslate"><span class="pre">sitescan</span></code>, <code class="docutils literal notranslate"><span class="pre">sitescan!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#pairlist-pairlist"><code class="docutils literal notranslate"><span class="pre">pairlist</span></code>, <code class="docutils literal notranslate"><span class="pre">pairlist!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#hetpairlist"><code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#distributions"><code class="docutils literal notranslate"><span class="pre">distributions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#enmpairs"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#id1"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#rbreference"><code class="docutils literal notranslate"><span class="pre">RBreference</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare.html">Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getcyana"><code class="docutils literal notranslate"><span class="pre">getcyana</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#center"><code class="docutils literal notranslate"><span class="pre">center</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#symmetry"><code class="docutils literal notranslate"><span class="pre">symmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#bilayer"><code class="docutils literal notranslate"><span class="pre">bilayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#mutate"><code class="docutils literal notranslate"><span class="pre">mutate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repair"><code class="docutils literal notranslate"><span class="pre">repair</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#deselenate"><code class="docutils literal notranslate"><span class="pre">deselenate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#renumber"><code class="docutils literal notranslate"><span class="pre">renumber</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#chains"><code class="docutils literal notranslate"><span class="pre">chains</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#replace"><code class="docutils literal notranslate"><span class="pre">replace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#merge"><code class="docutils literal notranslate"><span class="pre">merge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rigi.html">Rigi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#rbtemplate"><code class="docutils literal notranslate"><span class="pre">rbtemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#separate-off"><code class="docutils literal notranslate"><span class="pre">separate</span> <span class="pre">off</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex.html">Flex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flex_RNA.html">FlexRNA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enm.html">ENM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_fit.html">EnsembleFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_analysis.html">EnsembleAnalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="locate.html">Locate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Input/output concept</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_list.html">Ensemble lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Third-party software</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="third_party.html">Third-party software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#scwrl4">SCWRL4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#atsas">ATSAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#muscle">MUSCLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#msms">MSMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#hydropro">HYDROPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#dssp">DSSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#yasara">YASARA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Open concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-open-data-concept">Open source/ open data concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#branched-pipeline-concept">Branched pipeline concept</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Example set</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Distance distributions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="distance-distributions">
+<span id="id1"></span><h1>Distance distributions<a class="headerlink" href="#distance-distributions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="reasons-why-distances-are-distributed">
+<h2>Reasons why distances are distributed<a class="headerlink" href="#reasons-why-distances-are-distributed" title="Permalink to this headline">¶</a></h2>
+<p>In atomic-resolution structures obtained by x-ray crystallography, distances between atoms are defined with a
+precision given by the B factors. Parts of the macromolecules that are too disordered even in a crystal are not specified.
+Such disorder may arise from sidechains adopting several rotameric states or from coexistence of many different backbone conformations.</p>
+<p>Atomic-resolution structures obtained by NMR are represented by several models, typically 20 models. For small globular proteins,
+which are the mainstay of solution NMR, usually a core of the protein is defined with a atom position variance not much different from the
+properly scaled B factor in a crystal structure of the same protein. Terminal loops, internal loops, and sometimes whole domains may
+exhibit much more variation between models. Usually, this variation can only be interpreted in a binary way: this section is disordered.
+The extent of disorder cannot be specified, as the contribution from a lack of restraints cannot safely be separated from the contribution due
+to coexistence of several conformers.</p>
+<p>Distance distributions, as they are accessible by pulse dipolar spectroscopy (PDS) EPR techniques, have the potential for at least
+partial separation of the two contributions. In that, two problems arise from the necessity to introduce labels. First, the
+label might influence the ensemble of backbone conformers and, second, the non-native spin label side chain may have a broader distributions
+of rotameric states than a native sidechain. The first problem appears to be minor compared to the second one at least in ordered cores.
+More caution and more research may be required for disordered sections. It is generally advisable to integrate PDS data with data from other
+techniques and to assess consistency between the individual restraint sets.</p>
+<p>The second problem is addressed in MMMx by mdelling the conformational distribution of the spin label sidechain <a class="reference internal" href="rotamer_concept.html#rotamer-concept"><span class="std std-ref">with a rotamer library</span></a>.
+The same concept is applied to chromophore labels for Förster resonance energy transfer (FRET).
+Uncertainties in this modelling limit the resolution of structures that rely on PDS or FRET restraints and thus the minimal extent
+of backbone disorder that can safely be recognized as backbone disorder. For the most widely applied methanthiosulfonate spin label (MTSL),
+the resolution limit is about 2-3 Å.</p>
+</div>
+<div class="section" id="computation-of-distance-distributions">
+<h2>Computation of distance distributions<a class="headerlink" href="#computation-of-distance-distributions" title="Permalink to this headline">¶</a></h2>
+<p>MMMx can compute distance distributions between two atoms, between an atom and a label,
+or between two labels for individual structural models or ensemble models. The two labels can be the same or they can differ.</p>
+<p>Distance distributions for single conformers or ensembles given as PDB files can be computed, displayed, and saved
+by module <a class="reference internal" href="experiment_design.html#experiment-design"><span class="std std-ref">ExperimentDesign</span></a>. They are automatically computed by module <a class="reference internal" href="ensemble_fit.html#ensemble-fit"><span class="std std-ref">EnsembleFit</span></a>
+for those site pairs where distance distribution restraints were specified. If you want to compute distance distributions between site pairs
+that were not used in fitting, then first perform the ensemble fit and then run module <a class="reference internal" href="ensemble_fit.html#ensemble-fit"><span class="std std-ref">EnsembleFit</span></a> again
+with the fitted ensemble as input, the additional site pairs specified as distance distribution restraints, and the <code class="docutils literal notranslate"><span class="pre">nofit</span></code> keyword.</p>
+<p>See file <code class="docutils literal notranslate"><span class="pre">demo_ExperimentDesign.mcx</span></code> in the example set for a demonstration of computing distance distributions.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="third_party.html" class="btn btn-neutral float-right" title="Third-party software" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="rotamer_concept.html" class="btn btn-neutral float-left" title="Rotamer libraries" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

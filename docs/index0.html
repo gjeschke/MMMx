@@ -1,0 +1,365 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>MMMx 0.0.0 Documentation &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Ensemble structure</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="functional_entity.html">Functional entity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional_entity.html#the-object-of-interest">The object of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_entity.html#structural-hierarchy">Structural hierarchy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="structure_representation.html">Structure representation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#programmatic-access">Programmatic access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_atomic.html">MMMx|atomic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#topology">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conformation">Conformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#element-assignment-of-atoms">Element assignment of atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conversion-to-pdb-representation">Conversion to PDB representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conversion-from-pdb-representation">Conversion from PDB representation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_RigiFlex.html">MMMx|RigiFlex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#format">Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#conversion-to-mmmx-atomic-representation">Conversion to MMMx|atomic representation</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modelling</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#input-and-output-specification">Input and output specification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="log_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log_files.html#conventions">Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modelling_modules.html">Modelling modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#chain">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#single-conformer">Single conformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="object_modification.html">Set object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_modification.html#coordinates-any-level">Coordinates (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="property_functions.html#mass">Mass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="python.html">Python</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="python.html#remarks">Remarks</a></li>
+<li class="toctree-l2"><a class="reference internal" href="python.html#current-conclusion">Current conclusion</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="dependencies.html">Dependencies</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Architecture</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-concept">Open source concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#separation-of-user-interface-from-computation">Separation of user interface from computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#visibility-to-users-and-programmers">Visibility to users and programmers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data.html#entity">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#rotamer-library">Rotamer library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#distance-distribution-restraints">Distance distribution restraints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>MMMx 0.0.0 Documentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="mmmx-0-0-0-documentation">
+<h1>MMMx 0.0.0 Documentation<a class="headerlink" href="#mmmx-0-0-0-documentation" title="Permalink to this headline">¶</a></h1>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>MMMx is at an early design and prototyping stage. Version 0.0.0 is not functional.</p>
+</div>
+<ul class="simple">
+<li><p>MMMx is the successor program of MMM (Multiscale Modeling of Macromolecules)</p></li>
+<li><p>Graphical user interface is separated from computation modules</p></li>
+<li><p>Methods can be implemented in any language. They communicate by a few defined data exchange formats</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

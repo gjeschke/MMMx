@@ -1,0 +1,892 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Rotamer libraries &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Distance distributions" href="distance_distributions.html" />
+    <link rel="prev" title="Selection by address" href="MMMx_addresses.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source_installation.html">Source-code version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executable_installation.html">Executable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#windows-path">Windows path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="experiment_design.html">ExperimentDesign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#plot"><code class="docutils literal notranslate"><span class="pre">plot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#sitescan-sitescan"><code class="docutils literal notranslate"><span class="pre">sitescan</span></code>, <code class="docutils literal notranslate"><span class="pre">sitescan!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#pairlist-pairlist"><code class="docutils literal notranslate"><span class="pre">pairlist</span></code>, <code class="docutils literal notranslate"><span class="pre">pairlist!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#hetpairlist"><code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#distributions"><code class="docutils literal notranslate"><span class="pre">distributions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#enmpairs"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#id1"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#rbreference"><code class="docutils literal notranslate"><span class="pre">RBreference</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare.html">Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getcyana"><code class="docutils literal notranslate"><span class="pre">getcyana</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#center"><code class="docutils literal notranslate"><span class="pre">center</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#symmetry"><code class="docutils literal notranslate"><span class="pre">symmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#bilayer"><code class="docutils literal notranslate"><span class="pre">bilayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#mutate"><code class="docutils literal notranslate"><span class="pre">mutate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repair"><code class="docutils literal notranslate"><span class="pre">repair</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#deselenate"><code class="docutils literal notranslate"><span class="pre">deselenate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#renumber"><code class="docutils literal notranslate"><span class="pre">renumber</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#chains"><code class="docutils literal notranslate"><span class="pre">chains</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#replace"><code class="docutils literal notranslate"><span class="pre">replace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#merge"><code class="docutils literal notranslate"><span class="pre">merge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rigi.html">Rigi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#rbtemplate"><code class="docutils literal notranslate"><span class="pre">rbtemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#separate-off"><code class="docutils literal notranslate"><span class="pre">separate</span> <span class="pre">off</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex.html">Flex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flex_RNA.html">FlexRNA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enm.html">ENM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_fit.html">EnsembleFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_analysis.html">EnsembleAnalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="locate.html">Locate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Input/output concept</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_list.html">Ensemble lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Third-party software</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="third_party.html">Third-party software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#scwrl4">SCWRL4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#atsas">ATSAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#muscle">MUSCLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#msms">MSMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#hydropro">HYDROPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#dssp">DSSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#yasara">YASARA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Open concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-open-data-concept">Open source/ open data concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#branched-pipeline-concept">Branched pipeline concept</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Example set</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Rotamer libraries</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="rotamer-libraries">
+<span id="rotamer-concept"></span><h1>Rotamer libraries<a class="headerlink" href="#rotamer-libraries" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="concept">
+<h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
+<p>As previously established in MMM, site-directed labeling is modelled in MMMx based on pre-computed rotamer libraries of the label side groups.
+Such libraries can be generated with classical atomic force fields via molecular dynamics simulations or Monte Carlo sampling of conformation space.
+Briefly, the label side group is represented by a moderate number, typically between 100 and 10000, of rotameric states and their associated
+reference populations for a state that is non-interacting with the protein. Upon attachment to a labelling site, interaction with the protein is computed
+for a static (ensemble) structure of the latter assuming only non-bonded interaction via a Lennard-Jones potential parametrized in the Universal Force Field (UFF).
+Flexibility of the protein as well as of the label beyond rotameric states is roughly modelled by an <em>f</em>-factor (<img class="math" src="_images/math/569b5fa7e2486f81a6bdecf325e812d452c3a975.svg" alt="0 \le f \le 1"/>) that scales van-der-Waals radii of atoms in the underlying force field.
+A few libraries use an enhanced attraction term, i.e., the attractive part of the Lennard-Jones potential is multiplied by the <em>f</em>-factor and an enhancement factor <img class="math" src="_images/math/1b419f2044b44ab8913fc368931c65ffe77d8cbb.svg" alt="e_\mathrm{attract}"/>.
+The default <em>f</em>-factor is 0.5 and the default enhancement factor is 1.0.</p>
+<p>Attachment results in rotation and translation of the rotamer coordinates and in reweighting of populations, assuming a Boltzmann distribution at 298 K.
+Distributions of properties can then be computed by population-weighted averaging.</p>
+<p>A number of features in MMM were used only in method development and have not been in use anymore for years. These features are deprecated in MMMx.
+The concept of a “library temperature” has been deprecated as well, as libraries computed for the glass transition temperature of the medium have been found to perform worse than those computed for ambient temperature (298 K).</p>
+</div>
+<div class="section" id="implementation">
+<h2>Implementation<a class="headerlink" href="#implementation" title="Permalink to this headline">¶</a></h2>
+<p>The labeling concept is implemented by providing a set of rotamer libraries, a package for generating additional libraries for new labels,
+and by a function <code class="docutils literal notranslate"><span class="pre">get_label</span></code> for retrieving attributes of labels, such as distributions of label position and orientation.</p>
+<p>Labelling is dynamic and virtual. Dynamic labeling means that a label <em>L</em> at residue <em>R</em> is computed at the time when the user of an entity first tries
+to retrieve attributes of this label at this particular site. The label attributes are then stored at residue level, whereas no atomic coordinates are
+generated at entity level (virtual labeling). Explicit coordinates of all atoms are generated only for clash tests, for saving label rotamers to a PDB file,
+for visualizing the label in all-atom graphics, or when requested. Once computed, the explicit coordinates are stored in the atom coordinate array  of the
+entity, while their indices are stored in the <code class="docutils literal notranslate"><span class="pre">labels</span></code> field of the labelled residue.</p>
+<p>The following chemical modifications are implicit (d on need to be performed before labeling):</p>
+<ul class="simple">
+<li><p>mutation of any amino acid to cysteine or an unnatural amino acid for labeling</p></li>
+<li><p>conversion of uracil to 4-thiouracil</p></li>
+<li><p>conversion of phosphates to thiophosphates</p></li>
+</ul>
+</div>
+<div class="section" id="the-get-label-function">
+<span id="get-label"></span><h2>The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function<a class="headerlink" href="#the-get-label-function" title="Permalink to this headline">¶</a></h2>
+<p>Use this function if you want to label a residue with a particular label or want to retrieve attributes of a previously computed label.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">argsout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">)</span>
+<span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">)</span>
+<span class="n">argsout</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+<span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,</span><span class="n">attributes</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">label</span></code> - label name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attributes</span></code> - either a string (see table below) or a cell array of strings</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx residue address</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">argsout</span></code> - output arguments (<em>M</em>-element cell array for a single attribute)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message (1-element cell array)</p></li>
+</ul>
+</dd>
+</dl>
+<p>Either a rotamer library for <code class="docutils literal notranslate"><span class="pre">label</span></code> must be registered with MMMx (see below) or the label name must be <code class="docutils literal notranslate"><span class="pre">atom.&lt;atname&gt;</span></code>, where <code class="docutils literal notranslate"><span class="pre">&lt;atname&gt;</span></code> is an existing atom name for this residue.</p>
+<p>Requesting several attributes for the same site (residue) simultaneously can lead to a significant speedup in large entitities.
+The gain in speed may be very large if the labels were already precomputed. To do this, arrange all attributes in a cell of strings and split the output cell array:</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">site</span> <span class="p">=</span> <span class="n">sprintf</span><span class="p">(</span><span class="s">&#39;{%i}%s&#39;</span><span class="p">,</span><span class="n">conformer_number</span><span class="p">,</span><span class="n">residue</span><span class="p">);</span>
+<span class="p">[</span><span class="n">argsout</span><span class="p">,</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">label</span><span class="p">,{</span><span class="s">&#39;positions&#39;</span><span class="p">,</span><span class="s">&#39;populations&#39;</span><span class="p">},</span><span class="n">site</span><span class="p">);</span>
+<span class="n">positions</span> <span class="p">=</span> <span class="n">argsout</span><span class="p">{</span><span class="mi">1</span><span class="p">}{</span><span class="mi">1</span><span class="p">};</span>
+<span class="n">populations</span> <span class="p">=</span> <span class="n">argsout</span><span class="p">{</span><span class="mi">2</span><span class="p">}{</span><span class="mi">1</span><span class="p">};</span>
+</pre></div>
+</div>
+<p><strong>Attributes</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 26%" />
+<col style="width: 55%" />
+<col style="width: 20%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Explanation</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info</span></code></p></td>
+<td><p>rotamer library information</p></td>
+<td><p>struct</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.tlc</span></code></p></td>
+<td><p>MMMx internal three-letter code</p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.class</span></code></p></td>
+<td><p>label class, for instance <code class="docutils literal notranslate"><span class="pre">nitroxide</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.smiles</span></code></p></td>
+<td><p>SMILES string representing label structure</p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.f_factor</span></code></p></td>
+<td><p>f-factor and attraction enhancement factor</p></td>
+<td><p>(1,2) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">info.ref_pop</span></code></p></td>
+<td><p>reference populations for <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">info.site</span></code></p></td>
+<td><p>site address</p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">part_fun</span></code></p></td>
+<td><p>attachment partitition function</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">potentials</span></code></p></td>
+<td><p>attachment potentials (J/mol)</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">torsion</span></code></p></td>
+<td><p><em>T</em> sidechain torsions for <em>R</em> rotamers</p></td>
+<td><p>(<em>R,T</em>) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">orientations</span></code></p></td>
+<td><p>Euler angles of molecular frame</p></td>
+<td><p>(<em>R</em>,3) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
+<td><p>populations for <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">positions</span></code></p></td>
+<td><p>positions for <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,3) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">numbers</span></code></p></td>
+<td><p>numbers of the rotamers in the library</p></td>
+<td><p>(<em>R</em>,1) int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor</span></code></p></td>
+<td><p>full atom coordinates of <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) cell</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">affine</span></code></p></td>
+<td><p>affine matrix that transforms from the standard
+frame to the site frame</p></td>
+<td><p>(4,4) double</p></td>
+</tr>
+</tbody>
+</table>
+<p>Note that SMILES strings for nitroxides tend to be interpreted as the corresponding hydroxylamines by some programs, notably by ChemDraw.
+For libraries that contain several stereoisomers, the SMILES string refers to only one of them.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">orientations</span></code> can be used for simulating orientation selection in pulsed dipolar spectroscopy for spin labels
+or <img class="math" src="_images/math/566994edc83ec94a2e889bd85118baad3d17e18b.svg" alt="\kappa"/> averaging for FRET chromophores. In order to compute unit vectors along the <img class="math" src="_images/math/91ed8ef79d71a0d072a185f703a0d26853a2ded8.svg" alt="x,y,z"/> axes of the label molecular frame
+in the entity frame (direction cosine matrix <code class="docutils literal notranslate"><span class="pre">DCM</span></code>, the unit vectors are matrix rows) for rotamer <img class="math" src="_images/math/025b2f075298c0a898260ebea2e68d6e737a3f90.svg" alt="r=1"/>, use the code (example):</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">entity</span> <span class="p">=</span> <span class="n">get_pdb</span><span class="p">(</span><span class="s">&#39;2lzm&#39;</span><span class="p">);</span> <span class="c">% load structure of T4 Lysozyme with ID 2lzm from PDB server</span>
+<span class="p">[</span><span class="n">argout</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">get_label</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="s">&#39;mtsl&#39;</span><span class="p">,</span><span class="s">&#39;orientations&#39;</span><span class="p">,</span><span class="s">&#39;(A)131&#39;</span><span class="p">);</span> <span class="c">% get MTSL label orientation at residue 13</span>
+<span class="n">orientations</span> <span class="p">=</span> <span class="n">argout</span><span class="p">{</span><span class="mi">1</span><span class="p">};</span> <span class="c">% extract from cell output</span>
+<span class="n">r</span> <span class="p">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="n">DCM</span> <span class="p">=</span> <span class="n">Euler2DCM</span><span class="p">(</span><span class="n">orientations</span><span class="p">(</span><span class="n">r</span><span class="p">,:));</span> <span class="c">% compute direction cosine matrix</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="set-of-libraries">
+<h2>Set of libraries<a class="headerlink" href="#set-of-libraries" title="Permalink to this headline">¶</a></h2>
+<p>MMMx uses a single type of rotamer libraries, built by hierarchical clustering of Monte-Carlo generated conformer ensembles.
+Ensemble generation assumes torsion potentials and the non-bonded interaction potential of UFF.</p>
+<p>For the following labels, rotamer libraries are provided with MMMx:</p>
+<table class="docutils align-default" id="label-set">
+<colgroup>
+<col style="width: 7%" />
+<col style="width: 32%" />
+<col style="width: 14%" />
+<col style="width: 16%" />
+<col style="width: 9%" />
+<col style="width: 21%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Label</p></th>
+<th class="head"><p>Synonyms</p></th>
+<th class="head"><p>Class</p></th>
+<th class="head"><p>Attachment</p></th>
+<th class="head"><p>Rotamers</p></th>
+<th class="head"><p><img class="math" src="_images/math/1b419f2044b44ab8913fc368931c65ffe77d8cbb.svg" alt="e_\mathrm{attract}"/></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">R1A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mtsl</span></code>, <code class="docutils literal notranslate"><span class="pre">mtssl</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>216</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">R7A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">br-mtsl</span></code>, <code class="docutils literal notranslate"><span class="pre">br-mtssl</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>216</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">V1A</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">v1</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>72</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">IA1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ia-proxyl</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>108</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">MA1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">ma-proxyl</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>108</p></td>
+<td><p>2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">DZD</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dzd</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>216</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">DZC</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dzc</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>216</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GDI</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iag</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>2461</p></td>
+<td><p>2.0</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GDM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mag</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cysteine</p></td>
+<td><p>1367</p></td>
+<td><p>2.0</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">TUP</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">iap-4tu</span></code>, <code class="docutils literal notranslate"><span class="pre">iap-thiouracil</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>4-thiouracil</p></td>
+<td><p>72</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TUM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">mts-4tu</span></code>, <code class="docutils literal notranslate"><span class="pre">mts-thiouracil</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>4-thiouracil</p></td>
+<td><p>192</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">RTT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">r5-tpt</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>5’-thiophosphate</p></td>
+<td><p>576</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">R5P</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">r5p</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>5’-thiophosphate</p></td>
+<td><p>2048</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">R3P</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">r3p</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>3’-thiophosphate</p></td>
+<td><p>512</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">K1H</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">HF-K1</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>unnatural aa</p></td>
+<td><p>288</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">NC1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">cNox&#64;Tyr</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>tyrosine</p></td>
+<td><p>128</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">NX1</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">lNox&#64;Tyr</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>tyrosine</p></td>
+<td><p>256</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">CNR</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">CNC-NO</span></code></p></td>
+<td><p>nitroxide</p></td>
+<td><p>cofactor</p></td>
+<td><p>144</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">GMO</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dota-gd</span></code></p></td>
+<td><p>gadolinium</p></td>
+<td><p>cysteine</p></td>
+<td><p>648</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GTO</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dtpa-gd</span></code></p></td>
+<td><p>gadolinium</p></td>
+<td><p>cysteine</p></td>
+<td><p>2430</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">M8D</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">m8-dota-gd</span></code></p></td>
+<td><p>gadolinium</p></td>
+<td><p>cysteine</p></td>
+<td><p>1944</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">GPM</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">gpymi-MTA</span></code></p></td>
+<td><p>gadolinium</p></td>
+<td><p>cysteine</p></td>
+<td><p>432</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">TMT</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">tormyshev-trityl</span></code></p></td>
+<td><p>trityl</p></td>
+<td><p>cysteine</p></td>
+<td><p>3888</p></td>
+<td><p>1</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">HCU</span></code></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">dHis-Cu</span></code></p></td>
+<td><p>histidine</p></td>
+<td><p>any amino acid</p></td>
+<td><p>12</p></td>
+<td><p>1</p></td>
+</tr>
+</tbody>
+</table>
+<p>Label names (three-letter codes) and synonyms are case-insensitive.
+Note that gadolinium labels are sufficiently good approximations for other lanthanide labels with the same ligand,
+for instance, for pseudo-contact shift (PCS) and paramagnetic relaxation enhncement (PRE) computations.</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="rotamer-library-format">
+<h2>Rotamer library format<a class="headerlink" href="#rotamer-library-format" title="Permalink to this headline">¶</a></h2>
+<p>Rotamer libraries are stored in a binary Matlab format as a <code class="docutils literal notranslate"><span class="pre">struct</span></code> variable <code class="docutils literal notranslate"><span class="pre">rot_lib</span></code>. The fields are defined as follows:</p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 23%" />
+<col style="width: 46%" />
+<col style="width: 31%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Field</p></th>
+<th class="head"><p>Content</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tlc</span></code></p></td>
+<td><p>three-letter code</p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">synonyms</span></code></p></td>
+<td><p><em>S</em> synonyms for the label name</p></td>
+<td><p>(1,*S*) cell string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">SMILES</span></code></p></td>
+<td><p>SMILES string defining the structure</p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rotamers</span></code></p></td>
+<td><p>information on <em>R</em> rotamers (index <em>r</em>)</p></td>
+<td><p>(1,*R*) struct</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">rotamers(r).coor</span></code></p></td>
+<td><p>Cartesian coordinates of <code class="docutils literal notranslate"><span class="pre">A</span></code> atoms/rotamer</p></td>
+<td><p>(<em>A</em>,3) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">rotamers(k).torsion</span></code></p></td>
+<td><p>values of <em>T</em> torsion angles <img class="math" src="_images/math/7f1339ae1142e940d4cd6615f8c4b9d1c9fc594b.svg" alt="\chi_t"/> for
+<em>R</em> rotamers</p></td>
+<td><p>(<em>R,T</em>) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">elements</span></code></p></td>
+<td><p>atomic numbers for <em>A</em> atoms</p></td>
+<td><p>(<em>A</em>,1) uint8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
+<td><p><em>R</em> populations for the non-attached rotamers</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">position</span></code></p></td>
+<td><p><em>P</em> atom numbers and densities that define the
+label position</p></td>
+<td><p>(<em>P</em>,2) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">attachment</span></code></p></td>
+<td><p>structure element to which the label can be
+attached, for instance <code class="docutils literal notranslate"><span class="pre">peptide</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">side_chain</span></code></p></td>
+<td><p>first side chain atom numer, for instance <code class="docutils literal notranslate"><span class="pre">9</span></code>
+for a <code class="docutils literal notranslate"><span class="pre">CB</span></code> atom in position 9</p></td>
+<td><p>ìnt</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">f_factor</span></code></p></td>
+<td><p>“forgive” factor and attraction enhancement</p></td>
+<td><p>(1,2) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">atom_tags</span></code></p></td>
+<td><p><em>A</em> atom names</p></td>
+<td><p>(1,*A*) cell string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">std_frame</span></code></p></td>
+<td><p>atoms that define the standard frame for
+attachment: origin, atom on <em>x</em> axis, atom in
+<em>xy</em> plane</p></td>
+<td><p>(1,3) int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">std_frame_atoms</span></code></p></td>
+<td><p>atom types of the standard frame</p></td>
+<td><p>(1,3) cell string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">mol_frame</span></code></p></td>
+<td><p>atoms that define the label molecular frame:
+origin, atom on <em>x</em> axis, atom in <em>xy</em> plane</p></td>
+<td><p>(1,3) int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">mol_frame_atoms</span></code></p></td>
+<td><p>atom types of the standard frame</p></td>
+<td><p>(1,3) cell string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">class</span></code></p></td>
+<td><p>label class, for instance <code class="docutils literal notranslate"><span class="pre">nitroxide</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">chi_def</span></code></p></td>
+<td><p>definition of <em>T</em> torsion angles <img class="math" src="_images/math/7f1339ae1142e940d4cd6615f8c4b9d1c9fc594b.svg" alt="\chi_t"/></p></td>
+<td><p>(<em>T</em>,4) int</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">connect</span></code></p></td>
+<td><p>bonding information for up to <em>B</em> bonds for <em>A</em>
+atoms</p></td>
+<td><p>(<em>A,B</em>) int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">attach_forcefield</span></code></p></td>
+<td><p>force field for protein attachment, usually
+<code class="docutils literal notranslate"><span class="pre">UFF_Towhee</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">B_factors</span></code></p></td>
+<td><p>pseudo-temperature factors for <em>N</em> atoms in
+<em>R</em> rotamers</p></td>
+<td><p>(<em>N,R</em>) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">method</span></code></p></td>
+<td><p>method for library generation. for instance
+<code class="docutils literal notranslate"><span class="pre">MMM_Monte_Carlo</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">gen_forcefield</span></code></p></td>
+<td><p>force field used in library generation
+for instance <code class="docutils literal notranslate"><span class="pre">UFF_Towhee</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">types</span></code></p></td>
+<td><p><em>A</em> atom type numbers for the used force field</p></td>
+<td><p>(<em>A</em>,1) uint16</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">solvation</span></code></p></td>
+<td><p>solvation assumed in library generation,
+usually <code class="docutils literal notranslate"><span class="pre">none</span></code></p></td>
+<td><p>string</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">prerun</span></code></p></td>
+<td><p>number of trials in a prerun of the MMMx native
+UFF Monte Carlo rotamer library generator</p></td>
+<td><p>int</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">suppress_H</span></code></p></td>
+<td><p>true if hydrogen atoms were neglected in
+library generation, not recommended</p></td>
+<td><p>boolean</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">threshold</span></code></p></td>
+<td><p>thresholds for confermer acceptance in the
+MMMx native generator</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">min_strain</span></code></p></td>
+<td><p>minimum strain energy (kcal/mol) encountered</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">maxdist</span></code></p></td>
+<td><p>maximum distance of the label position from
+the backbone (CA atom or origin of attachment)
+frame</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">color</span></code></p></td>
+<td><p>RGB color triplet (fraction) for display</p></td>
+<td><p>(1,3) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">radius</span></code></p></td>
+<td><p>sphere radius (Angstroem) corresponding to
+100% rotamer population for display</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ff</span></code></p></td>
+<td><p>force field parameters for attachment</p></td>
+<td><p>struct</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ff.LJ_r</span></code></p></td>
+<td><p>van-der-Waals radii for attachment indexed by
+atomic number</p></td>
+<td><p>(1,103) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">ff.LJ_D</span></code></p></td>
+<td><p>Lennard-Jones potentials for attachment indexed
+by atomic number</p></td>
+<td><p>(1,103) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">ff.types</span></code></p></td>
+<td><p>atom type tags for force field</p></td>
+<td><p>string</p></td>
+</tr>
+</tbody>
+</table>
+<p>The pseudo-temperature factors relate to the variation of atom positions within the cluster of conformers that was projected onto a single rotamer.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="distance_distributions.html" class="btn btn-neutral float-right" title="Distance distributions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="MMMx_addresses.html" class="btn btn-neutral float-left" title="Selection by address" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

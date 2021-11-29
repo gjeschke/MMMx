@@ -1,0 +1,51 @@
+.. MMMx documentation master file, created by
+   sphinx-quickstart on Thu Jul 23 11:16:17 2020.
+   You can adapt this file completely to your liking, but it should at least
+   contain the root `toctree` directive.
+
+MMMx 0.0.0 Documentation
+========================
+
+.. warning:: MMMx is at an early design and prototyping stage. Version 0.0.0 is not functional.
+
+*    MMMx is the successor program of MMM (Multiscale Modeling of Macromolecules).
+
+*    MMMx separates graphical user interface from computation modules.
+
+*    MMMx defines allows for methods to be implemented in any language by defining data exchange formats.
+
+.. toctree::
+   :hidden:
+   :maxdepth: 1
+   :caption: Contents:
+
+    ./download
+    ./installation
+
+.. toctree::
+    :hidden:
+    :caption: User Guide
+    :maxdepth: 1
+
+    ./firstscript
+    ./basics
+    ./preprocess
+    ./fitting
+    ./uncertainty
+    ./examples
+
+.. toctree::
+    :hidden:
+    :caption: Reference
+    :maxdepth: 1
+
+    ./functions
+    ./modelsref
+    ./theory
+
+Indices and tables
+==================
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`

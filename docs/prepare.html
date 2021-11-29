@@ -1,0 +1,668 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Prepare &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Rigi" href="rigi.html" />
+    <link rel="prev" title="ExperimentDesign" href="experiment_design.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source_installation.html">Source-code version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executable_installation.html">Executable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#windows-path">Windows path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="experiment_design.html">ExperimentDesign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#plot"><code class="docutils literal notranslate"><span class="pre">plot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#sitescan-sitescan"><code class="docutils literal notranslate"><span class="pre">sitescan</span></code>, <code class="docutils literal notranslate"><span class="pre">sitescan!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#pairlist-pairlist"><code class="docutils literal notranslate"><span class="pre">pairlist</span></code>, <code class="docutils literal notranslate"><span class="pre">pairlist!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#hetpairlist"><code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#distributions"><code class="docutils literal notranslate"><span class="pre">distributions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#enmpairs"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#id1"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#rbreference"><code class="docutils literal notranslate"><span class="pre">RBreference</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getcyana"><code class="docutils literal notranslate"><span class="pre">getcyana</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#center"><code class="docutils literal notranslate"><span class="pre">center</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#symmetry"><code class="docutils literal notranslate"><span class="pre">symmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#bilayer"><code class="docutils literal notranslate"><span class="pre">bilayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#mutate"><code class="docutils literal notranslate"><span class="pre">mutate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#repair"><code class="docutils literal notranslate"><span class="pre">repair</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#deselenate"><code class="docutils literal notranslate"><span class="pre">deselenate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#renumber"><code class="docutils literal notranslate"><span class="pre">renumber</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#chains"><code class="docutils literal notranslate"><span class="pre">chains</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#replace"><code class="docutils literal notranslate"><span class="pre">replace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#merge"><code class="docutils literal notranslate"><span class="pre">merge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rigi.html">Rigi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#rbtemplate"><code class="docutils literal notranslate"><span class="pre">rbtemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#separate-off"><code class="docutils literal notranslate"><span class="pre">separate</span> <span class="pre">off</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex.html">Flex</a></li>
+<li class="toctree-l1"><a class="reference internal" href="flex_RNA.html">FlexRNA</a></li>
+<li class="toctree-l1"><a class="reference internal" href="enm.html">ENM</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_fit.html">EnsembleFit</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_analysis.html">EnsembleAnalysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="locate.html">Locate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Input/output concept</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_list.html">Ensemble lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Third-party software</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="third_party.html">Third-party software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#scwrl4">SCWRL4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#atsas">ATSAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#muscle">MUSCLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#msms">MSMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#hydropro">HYDROPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#dssp">DSSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#yasara">YASARA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Open concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-open-data-concept">Open source/ open data concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#branched-pipeline-concept">Branched pipeline concept</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Example set</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Prepare</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="prepare">
+<span id="id1"></span><h1>Prepare<a class="headerlink" href="#prepare" title="Permalink to this headline">¶</a></h1>
+<p>This module helps in preparing input PDB files for other MMMx modules. It can cut and merge existing structures,
+reorient structures based on symmetry or on constructing a coarse-grained lipid bilayer model (requires <a class="reference external" href="http://mgl.scripps.edu/people/sanner/html/msms_home.html">MSMS</a>),
+add, repair or modify sidechains (requires <a class="reference external" href="http://dunbrack.fccc.edu/SCWRL3.php/">SCWRL4</a>), superimpose structures (may require <a class="reference external" href="http://www.drive5.com/muscle/downloads.htm">MUSCLE</a> if sequence-based),
+amd renumber residues. Several processing steps can be performed without saving intermediate results.</p>
+<p>Features are demonstrated in examples <code class="docutils literal notranslate"><span class="pre">demo_Prepare.mcx</span></code> and <code class="docutils literal notranslate"><span class="pre">demo_RBreference.mcx</span></code>.
+The latter example is a two-module pipeline that uses module <code class="docutils literal notranslate"><span class="pre">Prepare</span></code> before module <a class="reference internal" href="experiment_design.html#experiment-design"><span class="std std-ref">ExperimentDesign</span></a>.</p>
+<p>The keywords are grouped into input/output (<code class="docutils literal notranslate"><span class="pre">getpdb</span></code>, <code class="docutils literal notranslate"><span class="pre">getcyana</span></code>, <code class="docutils literal notranslate"><span class="pre">save</span></code>),
+coordinate transformations (<code class="docutils literal notranslate"><span class="pre">center</span></code>, <code class="docutils literal notranslate"><span class="pre">symmetry</span></code>, <code class="docutils literal notranslate"><span class="pre">bilayer</span></code>),
+sidegroup changes (<code class="docutils literal notranslate"><span class="pre">mutate</span></code>, <code class="docutils literal notranslate"><span class="pre">repair</span></code>, <code class="docutils literal notranslate"><span class="pre">repack</span></code>, <code class="docutils literal notranslate"><span class="pre">deselenate</span></code>)
+and structure editing (<code class="docutils literal notranslate"><span class="pre">renumber</span></code>, <code class="docutils literal notranslate"><span class="pre">chains</span></code>, <code class="docutils literal notranslate"><span class="pre">replace</span></code>, <code class="docutils literal notranslate"><span class="pre">remove</span></code>, <code class="docutils literal notranslate"><span class="pre">merge</span></code>).</p>
+<p>The following keywords are supported:</p>
+<div class="section" id="getpdb">
+<h2><code class="docutils literal notranslate"><span class="pre">getpdb</span></code><a class="headerlink" href="#getpdb" title="Permalink to this headline">¶</a></h2>
+<p>Input of a raw ensemble (uniform populations) by reading a single PDB file.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">getpdb</span> <span class="s">file</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> - file name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the PDB file can contain several models (conformers) or a single one</p></li>
+<li><p>for MMMx ensemble PDB files with population information in <code class="docutils literal notranslate"><span class="pre">REMARK</span> <span class="pre">400</span></code>, such information is read</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="getcyana">
+<h2><code class="docutils literal notranslate"><span class="pre">getcyana</span></code><a class="headerlink" href="#getcyana" title="Permalink to this headline">¶</a></h2>
+<p>Input of a raw ensemble (uniform populations) by reading a single pseudo-PDB file as generated by CYANA.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">getcyana</span> <span class="s">file</span> <span class="s">identifier</span> <span class="s">[maxchains]</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> - file name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">maxchains</span></code> - reading is stop after the specified number of chains, optional, defaults to all chains</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>information on pseudo-atoms is removed</p></li>
+<li><p>standard PDB residue names are set for nucleic acids</p></li>
+<li><p>parameter <code class="docutils literal notranslate"><span class="pre">maxchains</span></code> allows for skipping pseudo-chains that simulate labels</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="save">
+<h2><code class="docutils literal notranslate"><span class="pre">save</span></code><a class="headerlink" href="#save" title="Permalink to this headline">¶</a></h2>
+<p>Save a (modified) entity to a PDB file.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">save</span> <span class="s">file</span> <span class="s">identifier</span> <span class="s">[[PDB_ID]</span> <span class="s">selection]</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> - file name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">PDB_ID</span></code> - four-character code used as PDB identifier, optional, defaults to PDB identifiert of loaded entity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">selection</span></code> - optional, if present, only a selected part of the structure is saved, see <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">Selection by address</span></a></p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>a minimal PDF file is saved</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="center">
+<h2><code class="docutils literal notranslate"><span class="pre">center</span></code><a class="headerlink" href="#center" title="Permalink to this headline">¶</a></h2>
+<p>Center the coordinates at the mean coordinate of all atoms</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">center</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the result is not automatically saved, use <code class="docutils literal notranslate"><span class="pre">save</span></code> if necessary</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="symmetry">
+<h2><code class="docutils literal notranslate"><span class="pre">symmetry</span></code><a class="headerlink" href="#symmetry" title="Permalink to this headline">¶</a></h2>
+<p>Transform coordinates to a symmetry frame. This is a block key with <img class="math" src="_images/math/97276f4239711cca2106c8430e82dc0f9b7ab719.svg" alt="n"/> lines for an <img class="math" src="_images/math/97276f4239711cca2106c8430e82dc0f9b7ab719.svg" alt="n"/>-fold symmetry axis.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">symmetry</span> <span class="s">mode</span> <span class="s">identifier</span>
+   <span class="s">&#39;address_1&#39;</span>
+   <span class="p">[]</span>
+   <span class="s">&#39;address_n&#39;</span>
+<span class="p">.</span><span class="n">symmetry</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span></code> - superposition mode, can be <img class="math" src="_images/math/5b80c9ac28ac05f3db3e79f623d4c01bcd4d1802.svg" alt="backbone"/> or <img class="math" src="_images/math/4f1791cf78cd1054f489294dace29b73e80fe2bc.svg" alt="CA"/> or <img class="math" src="_images/math/7587b40de707af87732dc8f782884045aaace265.svg" alt="C4'"/> or <img class="math" src="_images/math/99423ec29f0d63d8c0e11293402dea77b7433fbb.svg" alt="all"/></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address_1</span></code> address of chain, e.g. <img class="math" src="_images/math/0b446443cd13ccf6df38944aa3693cfaa89a46bb.svg" alt="(A)"/> or residue range, e.g., <img class="math" src="_images/math/ac8c38bdde721862c7dc906532f7aedf29ffcbb5.svg" alt="(A)58-108"/> in the first protomer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address_n</span></code> address of chain or residue range in the last protomer</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the addresses together with the mode define the atoms that are superimposed by minimal rmsd</p></li>
+<li><p>the result is not automatically saved, use <code class="docutils literal notranslate"><span class="pre">save</span></code> if necessary</p></li>
+<li><p>the <img class="math" src="_images/math/8ce4258fe18ff38d63bca1b50621473dc1518b48.svg" alt="C_n"/> symmetry axis becomes the new <img class="math" src="_images/math/7fe7ff035922a574720d31bf8b3ef6079b1981c0.svg" alt="z"/> axis</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="bilayer">
+<h2><code class="docutils literal notranslate"><span class="pre">bilayer</span></code><a class="headerlink" href="#bilayer" title="Permalink to this headline">¶</a></h2>
+<p>Computes a coarse-grained bilayer model and transforms coordinates into the bilayer frame.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">bilayer</span> <span class="s">mode</span> <span class="s">orientation</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">mode</span></code> - can be <img class="math" src="_images/math/4455de695aec20ade0c20958782595b6e12cf76d.svg" alt="bundle"/> for <img class="math" src="_images/math/f36a3f8dbda6bea20079ecea63562c7932d00b1b.svg" alt="\alpha"/>-helical bundles or <img class="math" src="_images/math/eb2d7bb6b56e44a331fe4560c6681e7a233e601b.svg" alt="barrel"/> for <img class="math" src="_images/math/0844943c9b878f5282b113981c85b336dad00b71.svg" alt="\beta"/>-barrels</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">orientation</span></code> - can be <img class="math" src="_images/math/f50f961c018d8abde93d12099d83a38123ac371f.svg" alt="oriented"/> if the protein is already properly oriented or <img class="math" src="_images/math/90bdabd996a0ba039b81fb7c9bdd160d6cb9bfeb.svg" alt="none"/> if it is not</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the algorithm minimizes free energy of bilayer insertion</p></li>
+<li><p>the <a class="reference internal" href="third_party.html#third-party"><span class="std std-ref">Third-party software</span></a> <a class="reference external" href="http://mgl.scripps.edu/people/sanner/html/msms_home.html">MSMS</a> is required</p></li>
+<li><p>the bilayer normal is the new <img class="math" src="_images/math/7fe7ff035922a574720d31bf8b3ef6079b1981c0.svg" alt="z"/> axis</p></li>
+<li><p>if the protein can be oriemted by symmetry, beter use <code class="docutils literal notranslate"><span class="pre">symmetry</span></code> first and orientation mode <code class="docutils literal notranslate"><span class="pre">oriented</span></code>
+*   the result is not automatically saved, use <code class="docutils literal notranslate"><span class="pre">save</span></code> if necessary</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="mutate">
+<h2><code class="docutils literal notranslate"><span class="pre">mutate</span></code><a class="headerlink" href="#mutate" title="Permalink to this headline">¶</a></h2>
+<p>Mutates residues. This is a block key with each line corresponding to one residue to be mutated.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">mutate</span> <span class="s">identifier</span>
+   <span class="s">&#39;address_1&#39;</span> <span class="s">&#39;new_residue_1&#39;</span>
+   <span class="p">[]</span>
+   <span class="s">&#39;address_n&#39;</span> <span class="s">&#39;new_residue_n&#39;</span>
+<span class="p">.</span><span class="n">mutate</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address_1</span></code> residue address of first residue to be mutated, see <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">Selection by address</span></a></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">new_residue_1</span></code> three-letter or single-letter code for new sidechain of first residue</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address_n</span></code> residue address of last residue to be mutated</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">new_residue_n</span></code> three-letter or single-letter code for new sidechain of last residue</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="third_party.html#third-party"><span class="std std-ref">Third-party software</span></a> <a class="reference external" href="http://dunbrack.fccc.edu/SCWRL3.php/">SCWRL4</a> is required</p></li>
+<li><p>only amino acids, not nucleotides, can be mutated in this version of MMMx</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="repair">
+<h2><code class="docutils literal notranslate"><span class="pre">repair</span></code><a class="headerlink" href="#repair" title="Permalink to this headline">¶</a></h2>
+<p>Repairs all incompletely defined amino acid sidechains in an entity.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">repair</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="third_party.html#third-party"><span class="std std-ref">Third-party software</span></a> <a class="reference external" href="http://dunbrack.fccc.edu/SCWRL3.php/">SCWRL4</a> is required</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="repack">
+<h2><code class="docutils literal notranslate"><span class="pre">repack</span></code><a class="headerlink" href="#repack" title="Permalink to this headline">¶</a></h2>
+<p>Repacks all amino acid sidechains in an entity.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">repack</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p><a class="reference internal" href="third_party.html#third-party"><span class="std std-ref">Third-party software</span></a> <a class="reference external" href="http://dunbrack.fccc.edu/SCWRL3.php/">SCWRL4</a> is required</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="deselenate">
+<h2><code class="docutils literal notranslate"><span class="pre">deselenate</span></code><a class="headerlink" href="#deselenate" title="Permalink to this headline">¶</a></h2>
+<p>Replaces selenocysteine and selenomethionine by their native counterparts cysteine and methionine.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">deselenate</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>this function does not require third-party software</p></li>
+<li><p>seleno amino acids are sometimes used for easier phasing of x-ray diffraction data</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="renumber">
+<h2><code class="docutils literal notranslate"><span class="pre">renumber</span></code><a class="headerlink" href="#renumber" title="Permalink to this headline">¶</a></h2>
+<p>Renumbers residues in one chain of an entity.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">renumber</span> <span class="s">address</span> <span class="s">shift</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - a chain address, such as <code class="docutils literal notranslate"><span class="pre">(A)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">shift</span></code> - offset to current residue numbers, can be negative or positive integer</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>use several <code class="docutils literal notranslate"><span class="pre">renumber</span></code> lines, if you want to renumber more than one chain</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="chains">
+<h2><code class="docutils literal notranslate"><span class="pre">chains</span></code><a class="headerlink" href="#chains" title="Permalink to this headline">¶</a></h2>
+<p>Restricts an entity to a subset of chains</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">chains</span> <span class="s">address</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx chain address, such as <code class="docutils literal notranslate"><span class="pre">(A)</span></code> or <code class="docutils literal notranslate"><span class="pre">(A,C,E)</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the entity with the given identifier is changed, but not automatically saved</p></li>
+<li><p>use the <code class="docutils literal notranslate"><span class="pre">save</span></code> command, if necessary</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="replace">
+<h2><code class="docutils literal notranslate"><span class="pre">replace</span></code><a class="headerlink" href="#replace" title="Permalink to this headline">¶</a></h2>
+<p>Replaces a chain in one entity with a chain from another entity</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">replace</span> <span class="s">id_1.chain_1</span> <span class="s">id_2.chain_2</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">id_1.chain_1</span></code> - identifier of target chsin, such as <code class="docutils literal notranslate"><span class="pre">BtuCDF.(F)</span></code> for chain <code class="docutils literal notranslate"><span class="pre">F</span></code> in entity <code class="docutils literal notranslate"><span class="pre">BtuCDF</span></code> to be replaced</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">id_2.chain_2</span></code> - identifier of template chsin, such as <code class="docutils literal notranslate"><span class="pre">BtuF_CBI.(A)</span></code> for using <code class="docutils literal notranslate"><span class="pre">A</span></code> in entity <code class="docutils literal notranslate"><span class="pre">BtuF_CDI</span></code> as a replacement</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the entity with the given identifier is changed, but not automatically saved</p></li>
+<li><p>use the <code class="docutils literal notranslate"><span class="pre">save</span></code> command, if necessary</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="remove">
+<h2><code class="docutils literal notranslate"><span class="pre">remove</span></code><a class="headerlink" href="#remove" title="Permalink to this headline">¶</a></h2>
+<p>Remove a residue</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">remove</span> <span class="s">address</span> <span class="s">idenfifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - residue address, such as <code class="docutils literal notranslate"><span class="pre">(A)238</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the entity with the given identifier is changed, but not automatically saved</p></li>
+<li><p>use the <code class="docutils literal notranslate"><span class="pre">save</span></code> command, if necessary
+*   use the <code class="docutils literal notranslate"><span class="pre">merge</span></code> command, if you wish to remove ranges of residues</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="merge">
+<h2><code class="docutils literal notranslate"><span class="pre">merge</span></code><a class="headerlink" href="#merge" title="Permalink to this headline">¶</a></h2>
+<p>Merges residue ranges of chains to e new entity.
+The parts can stem from different entitities, thus creating a chimera.
+This is a block key, with each line corresponding to one part.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">merge</span> <span class="s">identifier</span>
+  <span class="s">&#39;ID_1 address_1&#39;</span>
+      <span class="p">[]</span>
+  <span class="s">&#39;ID_n address_n&#39;</span>
+<span class="p">.</span><span class="n">merge</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal identifier of the newly created entity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ID_1</span></code> identifier of the entity from which the first part is taken</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address_1</span></code> address of the residues from which the first part is taken, e.g. <code class="docutils literal notranslate"><span class="pre">{11}(A)58-146</span></code> for residues 58-146 of chain A in conformer 11</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ID_n</span></code> identifier of the entity from which the last part is taken</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address_n</span></code> address of the residues from which the last part is taken</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>do <em>not</em> use an exsiting entity identifier</p></li>
+<li><p>the entity with the given identifier is created, but not automatically saved</p></li>
+<li><p>use the <code class="docutils literal notranslate"><span class="pre">save</span></code> command, if necessary</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="rigi.html" class="btn btn-neutral float-right" title="Rigi" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="experiment_design.html" class="btn btn-neutral float-left" title="ExperimentDesign" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

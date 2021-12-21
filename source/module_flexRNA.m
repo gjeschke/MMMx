@@ -579,10 +579,12 @@ for kent = first_conformer:nent
                     seq = sequence(2);
                     err = 0;
             end
-            threaded = check_RNA_threading(environment,ecoor(:,2:4),atomtags);
-            if isempty(threaded) || threaded
-                err = 1;
-                fprintf(logfid,'RNA is threaded through hole in protein. Continuing search.\n');
+            if err == 0
+                threaded = check_RNA_threading(environment,ecoor(:,2:4),atomtags);
+                if isempty(threaded) || threaded
+                    err = 1;
+                    fprintf(logfid,'RNA is threaded through hole in protein. Continuing search.\n');
+                end
             end
             if err == -3
                 break

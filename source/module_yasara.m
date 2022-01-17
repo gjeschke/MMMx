@@ -61,7 +61,7 @@ output_name = false;
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
-        case 'input'
+        case {'input','getpdb'}
             inname = control.directives(d).options{1};
             fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
         case 'addpdb'

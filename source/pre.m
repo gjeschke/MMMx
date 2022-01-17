@@ -20,7 +20,7 @@ function [all_Gamma2,all_pre] = pre(coor,label,td,taur,taui,R2_dia,larmor)
 % td        double, total INEPT time in HSQC [s]
 % taur      double, rotational correlation time of the protein [s]
 % taui      double, correlation time of internal label motion [s]
-% R2_dia    nuclear transverse relataion rate(s), can be either one double
+% R2_dia    nuclear transverse relataion rate (s^-1), can be either one double
 %           value applying to all nuclei or a vector (1,N) of values for
 %           individual nuclei [s^{-1)]
 % larmor    larmor frequency [MHz]

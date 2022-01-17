@@ -110,7 +110,7 @@ for d = 1:length(control.directives)
             end
         case 'plot'
             plot_result = true;
-        case 'initial'
+        case {'initial','getpdb'}
             initial_ensemble = control.directives(d).options{1};
         case 'figures'
             if strcmpi(control.directives(d).options{1},'off')

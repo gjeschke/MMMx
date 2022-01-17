@@ -1,7 +1,7 @@
 function flexibility_analysis(entity,fname,figures)
 %
 % FLEXIBILITY_ANALYSIS Analyze Ramachandran angle distributions in
-%                      ensemble, for RNA, pseud-torsion angles are analyzed 
+%                      ensemble, for RNA, pseudo-torsion angles are analyzed 
 %
 %   FLEXIBILITY_ANALYSIS(entity,fname)
 %   Save results in files based on fname, if empty, only plots are
@@ -152,7 +152,7 @@ for c = 1:length(chains)
         end
         resnums = resnums(1:respoi);
         flexibilities = flexibilities(1:respoi);
-        h = figure(c); clf; hold on;
+        h = figure; clf; hold on;
         plot(resnums,flexibilities,'.','MarkerSize',14,'Color',[0.25,0.25,0.25]);
         xlabel('Residue number');
         ylabel('Ramachandran flexibility');

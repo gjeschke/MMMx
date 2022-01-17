@@ -122,7 +122,7 @@ if ~isfield(options,'sorted') || isempty(options.sorted)
 end
 
 if options.sorted
-    options.pair_rmsd = tryue;
+    options.pair_rmsd = true;
 end
 
 if ~isfield(options,'pair_corr') || isempty(options.pair_corr)

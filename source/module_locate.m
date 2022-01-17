@@ -58,6 +58,8 @@ ref_poi = 0;
 % read restraints
 for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
+        case 'getpdb'
+            entity = get_pdb(control.directives(d).options{1});
         case 'reference'
             ref_poi = ref_poi + 1; % increase reference block counter
             restraints.reference(ref_poi).label = control.directives(d).options{1};

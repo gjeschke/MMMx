@@ -60,7 +60,7 @@ failed = false;
 
 % set defaults
 
-save_figures = false; % default is to not save figures
+save_figures = true; % default is to save figures
 figure_format = 'pdf';
 
 % default output to Matlab console if no log file identifiere was provided 
@@ -121,7 +121,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 2 % chain and possibly range given
                 cmd.address = control.directives(d).options{3};
             end
-            if length(control.directives(d).options) > 3 % chain and possibly range given
+            if length(control.directives(d).options) > 3 
                 if strcmpi(control.directives(d).options{4},'resolved')
                     cmd.resolved = true;
                 end
@@ -209,7 +209,7 @@ for d = 1:length(control.directives)
                 cmd.address = control.directives(d).options{3};
             end
             cmd.resolution = 1;
-            if length(control.directives(d).options) > 3 % chain and possibly range given
+            if length(control.directives(d).options) > 3 
                 cmd.resolution = str2double(control.directives(d).options{4});
             end
             commands{cmd_poi} = cmd;            

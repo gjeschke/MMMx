@@ -88,7 +88,7 @@ for d = 1:length(control.directives)
             if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
                 load(control.directives(d).options{1});
             end
-        case 'initial'
+        case {'initial','getpdb'}
             initial_ensemble = control.directives(d).options{1};
         case 'skipto'
             first_conformer = str2double(control.directives(d).options{1});

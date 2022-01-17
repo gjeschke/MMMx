@@ -31,7 +31,7 @@ function [entity,exceptions,failed] = module_flex(control,logfid,entity)
 % parallel      number of parallel runs per block
 % expand        expand an MMMx:RigiFlex model by computing flexible linker
 %               for each rigid-body arrangement
-% interactive   if present, information on progress is displayed, optional
+% verbose       if present, information on progress is written to logfile
 %               argument: trials between updates
 % loose         models with sidegroup clashes are not rejected
 % save [fn]     specify file name fn for output, defaults to mmmx_flex
@@ -71,9 +71,9 @@ acceptance_mode = 'uniform';
 keep_sidegroup_clashes = false; % delete models where side groups clash
 
 opt.parnum = 100; % number of trials performed in the parfor loop
-opt.disp_update = 200; % cycles between display updates in interactive mode
+opt.disp_update = 200; % cycles between display updates in verbose mode
 opt.clash_test = 10000; % number of residues before a backbone clashtest is performed 
-opt.interactive = false;
+opt.verbose = false;
 opt.acceptance_update = 1000; % trials between updating acceptance level
 maxlen = 1000; % maximum expected loop length for memory pre-allocation
 M_max = 10; % maximum factor for rejection sampling (default)
@@ -113,8 +113,8 @@ for d = 1:length(control.directives)
             restraints.initial =  str2double(control.directives(d).options{1});
             restraints.final =  str2double(control.directives(d).options{2});
             restraints.sequence = control.directives(d).options{3};
-        case 'interactive'
-            opt.interactive = true;
+        case {'interactive','verbose'}
+            opt.verbose = true;
             if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
                 opt.disp_update = str2double(control.directives(d).options{1});
             end
@@ -125,7 +125,7 @@ for d = 1:length(control.directives)
             if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
                 load(control.directives(d).options{1});
             end
-        case 'initial'
+        case {'initial','getpdb'}
             initial_ensemble = control.directives(d).options{1};
         case 'skipto'
             first_conformer = str2double(control.directives(d).options{1});
@@ -1435,7 +1435,7 @@ for kent = first_conformer:nent
                 end
             end
             report_update = false;
-            if opt.interactive && mod(k_MC,opt.disp_update) == 0
+            if opt.verbose && mod(k_MC,opt.disp_update) == 0
                 report_update = true;
                 ftr = (1 - k_MC/ntrials)*max_seconds;
                 fti = max_seconds - runtime;

@@ -55,8 +55,6 @@ min_lambda = 1e3*eps; % minimum frequency of a non-degenerate mode
 
 save_name = 'MMMx_enm_transition'; % default name for saving output entity
 
-conformer = 1;
-
 restraints.p_model = 0.5;
 restraints.uncertainty = 3;
 restraints.ensemble = 100;
@@ -73,6 +71,7 @@ end
 restraints.ddr(1).labels{1} = '';
 restraints.drag{1} = '';
 restraints.chains = '*';
+restraints.conformer = 1;
 
 ddr_poi = 0;
 drag_poi = 0;
@@ -272,7 +271,7 @@ for kr = 1:length(restraints.ddr)
 end
 
 % make the elastic network model
-CA_model = get_CA_model(entity); % extract the Calpha model, conformer 1 assumed if there are several
+CA_model = get_CA_model(entity,restraints.conformer); % extract the Calpha model, conformer 1 assumed unless specified otherwise
 Hessian = get_ANM_Hessian(CA_model);
 ENM_param = get_ENM;
 

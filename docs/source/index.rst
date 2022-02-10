@@ -79,7 +79,8 @@ MMMx is available at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_ and `at 
     :caption: Examples
     :maxdepth: 2
 
-    ./examples
+    ./demo_ExperimentDesign
+    ./demo_Prepare
 	
 
 .. Indices and tables

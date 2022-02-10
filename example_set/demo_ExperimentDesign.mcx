@@ -1,0 +1,49 @@
+% MMMx Demo: Functionality of the ExperimentDesign module
+%
+
+# log
+
+!ExperimentDesign
+
+   import 2LZM T4L % load T4 lysozyme crystal structure
+   
+   import 2ADC RRM % load NMR structure of an RNA recognition motif
+
+   sitescan mtsl T4L T4L_sites % sitescan for T4 Lysozyme, default set CILMSTV of residues 
+      
+   sitescan mtsl RRM RRM_sites I % sitescan for the protein part of the RRM, only isoleucine  
+   
+   sitescan iap-4tu RRM SL_sites u 1 0.1 % sitescan (only uracil) for the RNA part
+   
+   pairlist T4L_sites T4L T4L_pairs 15 80 % a site pair list for T4 lysozyme
+
+   hetpairlist RRM_sites SL_sites RRM RRM_pairs 15 80 
+
+   plot T4L_distributions pdf
+
+   distributions mtsl T4L T4L_distribution
+       68   131
+       72   131
+       75   131
+       76   131
+       79   131
+       86   131
+       89   131
+      109   131
+   .distributions
+
+   plot RRM_distributions pdf
+   
+   distributions mtsl|iap-4tu RRM RRM_distribution
+      RRM_pairs
+   .distributions
+   
+   import 1BUY EPO % import what was once very popular in professional cycling
+   
+   sitescan mtsl EPO EPO_sites % perform site scan
+   
+   ENMpairs EPO_sites EPO EPO_enm_pairs 15 80 % score site pairs for elastic network modeling  
+
+.ExperimentDesign
+
+# report

@@ -53,7 +53,7 @@ fid = fopen(fname,'rt');
 % treat case when file cannot be opened
 if fid == -1
     if ~contains(fname,'.') % there was no extension
-        fname = strcat(fname,'.mxc');
+        fname = strcat(fname,'.mcx');
         fid = fopen(fname,'rt');
     end
 end

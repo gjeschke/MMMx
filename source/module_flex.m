@@ -960,7 +960,7 @@ for kent = first_conformer:nent
                 continue
             end
             n_restraints = n_restraints+1;
-            if ~isempty(restraints.oligomers(oli_poi).file{kr})
+            if ~isempty(restraints.oligomer(oli_poi).file{kr})
                 restraint_type = 'rejection';
             elseif sigr < 0 % interpreted as lower/upper bound
                 restraint_type = 'bounds';

@@ -13,29 +13,35 @@ Only module ``Prepare`` is used.
 Functionality
 ---------------------------------
 
-The demo imports a T4 Lysozyme structure with PDB identifier ``2LZM`` and stores it with internal identifier ``T4L``.
-It also imports a RNA recognition motif with bound RNA stemloop with PDB identifier ``2ADC`` and stores it with internal identifier ``RRM``.
+The first example loads the ensemble structure ``2ADC`` from the PDB into entity ``NMR``. Then it saves a local PDB file ``rb34.pdb`` that contains only residues 334-528 of chain A in only model 3 of the ensemble.
 
-The first spin-labelling sitescan is performed with spin label ``mtsl`` on entity ``T4L`` and stored in file ``T4L_sites.lst``. The extension ``.lst`` is appended by default.
-The demo then performs two spin-labeling sitescans on the RRM/stemloop complex. First, a scan with label ``mtsl`` is  performed on entity ``RRM``, generating site list ``RRM_sites``. The RRM is scanned only for substituting isoleucine residues by a spin label.
-Second, a scan with label iodoacetamido-proxyl as a thiouracil label is performed on entity ``RRM``, generating site list ``SL_sites``. Only uracil nucleotides are considered for labeling.
+The second example generates a chimera from two structures related to vitamin B12 transporter BtuCDF in a frame related to a lipid bilayer and renumbers one of the chains. 
 
-The demo then generates two site pair lists, one from ``T4L_sites.lst`` referring to entityt ``T4L`` and stores it in file ``T4L_pairs.lst``. 
-Site pairs are included only if the mean distance ranges between 15 and 80 Å. The second list combines labels from ``RRM_sites.lst`` with labels from ``SL_sites.lst``, referring to entity ``RRM``.
-The pair list is stored as ``RRM_pairs.lst`` and again site pairs are included only if the mean distance ranges between 15 and 80 Å.
+First, the PDB file ``2QI9`` is downloaded as initial model with internal name ``BtuCDF``. Then the coodinates are translated, so that chains A and B (the transmembrane part) are centered.
+A pseudo-symmetry axis is computed that relates chains A and B and the coordinates are transformed so that this pseudo-symmetry axis is the z axis.
+This model is saved as file ``BtuCDF_centered.pdb``.
 
-Then, basis file name ``T4L_distributions`` is declared for distance distribution output plots and file format ``pdf`` is selected for these plots.
-Distributions are generated with label ``mtsl`` for entity ``T4L`` and are stored in numerical format with basis file name ``T4L_distribution``.
-A list of 8 spin pairs is declared. Note that this computation of distance distributions does not require a previous site scan or pair list generation.
+Then, selenium amino acids, which were used for phasing the x-ray data, are replaced by their (native) sulfur counterparts. This model is saved as file ``BtuCDF_deselenated.pdb``.
 
-After this, a new basis file name ``RRM_distributions`` is declared for plots, which are again stored in ``pdf`` format. In this case, distributions are genarted for the existing pair list ``RRM_pairs``.
-An orthogonal spin labelling scheme with labels ``mtsl`` and ``iap-4tu`` is used.
+Now, a bilayer geometry is computed in helix ``bundle`` mode, assuming that the z axis (here the pseudo-symmetry axis) is the bilayer normal (mode ``oriented``).
+This model is saved as file ``BtuCDF_bilayer_transform.pdb``. Compared to the previous model, only the z coordinates have changed, so that z = 0 corresponds to the bilayer central plane.
+The optimal bilayer thickness and the applied coordinate shift are rported in the logfile.
 
-The final example of this demo imports PDB structure ``1BUY`` of erythropoietin into entity ``EPO``. At sitescan with ``mtsl`` is performed to provide list ``EPO_sites.lst``.
-Site pairs are generated and scored from this list for elastic network modeling of conformation change of EPO. The list is stored as ``EPO_enm_pairs.lst``, considering only pairs with mean distance between 15 and 80 Å. 
+Then, PDB file ``5M29`` is downlaoded as internal entity BtuF_CBI. This structure is the substrate-binding protein BtuF in complex with cobinamid.
+The structure contains a cyanide ion and two glycerol molecules that are not required in the chimera. They are removed in the following.
+This model is saved as file ``BtuF_CBI_removal.pdb``.
+
+The substrate-binding protein, which is chain A in ``2M29`` is superimposed on the substrate-binding protein in BtuCDF, where it is chain F. Directive ``align`` uses sequence alignment to match residue numbers.
+Directive ``backbone`` superimposes backbone atoms. 
+
+Chain F in model BtuCDF is then replaced by chain A in model BtuF_CBI. Because the cofactor cobinamide is a cofactor of chain A of this model, this introduces the substrate molecule into the chimera.
+The chimera is saved to file ``BtuCDF_chimera`` with pseudo-PDB code ``BTUX``.
+
+The final part demonstrates renumbering of chain F, with all new residue numbers decreased by 20. This models is saved to file ``BtuCDF_chimera_renumbered.pdb``. 
+
+
 
 Outputs
 ---------------------------------
 
-Site and pair list are stored in a self-explaining human-readable format. Figures are stored as vector graphics in PDF format. 
-Distance distributions are stored as comma-separated value (``.csv``) files with the distance in units of Å as the first column and probability density in units of :math:`\AA^{-1}` as the second column.
+All outputs, except for the logfile, are PDB files. All intermediate models are stored here. In most application scenarios, it will be sufficient to save the final model.

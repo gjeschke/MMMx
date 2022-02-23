@@ -5,3 +5,281 @@ EnsembleFit
 
 This module performs integrative fitting of a raw ensemble to various sets of experimental restraints. 
 The ensemble is contracted by fitting populations and discarding conformers with zero or very low population.
+
+``addpdb``
+---------------------------------
+
+Input of template conformers from PDB files. 
+
+.. code-block:: matlab
+
+    addpdb file
+
+Arguments
+    *   ``file`` - file name, can contain wildcards
+Remarks
+    *   use wildcard '*' for part of the filename to process all conformers from a previous step in the pipeline 
+    *   without any input, Flex generates free peptide chains
+    *   use this command for attaching flexible peptide chains or linkers to existing structures
+    *   in pipelines, use this command after previous Flex or FlexRNA modules
+	
+``expand``
+---------------------------------
+
+Input and expansion of rigid-body arrangements. 
+
+.. code-block:: matlab
+
+    expand [fname]
+
+Arguments
+    *   ``file`` - optional fle name for saving extracted rigid-body arrangements
+Remarks
+    *   the output of a previous Rigi module in the pipeline is expanded 
+    *   input file format is the Matlab output format of Rigi
+    *   use this command only for direct processing of Rigi results by EnsembleFit
+	
+``getpdb``
+---------------------------------
+
+Input of a raw ensemble (uniform populations) by reading a single PDB file. 
+
+.. code-block:: matlab
+
+    getpdb file
+
+Arguments
+    *   ``file`` - file name
+Remarks
+    *   the PDB file can contain several models (conformers) or a single one
+    *   for MMMx ensemble PDB files with population information in ``REMARK 400``, such information is read
+	
+``save``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    save file
+
+Arguments
+    *   ``file`` - output file name, extension should be '.ens'
+Remarks
+    *   if the save key is missing, the ensemble list is saved to 'ensemble.ens'
+	
+``ddr``
+---------------------------------
+
+Definition of distance distribution restraints. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    ddr label_1 [label_2]
+       'address_1' 'address_2' 'rmean' 'rstd' [@'fname']
+       ...
+    .ddr
+
+Arguments
+    *   ``label_1``, ``label_2`` - label types, e.g. `mtsl`, `dota-gd`
+    *   ``address_1``, ``address_2`` addresses of the two labelled sites, e.g., `(A)16`, `107`
+    *   ``rmean`` mean distance in Angstroem, e.g. `32.5`
+    *   ``rstd`` standard deviation in Angstroem, e.g. `15.5`
+    *   ``fname`` optional file name of the distance distribution 
+Remarks
+    *   if both labels are the same, it is sufficient to specify the label type once
+    *   use separate 'ddr' blocks for each label combination
+    *   the file name is optional, but using full distributions is strongly recommended
+    *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped
+
+``pre``
+---------------------------------
+
+Definition of NMR paramagnetic relaxation enhancement (PRE) restraints as intensity ratios. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    pre label larmor td R2dia [taui [taur [maxrate]]]
+       'address_1' 'ratio' ['std']
+       ...
+    .pre
+
+Arguments
+    *   ``label`` - label type, e.g. `mtsl`
+    *   ``larmor`` - proton Larmor frequency in MHz, e.g. 700
+    *   ``td`` - total INEPT delay in ms. e.g. 10.8
+    *   ``R2dia`` - relaxation rate for the diamagnetic sample in `s^{-1}`, e.g. 66
+    *   ``taui`` - correlation time of internal label motion in ns, e.g. 0.6, default 0.5
+    *   ``taur`` - rotational correlation time of the protein in ns, e.g. 3.7
+    *   ``maxrate`` - maximum rate enhancement in `s^{-1}`, e.g. 150, defaults to 170
+    *   ``address`` - site address, e.g., `(A)16`
+    *   ``ratio`` - intensity ratio between paramagnetic and diamagnetic sample, should be between 0 and 1 
+	*   ``std`` - standard deviation of the PRE ratio, optional
+Remarks
+    *   ratios above 1 are accepted and interpreted as no PRE effect
+    *   'taui' may be estimated from the CW EPR spectrum of the labelled sample
+    *   'taur' will be estimated or computed with HYDROPRO if it is not provided
+    *   for disordered systems, a general 'taur' for all conformers may be a poor approximation
+    *   if standard deviation is missing, all PRE restraints in this block have the same weight 
+	
+``prerate``
+---------------------------------
+
+Definition of NMR paramagnetic relaxation enhancement (PRE) restraints as relaxation enhancement rates `\Gamma_2`. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    prerates label larmor td R2dia [taui [taur [maxrate]]]
+       'address_1' 'rate' ['std']
+       ...
+    .prerates
+
+Arguments
+    *   ``label`` - label type, e.g. `mtsl`
+    *   ``larmor`` - proton Larmor frequency in MHz, e.g. 700
+    *   ``td`` - total INEPT delay in ms. e.g. 10.8
+    *   ``R2dia`` - relaxation rate for the diamagnetic sample in `s^{-1}`, has no effect for rate fitting
+    *   ``taui`` - correlation time of internal label motion in ns, e.g. 0.6, default 0.5
+    *   ``taur`` - rotational correlation time of the protein in ns, e.g. 3.7
+    *   ``maxrate`` - maximum rate enhancement in `s^{-1}`, e.g. 150, defaults to 170
+    *   ``address`` - site address, e.g., `(A)16`
+    *   ``rate`` - rate enhancement in `s^{-1}`, e.g. 40
+	*   ``std`` - standard deviation of the rate enhancement, optional
+Remarks
+    *   ratios above 1 are accepted and interpreted as no PRE effect
+    *   'taui' may be estimated from the CW EPR spectrum of the labelled sample
+    *   'taur' will be estimated or computed with HYDROPRO if it is not provided
+    *   for disordered systems, a general 'taur' for all conformers may be a poor approximation
+    *   if standard deviation is missing, all PRE restraints in this block have the same weight 
+
+``sans``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    sans data [resolution [deuteration]]
+
+Arguments
+    *   ``data`` - name of the input scattering data file, must be a file acceptable by 'cryson' in the ATSAS package
+    *   ``resolution`` - name of a resolution file, must be a file acceptable by 'cryson' in the ATSAS package
+	*   ``deuteration`` - fraction of buffer deuteration, between 0 and 1, e.g. 0.66, optional
+Remarks
+    *   SANS fitting works without resolution file, but it is strongly recommended to provide one
+    *   if deuteration is not specified, natural proton abundance buffer is assumed
+    *   SANS curves are computed by the ATSAS package installed on this computer and present on the Matlab path
+
+``saxs``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    saxs data ['crysol3']
+
+Arguments
+    *   ``data`` - name of the input scattering data file, must be a file acceptable by 'crysol' in the ATSAS package
+    *   ``'crysol3'`` - if crysol3 is specified, SAXS data are computed with this newer version 
+Remarks
+    *   crysol3 uses a different algorithm for the hydration shell
+    *   fitting once with original crysol and once with crysol3 can provide an idea about uncertainty due to hydration shell modelling 
+    *   SAXS curves are computed by the ATSAS package installed on this computer and present on the Matlab path
+
+``nofit``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    nofit
+
+Remarks
+    *   the key requests only restraint computation and analysis for the input ensemble, without population fitting
+
+``rmean``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    rmean
+
+Remarks
+    *   the key requests that mean distances instead of distance distribution restraints are fitted
+    *   do this only if you have a very good reason
+	
+``blocksize``
+---------------------------------
+
+Specifies initial block size for population fitting
+
+.. code-block:: matlab
+
+    blocksize conformers
+
+Arguments
+    *   ``conformers`` - initial number of conformers per block, defaults to 100
+Remarks
+    *   block size is adaptive, there should be no reason to depart from the default
+				
+``interactive``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    interactive
+
+Remarks
+    *   the key enables display of fit information in a plot during fitting
+    *   this option may be useful for tests, but should be skipped for runs on a server
+	
+``plot``
+---------------------------------
+
+Specifies basis name for saving output conformers 
+
+.. code-block:: matlab
+
+    plot
+
+Remarks
+    *   the key generates Matlab result plots after fitting, default is not to plot
+    *   this can be useful even on a server, if you save the plots as PDF files
+	
+``figures``
+---------------------------------
+
+Specifies a graphics format for saving figures.
+
+.. code-block:: matlab
+
+    figures format
+
+Arguments
+    *   ``format`` - one of the formats in which Matlab can save figures, e.g. 'pdf'
+Remarks
+    *   this switches on figure saving, which is off by default
+    *   in most contexts, vector graphic output as 'pdf' works best
+
+``plotgroup``
+---------------------------------
+
+Assigns conformers to plot groups.
+
+.. code-block:: matlab
+
+    plotgroup svgcolor conformers
+
+Arguments
+    *   ``svgcolor`` - a scalable vector graphics color name for the distributions of the subensemble
+    *   ``conformers`` - a conformer number list in MMMx address list format
+Remarks
+    *   see `SVG color table <https://www.december.com/html/spec/colorsvg.html>`_ for available colors
+    *   conformer numbers are separated by comma and ranges are indicated by hyphen, e.g. '2, 4, 7-11, 15' 
+

@@ -81,6 +81,9 @@ MMMx is available at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_ and `at 
 
     ./demo_ExperimentDesign
     ./demo_Prepare
+    ./demo_Rigi
+    ./demo_FlexRNA
+    ./demo_RigiFlex
 	
 
 .. Indices and tables

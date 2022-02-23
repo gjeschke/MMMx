@@ -144,10 +144,16 @@ for d = 1:length(control.directives)
         case 'sort'
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
+            cmd.oriented = false;
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
                 cmd.entity = '.'; % flexibility analysis is performed for current entity
+            end
+            if length(control.directives(d).options) > 2 % further directive
+                if strcmpi(control.directives(d).options{3},'oriented')
+                    cmd.oriented = true;
+                end
             end
             commands{cmd_poi} = cmd;            
         case 'measures'
@@ -429,7 +435,11 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
+            if cmd.oriented
+                [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
+            else
+                [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
+            end
             if ~isempty(exceptions0{1})
                 for k = 1:exceptions0
                     warnings = warnings + 1;

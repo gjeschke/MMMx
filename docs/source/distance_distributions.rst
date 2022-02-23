@@ -34,10 +34,12 @@ Computation of distance distributions
 -------------------------------------
 
 MMMx can compute distance distributions between two atoms, between an atom and a label, 
-or between two labels for individual structural models or ensemble models. Thw two labels can be the same or they can differ.
+or between two labels for individual structural models or ensemble models. The two labels can be the same or they can differ.
 
 Distance distributions for single conformers or ensembles given as PDB files can be computed, displayed, and saved 
 by module :ref:`ExperimentDesign <experiment_design>`. They are automatically computed by module :ref:`EnsembleFit <ensemble_fit>`
 for those site pairs where distance distribution restraints were specified. If you want to compute distance distributions between site pairs
 that were not used in fitting, then first perform the ensemble fit and then run module :ref:`EnsembleFit <ensemble_fit>` again
 with the fitted ensemble as input, the additional site pairs specified as distance distribution restraints, and the ``nofit`` keyword.
+
+See file ``demo_ExperimentDesign.mcx`` in the example set for a demonstration of computing distance distributions.

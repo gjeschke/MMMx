@@ -1281,14 +1281,6 @@ if plot_result
             overlap_G = [];
             overlap_E = [];
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
-            for kpg = 1:length(plot_groups)
-                if ~isempty(plot_groups(kpg).rgb) && ~sum(isnan(plot_groups(kpg).conformers))
-                    pop = fit_task.ensemble_populations(plot_groups(kpg).conformers);
-                    all_distr_group = all_distr_ensemble(plot_groups(kpg).conformers,:);
-                    group_distr = pop*all_distr_group;
-                    plot(fit_task.r_axis,dr*group_distr,'Color',plot_groups(kpg).rgb);
-                end
-            end
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
                 if ~isempty(fit_task.ddr(kr).exp_distr_ub)
@@ -1297,6 +1289,14 @@ if plot_result
                     fill([fit_task.r_axis, fliplr(fit_task.r_axis)],dr*[distr_ub, fliplr(distr_lb)],0.75*[1,1,1],'LineStyle','none');
                 end
                 plot(fit_task.r_axis,dr*fit_task.ddr(kr).exp_distr,'Color',[0.2,0.2,0.2]);
+            end
+            for kpg = 1:length(plot_groups)
+                if ~isempty(plot_groups(kpg).rgb) && ~sum(isnan(plot_groups(kpg).conformers))
+                    pop = fit_task.ensemble_populations(plot_groups(kpg).conformers);
+                    all_distr_group = all_distr_ensemble(plot_groups(kpg).conformers,:);
+                    group_distr = pop*all_distr_group;
+                    plot(fit_task.r_axis,dr*group_distr,'Color',plot_groups(kpg).rgb);
+                end
             end
             if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
                 plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0]);

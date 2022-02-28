@@ -188,7 +188,7 @@ Remarks
 ``compare``
 ---------------------------------
 
-Superposition of conformers in an ensemble 
+Comparison of two ensembles 
 
 .. code-block:: matlab
 

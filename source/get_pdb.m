@@ -18,6 +18,9 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 %                   insertion codes or non-positive residue numbers
 %           .name   optional name for the entity, defaults: PDB identifier
 %                   upon download or if header line exists; MMMx otherwise
+%           .stripH Boolean flag indcating that protons should be removed,
+%                   needed to generate consistent ensembles, defaults to
+%                   false
 % entity    optional, if present, models from the PDB file are added as
 %           conformers to an existing entity, the caller is responsible for
 %           consistency of primary structure of the conformers
@@ -51,6 +54,9 @@ warnings = 0; % counter for warnings
 if ~exist('options','var') || isempty(options) || ~isfield(options,'dssp') || ...
         isempty(options.dssp)
     options.dssp = false;
+end
+if ~isfield(options,'stripH')
+    options.stripH = false;
 end
 
 % placeholder for downloaded file later to be deleted
@@ -190,6 +196,14 @@ while 1
             curr_resnum = 0; % current residue number
             offset = 0; % residue number offset to avoid negative residue numbers
         end
+        if length(tline) >= 78
+            element = strtrim(tline(77:78));
+        else
+            element = get_element_by_atomname(atname0);
+        end
+        if element == 1 && options.stripH
+            continue
+        end
         atoms = atoms + 1;
         atname = strtrim(upper(tline(13:16)));
         atname0 = tline(13:16);
@@ -260,11 +274,6 @@ while 1
         end
         if length(tline) >= 66
             Bfactor = str2double(tline(61:66));
-        end
-        if length(tline) >= 78
-            element = strtrim(tline(77:78));
-        else
-            element = get_element_by_atomname(atname0);
         end
         if length(tline) >= 80
             charge = str2double(tline(79:80));

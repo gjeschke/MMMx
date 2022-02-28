@@ -13,15 +13,17 @@ Input of template conformers from PDB files.
 
 .. code-block:: matlab
 
-    addpdb file
+    addpdb file ['protons']
 
 Arguments
     *   ``file`` - file name, can contain wildcards
+    *   ``protons`` - if directive 'protons' is present, protons from the input file are kept
 Remarks
     *   use wildcard '*' for part of the filename to process all conformers from a previous step in the pipeline 
     *   without any input, Flex generates free peptide chains
     *   use this command for attaching flexible peptide chains or linkers to existing structures
     *   in pipelines, use this command after previous Flex or FlexRNA modules
+    *   by default, protons are removed in order to avoid ensemble inconsistency arising from different protonation states of individual conformers
 	
 ``expand``
 ---------------------------------

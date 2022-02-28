@@ -69,6 +69,7 @@ pre_max_Gamma2 = 170;
 
 run_fit = true;
 plot_result = false;
+stripH = true;
 initial_ensemble = '';
 added_conformers = '';
 opt.threshold = 0.01; % conformers wih population below this threshold are discarded
@@ -125,6 +126,9 @@ for d = 1:length(control.directives)
             opt.blocksize = str2double(control.directives(d).options{1});
         case 'addpdb'
             added_conformers = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 && strcmpi(control.directives(d).options{2},'protons')
+                stripH = false;
+            end
         case 'plotgroup'
             pg_poi = pg_poi + 1;
             colname = control.directives(d).options{1};
@@ -459,12 +463,12 @@ for c = 1:C
         if isfield(properties,'entity')
             entity = properties.entity;
         else
-            entity = get_pdb(fname0);
+            entity = get_pdb(fname0,stripH);
         end
     else
         clear properties
         properties.initialized = true;
-        entity = get_pdb(fname0);
+        entity = get_pdb(fname0,stripH);
     end
     block_offset = 0;
     for ddr_poi = 1:length(restraints.ddr)

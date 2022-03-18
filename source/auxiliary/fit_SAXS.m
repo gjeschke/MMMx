@@ -63,11 +63,11 @@ end
 poi = strfind(pdbfile,'.pdb');
 if isempty(poi)
     outname = strcat(pdbfile,'00.fit');
-    to_be_deleted = strcat(pdbfile,'00*.*');
+    to_be_deleted = strcat(pdbfile,'00');
     pdbfile = strcat(pdbfile,'.pdb');
 else
     outname = [pdbfile(1:poi-1) '00.fit'];
-    to_be_deleted = strcat(pdbfile(1:poi-1),'00*.*');
+    to_be_deleted = strcat(pdbfile(1:poi-1),'00');
 end
 
 if ~isfield(options,'crysol3') || ~options.crysol3
@@ -175,7 +175,8 @@ fit = fit(poi+1:end,:);
 fclose(fid);
 
 if isfield(options,'delete') && options.delete
-    delete(to_be_deleted);
+    delete(strcat(to_be_deleted,'.log'));
+    delete(strcat(to_be_deleted,'.fit'));
 end
 
 function curve = load_SAXS_curve(fname)

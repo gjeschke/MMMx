@@ -19,6 +19,7 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 %           .name   optional name for the entity, defaults: PDB identifier
 %                   upon download or if header line exists; MMMx otherwise
 %           .stripH Boolean flag indcating that protons should be removed,
+%                   that are not expected to be always attached
 %                   needed to generate consistent ensembles, defaults to
 %                   false
 % entity    optional, if present, models from the PDB file are added as
@@ -40,6 +41,7 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 maxatoms = 1000000;
 maxwater = 100000;
 maxmodels = 100000;
+resdefs = load('monomers.mat');
 
 % initialize empty outputs
 if ~exist('entity','var')
@@ -55,8 +57,10 @@ if ~exist('options','var') || isempty(options) || ~isfield(options,'dssp') || ..
         isempty(options.dssp)
     options.dssp = false;
 end
-if ~isfield(options,'stripH')
+if ~isfield(options,'stripH') || isempty(options.stripH)
     options.stripH = false;
+elseif options.stripH
+    min_atoms = load('minimal_protonation.mat');
 end
 
 % placeholder for downloaded file later to be deleted
@@ -196,17 +200,8 @@ while 1
             curr_resnum = 0; % current residue number
             offset = 0; % residue number offset to avoid negative residue numbers
         end
-        if length(tline) >= 78
-            element = strtrim(tline(77:78));
-        else
-            element = get_element_by_atomname(atname0);
-        end
-        if element == 1 && options.stripH
-            continue
-        end
-        atoms = atoms + 1;
-        atname = strtrim(upper(tline(13:16)));
         atname0 = tline(13:16);
+        atname = strtrim(upper(tline(13:16)));
         for kk = 1:length(atname)
             if atname(kk) == ''''
                 atname(kk) = '_';
@@ -218,8 +213,21 @@ while 1
         if ~isstrprop(atname(1),'alpha')
             atname = strcat('Z_',atname);
         end
-        altloc = tline(17);
+        if length(tline) >= 78
+            element = strtrim(tline(77:78));
+        else
+            element = get_element_by_atomname(atname0);
+        end
+        elm_num = element_number(element);
         resname = strtrim(tline(18:20));
+        if options.stripH && elm_num == 1
+            canonical = find_proton(resname,atname,min_atoms);
+            if ~canonical
+                continue
+            end
+        end
+        atoms = atoms + 1;
+        altloc = tline(17);
         if ~contains(chains,chain)
             chains = strcat(chains,chain);
         end
@@ -467,3 +475,19 @@ if element(1) == '#'
     element = element(2:end);
 end
 
+function canonical = find_proton(resname,atname,min_atoms)
+% checks whether a proton is canonical, if the residue is not an amino
+% acid or nucleic acid, the proton is assumed to be canonical
+
+canonical = 0;
+if isfield(min_atoms.minimal_atoms,resname)
+    pattern = fieldnames(min_atoms.minimal_atoms.(resname));
+    for kp = 1:length(pattern)
+        this_atom = pattern{kp};
+        if strcmp(atname,this_atom)
+            canonical = min_atoms.minimal_atoms.(resname).(this_atom);
+        end
+    end
+else
+    canonical = 1;
+end

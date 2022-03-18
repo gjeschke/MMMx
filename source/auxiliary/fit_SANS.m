@@ -57,10 +57,10 @@ poi = strfind(pdbfile,'.pdb');
 if isempty(poi)
     outname = strcat(pdbfile,'00.fit');
     pdbfile = strcat(pdbfile,'.pdb');
-    to_be_deleted = strcat(pdbfile,'00*.*');
+    to_be_deleted = strcat(pdbfile,'00*');
 else
     outname = [pdbfile(1:poi-1) '00.fit'];
-    to_be_deleted = strcat(pdbfile(1:poi-1),'00*.*');
+    to_be_deleted = strcat(pdbfile(1:poi-1),'00*');
 end
 
 s = which_third_party_module('cryson');
@@ -152,5 +152,6 @@ end
 fclose(fid);
 
 if isfield(options,'delete') && options.delete
-    delete(to_be_deleted);
+    delete(strcat(to_be_deleted,'.log'));
+    delete(strcat(to_be_deleted,'.fit'));
 end

@@ -46,6 +46,7 @@ function [entity,exceptions,failed] = module_ensemble_analysis(control,logfid)
 % sort          sort ensemble
 % subsample     reduce ensemble (from a trajectory) by subsampling
 % superimpose   superimpose conformers
+% save          saves ensemble in a single PDB file
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -155,7 +156,16 @@ for d = 1:length(control.directives)
                     cmd.oriented = true;
                 end
             end
-            commands{cmd_poi} = cmd;            
+            commands{cmd_poi} = cmd;
+        case 'save'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % flexibility analysis is performed for current entity
+            end
+            commands{cmd_poi} = cmd;
         case 'measures'
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
@@ -481,6 +491,27 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'save'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            exceptions0 = put_pdb(c_entity,cmd.outname);
+            for exci = 1:length(exceptions0)
+                if ~isempty(exceptions0{exci})
+                    warnings = warnings +1;
+                    exceptions{warnings} = exceptions0{exci};
+                    record_exception(exceptions{warnings},logfid);
+                end
+            end
         case 'measures'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;

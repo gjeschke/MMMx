@@ -221,6 +221,34 @@ for d = 1:length(control.directives)
             cmd.pair_lists = pair_lists(1:pl_poi);
             cmd.site_pairs = site_pairs(1:sp_poi,:);
             commands{cmd_poi} = cmd;            
+        case 'trivariate'
+            cmd_poi = cmd_poi + 1;
+            cmd.label = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % distributions are computed for current entity
+            end
+            if length(control.directives(d).options) > 2 % basis ouput file name is provided
+                cmd.fname = control.directives(d).options{3};
+            else
+                cmd.fname = 'MMMx_distribution'; % default basis output file name
+            end
+            [n,narg] = size(control.directives(d).block);
+            site_triples = cell(n,3);
+            sp_poi = 0;
+            % record site lists and site pairs for which distributions
+            % should be computed
+            for k = 1:n
+                if narg > 1 % argument list contains some site triples
+                    sp_poi = sp_poi + 1;
+                    site_triples{sp_poi,1} = control.directives(d).block{k,1};
+                    site_triples{sp_poi,2} = control.directives(d).block{k,2};
+                    site_triples{sp_poi,3} = control.directives(d).block{k,3};
+                end
+            end
+            cmd.site_triples = site_triples(1:sp_poi,:);
+            commands{cmd_poi} = cmd;            
         case 'enmpairs'
             cmd_poi = cmd_poi + 1;
             cmd.sitescan = control.directives(d).options{1};
@@ -382,9 +410,10 @@ for c = 1:cmd_poi
             if length(labels) == 1
                 labels{2} = labels{1};
             end
-            for p = 1:length(cmd.site_pairs)
+            [pairs,~] = size(cmd.site_pairs);
+            for p = 1:pairs
                c_entity =  mk_distribution(c_entity,cmd.site_pairs{p,1},labels{1},cmd.site_pairs{p,2},labels{2},...
-                   cmd.fname,figures,figure_basname);
+                   cmd.fname,figures,cmd.fname);
             end
             labels0 = labels;
             for l = 1:length(cmd.pair_lists)
@@ -399,8 +428,36 @@ for c = 1:cmd_poi
                 end
                 for p = 1:length(pairs)
                     c_entity =  mk_distribution(c_entity,pairs(p).address1,labels{1},...
-                        pairs(p).address2,labels{2},cmd.fname,figures,figure_basname);
+                        pairs(p).address2,labels{2},cmd.fname,figures,cmd.fname);
                 end
+            end
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'trivariate'
+            c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+            if isempty(c_entity)
+                warnings = warnings +1;
+                exceptions{warnings} = MException('module_experiment_design:entity_unknown',...
+                    'tried to compute trivariate distance distribution for entity %s, which is unknown',cmd.entity);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            if save_figures
+                figures = figure_format;
+            else
+                figures = '';
+            end
+            labels = split(cmd.label,'|');
+            if length(labels) == 1
+                labels{2} = labels{1};
+                labels{3} = labels{1};
+            end
+            [triples,~] = size(cmd.site_triples);
+            for p = 1:triples
+               c_entity =  mk_trivariate(c_entity,cmd.site_triples{p,1},labels{1},cmd.site_triples{p,2},labels{2},...
+                   cmd.site_triples{p,3},labels{3},cmd.fname,figures,cmd.fname);
             end
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
@@ -597,6 +654,105 @@ if ~isempty(r_axis) && ~isempty(distribution)
     axis([r_min,r_max,-0.05*max(distribution),1.05*max(distribution)]);
     data = [ r_axis' distribution'];
     writematrix(data,filename);
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
+end
+
+function entity = mk_trivariate(entity,site1,label1,site2,label2,site3,label3,fname,figures,figname)
+
+[~,site1] = split_conformer_site(site1);
+[~,site2] = split_conformer_site(site2);
+[~,site3] = split_conformer_site(site3);
+filename = sprintf('%s_%s_%s-%s_%s-%s_%s.mat',fname,site1,label1,site2,label2,site3,label3);
+[r_axes,trivariate,entity] = trivariate_distribution(entity,site1,label1,site2,label2,site3,label3);
+if ~isempty(r_axes) && ~isempty(trivariate) 
+    % normalize trivariate distribution
+    trivariate = trivariate/sum(sum(sum(trivariate)));
+    voxel_volume = (r_axes{1}(2)-r_axes{1}(1))*(r_axes{2}(2)-r_axes{2}(1))*(r_axes{3}(2)-r_axes{3}(1));
+    trivariate = trivariate/voxel_volume;
+    % save distribution and axes
+    r_axis_1 = r_axes{1};
+    r_axis_2 = r_axes{2};
+    r_axis_3 = r_axes{3};
+    save(filename,'r_axis_1','r_axis_2','r_axis_3','trivariate');
+    % correlation a,b
+    tag = sprintf('%s.%s-%s.%s|%s.%s-%s.%s',site1,label1,site2,label2,site1,label1,site3,label3);
+    figfilename = sprintf('%s_%s_%s-%s_%s_corr_%s_%s-%s_%s.%s',figname,site1,label1,site2,label2,site1,label1,site3,label3,figures);
+    h = figure;
+    bivariate = squeeze(sum(trivariate,3));
+    contourf(r_axis_1,r_axis_2,bivariate);
+    colormap(hot);
+    colormap(flipud(colormap));
+    title(tag);
+    xlabel(sprintf('distance %s.%s (%s)',site1,site2,char(197)));
+    ylabel(sprintf('distance %s.%s (%s)',site1,site3,char(197)));
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
+    tag = sprintf('%s.%s-%s.%s',site1,label1,site2,label2);
+    figfilename = sprintf('%s_%s_%s-%s_%s.%s',figname,site1,label1,site2,label2,figures);
+    h = figure;
+    univariate = sum(bivariate,2);
+    univariate = univariate/sum(univariate);
+    univariate = univariate/(r_axis_1(2)-r_axis_1(1));
+    plot(r_axis_1,univariate,'k','LineWidth',1);
+    title(tag);
+    xlabel(sprintf('distance %s.%s (%s)',site1,site2,char(197)));
+    ylabel(sprintf('probability density (%s^{-1})',char(197)));
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
+    figfilename = sprintf('%s_%s_%s-%s_%s.%s',figname,site1,label1,site3,label3,figures);
+    h = figure;
+    univariate = sum(bivariate,1);
+    univariate = univariate/sum(univariate);
+    univariate = univariate/(r_axis_2(2)-r_axis_2(1));
+    plot(r_axis_2,univariate,'k','LineWidth',1);
+    title(tag);
+    xlabel(sprintf('distance %s.%s (%s)',site1,site3,char(197)));
+    ylabel(sprintf('probability density (%s^{-1})',char(197)));
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
+    % correlation a,c
+    tag = sprintf('%s.%s-%s.%s|%s.%s-%s.%s',site1,label1,site2,label2,site2,label2,site3,label3);
+    figfilename = sprintf('%s_%s_%s-%s_%s_corr_%s_%s-%s_%s.%s',figname,site1,label1,site2,label2,site2,label2,site3,label3,figures);
+    h = figure;
+    bivariate = squeeze(sum(trivariate,2));
+    contourf(r_axis_1,r_axis_3,bivariate);
+    colormap(hot);
+    colormap(flipud(colormap));
+    title(tag);
+    xlabel(sprintf('distance %s.%s (%s)',site1,site2,char(197)));
+    ylabel(sprintf('distance %s.%s (%s)',site2,site3,char(197)));
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
+    tag = sprintf('%s.%s-%s.%s',site2,label2,site3,label3);
+    figfilename = sprintf('%s_%s_%s-%s_%s.%s',figname,site2,label2,site3,label3,figures);
+    h = figure;
+    univariate = sum(bivariate,1);
+    univariate = univariate/sum(univariate);
+    univariate = univariate/(r_axis_3(2)-r_axis_3(1));
+    plot(r_axis_3,univariate,'k','LineWidth',1);
+    title(tag);
+    xlabel(sprintf('distance %s.%s (%s)',site2,site3,char(197)));
+    ylabel(sprintf('probability density (%s^{-1})',char(197)));
+    if ~isempty(figures)
+        saveas(h,figfilename);
+    end
+    % correlation b,c
+    tag = sprintf('%s.%s-%s.%s|%s.%s-%s.%s',site1,label1,site3,label3,site2,label2,site3,label3);
+    figfilename = sprintf('%s_%s_%s-%s_%s_corr_%s_%s-%s_%s.%s',figname,site1,label1,site3,label3,site2,label2,site3,label3,figures);
+    h = figure;
+    bivariate = squeeze(sum(trivariate,1));
+    contourf(r_axis_2,r_axis_3,bivariate);
+    colormap(hot);
+    colormap(flipud(colormap));
+    title(tag);
+    xlabel(sprintf('distance %s.%s (%s)',site1,site3,char(197)));
+    ylabel(sprintf('distance %s.%s (%s)',site2,site3,char(197)));
     if ~isempty(figures)
         saveas(h,figfilename);
     end

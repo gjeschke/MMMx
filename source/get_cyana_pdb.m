@@ -1,17 +1,17 @@
 function [entity,exceptions] = get_cyana_pdb(fname,options,entity)
 %
-% GET_CYANA_PDB Load structure from CYANA pseudo-PDB file
+% GET_CYANA_PDB Load structure from CYANA dialect PDB file
 %
 %   [entity,exceptions] = GET_CYANA_PDB(fname)
 %   Returns an (entity) structure in MMMx:atomic representation
 %
 %   [entity,exceptions] = GET_CYANA_PDB(fname,options)
 %   Reads topology and Cartesian coordinates of a biological entity
-%   from a CYANA pseudo-PDB file
+%   from a CYANA dialect PDB file
 %
 %   [entity,exceptions] = GET_CYANA_PDB(fname,options,entity)
 %   Adds Cartesian coordinates of a conformer to an input biological entity
-%   by reading from a CYANA pseudo-PDB file
+%   by reading from a CYANA dialect PDB file
 %
 % INPUT
 % ident     PDB identifier, if four characters without extension, otherwise
@@ -33,10 +33,28 @@ function [entity,exceptions] = get_cyana_pdb(fname,options,entity)
 %              errors but not for warnings, for warnings, only the last one
 %              is reported, cell containing an empty array, if no exception
 %
+% Realization:
+%
+% -     the reader skips residue types that are introduced purely for
+%       restraint-based optimization purposes:
+%       PL, NL, ML, LL, LL2, LLL, LL5, LP, LN, LM,ION, ORI
+% -     the reader converts modified CYS residues to CYS:
+%       CYSS, CYSM
+% -     the reader converts non-standard nucleotide rseidue names to
+%       standard names:
+%       RADE to A
+%       RCYT to C
+%       RGUA to G
+%       URA  to U
+%       ADE to DA
+%       CYT to DC
+%       GUA to DG
+%       THY to DT
+
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 %
-% G. Jeschke, 2021
+% G. Jeschke, 2021-2022
 
 exceptions{1} = [];
 warnings = 0; % counter for warnings
@@ -53,8 +71,6 @@ maxchain = 26;
 if isfield(options,'maxch') && ~isempty(options.maxch)
     maxchain = options.maxch;
 end
-
-skipmode = true;
 
 if ~contains(fname,'.')
     ifid = fopen(strcat(fname,'.pdb'));
@@ -81,56 +97,58 @@ chain_tags = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
 cres = -1000;
 chain = 0;
 atnum = 0;
-plnum = 0;
-ll5num = 0;
-lnnum = 0;
-orinum = 0;
-nlnum = 0;
-lpnum = 0;
+is_atom_line = false;
 while 1 && chain <= maxchain
     tline = fgetl(ifid);
     if ~ischar(tline), break, end
-    if length(tline)<26 % catches too short end line of MolProbity files
+    if length(tline)<26 % catches too short lines
+        if length(tline) >= 6
+            record = tline(1:6);
+            if strcmp(record,'MODEL ')
+                cres = -1000;
+                chain = 0;
+                atnum = 0;
+            end
+        end
         fprintf(ofid,'%s\n',tline);
     else
-        resnum = str2double(tline(23:26));
-        if resnum > 531
-            tline(22) = 'B';
-        end
         record = tline(1:6);
-        if strcmp(record,'ATOM  ') && skipmode
-            chainid = tline(22);
-            resnum = str2double(tline(23:26));
-            skip = true;
-            if chainid == 'A' && resnum >= 58 && resnum <= 531
-                skip = false;
-            end
-            if chainid == 'B' && resnum >= 288+315 && resnum <= 370+315
-                skip = false;
-            end
-            if skip
-                continue;
-            end
-        end
         restype = tline(18:21);
         switch restype
             case ' PL '
                 skipped = true;
-            case 'LL5 '
-                skipped = true;
             case ' LN '
+                skipped = true;
+            case ' ML '
                 skipped = true;
             case ' NL '
                 skipped = true;
+            case 'LL2 '
+                skipped = true;
+            case 'LL5 '
+                skipped = true;
+            case 'LLL '
+                skipped = true;
             case ' LP '
+                skipped = true;
+            case ' LL '
+                skipped = true;
+            case ' LM '
+                skipped = true;
+            case 'ION '
                 skipped = true;
             case 'ORI '
                 skipped = true;
             otherwise
                 skipped = false;
         end
-        % fprintf(1,'%s\n',record);
+        if strcmp(record,'MODEL ')
+            cres = -1000;
+            chain = 0;
+            atnum = 0;
+        end
         if strcmp(record,'ATOM  ') || strcmp(record,'HETATM')
+            is_atom_line = true;
             resnum = str2double(tline(23:26));
             if resnum ~= cres && resnum ~= cres + 1 && ~skipped
                 if chain > 0 % insert chain termination record
@@ -151,10 +169,6 @@ while 1 && chain <= maxchain
             atnum = atnum + 1;
             tline(7:11) = sprintf('%5i',atnum);
             tline(22) = chain_tags(chain);
-            resnum0 = str2double(tline(24:26));
-            if tline(22) == 'B'
-                tline(24:26) = sprintf('%i',resnum0-315);
-            end
             if strcmp(record,'HETATM')
                 cres = resnum;
                 fprintf(ofid,'%s\n',tline);
@@ -162,24 +176,30 @@ while 1 && chain <= maxchain
                 restype = tline(18:21);
                 switch restype
                     case ' PL '
-                        plnum = plnum + 1;
                         atnum = atnum - 1;
-                    case 'LL5 '
-                        ll5num = ll5num + 1;
-                        atnum = atnum - 1;
-                    case ' LN '
-                        lnnum = lnnum + 1;
+                    case ' ML '
                         atnum = atnum -1;
                     case ' NL '
-                        nlnum = nlnum + 1;
+                        atnum = atnum -1;
+                    case ' LL '
+                        atnum = atnum -1;
+                    case 'LL2 '
+                        atnum = atnum - 1;
+                    case 'LLL '
+                        atnum = atnum - 1;
+                    case 'LL5 '
+                        atnum = atnum - 1;
+                    case ' LN '
                         atnum = atnum -1;
                     case ' LP '
-                        lpnum = lpnum + 1;
+                        atnum = atnum -1;
+                    case ' LM '
+                        atnum = atnum -1;
+                    case 'ION '
                         atnum = atnum -1;
                     case 'ORI '
-                        orinum = orinum + 1;
                         atnum = atnum -1;
-                   case 'RGUA'
+                    case 'RGUA'
                         tline(18:21) = '  G ';
                         cres = resnum;
                         fprintf(ofid,'%s\n',tline);
@@ -195,14 +215,44 @@ while 1 && chain <= maxchain
                         tline(18:21) = '  C ';
                         cres = resnum;
                         fprintf(ofid,'%s\n',tline);
+                    case 'ADE '
+                        tline(18:21) = ' DA ';
+                        cres = resnum;
+                        fprintf(ofid,'%s\n',tline);
+                    case 'CYT '
+                        tline(18:21) = ' DC ';
+                        cres = resnum;
+                        fprintf(ofid,'%s\n',tline);
+                    case 'GUA '
+                        tline(18:21) = ' DG ';
+                        cres = resnum;
+                        fprintf(ofid,'%s\n',tline);
+                    case 'THY '
+                        tline(18:21) = ' DT ';
+                        cres = resnum;
+                        fprintf(ofid,'%s\n',tline);
+                    case {'CYSS','CYSM'}
+                        tline(18:21) = 'CYS ';
+                        cres = resnum;
+                        switch tline(13:16)
+                            case {' C  ',' O  ',' N  ',' H  ',' CA ',' HA ',' CB ',' HB2',' HB3',' SG '}
+                                fprintf(ofid,'%s\n',tline);
+                            otherwise
+                                atnum = atnum - 1;
+                        end
                     otherwise
                         cres = resnum;
                         fprintf(ofid,'%s\n',tline);
                 end
             end
+        else
+            is_atom_line = false;
         end
     end
-    if ~skipped
+    if strcmp(record,'TER   ')
+        fprintf(ofid,'%s\n',tline);
+    end
+    if ~skipped && is_atom_line
         tline0 = tline;
     end
 end

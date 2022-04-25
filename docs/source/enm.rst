@@ -15,7 +15,7 @@ Input of a raw ensemble (uniform populations) by reading a single PDB file.
     getpdb file
 
 Arguments
-    *   ``file`` - file name
+    *   ``file`` - file name or PDB identifier, must have extension '.pdb' if it specifies a file
 Remarks
     *   the PDB file can contain several models (conformers) or a single one, by default, the first conformer is used
 	

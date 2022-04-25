@@ -181,6 +181,33 @@ Remarks
     *   in the block you can specify as many site pairs and pair lists as you wish
     *   labels specified in the pair list(s) prevail over labels specified in the command, if these are inconsistent, it is reported in the log file
     *   if the same label is used at both sites, just provide this one; for orthogonal labeling, use the syntax ``label_1|label_2``
+    *   if residue addresses do not contain a conformer specification, the distribution corresponds to all conformers
+
+``trivariate``
+---------------------------------
+
+Compute and save trivariate distance distributions and plot their 2D and 1D sum projections for site triples. This is a block key.
+
+.. code-block:: matlab
+
+    trivariate labels entity outname
+       'address_1' 'address_2' 'address_3'
+       []
+    .trivariate	
+
+Arguments
+    *   ``labels`` - label or labels for specified site triples, see :ref:`Rotamer libraries <rotamer_concept>` for list of available labels 
+    *   ``entity`` - entity identifier specified in any of the input commands
+    *   ``outname`` - basis file name for the output distributions and plots
+    *   ``address_1`` - MMMx :ref:`residue address <MMMx_addresses>` for first site
+    *   ``address_2`` - MMMx :ref:`residue address <MMMx_addresses>` for second site
+    *   ``address_3`` - MMMx :ref:`residue address <MMMx_addresses>` for third site
+Remarks
+    *   in the block you can specify as many site triples as you wish
+    *   if the same label is used at both sites, just provide this one; for orthogonal labeling, use the syntax ``label_1|label_2|label_3``
+    *   output is large and thus in a binary Matlab file, variables are 'trivariate' for the 3D array and r_axis_1, 'r_axis_2', 'r_axis_3' for the three distance axes
+    *   sequence of dimensions is 'site1-site2', 'site1-site3', 'site2-site3'
+    *   use 'scipy.io.loadmat' from the SciPy library for importing to Python
 
 ``ENMpairs``
 ---------------------------------

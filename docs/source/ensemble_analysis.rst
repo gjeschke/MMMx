@@ -172,9 +172,10 @@ Superposition of conformers in an ensemble
 
 .. code-block:: matlab
 
-    superimpose input [range [template [template_range [mode]]]]
+    superimpose output input [range [template [template_range [mode]]]]
 
 Arguments
+    *   ``output`` - name of the output file, extension '.pdb' is appended, if none
     *   ``input`` - identifier of the input ensemble
     *   ``range`` - optional MMMx address that specifies only a range of a conformer for analysis, e.g. `(A)187-320`
     *   ``template`` - template ensemble or structure (optional)
@@ -184,6 +185,21 @@ Remarks
     *   by default, superposition is to the first conformer of the input ensemble if no range is provided
     *   if a template and central are specified, superposition is to central conformer of a superensemble consisting of input and template
     *   the range argument '(*)' selects the complete structure
+	
+``save``
+---------------------------------
+
+Save ensemble to a single PDB file  
+
+.. code-block:: matlab
+
+    save output ensemble_id
+
+Arguments
+    *   ``output`` - name of the output file, extension '.pdb' is appended, if none
+    *   ``ensemble_id`` - identifier of the ensemble to be save
+Remarks
+    *   populations are stored in a REMARK 400 field
   
 ``compare``
 ---------------------------------

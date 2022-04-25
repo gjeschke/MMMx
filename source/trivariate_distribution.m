@@ -85,7 +85,7 @@ if ~isempty(si) && ~isempty(ei)
     confstr = site1(si+1:ei-1);
     residue1 = [site1(1:si-1) site1(ei+1:end)];
 else
-    confstr = '1';
+    confstr = '*';
     residue1 = site1;
 end
 if strcmp(strtrim(confstr),'*')
@@ -149,7 +149,7 @@ if ~isempty(si) && ~isempty(ei)
     confstr = site2(si+1:ei-1);
     residue2 = [site2(1:si-1) site2(ei+1:end)];
 else
-    confstr = '1';
+    confstr = '*';
     residue2 = site2;
 end
 if strcmp(strtrim(confstr),'*')
@@ -206,14 +206,14 @@ if ~isempty(confstr)
     conformers2 = conformers2(1:cpoi);
 end
 
-% extract conformer selection of site32 if any, set default, if none
+% extract conformer selection of site3 if any, set default, if none
 si = strfind(site3,'{');
 ei = strfind(site3,'}');
 if ~isempty(si) && ~isempty(ei)
     confstr = site3(si+1:ei-1);
     residue3 = [site3(1:si-1) site3(ei+1:end)];
 else
-    confstr = '1';
+    confstr = '*';
     residue3 = site3;
 end
 if strcmp(strtrim(confstr),'*')

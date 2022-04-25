@@ -85,7 +85,7 @@ if ~isempty(si) && ~isempty(ei)
     confstr = site1(si+1:ei-1);
     residue1 = [site1(1:si-1) site1(ei+1:end)];
 else
-    confstr = '1';
+    confstr = '*';
     residue1 = site1;
 end
 if strcmp(strtrim(confstr),'*')
@@ -149,7 +149,7 @@ if ~isempty(si) && ~isempty(ei)
     confstr = site2(si+1:ei-1);
     residue2 = [site2(1:si-1) site2(ei+1:end)];
 else
-    confstr = '1';
+    confstr = '*';
     residue2 = site2;
 end
 if strcmp(strtrim(confstr),'*')

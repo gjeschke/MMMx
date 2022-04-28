@@ -1,0 +1,606 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Demo Rigi &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Demo FlexRNA" href="demo_FlexRNA.html" />
+    <link rel="prev" title="Demo Prepare" href="demo_Prepare.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source_installation.html">Source-code version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executable_installation.html">Executable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#windows-path">Windows path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="experiment_design.html">ExperimentDesign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#plot"><code class="docutils literal notranslate"><span class="pre">plot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#sitescan-sitescan"><code class="docutils literal notranslate"><span class="pre">sitescan</span></code>, <code class="docutils literal notranslate"><span class="pre">sitescan!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#pairlist-pairlist"><code class="docutils literal notranslate"><span class="pre">pairlist</span></code>, <code class="docutils literal notranslate"><span class="pre">pairlist!</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#hetpairlist"><code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#distributions"><code class="docutils literal notranslate"><span class="pre">distributions</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#trivariate"><code class="docutils literal notranslate"><span class="pre">trivariate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#enmpairs"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#id1"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="experiment_design.html#rbreference"><code class="docutils literal notranslate"><span class="pre">RBreference</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="prepare.html">Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getcyana"><code class="docutils literal notranslate"><span class="pre">getcyana</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#center"><code class="docutils literal notranslate"><span class="pre">center</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#symmetry"><code class="docutils literal notranslate"><span class="pre">symmetry</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#bilayer"><code class="docutils literal notranslate"><span class="pre">bilayer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#mutate"><code class="docutils literal notranslate"><span class="pre">mutate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repair"><code class="docutils literal notranslate"><span class="pre">repair</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#deselenate"><code class="docutils literal notranslate"><span class="pre">deselenate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#renumber"><code class="docutils literal notranslate"><span class="pre">renumber</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#chains"><code class="docutils literal notranslate"><span class="pre">chains</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#replace"><code class="docutils literal notranslate"><span class="pre">replace</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#merge"><code class="docutils literal notranslate"><span class="pre">merge</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="rigi.html">Rigi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#rbtemplate"><code class="docutils literal notranslate"><span class="pre">rbtemplate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#rigid"><code class="docutils literal notranslate"><span class="pre">rigid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#nlink"><code class="docutils literal notranslate"><span class="pre">nlink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#plink"><code class="docutils literal notranslate"><span class="pre">plink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#xlink"><code class="docutils literal notranslate"><span class="pre">xlink</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#maxtrials"><code class="docutils literal notranslate"><span class="pre">maxtrials</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#maxtime"><code class="docutils literal notranslate"><span class="pre">maxtime</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#models"><code class="docutils literal notranslate"><span class="pre">models</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#xl-percentage"><code class="docutils literal notranslate"><span class="pre">xl_percentage</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#separate-off"><code class="docutils literal notranslate"><span class="pre">separate</span> <span class="pre">off</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#savepdb"><code class="docutils literal notranslate"><span class="pre">savepdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#maxsize"><code class="docutils literal notranslate"><span class="pre">maxsize</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#parallel"><code class="docutils literal notranslate"><span class="pre">parallel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#probability"><code class="docutils literal notranslate"><span class="pre">probability</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="rigi.html#resolution"><code class="docutils literal notranslate"><span class="pre">resolution</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex.html">Flex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#sequence"><code class="docutils literal notranslate"><span class="pre">sequence</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#n-anchor"><code class="docutils literal notranslate"><span class="pre">n_anchor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#c-anchor"><code class="docutils literal notranslate"><span class="pre">c_anchor</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#oligomer"><code class="docutils literal notranslate"><span class="pre">oligomer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#depth"><code class="docutils literal notranslate"><span class="pre">depth</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#a-prop"><code class="docutils literal notranslate"><span class="pre">a_prop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#b-prop"><code class="docutils literal notranslate"><span class="pre">b_prop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#c-prop"><code class="docutils literal notranslate"><span class="pre">c_prop</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#verbose"><code class="docutils literal notranslate"><span class="pre">verbose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#acceptance"><code class="docutils literal notranslate"><span class="pre">acceptance</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#skipto"><code class="docutils literal notranslate"><span class="pre">skipto</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#parallel"><code class="docutils literal notranslate"><span class="pre">parallel</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#loose"><code class="docutils literal notranslate"><span class="pre">loose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#clashtest"><code class="docutils literal notranslate"><span class="pre">clashtest</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex_RNA.html">FlexRNA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#sequence"><code class="docutils literal notranslate"><span class="pre">sequence</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#anchor-5p"><code class="docutils literal notranslate"><span class="pre">anchor_5p</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#anchor-3p"><code class="docutils literal notranslate"><span class="pre">anchor_3p</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex_RNA.html#skipto"><code class="docutils literal notranslate"><span class="pre">skipto</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="enm.html">ENM</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#conformer"><code class="docutils literal notranslate"><span class="pre">conformer</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#chains"><code class="docutils literal notranslate"><span class="pre">chains</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#drag"><code class="docutils literal notranslate"><span class="pre">drag</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#ensemble"><code class="docutils literal notranslate"><span class="pre">ensemble</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="enm.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_fit.html">EnsembleFit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#pre"><code class="docutils literal notranslate"><span class="pre">pre</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#prerate"><code class="docutils literal notranslate"><span class="pre">prerate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#sans"><code class="docutils literal notranslate"><span class="pre">sans</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#saxs"><code class="docutils literal notranslate"><span class="pre">saxs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#nofit"><code class="docutils literal notranslate"><span class="pre">nofit</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#rmean"><code class="docutils literal notranslate"><span class="pre">rmean</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#blocksize"><code class="docutils literal notranslate"><span class="pre">blocksize</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#interactive"><code class="docutils literal notranslate"><span class="pre">interactive</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#plot"><code class="docutils literal notranslate"><span class="pre">plot</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#figures"><code class="docutils literal notranslate"><span class="pre">figures</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#plotgroup"><code class="docutils literal notranslate"><span class="pre">plotgroup</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_analysis.html">EnsembleAnalysis</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#subsample"><code class="docutils literal notranslate"><span class="pre">subsample</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#figures"><code class="docutils literal notranslate"><span class="pre">figures</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#sort"><code class="docutils literal notranslate"><span class="pre">sort</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#measures"><code class="docutils literal notranslate"><span class="pre">measures</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#flexibility"><code class="docutils literal notranslate"><span class="pre">flexibility</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#order"><code class="docutils literal notranslate"><span class="pre">order</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#density"><code class="docutils literal notranslate"><span class="pre">density</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_analysis.html#compare"><code class="docutils literal notranslate"><span class="pre">compare</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="locate.html">Locate</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="locate.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="locate.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="locate.html#reference"><code class="docutils literal notranslate"><span class="pre">reference</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="locate.html#grid"><code class="docutils literal notranslate"><span class="pre">grid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="locate.html#cube"><code class="docutils literal notranslate"><span class="pre">cube</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#console"><code class="docutils literal notranslate"><span class="pre">console</span></code></a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Input/output concept</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_list.html">Ensemble lists</a></li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Third-party software</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="third_party.html">Third-party software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#scwrl4">SCWRL4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#atsas">ATSAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#muscle">MUSCLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#msms">MSMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#hydropro">HYDROPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#dssp">DSSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#yasara">YASARA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Open concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-open-data-concept">Open source/ open data concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#branched-pipeline-concept">Branched pipeline concept</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="demo_ExperimentDesign.html">Demo ExperimentDesign</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="demo_ExperimentDesign.html#modules-used">Modules used</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_ExperimentDesign.html#source-code">Source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_ExperimentDesign.html#functionality">Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_ExperimentDesign.html#outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demo_Prepare.html">Demo Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="demo_Prepare.html#modules-used">Modules used</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_Prepare.html#source-code">Source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_Prepare.html#functionality">Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_Prepare.html#outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Demo Rigi</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#modules-used">Modules used</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#source-code">Source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#functionality">Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#outputs">Outputs</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="demo_FlexRNA.html">Demo FlexRNA</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="demo_FlexRNA.html#modules-used">Modules used</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_FlexRNA.html#source-code">Source code</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_FlexRNA.html#functionality">Functionality</a></li>
+<li class="toctree-l2"><a class="reference internal" href="demo_FlexRNA.html#outputs">Outputs</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">License</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="license.html">Unlicense</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Demo Rigi</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="demo-rigi">
+<span id="id1"></span><h1>Demo Rigi<a class="headerlink" href="#demo-rigi" title="Permalink to this headline">¶</a></h1>
+<p>This example generates logfile <code class="docutils literal notranslate"><span class="pre">demo_rigi.log</span></code>. The logfile is automatically displayed after completion by the <code class="docutils literal notranslate"><span class="pre">#report</span></code> directive at the end.</p>
+<div class="section" id="modules-used">
+<h2>Modules used<a class="headerlink" href="#modules-used" title="Permalink to this headline">¶</a></h2>
+<p>Modules <code class="docutils literal notranslate"><span class="pre">Prepare</span></code> and <code class="docutils literal notranslate"><span class="pre">Rigi</span></code> are used.</p>
+</div>
+<div class="section" id="source-code">
+<h2>Source code<a class="headerlink" href="#source-code" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-matlabsession notranslate"><div class="highlight"><pre><span></span><span class="go">#log</span>
+
+<span class="go">!prepare</span>
+
+<span class="go">   getpdb 2MF1 RSM0</span>
+
+<span class="go">   merge RSM1 % only backbone coordinates are used for pseudo-symmetry transform</span>
+<span class="go">      RSM0 {1}(A)1-59</span>
+<span class="go">      RSM0 {1}(B)1-59</span>
+<span class="go">      RSM0 {1}(C)1-59</span>
+<span class="go">      RSM0 {1}(D)1-59</span>
+<span class="go">      RSM0 {1}(E)1-59</span>
+<span class="go">      RSM0 {1}(F)1-59</span>
+<span class="go">      RSM0 {1}(G)20-35</span>
+<span class="go">      RSM0 {1}(G)44-56</span>
+<span class="go">      RSM0 {1}(G)1-15</span>
+<span class="go">      RSM0 {1}(G)59-72</span>
+<span class="go">      RSM0 {1}(G)38-40</span>
+<span class="go">   .merge</span>
+
+<span class="go">   save RsmE_RsmZ_rigid_bodies RSM1 RSM1 % save a PDB file that contains only the rigid bodies</span>
+
+<span class="go">.prepare</span>
+
+
+<span class="go">!rigi                          % call the Rigi method</span>
+
+<span class="go">   rbtemplate RsmE_RsmZ_rigid_bodies.pdb</span>
+
+<span class="go">   separate on</span>
+
+<span class="go">   maxtrials 50000</span>
+
+<span class="go">   save RsmE_RsmZ_rba</span>
+
+<span class="go">   probability 0.5</span>
+
+<span class="go">   rigid (A) (B) (G) (H)</span>
+<span class="go">     (A)8 mtsl</span>
+<span class="go">     (A)40 mtsl</span>
+<span class="go">     (B)40 mtsl</span>
+<span class="go">   .rigid</span>
+<span class="go">   rigid (C) (D) (I) (J)</span>
+<span class="go">     (C)8 mtsl</span>
+<span class="go">     (C)40 mtsl</span>
+<span class="go">     (D)40 mtsl</span>
+<span class="go">   .rigid</span>
+<span class="go">   rigid (E) (F) (K)</span>
+<span class="go">     (E)8 mtsl</span>
+<span class="go">     (E)40 mtsl</span>
+<span class="go">     (F)40 mtsl</span>
+<span class="go">   .rigid</span>
+
+<span class="go">   ddr mtsl</span>
+<span class="go">       % 18 core restraints</span>
+<span class="go">       (A)8   (C)8    34.8  3.7 </span>
+<span class="go">       (A)8   (C)40   65.4  2.8</span>
+<span class="go">       (A)8   (D)40   66.1  3.1</span>
+<span class="go">       (A)40  (C)8    54.9  3.2</span>
+<span class="go">       (A)40  (C)40   83.8  2.5</span>
+<span class="go">       (B)40  (C)40   86.2  3.2</span>
+<span class="go">       (A)8   (E)40   20.5  2.2</span>
+<span class="go">       (A)40  (E)8    53.1  3.0</span>
+<span class="go">       (A)40  (E)40   51.5  2.9</span>
+<span class="go">       (B)40  (E)40   49.2  2.6</span>
+<span class="go">       (A)8   (F)40   21.7  2.4</span>
+<span class="go">       (A)40  (F)40   50.8  2.6</span>
+<span class="go">       (B)40  (F)40   49.0  2.4</span>
+<span class="go">       (C)8   (E)8    16.0  2.1</span>
+<span class="go">       (C)8   (E)40   46.6  2.8</span>
+<span class="go">       (D)40  (E)8    49.3  2.8</span>
+<span class="go">       (D)40  (E)40   77.8  2.6</span>
+<span class="go">       (C)40  (F)40   77.7  2.4</span>
+<span class="go">	   </span>
+<span class="go">       % 6 auxiliary protein-protein restraints</span>
+<span class="go">       (B)8   (D)40   54.0  2.9</span>
+<span class="go">       (B)8   (C)40   54.4  3.0</span>
+<span class="go">       (D)8   (F)40   49.4  3.6</span>
+<span class="go">       (C)40  (F)8    51.3  3.1</span>
+<span class="go">       (A)8   (D)8    33.6  3.4</span>
+<span class="go">       (B)40  (D)8    55.2  2.9</span>
+<span class="go">   .ddr</span>
+
+<span class="go">   nlink </span>
+<span class="go">       (I)15  (G)20  5 30 % SL1 16/ SL2 19 </span>
+<span class="go">       (G)35  (K)38  3 18 % SL2 36/ Link(2,3) 38 </span>
+<span class="go">       (K)40  (H)44  4 24 % Link(2,3) 40/ SL3 44</span>
+<span class="go">       (H)56  (J)59  3 18 % SL3 56/ SL4 59</span>
+<span class="go">   .nlink</span>
+
+<span class="go">.rigi</span>
+
+<span class="go"># report</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="functionality">
+<h2>Functionality<a class="headerlink" href="#functionality" title="Permalink to this headline">¶</a></h2>
+<p>This example reassembles the RsmE/RsmZ complex, excluding flexible RNA linkers, from its parts and from simulated distance distribution restraints.</p>
+<p>First, the prepare module is used to generate a rigid-body template containing only the copies of the RsmE protein and the RNA stemloops of RsmZ.
+To this end, structure <code class="docutils literal notranslate"><span class="pre">2MF1</span></code> is downloaded from the PDB and stored in entity <code class="docutils literal notranslate"><span class="pre">RSM0</span></code>. The six RsmE copies are chains A-F, residues 1-59. They are extracted from the first model <code class="docutils literal notranslate"><span class="pre">{1}</span></code> of this NMR structure ensemble.
+The stemloops are extracted from chain G of this model. All these parts are merged into entity <code class="docutils literal notranslate"><span class="pre">RSM1</span></code>. This entity is then saved to file <code class="docutils literal notranslate"><span class="pre">Rsme_Rsmz_rigid_bodies.pbd</span></code> with pseudo-PDB identifier <code class="docutils literal notranslate"><span class="pre">RSM1</span></code>.</p>
+<p>In the rigi module, this PDB file is specified as rigid-body template. The rigid bodies are separated from each other. A maximum number of <code class="docutils literal notranslate"><span class="pre">50000</span></code> trials is specified.
+The rigid-body arrangements are saved in MMMx-internal format to file <code class="docutils literal notranslate"><span class="pre">RsmE_RsmZ_rba.mat</span></code>. The rigid-body arrangements cover 50% of total probability.</p>
+<p>Rigid body 1 is assmebled from an RsmE dimer (chains A and B of the tempalte) and the stemlops attached to this dimer (chains G and H of the template, corresponding to (G)20-35 and (G)44-56 in PDB structure 2MF1).
+Residues 8 and 40 in chain A and residue 40 in chain B are specified as reference labelling sites with spin label <code class="docutils literal notranslate"><span class="pre">mtsl</span></code>.
+Rigid body 2 is assembled analogously. Rigid body 3 features only one stemloop.</p>
+<p>Then, 18 distance distribution restraints with mtsl labels are specified between reference sites (core restraints) and six further restraints are specified that involve equivalent sites, which are not reference sites (auxiliary restraints).
+Each restraint is specified by the mean distance and standard deviation of the distance distribution.</p>
+<p>Finally, the nucleotide links between the stemloops are specified, each by the number of nucleotide links and the maximum distance. For the maximum distance, 6 Å per nucleotide link are assumed.</p>
+</div>
+<div class="section" id="outputs">
+<h2>Outputs<a class="headerlink" href="#outputs" title="Permalink to this headline">¶</a></h2>
+<p>Outputs are the rigid-body template file <code class="docutils literal notranslate"><span class="pre">RsmE_RsmZ_rigid_bodies.pdb</span></code> and the rigid-body arrangement file <code class="docutils literal notranslate"><span class="pre">RsmE_RsmZ_rba.mat</span></code>.</p>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="demo_FlexRNA.html" class="btn btn-neutral float-right" title="Demo FlexRNA" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="demo_Prepare.html" class="btn btn-neutral float-left" title="Demo Prepare" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright UnCopyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

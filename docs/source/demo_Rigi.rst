@@ -10,6 +10,13 @@ Modules used
 
 Modules ``Prepare`` and ``Rigi`` are used.
 
+Source code
+------------
+
+.. literalinclude :: ..\..\example_set\demo_Rigi.mcx
+   :language: matlabsession
+
+
 Functionality
 ---------------------------------
 

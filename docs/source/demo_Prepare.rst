@@ -10,6 +10,13 @@ Modules used
 
 Only module ``Prepare`` is used.
 
+Source code
+------------
+
+.. literalinclude :: ..\..\example_set\demo_Prepare.mcx
+   :language: matlabsession
+
+
 Functionality
 ---------------------------------
 

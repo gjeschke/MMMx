@@ -34,7 +34,7 @@ Getting started
 
 Type ``MMMx help`` or ``MMMx docs``  to access the documentation.
 
-Type ``MMMx distributions.mcx`` to run a first example. Examples exist for all modules.
+Type ``MMMx demo_distributions_T4L.mcx`` to run a first example. Examples exist for all modules.
 
 Type just ``MMMx`` to open a file browser. You can select any MMMx control file (.mcx) to run a modeling pipeline.
 

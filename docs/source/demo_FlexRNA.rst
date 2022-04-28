@@ -10,6 +10,13 @@ Modules used
 
 Modules ``Prepare``, ``FlexRNA``, and ``YasaraRefine`` are used.
 
+Source code
+------------
+
+.. literalinclude :: ..\..\example_set\demo_FlexRNA.mcx
+   :language: matlabsession
+
+
 Functionality
 ---------------------------------
 

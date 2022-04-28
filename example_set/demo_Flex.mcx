@@ -1,0 +1,52 @@
+% MMMx Demo: Modelling of the N-terminal domain of plant light-harvesting complex LHCII
+%
+% Restraints: N. Fehr, C. Dietz, Y. Polyhach, T. von Hagens, G. Jeschke, H. Paulsen, 
+%             J. Biol. Chem. 2015, 290, 26007-26020.
+%             DOI: 10.1074/jbc.M115.669804
+
+
+#log
+
+#getpdb 2BHW_sym_no_10_13_no_water.pdb
+
+!flex 0.5 25 0.2 % coverage, number of models, maximum time
+      
+   sequence 3 13 SATTKKVASSG
+   
+   interactive
+
+   c_anchor [2BHW](A)14
+   
+   save test_LHCII_3_13 LHCN A
+   
+   ddr ia-proxyl
+       3 (A)34 26.6 16.0	
+       3 (A)59 15.0 16.6	
+       7 (A)34 26.7 16.2	
+       7 (A)59 19.2 16.9	
+       11 (A)34 24.5 15.6	
+       11 (A)59 15.0 17.3	
+   .ddr
+   
+   oligomer ia-proxyl 3
+       3 36.5 12.8	
+       4 37.2 12.1	
+       7 40.0 11.8	
+       9 43.1 13.4	
+       10 46.4 14.6 	
+       11 45.7 11.7	
+       12 49.6 13.6	
+   .oligomer
+
+   depth CA
+       3 -18.7 -35.0	
+       4 -17.5 -35.0	
+       7 -17.9 -35.0	
+       9 -17.5 -35.0	
+       10 -18.9 -35.0	
+       11 -17.3 -35.0	
+       12 -20.6 -35.0	
+   .depth
+
+.flex
+

@@ -1,0 +1,90 @@
+#log
+
+!prepare
+
+   getpdb 2MF1 RSM0
+
+   merge RSM1 
+      RSM0 {1}(A)1-59
+      RSM0 {1}(B)1-59
+      RSM0 {1}(C)1-59
+      RSM0 {1}(D)1-59
+      RSM0 {1}(E)1-59
+      RSM0 {1}(F)1-59
+      RSM0 {1}(G)20-35
+      RSM0 {1}(G)44-56
+      RSM0 {1}(G)1-15
+      RSM0 {1}(G)59-72
+      RSM0 {1}(G)38-40
+   .merge
+
+   save RsmE_RsmZ_rigid_bodies RSM1 RSM1 % save a PDB file that contains only the rigid bodies
+
+.prepare
+
+!flexrna 0.75 1 0.1 % coverage, number of models, time per model
+
+   addpdb RsmE_RsmZ_rigid_bodies
+      
+   sequence 16 19 ACAG
+   
+   save RsmE_RsmZ_SL1_SL2
+   
+   anchor_5p (I)15
+   
+   anchor_3p (G)20
+   
+.flexrna
+
+!flexrna 0.75 1 0.1 % coverage, number of models, time per model
+
+   addpdb RsmE_RsmZ_SL1_SL2_*.pdb
+      
+   sequence 36 37 UC
+   
+   save RsmE_RsmZ_SL2_Link23
+   
+   anchor_5p (I)35 % the RNA up to nt 35 is I after the previous block
+   
+   anchor_3p (K)38
+   
+.flexrna
+
+!flexrna 0.75 1 0.1 % coverage, number of models, time per model
+
+   addpdb RsmE_RsmZ_SL2_Link23_*.pdb
+      
+   sequence 41 43 ACA
+   
+   save RsmE_RsmZ_Link23_SL3
+   
+   anchor_5p (I)40
+   
+   anchor_3p (H)44
+   
+.flexrna
+
+!flexrna 0.75 1 0.1 % coverage, number of models, time per model
+
+   addpdb RsmE_RsmZ_Link23_SL3_*.pdb
+      
+   sequence 57 58 UU
+   
+   save RsmE_RsmZ_reconstructed
+   
+   anchor_5p (I)56
+   
+   anchor_3p (J)59
+   
+.flexrna
+
+!YasaraRefine 1
+
+   input RsmE_RsmZ_reconstructed_*.pdb
+      
+   save RsmE_RsmZ_reconstructed_refined
+   
+.YasaraRefine
+
+
+# report

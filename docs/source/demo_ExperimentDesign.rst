@@ -10,6 +10,13 @@ Modules used
 
 Only module ``ExperimentDesign`` is used.
 
+Source code
+------------
+
+.. literalinclude :: ..\..\example_set\demo_ExperimentDesign.mcx
+   :language: matlabsession
+
+
 Functionality
 ---------------------------------
 

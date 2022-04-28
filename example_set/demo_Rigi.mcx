@@ -33,7 +33,7 @@
 
    save RsmE_RsmZ_rba
 
-   probability 0.75
+   probability 0.5
 
    rigid (A) (B) (G) (H)
      (A)8 mtsl

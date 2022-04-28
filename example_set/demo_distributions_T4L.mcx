@@ -1,0 +1,29 @@
+% MMMx Demo: Computation of selected distance distributions for T4 Lysozyme
+%
+
+# log
+
+!ExperimentDesign
+
+   import 2LZM T4L % load T4 lysozyme crystal structure
+   
+   sitescan mtsl T4L T4L_sites % sitescan for T4 Lysozyme, default set CILMSTV of residues 
+      
+   pairlist T4L_sites T4L T4L_pairs 15 80 % a site pair list for T4 lysozyme
+
+   plot T4L_distributions pdf
+
+   distributions mtsl T4L T4L_distribution
+       68   131
+       72   131
+       75   131
+       76   131
+       79   131
+       86   131
+       89   131
+      109   131
+   .distributions
+
+.ExperimentDesign
+
+# report

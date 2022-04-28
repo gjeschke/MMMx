@@ -1,0 +1,658 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Set object attributes &mdash; MMMx  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="/source/_static/theme_override.css" type="text/css" />
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_util.css" type="text/css" />
+  <link rel="stylesheet" href="_static/table_main.css" type="text/css" />
+  <link rel="stylesheet" href="_static/theme_override.css" type="text/css" />
+
+  
+  
+    <link rel="shortcut icon" href="_static/favicon.ico"/>
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="./" src="_static/documentation_options.js"></script>
+        <script src="_static/jquery.js"></script>
+        <script src="_static/underscore.js"></script>
+        <script src="_static/doctools.js"></script>
+        <script src="_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Property functions" href="property_functions.html" />
+    <link rel="prev" title="Get object attributes" href="object_access.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="index.html">
+          
+
+          
+            
+            <img src="_static/logo.png" class="logo" alt="Logo"/>
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Installation</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="source_installation.html">Source-code version</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="source_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="executable_installation.html">Executable</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#windows-path">Windows path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="executable_installation.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Modules</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="prepare.html">Prepare</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="prepare.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="flex.html">Flex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ensemble_fit.html">Ensemble fit</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#concept">Concept</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#requirements">Requirements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#download">Download</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#matlab-path">Matlab path</a></li>
+<li class="toctree-l2"><a class="reference internal" href="yasara_refine.html#getting-started">Getting started</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="functional_entity.html">Functional entity</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="functional_entity.html#the-object-of-interest">The object of interest</a></li>
+<li class="toctree-l2"><a class="reference internal" href="functional_entity.html#structural-hierarchy">Structural hierarchy</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="structure_representation.html">Structure representation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#protein-database-pdb-format">Protein database (PDB) format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#pdbx-mmcif-format">PDBx/mmCIF format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="structure_representation.html#mmmx-internal-representations">MMMx internal representations</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_addresses.html">Selection by address</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#topology-and-ensemble-addressing">Topology and ensemble addressing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#chains">Chains</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#residues">Residues</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#water-molecules">Water molecules</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#conformers">Conformers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#rotamers">Rotamers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#programmatic-access">Programmatic access</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#changes-compared-to-mmm">Changes compared to MMM</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_addresses.html#correspondence-with-chimerax">Correspondence with ChimeraX</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_atomic.html">MMMx|atomic</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#topology">Topology</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conformation">Conformation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#element-assignment-of-atoms">Element assignment of atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conversion-to-pdb-representation">Conversion to PDB representation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_atomic.html#conversion-from-pdb-representation">Conversion from PDB representation</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="MMMx_RigiFlex.html">MMMx|RigiFlex</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#basic-considerations">Basic considerations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#format">Format</a></li>
+<li class="toctree-l2"><a class="reference internal" href="MMMx_RigiFlex.html#conversion-to-mmmx-atomic-representation">Conversion to MMMx|atomic representation</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Input/output concept</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="control_files.html">Control files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#syntax">Syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#input-and-output-specification">Input and output specification</a></li>
+<li class="toctree-l2"><a class="reference internal" href="control_files.html#restraint-specification">Restraint specification</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="log_files.html">Log files</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="log_files.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="log_files.html#conventions">Conventions</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="modelling_modules.html">Modelling modules</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="modelling_modules.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Spectroscopic labels</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="rotamer_concept.html">Rotamer libraries</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#implementation">Implementation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#the-get-label-function">The <code class="docutils literal notranslate"><span class="pre">get_label</span></code> function</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#set-of-libraries">Set of libraries</a></li>
+<li class="toctree-l2"><a class="reference internal" href="rotamer_concept.html#rotamer-library-format">Rotamer library format</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="distance_distributions.html">Distance distributions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#reasons-why-distances-are-distributed">Reasons why distances are distributed</a></li>
+<li class="toctree-l2"><a class="reference internal" href="distance_distributions.html#computation-of-distance-distributions">Computation of distance distributions</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Third-party software</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="third_party.html">Third-party software</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#scwrl4">SCWRL4</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#atsas">ATSAS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#muscle">MUSCLE</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#msms">MSMS</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#hydropro">HYDROPRO</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#dssp">DSSP</a></li>
+<li class="toctree-l2"><a class="reference internal" href="third_party.html#yasara">YASARA</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="concept.html">Concept</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#open-source-concept">Open source concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#separation-of-user-interface-from-computation">Separation of user interface from computation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="concept.html#visibility-to-users-and-programmers">Visibility to users and programmers</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="data.html">Data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="data.html#entity">Entity</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#rotamer-library">Rotamer library</a></li>
+<li class="toctree-l2"><a class="reference internal" href="data.html#distance-distribution-restraints">Distance distribution restraints</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="docs.html">Documentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="docs.html#automation">Automation</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="examples.html">Example set</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="examples.html#concept">Concept</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Programmer's Guide</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="object_access.html">Get object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#chain">Chain</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#single-conformer">Single conformer</a></li>
+<li class="toctree-l2"><a class="reference internal" href="object_access.html#coordinates-atomic-numbers-any-level">Coordinates &amp; atomic numbers (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Set object attributes</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#concept">Concept</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#generic-syntax">Generic syntax</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#residue">Residue</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#atoms">Atoms</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#locations">Locations</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coordinates-any-level">Coordinates (any level)</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="property_functions.html">Property functions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="property_functions.html#mass">Mass</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="ChimeraX.html">ChimeraX</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="ChimeraX.html#remarks">Remarks</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="index.html">MMMx</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Set object attributes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="set-object-attributes">
+<span id="object-modification"></span><h1>Set object attributes<a class="headerlink" href="#set-object-attributes" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="concept">
+<h2>Concept<a class="headerlink" href="#concept" title="Permalink to this headline">¶</a></h2>
+<p>Methods in MMMx should not directly change the <code class="docutils literal notranslate"><span class="pre">entity</span></code> variable, but rather use the <code class="docutils literal notranslate"><span class="pre">set_*object*</span></code> functions, where <em>object</em> is a conformer, a chain, a residue, a rotamer, an atom, or an atom location.
+The <code class="docutils literal notranslate"><span class="pre">entity</span></code> is an MMMx ensemble structure representation in <a class="reference internal" href="MMMx_atomic.html#mmmx-atomic"><span class="std std-ref">MMMx|atomic</span></a> or <a class="reference internal" href="MMMx_RigiFlex.html#mmmx-rigiflex"><span class="std std-ref">MMMx|RigiFlex</span></a> format.</p>
+<p><code class="docutils literal notranslate"><span class="pre">set</span></code> functions modify attributes of objects, whereas <code class="docutils literal notranslate"><span class="pre">get</span></code> functions retrieve them. They are specific to an object hierarchy level in order to avoid unintended behaviour.
+The objects are selected by an <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">MMMx address</span></a>. The address can also be <code class="docutils literal notranslate"><span class="pre">selected</span></code> for accessing all currently selected objects on this hierarchy level.
+If an address is provided, selection in the entity changes to the one specified by this address.</p>
+<p>It is good practice to use <code class="docutils literal notranslate"><span class="pre">get_&quot;object&quot;</span></code> to retrieve current attributes, modify them, and reassign the modified attributes by <code class="docutils literal notranslate"><span class="pre">set_object</span></code>.
+Between the calls of <code class="docutils literal notranslate"><span class="pre">get_&quot;object&quot;</span></code> and <code class="docutils literal notranslate"><span class="pre">set_&quot;object&quot;</span></code>, either the selection in the entity should not be changed (calls without <code class="docutils literal notranslate"><span class="pre">address</span></code>)
+or the same address must be used in both calls.</p>
+<p>The special function <code class="docutils literal notranslate"><span class="pre">set_coor</span></code> can be used to assign modified coordinates.
+It can be applied to a mixed selection on several hierarchy levels and is faster than coordinate access by the <code class="docutils literal notranslate"><span class="pre">set_&quot;object&quot;</span></code> functions.</p>
+<p>For transforming coordinates of all atoms of a single conformer, the fastest way is to retrieve coordinates and atom indices with <span class="xref std std-ref">get_conformer</span>
+and to use <code class="docutils literal notranslate"><span class="pre">entity</span> <span class="pre">=</span> <span class="pre">set_coor(entity,coor.xyz,coor.indices)</span></code> for reassignment of modified coordinates. For changing conformer populations, directly access <code class="docutils literal notranslate"><span class="pre">entity.populations</span></code>.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">info</span></code> cannot generally be modified, as this could compromise integrity of addressing or indexing the entity.
+There are exceptions for fields of info on some hierarchy levels.</p>
+</div>
+<div class="section" id="generic-syntax">
+<h2>Generic syntax<a class="headerlink" href="#generic-syntax" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_</span><span class="s">&quot;object&quot;</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>where the <code class="docutils literal notranslate"><span class="pre">attribute</span></code> strings are specific to the “object” hierarchy level
+(“residue”, “atom”, “location”, see below) and argin is a cell vector,
+whose length is (most of the time) the number of objects of this hierarchy level that were selected by <code class="docutils literal notranslate"><span class="pre">address</span></code>.
+If the address is <code class="docutils literal notranslate"><span class="pre">selected</span></code> or empty, the <code class="docutils literal notranslate"><span class="pre">set</span></code> functions operate on objects currently selected in the entity.</p>
+<p>There is no <code class="docutils literal notranslate"><span class="pre">set</span></code> function for chains. Chain tags can be changed only upon saving the entity, for instance with <code class="docutils literal notranslate"><span class="pre">put_pdb</span></code>.</p>
+<p>Error messages or warnings are reported as MException objects in cell array <code class="docutils literal notranslate"><span class="pre">exceptions</span></code>.</p>
+</div>
+<div class="section" id="residue">
+<h2>Residue<a class="headerlink" href="#residue" title="Permalink to this headline">¶</a></h2>
+<p>Use this function if you want to operate exclusively on residue level.
+Selections above or below residue level are ignored.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">entity</span> <span class="p">=</span> <span class="n">set_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">)</span>
+<span class="n">entity</span> <span class="p">=</span> <span class="n">set_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_residue</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attribute</span></code> - see table below (string)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx address for object selection, ‘selected’ or empty uses current selection</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - modified entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message, if attribute is not supported  (1-element cell array)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Attributes</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 47%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Explanation</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">dssp</span></code></p></td>
+<td><p>DSSP secondary structure assignment</p></td>
+<td><p>char</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">number</span></code></p></td>
+<td><p>residue number</p></td>
+<td><p>int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">populations</span></code></p></td>
+<td><p>populations for all <em>R</em> rotamers</p></td>
+<td><p>(<em>R</em>,1) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">sheet</span></code></p></td>
+<td><p>DSSP information on sheets</p></td>
+<td><p>(1,2) double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">tlc</span></code></p></td>
+<td><p>three-letter code/PDB residue tag</p></td>
+<td><p>string</p></td>
+</tr>
+</tbody>
+</table>
+<p><code class="docutils literal notranslate"><span class="pre">set_residue</span></code> raises an exception and returns an empty entity if the requested residue number already exists in that chain.</p>
+<p>Three-letter codes are capitalized, any characters that are not alphanumeric are removed, and the string is trimmed and truncated to at most three characters.
+If the request does not contain alphanumeric characters, an exception is raised and the returned entity is empty.</p>
+<p>The format of <code class="docutils literal notranslate"><span class="pre">dssp</span></code> and <code class="docutils literal notranslate"><span class="pre">sheet</span></code> information is not checked.</p>
+</div>
+<hr class="docutils" />
+<div class="section" id="atoms">
+<h2>Atoms<a class="headerlink" href="#atoms" title="Permalink to this headline">¶</a></h2>
+<p>Use this function if you want to operate on atoms of all rotamers or on all atom locations.
+Selections above atom level are ignored.</p>
+<p>Use Matlab built-in function <code class="docutils literal notranslate"><span class="pre">cell2mat</span></code> for reforming output for B factor, charge, atomic number, and population into vectors.
+Note that MMMx supports only one B factor per atom, not distinct B factors for locations.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">entity</span> <span class="p">=</span> <span class="n">set_atom</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_atom</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">)</span>
+<span class="n">entity</span> <span class="p">=</span> <span class="n">set_atom</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_atom</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attribute</span></code> - see table below (string)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argin</span></code> - input arguments (<em>M</em>-element cell array for <em>M</em> selected locations)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx address for object selection, ‘selected’ or empty uses current selection</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - modified entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message, if attribute is not supported  (1-element cell array)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Attributes</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 47%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Explanation</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">bfactor</span></code></p></td>
+<td><p>crystallographic B factor</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">charge</span></code></p></td>
+<td><p>atom charge</p></td>
+<td><p>int</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">coor</span></code></p></td>
+<td><p>Cartesian coordinate array for <em>all</em> locations</p></td>
+<td><p>(<em>N</em>,3) double</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">element</span></code></p></td>
+<td><p>atomic number</p></td>
+<td><p>int8</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">name</span></code></p></td>
+<td><p>atom name</p></td>
+<td><p>string, maximum 4 characters</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">population</span></code></p></td>
+<td><p>rotamer population or atom occupancy</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
+<td><p>Cartesian coordinates per location</p></td>
+<td><p>(1,3) double</p></td>
+</tr>
+</tbody>
+</table>
+<hr class="docutils" />
+<p>Modifying atom names is generally discouraged, but may be useful for (paramagnetic) substitution of ions.
+The atom name is capitalized, primes are substituted by underscores, and it is truncated to 4 characters.</p>
+</div>
+<div class="section" id="locations">
+<h2>Locations<a class="headerlink" href="#locations" title="Permalink to this headline">¶</a></h2>
+<p>Use this function if you want to operate on selected rotamers or atom locations.
+If the selection is on atom level and no rotamers are selected, only the first location or rotamer is referred to.
+Selections above atom level are ignored.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">entity</span> <span class="p">=</span> <span class="n">set_location</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_location</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_location</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">attribute</span><span class="p">,</span><span class="n">argin</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">attribute</span></code> - see table below (string)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">argin</span></code> - input arguments (<em>M</em>-element cell array for <em>M</em> selected locations)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx address for object selection, ‘selected’ or empty uses current selection</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - modified entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - error message, if attribute is not supported  (1-element cell array)</p></li>
+</ul>
+</dd>
+</dl>
+<p><strong>Attributes</strong></p>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 22%" />
+<col style="width: 47%" />
+<col style="width: 32%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>Variable</p></th>
+<th class="head"><p>Explanation</p></th>
+<th class="head"><p>Type</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">element</span></code></p></td>
+<td><p>atomic number</p></td>
+<td><p>int8</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">population</span></code></p></td>
+<td><p>rotamer population or atom occupancy</p></td>
+<td><p>double</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">xyz</span></code></p></td>
+<td><p>Cartesian coordinates per location</p></td>
+<td><p>(1,3) double</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<hr class="docutils" />
+<div class="section" id="coordinates-any-level">
+<h2>Coordinates (any level)<a class="headerlink" href="#coordinates-any-level" title="Permalink to this headline">¶</a></h2>
+<p>For modification of only Cartesian coordinates of a set of objects, it is faster to use <code class="docutils literal notranslate"><span class="pre">get_coor</span></code> and <code class="docutils literal notranslate"><span class="pre">set_coor</span></code>.</p>
+<p>If no atom indices are provided, <code class="docutils literal notranslate"><span class="pre">set_coor</span></code> expands <em>all selections on different hierarchy levels</em> down to location level.
+The function is much faster when the atom indices, originally retrieved by <code class="docutils literal notranslate"><span class="pre">get_coor</span></code>, are provided instead of an <code class="docutils literal notranslate"><span class="pre">address</span></code>.
+However, in order to enable better code readability, a call with <code class="docutils literal notranslate"><span class="pre">address</span></code> or for the current selection is allowed.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_coor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">coor</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_coor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">coor</span><span class="p">,</span><span class="n">indices</span><span class="p">)</span>
+<span class="p">[</span><span class="n">entity</span><span class="p">,</span><span class="n">exceptions</span><span class="p">]</span> <span class="p">=</span> <span class="n">set_coor</span><span class="p">(</span><span class="n">entity</span><span class="p">,</span><span class="n">coor</span><span class="p">,</span><span class="n">address</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Parameters</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">coor</span></code> - Cartesian coordinates, (<em>N</em>,3) double array for <em>N</em> selected or indexed atom locations</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">indices</span></code> - indices into entity atom tables, (<em>N</em>,1) int array</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - MMMx address for object selection, ‘selected’ or empty uses current selection, string</p></li>
+</ul>
+</dd>
+<dt>Returns</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - modified entity in MMMx:atomic format</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">exceptions</span></code> - cell array of MException objects that occurred upon selection by address</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="property_functions.html" class="btn btn-neutral float-right" title="Property functions" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="object_access.html" class="btn btn-neutral float-left" title="Get object attributes" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright 2020-, Gunnar Jeschke
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(false);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

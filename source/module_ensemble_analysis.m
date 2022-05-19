@@ -687,7 +687,7 @@ for c = 1:cmd_poi
                 if isempty(c_entity)
                     warnings = warnings +1;
                     exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'tried to suberimpose entity %s, which is unknown',cmd.entity);
+                        'tried to superimpose entity %s, which is unknown',cmd.entity);
                     record_exception(exceptions{warnings},logfid);
                     return
                 end

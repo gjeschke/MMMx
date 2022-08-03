@@ -1341,7 +1341,7 @@ if plot_result
             plot(data(:,1),data(:,2),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(data(:,1),fitted_curve,'-','LineWidth',2.5,'Color',[0.7,0,0]);
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
-            xlabel(sprintf('s [%s^{-1}]',char(197)));
+            xlabel(sprintf('q [%s^{-1}]',char(197)));
             ylabel('I(s)');
             if save_figures
                 figure_title = sprintf('SAS_fit_%i',kr);
@@ -1352,18 +1352,29 @@ if plot_result
             plot(data(:,1),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(data(:,1),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
-            xlabel(sprintf('s [%s^{-1}]',char(197)));
-            ylabel('log(I(s))');
+            xlabel(sprintf('q [%s^{-1}]',char(197)));
+            ylabel('log(I(q))');
             if save_figures
                 figure_title = sprintf('SAS_log_fit_%i',kr);
                 save_figure(h,figure_title,figure_format);
             end
             h = figure; clf; hold on
             data = all_sas_predictions{kr};
+            plot(log(data(:,1)),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
+            plot(log(data(:,1)),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
+            title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            xlabel(sprintf('log(q%s%s)',char(183),char(197)));
+            ylabel('log(I(q))');
+            if save_figures
+                figure_title = sprintf('SAS_log_log_fit_%i',kr);
+                save_figure(h,figure_title,figure_format);
+            end
+            h = figure; clf; hold on
+            data = all_sas_predictions{kr};
             plot(data(:,1),data(:,2)-fitted_curve,'.','MarkerSize',14,'Color',[0,0,0.8]);
             title(sprintf('Fit residual: chi^2 = %6.3f',fit_task.sas(kr).chi2));
-            xlabel('s [Angstroem^{-1}]');
-            ylabel('log(I(s))');
+            xlabel(sprintf('q [%c^{-1}]',char(197)));
+            ylabel('I_{exp}(q) - I_{sim}(q)');
             if save_figures
                 figure_title = sprintf('SAS_log_fit_residual_%i',kr);
                 save_figure(h,figure_title,figure_format);

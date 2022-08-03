@@ -274,7 +274,7 @@ while bask < trials && runtime <= 3600*max_time && success < options.max_clust
     parblocks = parblocks + 1;
     res_vec = res*ones(1,options.granule);
     % profile on
-    parfor kt = 1:options.granule 
+    for kt = 1:options.granule % ### edit to 'for' if you want to debug
         fulfill = true;
         if bask + kt <= prod(intervals)
             fractions = get_restraint_fractions(bask+kt,intervals,digitbase);

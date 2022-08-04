@@ -3,7 +3,7 @@
 Demo Prepare
 ==========================
 
-This example generates logfile ``demo_Prepare.log``.
+Run it by typing ``MMMx demo_Prepare``. This example generates logfile ``demo_Prepare.log``.
 
 Modules used
 ---------------------------------

@@ -83,6 +83,7 @@ MMMx is available at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_ and `at 
     ./demo_Prepare
     ./demo_Rigi
     ./demo_FlexRNA
+    ./demo_RigiFlex
 
 .. toctree::
     :hidden:

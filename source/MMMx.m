@@ -20,7 +20,7 @@ if ~exist('control_file','var') || isempty(control_file)
     [control_file,pathname] = uigetfile('*.mcx');
     cd(pathname);
 elseif strcmpi(control_file,'help') || strcmpi(control_file,'docs')
-    web('index.html');
+    web('mmmx.info');
     return
 end
 

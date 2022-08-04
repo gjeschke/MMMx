@@ -3,7 +3,7 @@
 Demo RigiFlex
 ==========================
 
-This example generates logfile ``demo_RigiFlex.log``. The logfile is automatically displayed after completion by the ``#report`` directive at the end.
+Run it by typing ``MMMx demo_RigiFlex``. This example generates logfile ``demo_RigiFlex.log``. The logfile is automatically displayed after completion by the ``#report`` directive at the end.
 Note that this demo runs for a long time and creates a sizeable ensemble. Therefore, it is contained in a separate subdirectory of ``MMMx\example_set``.
 You may want to run and understand ``demo_Rigi`` and ``demo_FlexRNA`` before and run the ``demo_RigiFlex`` over night. 
 

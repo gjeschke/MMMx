@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2891844742" file="G:\MMMx\source\MMMx.prj" location="G:\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="2891844742" file="C:\Users\guje\Documents\MMMx\source\MMMx.prj" location="C:\Users\guje\Documents\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>MMMx</param.appname>
     <param.icon>${PROJECT_ROOT}\MMMx_resources\icon.ico</param.icon>
     <param.icons>
@@ -8,13 +8,13 @@
       <file>${PROJECT_ROOT}\MMMx_resources\icon_24.png</file>
       <file>${PROJECT_ROOT}\MMMx_resources\icon_16.png</file>
     </param.icons>
-    <param.version>1.0</param.version>
+    <param.version>1.1</param.version>
     <param.authnamewatermark>Gunnar Jeschke</param.authnamewatermark>
     <param.email>gjeschke@ethz.ch</param.email>
     <param.company>ETHZ</param.company>
     <param.summary>MMMx runtime windows executable</param.summary>
     <param.description>Package for running integrative ensemble structure modelling and ensemble analysis of proteins and protein complexes</param.description>
-    <param.screenshot>${PROJECT_ROOT}\splash.png</param.screenshot>
+    <param.screenshot />
     <param.guid />
     <param.installpath.string>\ETHZ\MMMx\</param.installpath.string>
     <param.installpath.combo>option.installpath.appdata</param.installpath.combo>
@@ -50,7 +50,7 @@
  Description 
  	 Package for running integrative ensemble structure modelling and ensemble analysis of proteins and protein complexes</param.help.text>
     <unset>
-      <param.version />
+      <param.screenshot />
       <param.guid />
       <param.installpath.string />
       <param.install.notes />
@@ -85,11 +85,6 @@
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
-      <file>G:\MMMx\defs\color_defs.mat</file>
-      <file>G:\MMMx\defs\element_attributes.mat</file>
-      <file>G:\MMMx\defs\monomer_attributes.mat</file>
-      <file>G:\MMMx\defs\monomers.mat</file>
-      <file>G:\MMMx\defs\Ramachandran_disordered.mat</file>
       <file>${PROJECT_ROOT}\add_residue.m</file>
       <file>${PROJECT_ROOT}\affine.m</file>
       <file>${PROJECT_ROOT}\align_in_entity.m</file>
@@ -215,11 +210,16 @@
       <file>${PROJECT_ROOT}\split_address.m</file>
       <file>${PROJECT_ROOT}\superimpose_ensemble.m</file>
       <file>${PROJECT_ROOT}\transform_structure.m</file>
+      <file>G:\MMMx\defs\color_defs.mat</file>
+      <file>G:\MMMx\defs\element_attributes.mat</file>
+      <file>G:\MMMx\defs\monomer_attributes.mat</file>
+      <file>G:\MMMx\defs\monomers.mat</file>
+      <file>G:\MMMx\defs\Ramachandran_disordered.mat</file>
     </fileset.depfun>
     <build-deliverables>
-      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="MMMx.exe" optional="false">G:\MMMx\source\MMMx\for_testing\MMMx.exe</file>
-      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="readme.txt" optional="true">G:\MMMx\source\MMMx\for_testing\readme.txt</file>
-      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="splash.png" optional="false">G:\MMMx\source\MMMx\for_testing\splash.png</file>
+      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="readme.txt" optional="true">C:\Users\guje\Documents\MMMx\source\MMMx\for_testing\readme.txt</file>
+      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="MMMx.exe" optional="false">C:\Users\guje\Documents\MMMx\source\MMMx\for_testing\MMMx.exe</file>
+      <file location="${PROJECT_ROOT}\MMMx\for_testing" name="splash.png" optional="false">C:\Users\guje\Documents\MMMx\source\MMMx\for_testing\splash.png</file>
     </build-deliverables>
     <workflow />
     <matlab>

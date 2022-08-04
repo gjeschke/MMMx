@@ -3,7 +3,7 @@
 Demo ExperimentDesign
 ==========================
 
-This example generates logfile ``demo_ExperimentDesign.log``.
+Run it by typing ``MMMx demo_ExperimentDesign``. This example generates logfile ``demo_ExperimentDesign.log``.
 
 Modules used
 ---------------------------------

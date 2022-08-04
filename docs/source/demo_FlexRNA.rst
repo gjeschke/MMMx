@@ -3,7 +3,7 @@
 Demo FlexRNA
 ==========================
 
-This example generates logfile ``demo_FlexRNA.log``. The logfile is automatically displayed after completion by the ``#report`` directive at the end.
+Run it by typing ``MMMx demo_FlexRNA``. This example generates logfile ``demo_FlexRNA.log``. The logfile is automatically displayed after completion by the ``#report`` directive at the end.
 
 Modules used
 ---------------------------------

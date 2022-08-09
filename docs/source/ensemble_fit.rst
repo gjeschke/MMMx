@@ -65,7 +65,7 @@ Arguments
     *   ``file`` - file name, must refer to a single ensemble
 Remarks
     *   use this in combination with ``nofit`` to generate plots or save data for an existing ensemble
-    *   it is possoble to combine ``initial`` with ``addpdb``, but not with ``getpdb``
+    *   it is possible to combine ``initial`` with ``addpdb``, but not with ``getpdb``
 	
 ``save``
 ---------------------------------
@@ -80,6 +80,26 @@ Arguments
     *   ``file`` - output file name, extension should be '.ens'
 Remarks
     *   if the save key is missing, the ensemble list is saved to 'ensemble.ens'
+	
+``csv``
+---------------------------------
+
+Save fit results to comma-separated value (CSV) files 
+
+.. code-block:: matlab
+
+    csv
+
+Remarks
+    *   by default, full fit results are saved only to a Matlab file and CSV saving is off
+    *   if ``csv`` is on, all information underlying fit plots is saved, even if ``plot`` is off
+    *   this feature also reports fit quality of individual restraints to the logfile (except PRE)
+    *   small-angle scattering data has four columns: scattering vector, intensity, standard deviation, fitted intensity
+    *   PRE data has four columns: index, experimental PRE ratio rate, standard deviation, fitted PRE ratio or rate
+    *   distance distribution restraint (ddr) data has a variable column format, the format is specified in the logfile for each individual restraint
+    *   specifiers for ddr columns are: ``r`` distance axis, ``d`` experimental distribution, ``l`` lower bound, ``u`` upper bound, ``f`` fitted distribution
+    *   if ``plotgroups`` were specified for ddr, a format specifier ``s1`` stands for plot group 1, ``s2`` for plot group 2, and so on  
+
 	
 ``ddr``
 ---------------------------------

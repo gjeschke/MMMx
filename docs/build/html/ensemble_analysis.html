@@ -218,7 +218,9 @@
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#initial"><code class="docutils literal notranslate"><span class="pre">initial</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#csv"><code class="docutils literal notranslate"><span class="pre">csv</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#pre"><code class="docutils literal notranslate"><span class="pre">pre</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#prerate"><code class="docutils literal notranslate"><span class="pre">prerate</span></code></a></li>
@@ -514,6 +516,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> - name of the output ensemble list, extension should be ‘.ens’</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘oriented’ assumes that the conformers are already in the same frame, otherwise they are optimally superimposed</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘drms’ uses orientation-independent distance root-mean square as a metric</p></li>
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
@@ -546,6 +549,8 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">Rg</span></code> - radius of gyration. including standard deviation (output to logfile)</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">width</span></code> - ensemble width and density in Angstroem (output to logfile), also computes pair r.m.s.d. matrix and central conformer</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">correlation</span></code> - correlation matrix, output as figure and to files ‘residue_pair_correlation_%s’ with extensions ‘.csv’and ‘.mat’</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sort</span></code> - sort for computation of correlation matrix
+*   <code class="docutils literal notranslate"><span class="pre">drms</span></code> - uses distance root mean square deviation for correlation matrix and sorting</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">compactness</span></code> - compactness matrix</p></li>
 </ul>
 </dd>
@@ -706,7 +711,7 @@
   <div role="contentinfo">
     <p>
         
-        &copy; Copyright UnCopyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer
+        &copy; Copyright MIT license 2020-, Gunnar Jeschke, Laura Esteban-Hofer
 
     </p>
   </div>

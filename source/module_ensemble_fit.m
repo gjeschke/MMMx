@@ -70,6 +70,7 @@ pre_max_Gamma2 = 170;
 run_fit = true;
 plot_result = false;
 load_options.stripH = true;
+save_csv = false; % saving of fit results to CSV files is off by default
 initial_ensemble = '';
 added_conformers = '';
 opt.threshold = 0.01; % conformers wih population below this threshold are discarded
@@ -139,6 +140,8 @@ for d = 1:length(control.directives)
             plot_groups(pg_poi).conformers = decode_number_list(control.directives(d).options{2}); %#ok<AGROW>
         case 'save'
             outname = control.directives(d).options{1};
+        case 'csv'
+            save_csv = true;
         case {'pdbsave','pdb_save'}
             pdbout = control.directives(d).options{1};
         case 'rmean'
@@ -262,9 +265,9 @@ for d = 1:length(control.directives)
             end
             [nr,args] = size(control.directives(d).block);
             if nr > 0 % at least one restraint in this block
-                restraints.ddr(pre_poi).residue{nr} = ' ';
-                restraints.ddr(pre_poi).data = ones(2,nr);
-                restraints.ddr(pre_poi).data(2,:) = 0;
+                restraints.pre(pre_poi).residue{nr} = ' ';
+                restraints.pre(pre_poi).data = ones(nr,2);
+                restraints.pre(pre_poi).data(2,:) = 0;
             else % empty block
                 warnings = warnings + 1;
                 exceptions{warnings} = MException('module_ensemble_fit:empty_pre_block', 'pre block %i is empty',d);
@@ -1177,7 +1180,7 @@ if run_fit
     end
 end
 
-fprintf(logfid,'%i conformers remain included\n',C0);          
+fprintf(logfid,'%i conformers remain included\n\n',C0);          
 
 % save ensemble
 ofid = fopen(outname,'wt');
@@ -1271,7 +1274,7 @@ end
 if isempty(loss_of_merit) % for non-integrative fits, there is no loss of merit
     loss_of_merit = 0;
 else
-    fprintf(logfid,'\n Final loss of merit: %6.3f\n',loss_of_merit);
+    fprintf(logfid,'\n Final loss of merit: %6.3f\n\n',loss_of_merit);
     fprintf(1,'\n Final loss of merit: %6.3f\n',loss_of_merit);
 end
 fit_task.loss_of_merit = loss_of_merit;
@@ -1279,6 +1282,108 @@ fit_task.loss_of_merit = loss_of_merit;
 % save fit task and restraints
 
 save([outname '.mat'],'restraints','fit_task','exceptions');
+
+% save fit results into CSV files if requested
+if save_csv
+    dr = fit_task.r_axis(2) - fit_task.r_axis(1);
+    overlap = 1;
+    for kr = 1:nr
+        if fit_task.ddr_valid(kr)
+            overlap_G = [];
+            overlap_E = [];
+            all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
+            data = fit_task.r_axis.';
+            column_string = 'r';
+            if ~isempty(fit_task.ddr(kr).exp_distr)
+                overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
+                data = [data dr*fit_task.ddr(kr).exp_distr.']; %#ok<AGROW>
+                column_string = strcat(column_string,',d');
+                if ~isempty(fit_task.ddr(kr).exp_distr_ub)
+                    distr_ub = fit_task.ddr(kr).exp_distr_ub;
+                    distr_lb = fit_task.ddr(kr).exp_distr_lb;
+                    data = [data dr*distr_lb.' dr*distr_ub']; %#ok<AGROW>
+                    column_string = strcat(column_string,',l,u');
+                end
+            end
+            data = [data dr*fit_task.ddr(kr).fit_distr.']; %#ok<AGROW>
+            column_string = strcat(column_string,',f');
+            if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
+                data = [data dr*fit_task.ddr(kr).sim_distr.']; %#ok<AGROW>
+                column_string = strcat(column_string,',g');
+            end
+            for kpg = 1:length(plot_groups)
+                if ~isempty(plot_groups(kpg).rgb) && ~sum(isnan(plot_groups(kpg).conformers))
+                    pop = fit_task.ensemble_populations(plot_groups(kpg).conformers);
+                    all_distr_group = all_distr_ensemble(plot_groups(kpg).conformers,:);
+                    group_distr = pop*all_distr_group;
+                    data = [data dr*group_distr.']; %#ok<AGROW>
+                    column_string = strcat(column_string,sprintf(',s%i',kpg));
+                end
+            end
+            if ~isempty(overlap_E)
+                overlap = overlap*overlap_E;
+            else
+                overlap = overlap*overlap_G;
+            end
+            site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
+            site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
+            fprintf(logfid,'Overlap %s-%s',site1,site2);
+            if ~isempty(overlap_E)
+                fprintf(logfid,' (distribution): %6.3f.',overlap_E);
+            elseif ~isempty(overlap_G)
+                fprintf(logfid,' (Gaussian restraint): %6.3f.',overlap_G);
+            else
+                fprintf(logfid,' is unspecified.');
+            end
+            % save the data
+            fprintf(logfid,' CSV columns: %s\n',column_string);
+            datname = sprintf('ddr_fit_%s_%s.csv',site1,site2);
+            writematrix(data,datname);
+        end
+    end
+    overlap = overlap^(1/nr);
+    fprintf(logfid,'\nOverlap deficiency: %6.3f\n',1-overlap);
+    for kr = 1:nr_sas
+        if fit_task.sas_valid(kr)
+            datafile = restraints.sas(kr).data;
+            data = all_sas_predictions{kr};
+            fitted_curve = fit_task.sas(kr).fitted_curve;
+            data(:,4) = fitted_curve;
+            data = data(:,1:4);
+            % save the data
+            datname = sprintf('sas_fit_%s.csv',datafile);
+            writematrix(data,datname);
+        end
+    end
+    if nr_pre > 0
+        kft = 0;
+        for kr = 1:length(pre_parameters)
+            range = pre_parameters(kr).range;
+            plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
+            kx = 0;
+            data = zeros(range(2)-range(1)+1,4);
+            coding = cell(1,range(2)-range(1)+1);
+            for nr_pre = range(1):range(2)
+                kft = kft + 1;
+                kx = kx + 1;
+                coding{kft} = fit_task.pre(kft).residue;
+                data(kft,1) = nr_pre;
+                data(kft,2:3) = fit_task.pre(kft).exp_data(1:2);
+                data(kft,4) = fit_task.pre(kft).fit_data;
+            end
+            data = data(1:kft,:);
+            datname = sprintf('PRE_fit_%s.csv',restraints.pre(kr).site);
+            writematrix(data,datname);
+            codename = sprintf('PRE_residues_%s.csv',restraints.pre(kr).site);
+            fid = fopen(codename,'wt');
+            for nr_pre = 1:kft
+                fprintf(fid,'%i,%s\n',nr_pre,coding{nr_pre});
+            end
+            fclose(fid);
+        end
+        fprintf(logfid,'\nPRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
+    end
+end
 
 if plot_result
     dr = fit_task.r_axis(2) - fit_task.r_axis(1);
@@ -1350,7 +1455,7 @@ if plot_result
             fitted_curve = fit_task.sas(kr).fitted_curve;
             plot(data(:,1),data(:,2),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(data(:,1),fitted_curve,'-','LineWidth',2.5,'Color',[0.7,0,0]);
-            title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            title(sprintf('%s: chi^2 = %6.3f',datafile,fit_task.sas(kr).chi2), 'Interpreter', 'none');
             xlabel(sprintf('q [%s^{-1}]',char(197)));
             ylabel('I(s)');
             set(gca,'FontSize',14);
@@ -1362,7 +1467,7 @@ if plot_result
             data = all_sas_predictions{kr};
             plot(data(:,1),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(data(:,1),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
-            title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            title(sprintf('%s: chi^2 = %6.3f',datafile,fit_task.sas(kr).chi2), 'Interpreter', 'none');
             xlabel(sprintf('q [%s^{-1}]',char(197)));
             ylabel('log(I(q))');
             set(gca,'FontSize',14);
@@ -1374,7 +1479,7 @@ if plot_result
             data = all_sas_predictions{kr};
             plot(log(data(:,1)),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
             plot(log(data(:,1)),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
-            title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            title(sprintf('%s: chi^2 = %6.3f',datafile,fit_task.sas(kr).chi2), 'Interpreter', 'none');
             xlabel(sprintf('log(q%s%s)',char(183),char(197)));
             ylabel('log(I(q))');
             set(gca,'FontSize',14);
@@ -1385,7 +1490,7 @@ if plot_result
             h = figure; clf; hold on
             data = all_sas_predictions{kr};
             plot(data(:,1),data(:,2)-fitted_curve,'.','MarkerSize',14,'Color',[0,0,0.8]);
-            title(sprintf('Fit residual: chi^2 = %6.3f',fit_task.sas(kr).chi2));
+            title(sprintf('%s: chi^2 = %6.3f',datafile,fit_task.sas(kr).chi2), 'Interpreter', 'none');
             xlabel(sprintf('q [%c^{-1}]',char(197)));
             ylabel('I_{exp}(q) - I_{sim}(q)');
             set(gca,'FontSize',14);

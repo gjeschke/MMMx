@@ -1,5 +1,5 @@
 <deployment-project plugin="plugin.ezdeploy" plugin-version="1.0">
-  <configuration build-checksum="2891844742" file="C:\Users\guje\Documents\MMMx\source\MMMx.prj" location="C:\Users\guje\Documents\MMMx\source" name="MMMx" preferred-package-location="G:\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
+  <configuration build-checksum="3639751260" file="C:\Users\guje\Documents\MMMx\source\MMMx.prj" location="C:\Users\guje\Documents\MMMx\source" name="MMMx" preferred-package-location="C:\Users\guje\Documents\MMMx\source\MMMx\for_redistribution" preferred-package-type="package.type.exe" target="target.ezdeploy.standalone" target-name="Application Compiler">
     <param.appname>MMMx</param.appname>
     <param.icon>${PROJECT_ROOT}\MMMx_resources\icon.ico</param.icon>
     <param.icons>
@@ -85,6 +85,8 @@
     </fileset.resources>
     <fileset.package />
     <fileset.depfun>
+      <file>C:\Users\guje\Documents\MMM\definitions\labels.mat</file>
+      <file>C:\Users\guje\Documents\MMMx\rotamer_libraries\HNP_nucleotide_library.mat</file>
       <file>${PROJECT_ROOT}\add_residue.m</file>
       <file>${PROJECT_ROOT}\affine.m</file>
       <file>${PROJECT_ROOT}\align_in_entity.m</file>
@@ -150,6 +152,7 @@
       <file>${PROJECT_ROOT}\auxiliary\SpinCalc.m</file>
       <file>${PROJECT_ROOT}\auxiliary\superimpose_3points.m</file>
       <file>${PROJECT_ROOT}\auxiliary\tag2id.m</file>
+      <file>${PROJECT_ROOT}\auxiliary\test_embed.m</file>
       <file>${PROJECT_ROOT}\auxiliary\tlc2slc.m</file>
       <file>${PROJECT_ROOT}\auxiliary\transrot2affine.m</file>
       <file>${PROJECT_ROOT}\auxiliary\triangle.m</file>
@@ -158,6 +161,7 @@
       <file>${PROJECT_ROOT}\auxiliary\writeMRC.m</file>
       <file>${PROJECT_ROOT}\auxiliary\WriteMRCHeader.m</file>
       <file>${PROJECT_ROOT}\bilayer_model.m</file>
+      <file>${PROJECT_ROOT}\check_RNA_threading.m</file>
       <file>${PROJECT_ROOT}\density_overlap.m</file>
       <file>${PROJECT_ROOT}\distance_distribution.m</file>
       <file>${PROJECT_ROOT}\flexibility_analysis.m</file>
@@ -195,6 +199,7 @@
       <file>${PROJECT_ROOT}\optimize_by_yasara.m</file>
       <file>${PROJECT_ROOT}\pair_list.m</file>
       <file>${PROJECT_ROOT}\pair_rmsd_matrix.m</file>
+      <file>${PROJECT_ROOT}\pair_rmsd_matrix_oriented.m</file>
       <file>${PROJECT_ROOT}\pre.m</file>
       <file>${PROJECT_ROOT}\pre_of_entity.m</file>
       <file>${PROJECT_ROOT}\put_pdb.m</file>
@@ -210,8 +215,10 @@
       <file>${PROJECT_ROOT}\split_address.m</file>
       <file>${PROJECT_ROOT}\superimpose_ensemble.m</file>
       <file>${PROJECT_ROOT}\transform_structure.m</file>
+      <file>${PROJECT_ROOT}\trivariate_distribution.m</file>
       <file>G:\MMMx\defs\color_defs.mat</file>
       <file>G:\MMMx\defs\element_attributes.mat</file>
+      <file>G:\MMMx\defs\minimal_protonation.mat</file>
       <file>G:\MMMx\defs\monomer_attributes.mat</file>
       <file>G:\MMMx\defs\monomers.mat</file>
       <file>G:\MMMx\defs\Ramachandran_disordered.mat</file>

@@ -146,12 +146,16 @@ for d = 1:length(control.directives)
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
             cmd.oriented = false;
+            cmd.drms = false;
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
                 cmd.entity = '.'; % flexibility analysis is performed for current entity
             end
             if length(control.directives(d).options) > 2 % further directive
+                if strcmpi(control.directives(d).options{3},'drms')
+                    cmd.drms = true;
+                end
                 if strcmpi(control.directives(d).options{3},'oriented')
                     cmd.oriented = true;
                 end
@@ -177,6 +181,7 @@ for d = 1:length(control.directives)
             cmd.options.chain_mode = false;
             cmd.options.Rg = false;
             cmd.options.pair_rmsd = false;
+            cmd.options.pair_drms = false;
             cmd.options.superimpose = true;
             cmd.options.sorted = false;
             cmd.options.pair_corr = false;
@@ -199,6 +204,10 @@ for d = 1:length(control.directives)
                         cmd.options.Rg = true;
                     case 'width'
                         cmd.options.pair_rmsd = true;
+                    case 'drms'
+                        cmd.options.pair_drms = true;
+                    case 'sort'
+                        cmd.options.sorted = true;
                     case 'correlation'
                         cmd.options.pair_corr = true;
                     case 'compactness'
@@ -445,7 +454,9 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            if cmd.oriented
+            if cmd.drms
+                [pair_rmsd,pop,exceptions0] = pair_drms_matrix(c_entity);
+            elseif cmd.oriented
                 [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
             else
                 [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
@@ -481,10 +492,18 @@ for c = 1:cmd_poi
                 end
             end
             fclose(ens_fid);
-            h = plot_pair_rmsd(pair_rmsd);
-            if save_figures
-                figname = sprintf('pair_rmsd_sorting_%s.%s',basname,figure_format);
-                saveas(h,figname);
+            if cmd.drms
+                h = plot_pair_rmsd(pair_rmsd,false,true);
+                if save_figures
+                    figname = sprintf('pair_drms_sorting_%s.%s',basname,figure_format);
+                    saveas(h,figname);
+                end
+            else
+                h = plot_pair_rmsd(pair_rmsd);
+                if save_figures
+                    figname = sprintf('pair_rmsd_sorting_%s.%s',basname,figure_format);
+                    saveas(h,figname);
+                end
             end
             c_entity = get_ensemble(ensemble_name);
             if strcmp(cmd.entity,'.')
@@ -581,6 +600,29 @@ for c = 1:cmd_poi
                         pair_rmsd = measures.(part).pair_rmsd;
                         datname = sprintf('pair_rmsd_%s_%s.csv',basname,part);
                         writematrix(pair_rmsd,datname);
+                    end
+                end
+                if cmd.options.pair_drms
+                    h = plot_pair_rmsd(measures.(part).pair_drms,cmd.options.superimpose,cmd.options.pair_drms);
+                    sum_msq = sum(measures.(part).pair_drms.^2);
+                    [C,~] = size(measures.(part).pair_drms);
+                    [msq,conf] = min(sum_msq);
+                    drms = sqrt(msq/C);
+                    fprintf(logfid,'\nCentral conformer %i has drms of %4.1f %s from other conformers\n',...
+                        conf,drms,char(197));
+                    if save_figures
+                        figname = sprintf('pair_drms_%s_%s.%s',basname,part,figure_format);
+                        saveas(h,figname);
+                    end
+                    if cmd.options.matlab
+                        pair_drms = measures.(part).pair_rmsd;
+                        datname = sprintf('pair_drms_%s_%s.mat',basname,part);
+                        save(datname,'pair_drms');
+                    end
+                    if cmd.options.csv
+                        pair_drms = measures.(part).pair_drms;
+                        datname = sprintf('pair_drms_%s_%s.csv',basname,part);
+                        writematrix(pair_drms,datname);
                     end
                 end
                 if cmd.options.pair_corr
@@ -803,10 +845,18 @@ if length(range) == 1
 end
 
 
-function h = plot_pair_rmsd(pair_rmsd,superimposed)
+function h = plot_pair_rmsd(pair_rmsd,superimposed,drms)
 
 if ~exist('superimposed','var') || isempty(superimposed)
     superimposed = true;
+end
+
+if ~exist('drms','var') || isempty(drms)
+    drms = false;
+end
+
+if drms
+    superimposed = false;
 end
 
 h = figure;
@@ -821,7 +871,9 @@ colorbar;
 axis tight
 xlabel('Conformer number');
 ylabel('Conformer number');
-if superimposed
+if drms
+    title('Pair distance root mean square deviation');
+elseif superimposed
     title('Pair rmsd upon optimal superposition');
 else
     title('Pair rmsd for original orientation');

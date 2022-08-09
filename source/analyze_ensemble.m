@@ -26,13 +26,18 @@ function [measures,correlations] = analyze_ensemble(backbones,pop,options)
 %               .pair_rmsd      Boolean, pairwise root mean square 
 %                               deviation, ensemble width, and density,
 %                               defaults to true
+%               .pair_drms      Boolean, pairwise distance root mean square 
+%                               deviation, defaults to false
 %               .superimpose    Boolean, optimal superposition of
 %                               conformers for computing pair rmsd,
 %                               defaults to true, effect only if .pair_rmsd
 %                               is true
 %               .sorted         Boolean, recursive hierarchical clustering
 %                               sorting, defaults to false, forces
-%                               .pair_rmsd to true
+%                               .pair_rmsd to true if neither .pair_rmsd
+%                               nor .pair.drms is set, if .pair_drms is
+%                               set, sorting is by distance root mean
+%                               square deviation
 %               .pair_corr      Boolean, if true, compute residue pair
 %                               correlations, defaults to true 
 %               .compactness    Boolean, if true, compactness analysis is
@@ -117,11 +122,15 @@ if ~isfield(options,'superimpose') || isempty(options.superimpose)
     options.superimpose = true;
 end
 
+if ~isfield(options,'pair_drms') || isempty(options.pair_drms)
+    options.pair_drms = false;
+end
+
 if ~isfield(options,'sorted') || isempty(options.sorted)
     options.sorted = false;
 end
 
-if options.sorted
+if options.sorted && ~options.pair_drms
     options.pair_rmsd = true;
 end
 
@@ -217,13 +226,42 @@ for kc = 1:length(chains)
         measures.(chains{kc}).pair_rmsd = pair_rmsd;        
         measures.(chains{kc}).width = get_ensemble_width(pair_rmsd,pop);
         measures.(chains{kc}).density = get_ensemble_density(pair_rmsd);
-        if options.sorted
+        if options.sorted && ~options.pair_drms
             rmsdsum = sum(pair_rmsd);
             [~,sorting] = sort(rmsdsum);
             pair_rmsd = pair_rmsd(sorting,sorting);
             [new_pair_rmsd,new_ordering] = cluster_sorting(pair_rmsd,pop,1,sorting);
             measures.(chains{kc}).sorting = new_ordering;
             measures.(chains{kc}).pair_rmsd = new_pair_rmsd;
+        else
+            measures.(chains{kc}).sorting = 1:C;
+        end
+    end
+    if options.pair_drms
+        pair_drms = zeros(C);
+        coor0 = backbones.(chains{kc}).bb{1};
+        [N_atoms,~] = size(coor0);
+        N2 = N_atoms*(N_atoms-1)/2;
+        for c1 = 1:C-1
+            coor1 = backbones.(chains{kc}).bb{c1};
+            for c2 = c1+1:C
+                coor2 = backbones.(chains{kc}).bb{c2};
+                dmat1 = coor2dmat(coor1); % distance matrix for first conformer
+                dmat2 = coor2dmat(coor2); % distance matrix for second conformer
+                drms = sum(sum((dmat1-dmat2).^2)); % mean-square deviation for this conformer pair
+                pair_drms(c1,c2) = drms;
+                pair_drms(c2,c1) = drms;
+            end
+        end
+        pair_drms = sqrt(pair_drms/N2); % normalized root mean square deviation
+        measures.(chains{kc}).pair_drms = pair_drms;
+        if options.sorted
+            rmsdsum = sum(pair_drms);
+            [~,sorting] = sort(rmsdsum);
+            pair_drms = pair_drms(sorting,sorting);
+            [new_pair_drms,new_ordering] = cluster_sorting(pair_drms,pop,1,sorting);
+            measures.(chains{kc}).sorting = new_ordering;
+            measures.(chains{kc}).pair_drms = new_pair_drms;
         else
             measures.(chains{kc}).sorting = 1:C;
         end

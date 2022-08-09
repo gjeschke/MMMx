@@ -163,7 +163,7 @@ while ischar(tline)
             %             if new_indent < indent 
             %                 level = level - 1;
             %             end
-            if new_indent > indent
+            if new_indent > indent && level < 2
                 level = level + 1;
             end
             switch level

@@ -13,7 +13,7 @@ from sphinx_rtd_theme import __version__
 
 # Project details
 project = 'MMMx'
-copyright = 'UnCopyright 2020-, Gunnar Jeschke, Laura Esteban-Hofer'
+copyright = 'MIT license 2020-, Gunnar Jeschke, Laura Esteban-Hofer'
 author = 'Gunnar Jeschke'
 language = 'en'
 

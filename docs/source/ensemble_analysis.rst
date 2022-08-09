@@ -80,6 +80,7 @@ Arguments
     *   ``filename`` - name of the output ensemble list, extension should be '.ens'
     *   ``input`` - identifier of the input ensemble
     *   ``option`` - option 'oriented' assumes that the conformers are already in the same frame, otherwise they are optimally superimposed
+    *   ``option`` - option 'drms' uses orientation-independent distance root-mean square as a metric
 Remarks
     *   the algorithm attempts to group similar conformers and to start from the most typical conformers
 
@@ -107,6 +108,8 @@ Available subkeys
     *   ``Rg`` - radius of gyration. including standard deviation (output to logfile)
     *   ``width`` - ensemble width and density in Angstroem (output to logfile), also computes pair r.m.s.d. matrix and central conformer
     *   ``correlation`` - correlation matrix, output as figure and to files 'residue\_pair\_correlation_%s' with extensions '.csv'and '.mat'
+    *   ``sort`` - sort for computation of correlation matrix
+	*   ``drms`` - uses distance root mean square deviation for correlation matrix and sorting
     *   ``compactness`` - compactness matrix    
 Remarks
     *   saving output to both Matlab ('.mat') and '.csv' files is allowed 

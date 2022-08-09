@@ -114,11 +114,14 @@ for d = 1:length(control.directives)
         case {'initial','getpdb'}
             initial_ensemble = control.directives(d).options{1};
         case 'figures'
-            if strcmpi(control.directives(d).options{1},'off')
+            if ~isempty(control.directives(d).options) && strcmpi(control.directives(d).options{1},'off')
                 save_figures = false;
             else
                 save_figures = true;
-                figure_format = control.directives(d).options{1};
+                plot_result = true;
+                if ~isempty(control.directives(d).options)
+                    figure_format = control.directives(d).options{1};
+                end
             end
         case 'interactive'
             opt.interactive = true;
@@ -386,6 +389,7 @@ for ddr_poi = 1:length(restraints.ddr)
             distr_exp = exp_data(:,2)';
             lb_exp = exp_data(:,3)';
             ub_exp = exp_data(:,4)';
+            fit_task.ddr(kft).rax_exp = rax_exp; % store original distance axis for plot range
             fit_task.ddr(kft).exp_distr = interp1(rax_exp,distr_exp,fit_task.r_axis,'pchip',0);
             sc = 1/sum(fit_task.ddr(kft).exp_distr);
             fit_task.ddr(kft).exp_distr = sc*fit_task.ddr(kft).exp_distr;
@@ -1287,7 +1291,9 @@ if plot_result
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
+                maxamp = dr*max([max(fit_task.ddr(kr).fit_distr),max(fit_task.ddr(kr).exp_distr)]);
                 if ~isempty(fit_task.ddr(kr).exp_distr_ub)
+                    maxamp = max([maxamp,dr*max(fit_task.ddr(kr).exp_distr_ub)]);
                     distr_ub = fit_task.ddr(kr).exp_distr_ub;
                     distr_lb = fit_task.ddr(kr).exp_distr_lb;
                     fill([fit_task.r_axis, fliplr(fit_task.r_axis)],dr*[distr_ub, fliplr(distr_lb)],0.75*[1,1,1],'LineStyle','none');
@@ -1303,10 +1309,12 @@ if plot_result
                 end
             end
             if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
+                maxamp = max(dr*fit_task.ddr(kr).sim_distr);
                 plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0]);
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
             end
             plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0]);
+            axis([fit_task.ddr(kr).rax_exp(1),fit_task.ddr(kr).rax_exp(end),0,1.05*maxamp]);
             if ~isempty(overlap_E)
                 overlap = overlap*overlap_E;
             else
@@ -1325,6 +1333,7 @@ if plot_result
             title(title_str);
             xlabel('Distance (Angstroem)');
             ylabel('Probability density');
+            set(gca,'FontSize',14);
             if save_figures
                 figure_title = sprintf('overlap_%s-%s',site1,site2);
                 save_figure(h,figure_title,figure_format);
@@ -1335,6 +1344,7 @@ if plot_result
     fprintf(1,'Overlap deficiency: %6.3f\n',1-overlap);
     for kr = 1:nr_sas
         if fit_task.sas_valid(kr)
+            datafile = restraints.sas(kr).data;
             h = figure; clf; hold on
             data = all_sas_predictions{kr};
             fitted_curve = fit_task.sas(kr).fitted_curve;
@@ -1343,8 +1353,9 @@ if plot_result
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
             xlabel(sprintf('q [%s^{-1}]',char(197)));
             ylabel('I(s)');
+            set(gca,'FontSize',14);
             if save_figures
-                figure_title = sprintf('SAS_fit_%i',kr);
+                figure_title = sprintf('SAS_fit_%s',datafile);
                 save_figure(h,figure_title,figure_format);
             end
             h = figure; clf; hold on
@@ -1354,8 +1365,9 @@ if plot_result
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
             xlabel(sprintf('q [%s^{-1}]',char(197)));
             ylabel('log(I(q))');
+            set(gca,'FontSize',14);
             if save_figures
-                figure_title = sprintf('SAS_log_fit_%i',kr);
+                figure_title = sprintf('SAS_log_fit_%s',datafile);
                 save_figure(h,figure_title,figure_format);
             end
             h = figure; clf; hold on
@@ -1365,8 +1377,9 @@ if plot_result
             title(sprintf('chi^2 = %6.3f',fit_task.sas(kr).chi2));
             xlabel(sprintf('log(q%s%s)',char(183),char(197)));
             ylabel('log(I(q))');
+            set(gca,'FontSize',14);
             if save_figures
-                figure_title = sprintf('SAS_log_log_fit_%i',kr);
+                figure_title = sprintf('SAS_log_log_fit_%s',datafile);
                 save_figure(h,figure_title,figure_format);
             end
             h = figure; clf; hold on
@@ -1375,8 +1388,9 @@ if plot_result
             title(sprintf('Fit residual: chi^2 = %6.3f',fit_task.sas(kr).chi2));
             xlabel(sprintf('q [%c^{-1}]',char(197)));
             ylabel('I_{exp}(q) - I_{sim}(q)');
+            set(gca,'FontSize',14);
             if save_figures
-                figure_title = sprintf('SAS_log_fit_residual_%i',kr);
+                figure_title = sprintf('SAS_log_fit_residual_%s',datafile);
                 save_figure(h,figure_title,figure_format);
             end
         end
@@ -1423,7 +1437,7 @@ if plot_result
                 axis([1,kx,0,1.05]);
             end
             if save_figures
-                figure_title = sprintf('PRE_fit_%i',kr);
+                figure_title = sprintf('PRE_fit_%s',restraints.pre(kr).site);
                 save_figure(h,figure_title,figure_format);
             end
         end

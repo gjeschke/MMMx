@@ -1285,7 +1285,7 @@ save([outname '.mat'],'restraints','fit_task','exceptions');
 
 % save fit results into CSV files if requested
 if save_csv
-    dr = fit_task.r_axis(2) - fit_task.r_axis(1);
+    dr = 1/(fit_task.r_axis(2) - fit_task.r_axis(1));
     overlap = 1;
     for kr = 1:nr
         if fit_task.ddr_valid(kr)
@@ -1294,6 +1294,8 @@ if save_csv
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
             data = fit_task.r_axis.';
             column_string = 'r';
+            exp_rmean = '(exp. na)';
+            exp_rstd = '(exp. na)';
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
                 data = [data dr*fit_task.ddr(kr).exp_distr.']; %#ok<AGROW>
@@ -1304,8 +1306,18 @@ if save_csv
                     data = [data dr*distr_lb.' dr*distr_ub']; %#ok<AGROW>
                     column_string = strcat(column_string,',l,u');
                 end
+                expdistr = dr*fit_task.ddr(kr).exp_distr;
+                expdistr = expdistr/sum(expdistr);
+                rmean = sum(fit_task.r_axis.*expdistr);
+                rstd = sqrt(sum(expdistr.*(fit_task.r_axis-rmean).^2));
+                exp_rmean = sprintf('(exp. %5.1f A)',rmean);
+                exp_rstd = sprintf('(exp. %5.1f A)',rstd);
             end
             data = [data dr*fit_task.ddr(kr).fit_distr.']; %#ok<AGROW>
+            backcalc = fit_task.ddr(kr).fit_distr;
+            backcalc = backcalc/sum(backcalc);
+            rmean = sum(fit_task.r_axis.*backcalc);
+            rstd = sqrt(sum(backcalc.*(fit_task.r_axis-rmean).^2));
             column_string = strcat(column_string,',f');
             if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
                 data = [data dr*fit_task.ddr(kr).sim_distr.']; %#ok<AGROW>
@@ -1327,14 +1339,15 @@ if save_csv
             end
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
-            fprintf(logfid,'Overlap %s-%s',site1,site2);
+            fprintf(logfid,'%s-%s',site1,site2);
             if ~isempty(overlap_E)
-                fprintf(logfid,' (distribution): %6.3f.',overlap_E);
+                fprintf(logfid,' (distribution): overlap = %6.3f.',overlap_E);
             elseif ~isempty(overlap_G)
-                fprintf(logfid,' (Gaussian restraint): %6.3f.',overlap_G);
+                fprintf(logfid,' (Gaussian restraint): overlap = %6.3f.',overlap_G);
             else
                 fprintf(logfid,' is unspecified.');
             end
+            fprintf(logfid,' mean = %5.1f A %s, SD = %5.1f A %s',rmean,exp_rmean,rstd,exp_rstd);
             % save the data
             fprintf(logfid,' CSV columns: %s\n',column_string);
             datname = sprintf('ddr_fit_%s_%s.csv',site1,site2);
@@ -1386,7 +1399,7 @@ if save_csv
 end
 
 if plot_result
-    dr = fit_task.r_axis(2) - fit_task.r_axis(1);
+    dr = 1/(fit_task.r_axis(2) - fit_task.r_axis(1));
     overlap = 1;
     for kr = 1:nr
         if fit_task.ddr_valid(kr)

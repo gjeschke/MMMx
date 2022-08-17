@@ -165,10 +165,10 @@ else
     if decider(significant_rotamers) < 1- threshold
         significant_rotamers = significant_rotamers + 1;
     end
+    rotamers.numbers = sorting(1:significant_rotamers);
     rotamers.populations = rotamers.populations(1:significant_rotamers);
     rotamers.populations = rotamers.populations/sum(rotamers.populations);
     rotamers.coor = rotamers.coor(1:significant_rotamers);
-    rotamers.numbers = sorting(1:significant_rotamers);
 end
 
 % compute label positions

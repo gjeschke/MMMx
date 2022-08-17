@@ -45,6 +45,8 @@ synonyms{21} = 'M8D,m8-dota-gd,';
 synonyms{22} = 'GPM,gpymi-MTA,';
 synonyms{23} = 'TMT,tormyshev-trityl,';
 synonyms{24} = 'HCU,dHis-Cu,';
+synonyms{25} = 'GBH,br-py-do3a,';
+synonyms{26} = 'GBM,br-py-do3ma,';
 
 for k = 1:length(synonyms)
     if contains(upper(synonyms{k}),[',' upper(synonym) ','])...

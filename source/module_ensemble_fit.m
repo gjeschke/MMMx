@@ -73,6 +73,7 @@ load_options.stripH = true;
 save_csv = false; % saving of fit results to CSV files is off by default
 initial_ensemble = '';
 added_conformers = '';
+added_ensemble = '';
 opt.threshold = 0.01; % conformers wih population below this threshold are discarded
 
 opt.interactive = false; % no interactive plotting during fits
@@ -112,7 +113,7 @@ for d = 1:length(control.directives)
             end
         case 'plot'
             plot_result = true;
-        case {'initial','getpdb'}
+        case {'initial'}
             initial_ensemble = control.directives(d).options{1};
         case 'figures'
             if ~isempty(control.directives(d).options) && strcmpi(control.directives(d).options{1},'off')
@@ -128,11 +129,13 @@ for d = 1:length(control.directives)
             opt.interactive = true;
         case 'blocksize'
             opt.blocksize = str2double(control.directives(d).options{1});
-        case 'addpdb'
+        case {'addpdb'}
             added_conformers = control.directives(d).options{1};
             if length(control.directives(d).options) > 1 && strcmpi(control.directives(d).options{2},'protons')
                 load_options.stripH = false;
             end
+        case {'getpdb'}
+            added_ensemble = control.directives(d).options{1};
         case 'plotgroup'
             pg_poi = pg_poi + 1;
             colname = control.directives(d).options{1};
@@ -318,6 +321,25 @@ if expand_rba
     end
 end
 
+%read an input ensemble from a single PDB file if there was a 'getpbd'
+%directive
+added_ensemble_files = {};
+if ~isempty(added_ensemble)
+    entity = get_pdb(added_ensemble);
+    pop0 = entity.populations;
+    pop0 = pop0';
+    added_ensemble_files(length(pop0)).name = '';
+    put_options.selected = true;
+    [~,basname,~] = fileparts(added_ensemble);
+    for c = 1:length(pop0)
+        fname = sprintf('%s_m%i.pdb',basname,c);
+        added_ensemble_files(c).name = fname;
+        entity = select(entity,sprintf('{%i}',c),true);
+        put_pdb(entity,fname,put_options);
+        fit_task.file_list{c} = fname;
+    end
+end
+
 [initial_files,pop] = rd_ensemble_definition(initial_ensemble);
 pop = pop';
 [~,~,ext] = fileparts(added_conformers);
@@ -328,13 +350,25 @@ added_files = dir(added_conformers); % find all files that match the pattern
 
 if ~expand_rba
     % make file list of conformers
-    C = length(initial_files) + length(added_files);
+    C = length(initial_files) + length(added_files) + length(added_ensemble_files);
+    if ~isempty(initial_files) 
+        fprintf(logfid,'An initial ensemble with populations and %i conformers was input from a list\n',length(initial_files));
+    end
+    if ~isempty(added_ensemble_files) 
+        fprintf(logfid,'An initial ensemble with %i conformers was input from a PDB file\n',length(added_ensemble_files));
+    end
+    if ~isempty(added_files) 
+        fprintf(logfid,'%i conformers were added from individual PDB files\n',length(added_files));
+    end
     expand_str = '';
 else
-    expand_str = ' by rigid-body arrangment expansion';
+    expand_str = ' by rigid-body arrangement expansion';
 end
 
 fprintf(logfid,'Ensemble fit with %i conformers%s\n',C,expand_str);
+if expand_rba && ~isempty(initial_files)
+    fprintf(logfid,'The %i input conformers beyond expanded rigid bodies are ignored\n',length(initial_files));
+end
 
 C0 = length(initial_files); % number of conformers that must be included
 
@@ -351,14 +385,23 @@ fit_task.file_list = cell(1,C);
 for c = 1:length(initial_files)
     fit_task.file_list{c} = initial_files(c).name;
 end
+coffset = length(initial_files);
+for c = 1:length(added_ensemble_files)
+    fit_task.file_list{coffset+c} = added_ensemble_files(c).name;
+end
+coffset = coffset + length(added_ensemble_files);
 for c = 1:length(added_files)
-    fit_task.file_list{length(initial_files)+c} = added_files(c).name;
+    fit_task.file_list{coffset+c} = added_files(c).name;
 end
 
-if C > length(initial_files)
+if ~isempty(added_files) 
     fit_task.pop = ones(1,C)/C;
-else
+elseif ~isempty(initial_files) && ~isempty(added_ensemble_files)
+    fit_task.pop = ones(1,C)/C;
+elseif ~isempty(initial_files)
     fit_task.pop = pop;
+else
+    fit_task.pop = pop0;
 end
 
 opt.pre_max_Gamma2 = pre_max_Gamma2;
@@ -788,6 +831,7 @@ all_pre_predictions = all_pre_predictions(1:nr_pre,:);
 
 loss_of_merit = [];
 
+included = 1:C0; % indices for conformers of initial ensemble
 if run_fit
     % prepare display figure if needed and store axes handle
     if opt.interactive
@@ -799,7 +843,6 @@ if run_fit
     % the following is an iterative run with block size limit
     
     processed = C0; % pointer for processed files, initial ensemble is automatically included
-    included = 1:C0; % indices for conformers of initial ensemble
     first_run = true; % even if only the initial ensemble is given, it should be refitted
     
     all_fom_ddr = zeros(1,C);
@@ -1180,7 +1223,7 @@ if run_fit
     end
 end
 
-fprintf(logfid,'%i conformers remain included\n\n',C0);          
+fprintf(logfid,'%i conformers remain included\n\n',length(fit_task.ensemble_populations));          
 
 % save ensemble
 ofid = fopen(outname,'wt');

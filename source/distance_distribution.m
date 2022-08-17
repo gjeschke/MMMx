@@ -330,6 +330,7 @@ function [pair_distribution,missing] = get_pair_distribution(rax,positions1,popu
 % population, the distribution is normalized to unity
 
 %initialize output
+pair_distribution0 = zeros(size(rax));
 pair_distribution = zeros(size(rax));
 
 rmin = rax(1);
@@ -346,6 +347,18 @@ populations2 = populations2/sum(populations2);
 a2 = repmat(sum(positions1.^2,2),1,n_rot_2);
 b2 = repmat(sum(positions2.^2,2),1,n_rot_1).';
 pair_dist = sqrt(abs(a2 + b2 - 2*positions1*positions2.'));
+missing0 = 0;
+for k1 = 1:length(populations1)
+    for k2 = 1:length(populations2)
+        r = norm(positions1(k1,:)-positions2(k2,:));
+        index = 1 + round((r-rmin)/dr);
+        if index >= 1 && index <= nr
+            pair_distribution0(index) = pair_distribution0(index) + populations1(k1)*populations2(k2);
+        else
+            missing0 = missing0 + populations1(k1)*populations2(k2);
+        end
+    end
+end
 weights = populations1*populations2.';
 indices = reshape(pair_dist,1,n_rot_1*n_rot_2);
 indices = 1 + round((indices-rmin)/dr);

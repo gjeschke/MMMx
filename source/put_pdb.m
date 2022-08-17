@@ -177,6 +177,9 @@ for kconf = 1:length(conformer_order)
     % or is this specific one selected?
     if min(abs(entity.selected-conformer_order(kconf))) == 0
         selected = true;
+        conformer_selected = true;
+    else
+        conformer_selected = false;
     end
     % skip this conformer, if it is not selected
     if ~selected
@@ -193,6 +196,9 @@ for kconf = 1:length(conformer_order)
         chain = chains{kc};
         if isstrprop(chain(1),'upper') % chain fields start with a capital
             selected = entity.(chain).selected | select_all;
+            if conformer_selected
+                selected = true;
+            end
             indices(1) = entity.(chain).index;
             residues = fieldnames(entity.(chain));
             residue_sorting = sort_residues(residues);
@@ -485,8 +491,8 @@ end
 [~,residue_sorting] = sort(sorter);
 residue_sorting = residue_sorting(1:true_residues);
 
-function flag = is_backbone(atom_tag)
-
-peptide_backbone = {'N','CA','C','O'};
-
-flag = any(strcmp(peptide_backbone,atom_tag));
+% function flag = is_backbone(atom_tag)
+% 
+% peptide_backbone = {'N','CA','C','O'};
+% 
+% flag = any(strcmp(peptide_backbone,atom_tag));

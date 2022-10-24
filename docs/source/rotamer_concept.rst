@@ -149,6 +149,8 @@ Label    Synonyms                         Class           Attachment       Rotam
 ``CNR``  ``CNC-NO``                       nitroxide       cofactor         144       1
 ``GMO``  ``dota-gd``                      gadolinium      cysteine         648       1
 ``GTO``  ``dtpa-gd``                      gadolinium      cysteine         2430      1
+``GBH``  ``br-py-do3a``                   gadolinium      cysteine         180       1
+``GBM``  ``br-py-do3ma``                  gadolinium      cysteine         180       1
 ``M8D``  ``m8-dota-gd``                   gadolinium      cysteine         1944      1
 ``GPM``  ``gpymi-MTA``                    gadolinium      cysteine         432       1
 ``TMT``  ``tormyshev-trityl``             trityl          cysteine         3888      1

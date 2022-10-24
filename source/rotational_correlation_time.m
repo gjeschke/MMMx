@@ -20,8 +20,8 @@ function [taur,info] = rotational_correlation_time(entity,address,options)
 % address      MMMx address, 'selected' refers to the current selection
 % options      struct, the following options can be specified
 %              .viscosity   viscosity in cPoise, defaults to 0.8882 cPoise,
-%                           (pH 7.4 phosphate buffer at 25?C)
-%              .T           temperature, defaults to 25?C, can be given in
+%                           (pH 7.4 phosphate buffer at 25C)
+%              .T           temperature, defaults to 25C, can be given in
 %                           ?C or K, values above 100 default to K units
 %              .specV       partial specific volume, defaults to 0.702
 %                           g/cm^3, used only with HYDROPRO

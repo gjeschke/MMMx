@@ -628,16 +628,16 @@ for c = 1:C
             found = false;
             for kcomp = 1:length(pre_list)
                 if strcmp(site_list(kr).chain,pre_list(kcomp).chain) && ...
-                        site_list(kr).residue == pre_list(kr).residue
-                    fit_task.pre(block_offset+kr).Gamma2(c) = pre_list(kr).Gamma2;
-                    if ~isnan(pre_list(kr).Gamma2)
+                        site_list(kr).residue == pre_list(kcomp).residue
+                    fit_task.pre(block_offset+kr).Gamma2(c) = pre_list(kcomp).Gamma2;
+                    if ~isnan(pre_list(kcomp).Gamma2)
                         found = true;
                         break
                     end
                 end
             end
             if ~found
-                fprintf(logfid,'Warning: pre at sites (%s)%i and %i cannot be evaluated for conformer %i\n',site_list(kr).chain,site_list(kr).residue,pre_list(kr).residue,c);
+                fprintf(logfid,'Warning: pre at sites %s and %i cannot be evaluated for conformer %i\n',site,site_list(kr).residue,c);
                 if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
                     fit_task.pre_valid(block_offset+kr) = false;
                 else % otherwise skip conformers for which not all restraints can be evaluated

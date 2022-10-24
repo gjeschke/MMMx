@@ -217,34 +217,34 @@ coor = all_coor{conf};
 % [~,conf] = min(sum_msq);
 % coor = backbones.all.bb{conf};
 % 
-% function [chain,range] = split_chain_range(address)
-% 
-% range = [];
-% 
-% if contains(address,'*')
-%     chain = '';
-%     return;
-% end
-% 
-% poia = strfind(address,'(');
-% poie = strfind(address,')');
-% if isempty(poie)
-%     chain = '';
-% else
-%     chain = address(poia+1:poie-1);
-%     address = address(poie+1:end);
-% end
-% if strcmp(chain,'*')
-%     range = [1,1e6];
-%     return
-% end
-% residues = split(address,'-');
-% if ~isempty(residues{1})
-%     range(1) = str2double(residues{1});
-% end
-% if ~isempty(residues{2})
-%     range(2) = str2double(residues{2});
-% end
-% if length(range) == 1
-%     range(2) = range(1);
-% end
+function [chain,range] = split_chain_range(address)
+
+range = [];
+
+if contains(address,'*')
+    chain = '';
+    return;
+end
+
+poia = strfind(address,'(');
+poie = strfind(address,')');
+if isempty(poie)
+    chain = '';
+else
+    chain = address(poia+1:poie-1);
+    address = address(poie+1:end);
+end
+if strcmp(chain,'*')
+    range = [1,1e6];
+    return
+end
+residues = split(address,'-');
+if ~isempty(residues{1})
+    range(1) = str2double(residues{1});
+end
+if ~isempty(residues{2})
+    range(2) = str2double(residues{2});
+end
+if length(range) == 1
+    range(2) = range(1);
+end

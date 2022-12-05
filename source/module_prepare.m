@@ -1134,7 +1134,7 @@ residues = split(address,'-');
 if ~isempty(residues{1})
     range(1) = str2double(residues{1});
 end
-if ~isempty(residues{2})
+if length(residues) > 1 && ~isempty(residues{2})
     range(2) = str2double(residues{2});
 end
 if length(range) == 1

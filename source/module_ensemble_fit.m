@@ -68,6 +68,7 @@ pre_default_taui = 0.5; % 0.5 ns default label internal correlation time
 pre_max_Gamma2 = 170;
 
 run_fit = true;
+nnllsq_fit = false;
 plot_result = false;
 load_options.stripH = true;
 save_csv = false; % saving of fit results to CSV files is off by default
@@ -92,10 +93,12 @@ sas_options.err = true;
 sas_options.crysol3 = false; 
 
 restraints.ddr(1).labels{1} = '';
+restraints.deer(1).labels{1} = '';
 restraints.pre(1).label = '';
 restraints.sas(1).data{1} = '';
 
 ddr_poi = 0;
+deer_poi = 0;
 sas_poi = 0;
 pre_poi = 0;
 plot_groups(1).rgb = [];
@@ -106,6 +109,8 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case 'nofit'
             run_fit = false;
+        case 'nnllsq'
+            nnllsq_fit = true;
         case 'expand'
             expand_rba = true;
             if ~isempty(control.directives(d).options{1})
@@ -129,6 +134,8 @@ for d = 1:length(control.directives)
             opt.interactive = true;
         case 'blocksize'
             opt.blocksize = str2double(control.directives(d).options{1});
+        case 'discard'
+            opt.threshold = str2double(control.directives(d).options{1});
         case {'addpdb'}
             added_conformers = control.directives(d).options{1};
             if length(control.directives(d).options) > 1 && strcmpi(control.directives(d).options{2},'protons')
@@ -226,6 +233,43 @@ for d = 1:length(control.directives)
                 fprintf(logfid,'\n');
             end
             fprintf(logfid,'\n\n');
+        case 'deer' % primary DEER data
+            deer_poi = deer_poi + 1; % increase ddr block counter
+            restraints.deer(deer_poi).labels{1} = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % different labels
+                restraints.deer(deer_poi).labels{2} = control.directives(d).options{2};
+            else % same label at both sites
+                restraints.deer(deer_poi).labels{2} = control.directives(d).options{1};
+                fprintf(logfid,'\n');
+            end
+            [nr,args] = size(control.directives(d).block);
+            if nr > 0 % at least one restraint in this block
+                restraints.deer(deer_poi).site1{nr} = ' ';
+                restraints.deer(deer_poi).site2{nr} = ' ';
+                restraints.deer(deer_poi).file{nr} = '*';
+            else % empty block
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_ensemble_fit:empty_deer_block', 'deer block %i is empty',d);
+                record_exception(exceptions{warnings},logfid);
+            end
+            if args < 3 % misformed restraint line
+                warnings = warnings + 1;
+                exceptions{warnings} = MException('module_ensemble_fit:misformed_deer', 'deer restraint has less than 3 arguments');
+                record_exception(exceptions{warnings},logfid);
+                failed = true;
+                return
+            end
+            for kr = 1:nr
+                restraints.deer(deer_poi).site1{kr} = control.directives(d).block{kr,1};
+                restraints.deer(deer_poi).site2{kr} = control.directives(d).block{kr,2};
+                restraints.deer(deer_poi).file{kr} = '';
+                arg3 = control.directives(d).block{kr,3};
+                if arg3(1) == '@'
+                    restraints.deer(deer_poi).file{kr} = arg3(2:end);
+                else
+                    restraints.deer(deer_poi).file{kr} = arg3;
+                end
+            end
         case {'pre','prerates'}
             pre_poi = pre_poi + 1; % increase pre block counter
             fprintf(logfid,'pre %s',control.directives(d).options{1}); % echo directive to log file
@@ -308,6 +352,7 @@ end
 restraints.ddr = restraints.ddr(1:ddr_poi);
 restraints.sas = restraints.sas(1:sas_poi);
 restraints.pre = restraints.pre(1:pre_poi);
+restraints.deer = restraints.deer(1:deer_poi);
 
 if expand_rba
     if isfield(entity0,'rba_populations')
@@ -453,6 +498,35 @@ for ddr_poi = 1:length(restraints.ddr)
     end
 end
 
+nr_deer = 0;
+if ~isempty(restraints.deer) && isfield(restraints.deer(1),'site1')
+    for deer_poi = 1:length(restraints.deer)
+        nr_deer = nr_deer + length(restraints.deer(deer_poi).site1);
+    end
+    if ~isempty(restraints.deer)
+        fit_task.deer(nr_deer).sim_distr = zeros(1,length(fit_task.r_axis));
+        fit_task.deer(nr_deer).exp_deer = [];
+        fit_task.deer(nr_deer).exp_time = [];
+    end
+    kft = 0;
+    for deer_poi = 1:length(restraints.deer)
+        for kr = 1:length(restraints.deer(deer_poi).site1)
+            kft = kft + 1;
+            if ~isempty(restraints.deer(deer_poi).file{kr})
+                exp_data = load(restraints.deer(deer_poi).file{kr});
+                time = exp_data(:,1)';
+                deer = exp_data(:,2)';
+                ff = (exp_data(:,2)-exp_data(:,4))/(1-exp_data(1,4)); % experimental form factor
+                fit_task.deer(kft).exp_deer = deer; % store original DEER trace
+                fit_task.deer(kft).exp_time = time;
+                fit_task.deer(kft).exp_ff = ff;
+            end
+            fit_task.deer(kft).distr = zeros(C,length(fit_task.r_axis));
+            fit_task.deer(kft).sim_ff = zeros(length(time),C);
+        end
+    end
+end
+
 nr_pre = 0;
 for pre_poi = 1:length(restraints.pre)
     nr_pre = nr_pre + length(restraints.pre(pre_poi).residue);
@@ -482,6 +556,7 @@ if ~isempty(restraints.sas)
     sas_initialized = false(1,length(restraints.sas));
 end
 fit_task.ddr_valid = true(1,nr); % for logical indexing of restraints
+fit_task.deer_valid = true(1,nr_deer); % for logical indexing of restraints
 fit_task.pre_valid = true(1,nr_pre); % for logical indexing of restraints
 if ~isempty(restraints.pre)
     pre_parameters(length(restraints.pre)).td = [];
@@ -574,6 +649,69 @@ for c = 1:C
         end
         block_offset = block_offset + length(restraints.ddr(ddr_poi).site1);
     end
+    if nr_deer > 0
+        my_base = load('deer_kernel.mat','base','t','r');
+        Pake_base.kernel = my_base.base-ones(size(my_base.base)); % kernel format for pcf2deer
+        Pake_base.t = my_base.t;
+        Pake_base.r = my_base.r;
+        clear my_base
+        block_offset = 0;
+        for deer_poi = 1:length(restraints.deer)
+            label1 = restraints.deer(deer_poi).labels{1};
+            label2 = restraints.deer(deer_poi).labels{2};
+            for kr = 1:length(restraints.deer(deer_poi).site1)
+                fit_task.deer(block_offset+kr).assignment = [deer_poi,kr];
+                site1 = restraints.deer(deer_poi).site1{kr};
+                site2 = restraints.deer(deer_poi).site2{kr};
+                is_known = false;
+                if isfield(properties,'deer')
+                    n_comp = length(properties.deer);
+                    for k_comp = 1:n_comp
+                        if strcmp(properties.deer(k_comp).site1,site1) && ...
+                                strcmp(properties.deer(k_comp).site2,site2) && ...
+                                strcmp(properties.deer(k_comp).label1,label1) && ...
+                                strcmp(properties.deer(k_comp).label2,label2)
+                            deer_exceptions = [];
+                            distr = properties.deer(k_comp).distr;
+                            is_known = true;
+                            break
+                        end                    
+                    end
+                else
+                    n_comp = 0;
+                end
+                if ~is_known
+                    [~,distr,entity,deer_exceptions] = distance_distribution(entity,site1,label1,site2,label2,options);
+                end
+                if ~isempty(deer_exceptions) && ~isempty(deer_exceptions{1})
+                    for ex = 1:length(deer_exceptions)
+                        warnings = warnings + 1;
+                        exceptions{warnings} = deer_exceptions{ex};
+                    end
+                elseif ~is_known
+                    n_comp = n_comp + 1;
+                    properties.deer(n_comp).site1 = site1;
+                    properties.deer(n_comp).site2 = site2;
+                    properties.deer(n_comp).label1 = label1;
+                    properties.deer(n_comp).label2 = label2;
+                    properties.deer(n_comp).distr = distr;
+                end
+                if ~isempty(distr)
+                    fit_task.deer(block_offset+kr).distr(c,:) = distr/sum(distr);
+                    sim_ff = form_factor_deer(fit_task.r_axis/10,distr,fit_task.deer(block_offset+kr).exp_time,Pake_base);
+                    fit_task.deer(block_offset+kr).sim_ff(:,c) = sim_ff.';
+                else
+                    fprintf(logfid,'Warning: deer between sites %s and %s cannot be evaluated for conformer %i\n',site1,site2,c);
+                    if opt.skip_restraints % if requested, skip restraints that cannot be evaluated for all conformers
+                        fit_task.deer_valid(block_offset+kr) = false;
+                    else % otherwise skip conformers for which not all restraints can be evaluated
+                        valid_conformers(c) = false;
+                    end
+                end
+            end
+            block_offset = block_offset + length(restraints.deer(deer_poi).site1);
+        end
+    end
     block_offset = 0;
     for pre_poi = 1:length(restraints.pre)
         label = restraints.pre(pre_poi).label;
@@ -630,6 +768,7 @@ for c = 1:C
                 if strcmp(site_list(kr).chain,pre_list(kcomp).chain) && ...
                         site_list(kr).residue == pre_list(kcomp).residue
                     fit_task.pre(block_offset+kr).Gamma2(c) = pre_list(kcomp).Gamma2;
+                    fit_task.pre(block_offset+kr).pre(c) = pre_list(kcomp).pre;
                     if ~isnan(pre_list(kcomp).Gamma2)
                         found = true;
                         break
@@ -667,29 +806,9 @@ for c = 1:C
                 switch restraints.sas(sas_poi).type
                     case 'saxs'
                         [fit,chi2] = fit_SAXS(datafile,fit_task.file_list{c},options);
-%                         h = figure; clf; hold on;
-%                         plot(fit(:,1),fit(:,2),'k');
-%                         plot(fit(:,1),fit(:,3),'r');
-%                         title(sprintf('chi^2 = %6.3f\n',chi2));
-%                         fprintf(1,'SAXS chi^2 = %6.3f\n',chi2);
-%                         drawnow
-%                         if save_figures
-%                             figure_title = sprintf('SAXS restraint set %i',sas_poi);
-%                             save_figure(h,figure_title,figure_format);
-%                         end
                     case 'sans'
                         illres = restraints.sas(sas_poi).illres;
                         [fit,chi2] = fit_SANS(datafile,fit_task.file_list{c},illres,options);
-%                         h = figure; clf; hold on;
-%                         plot(fit(:,1),fit(:,2),'k');
-%                         plot(fit(:,1),fit(:,3),'r');
-%                         title(sprintf('chi^2 = %6.3f\n',chi2));
-%                         fprintf(1,'SANS chi^2 = %6.3f\n',chi2);
-%                         drawnow
-%                         if save_figures
-%                             figure_title = sprintf('SANS restraint set %i',sas_poi);
-%                             save_figure(h,figure_title,figure_format);
-%                         end
                 end
             end
             if isempty(fit)
@@ -769,12 +888,19 @@ if isfield(fit_task,'pre')
         fit_task.pre(kr).Gamma2 = fit_task.pre(kr).Gamma2(valid_conformers);
     end
 end
+if isfield(fit_task,'deer')
+    for kr = 1:length(fit_task.deer)
+        fit_task.deer(kr).sim_ff = fit_task.deer(kr).sim_ff(:,valid_conformers);
+    end
+end
 C = length(fit_task.pop);
 
 fprintf(logfid,'\n');
 
 fit_task.remaining_conformers = 1:C;
 fit_task.ensemble_populations = fit_task.pop;
+
+
 
 % prepare DEER fit by arranging fit target and distance distributions
 % predicted for all conformers into matrices for all restraints
@@ -832,7 +958,89 @@ all_pre_predictions = all_pre_predictions(1:nr_pre,:);
 loss_of_merit = [];
 
 included = 1:C0; % indices for conformers of initial ensemble
-if run_fit
+
+if nnllsq_fit
+    conformers = 1:C;
+    nnllsq_options = optimset('TolFun',1e-4,'Display','final');
+    for kr = 1:length(fit_task.deer_valid)
+        if fit_task.deer_valid(kr)
+           exp_data = fit_task.deer(kr).exp_ff;
+           kernel = fit_task.deer(kr).sim_ff;
+           [popfit,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
+           fit_task.deer(kr).resnorm = resnorm;
+           sim = kernel*popfit;           
+           figure(100+kr); clf; hold on;
+           plot(fit_task.deer(kr).exp_time,exp_data);
+           plot(fit_task.deer(kr).exp_time,sim);
+           title(sprintf('Residual norm: %6.4f',resnorm));
+        end
+    end
+    for kr = 1:length(fit_task.sas_valid)
+        if fit_task.sas_valid
+            exp_data = fit_task.sas(kr).fits(:,2);
+            kernel = fit_task.sas(kr).fits(:,4:end);
+            [popfit,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
+            fit_task.sas(kr).resnorm = resnorm;
+            sim = kernel*popfit;
+            figure(200+kr); clf; hold on;
+            plot(fit_task.sas(kr).fits(:,1),exp_data);
+            plot(fit_task.sas(kr).fits(:,1),sim);
+            title(sprintf('Residual norm: %6.4f',resnorm));
+        end
+    end
+    data_dim = 0;
+    for kr = 1:length(fit_task.deer_valid)
+        if fit_task.deer_valid(kr)
+            data_dim = data_dim + length(fit_task.deer(kr).exp_ff);
+        end
+    end
+    for kr = 1:length(fit_task.sas_valid)
+        if fit_task.sas_valid
+            data_dim = data_dim + length(fit_task.sas(kr).fits(:,2));
+        end
+    end
+    kernel = zeros(data_dim,C);
+    all_data = zeros(data_dim,1);
+    data_pointer = 0;
+    for kr = 1:length(fit_task.deer_valid)
+        if fit_task.deer_valid(kr)
+            ndat = length(fit_task.deer(kr).exp_ff);
+            normalizer = sqrt(fit_task.deer(kr).resnorm);
+            all_data(data_pointer+1:data_pointer+ndat) = fit_task.deer(kr).exp_ff/normalizer;
+            kernel(data_pointer+1:data_pointer+ndat,:) = fit_task.deer(kr).sim_ff/normalizer;
+            data_pointer = data_pointer + ndat;
+        end
+    end
+    for kr = 1:length(fit_task.sas_valid)
+        if fit_task.sas_valid
+            ndat = length(fit_task.sas(kr).fits(:,2));
+            normalizer = sqrt(fit_task.sas(kr).resnorm);
+            all_data(data_pointer+1:data_pointer+ndat) = fit_task.sas(kr).fits(:,2)/normalizer;
+            kernel(data_pointer+1:data_pointer+ndat,:) = fit_task.sas(kr).fits(:,4:end)/normalizer;
+            data_pointer = data_pointer + ndat;
+        end
+    end
+    n_sets = length(fit_task.deer_valid) + length(fit_task.sas_valid);
+    tic;
+    [popfit,resnorm] = lsqnonneg(kernel,all_data,nnllsq_options);
+    runtime = toc;
+    fit_task.ensemble_populations = popfit.'/sum(popfit);
+    loss_of_merit = resnorm/n_sets - 1;
+    fprintf(1,'\n--- Non-negative linear least-squares fit of populations ---\n\n');
+    fprintf(1,'Run time: %6.1f s\n',runtime);
+    fprintf(1,'Population sum: %6.4f\n',sum(popfit));
+    fprintf(1,'Loss of merit: %5.3f\n',loss_of_merit);
+    popfit = popfit.'/sum(popfit);
+    above_threshold = (popfit >= opt.threshold); % indicies of conformers above the population threshold
+    included = conformers(above_threshold); % these conformers are kept
+    fit_task.remaining_conformers = included; % store numbers of remaining conformers
+    popfit(~above_threshold) = 0; % discard low-probability conformers
+    popfit = popfit/sum(popfit);
+    fit_task.ensemble_populations = popfit(above_threshold); % store corresponding populations
+    fit_task.pop = popfit; % assign
+    fprintf(1,'%i conformers remain included\n',length(fit_task.ensemble_populations));
+    
+elseif run_fit
     % prepare display figure if needed and store axes handle
     if opt.interactive
         figure
@@ -1256,6 +1464,12 @@ for kr = 1:nr
     restraints.ddr(fit_task.ddr(kr).assignment(1)).fit_distr{fit_task.ddr(kr).assignment(2)} = fit_distr;
 end
 
+for kr = 1:nr_deer
+    fit_distr = fit_task.ensemble_populations*fit_task.deer(kr).distr(fit_task.remaining_conformers,:);
+    fit_task.deer(kr).fit_distr = fit_distr;
+    restraints.deer(fit_task.deer(kr).assignment(1)).fit_distr{fit_task.deer(kr).assignment(2)} = fit_distr;
+end
+
 for kr = 1:nr_sas
 %     fitted_curve = fit_task.ensemble_populations*fit_task.sas(kr).all_fits(:,fit_task.remaining_conformers).';
 %     fitted_curve = fitted_curve.';
@@ -1503,6 +1717,7 @@ if plot_result
     end
     overlap = overlap^(1/nr);
     fprintf(1,'Overlap deficiency: %6.3f\n',1-overlap);
+    fprintf(logfid,'Overlap deficiency: %6.3f\n',1-overlap);
     for kr = 1:nr_sas
         if fit_task.sas_valid(kr)
             datafile = restraints.sas(kr).data;
@@ -1603,6 +1818,22 @@ if plot_result
             end
         end
         fprintf(1,'PRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
+    end
+    if nr_deer > 0
+        my_base = load('deer_kernel.mat','base','t','r');
+        Pake_base.kernel = my_base.base-ones(size(my_base.base)); % kernel format for pcf2deer
+        Pake_base.t = my_base.t;
+        Pake_base.r = my_base.r;
+        clear my_base
+        for kr = 1:nr_deer
+            deer_fit = fit_deer(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_deer,fit_task.r_axis,fit_task.deer(kr).fit_distr,Pake_base);
+            figure; clf; hold on;
+            plot(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_deer);
+            plot(fit_task.deer(kr).exp_time,deer_fit);
+            site1 = restraints.deer(fit_task.deer(kr).assignment(1)).site1{fit_task.deer(kr).assignment(2)};
+            site2 = restraints.deer(fit_task.deer(kr).assignment(1)).site2{fit_task.deer(kr).assignment(2)};
+            title(sprintf('%s-%s Time-domain fit',site1,site2));
+        end
     end
 end
 

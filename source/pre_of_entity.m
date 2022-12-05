@@ -29,7 +29,11 @@ function [pre_list,exceptions,entity] = pre_of_entity(entity,site_list,label,lab
 % larmor    larmor frequency [MHz]
 %
 % OUTPUT
-% all_pre       double (N,1) of intensity ratios I_para/I_dia
+% pre_list      struct (n_sites,1) of
+%               .chain      chain identifier
+%               .residue    residue number
+%               .Gamma2     PRE rate
+%               .pre        PRE ratio
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
 % entity        entity, which may be augmented by a label

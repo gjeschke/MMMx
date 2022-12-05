@@ -1,4 +1,4 @@
-function MMMx(control_file)
+function MMMx(control_file,verbose)
 %
 % MMMX Run an MMMx modelling job
 %
@@ -24,12 +24,18 @@ elseif strcmpi(control_file,'help') || strcmpi(control_file,'docs')
     return
 end
 
+if ~exist('verbose','var') || isempty(verbose)
+    verbose = false;
+end
+
 exceptions = MMModel(control_file);
 
-for k = 1:length(exceptions)
-    if ~isempty(exceptions{k})
-        c_exception = exceptions{k};
-        fprintf(2,'%s\n',c_exception.message);
+if verbose
+    for k = 1:length(exceptions)
+        if ~isempty(exceptions{k})
+            c_exception = exceptions{k};
+            fprintf(2,'%s\n',c_exception.message);
+        end
     end
 end
 

@@ -1,4 +1,4 @@
-function gromacs2xyz(fname,options)
+function [sorting,elements,coor,n_atoms] = gromacs2xyz(fname,options)
 % GROMACS2XYZ Converts a GROMACS coordinate file to an xyz or Chem3D cc1
 % file, input is in nm, output is in Angstroem, output velocities are in
 % Angstroem/ps if requested
@@ -29,6 +29,11 @@ function gromacs2xyz(fname,options)
 %                   missing, only elements with single-letter symbols are
 %                   correctly recognized, if present, all atom types in the
 %                   input file must be included
+%
+% sorting           indices of output atoms in original cordinate array
+% elements          element names of output atoms
+% coor              coordinates of output atoms
+% n_atoms           total number of atoms
 %
 % GROMACS format specification taken from https://manual.gromacs.org/archive/5.0.3/online/gro.html
 %
@@ -111,6 +116,7 @@ else
 end
 
 fprintf(1,'Reading %i atom coordinates\n',n_atoms);
+sorting = 1:n_atoms;
 for k = 1:n_atoms
     % read and analyze one input line
     tline = fgetl(fid);
@@ -155,6 +161,7 @@ for k = 1:n_atoms
             coordinates.(restype).v = zeros(n_atoms,3);
             coordinates.(restype).elements = cell(n_atoms,1);
             coordinates.(restype).atnum = zeros(n_atoms,1);
+            coordinates.(restype).indices = zeros(n_atoms,1);
             coordinates.(restype).resnum = zeros(n_atoms,1);
         end
         coordinates.(restype).N = coordinates.(restype).N + 1;
@@ -163,6 +170,7 @@ for k = 1:n_atoms
         coordinates.(restype).v(n,:) = [vx,vy,vz]; 
         coordinates.(restype).elements{n} = element; 
         coordinates.(restype).atnum(n) = atnum; 
+        coordinates.(restype).indices(n) = k; 
         coordinates.(restype).resnum(n) = resnum; 
     else
         xyz(k,:) = [x,y,z]; 
@@ -200,10 +208,16 @@ end
 
 fprintf(fid,'%i\n',atoms);
 
+coor = zeros(atoms,3);
 if sorted
+    pointer = 0;
     for t = 1:length(options.sort)
         restype = options.sort{t};
         for a = 1:coordinates.(restype).N
+            pointer = pointer + 1;
+            sorting(pointer) = coordinates.(restype).indices(a);
+            coor(pointer,:) = coordinates.(restype).xyz(a,:);
+            elements{pointer} = coordinates.(restype).elements{a};
             fprintf(fid,'%3s',coordinates.(restype).elements{a});
             fprintf(fid,'%12.6f',coordinates.(restype).xyz(a,:));
             if options.v
@@ -212,6 +226,9 @@ if sorted
             fprintf(fid,'\n');
         end
     end
+    sorting = sorting(1:pointer);
+    elements = elements(1:pointer);
+    coor = coor(1:pointer,:);
 else
     for a = 1:atoms
         fprintf(fid,'%3s',elements{a});
@@ -221,6 +238,7 @@ else
         end
         fprintf(fid,'\n');
     end
+    coor = xyz;
 end
 
 fclose(fid);

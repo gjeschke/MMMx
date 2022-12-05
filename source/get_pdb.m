@@ -70,30 +70,34 @@ to_be_deleted = '';
 [~,~,ext] = fileparts(ident);
 
 % load file from PDB server if required
-if isempty(ext) && length(ident) == 4
-    query = sprintf('https://files.rcsb.org/download/%s.pdb.gz',lower(ident));
-    fname0 = [lower(ident) '.pdb.gz'];
-    try
-        websave(fname0,query);
-    catch exception
-        exceptions{1} = exception;
-        return;
-    end
-    try
-        gunzip(fname0);
-    catch exception
-        exceptions{1} = exception;
-        return;
-    end
-    ident = sprintf('%s.pdb',lower(ident));
-    to_be_deleted = ident;
-    % delete the zipped file
-    try
-        delete(fname0);
-    catch exception
-        warnings = warnings + 1;
-        exceptions{warnings} = exception;
-        % if everything else went well, this produces only a warning
+if isempty(ext) 
+    if length(ident) == 4
+        query = sprintf('https://files.rcsb.org/download/%s.pdb.gz',lower(ident));
+        fname0 = [lower(ident) '.pdb.gz'];
+        try
+            websave(fname0,query);
+        catch exception
+            exceptions{1} = exception;
+            return;
+        end
+        try
+            gunzip(fname0);
+        catch exception
+            exceptions{1} = exception;
+            return;
+        end
+        ident = sprintf('%s.pdb',lower(ident));
+        to_be_deleted = ident;
+        % delete the zipped file
+        try
+            delete(fname0);
+        catch exception
+            warnings = warnings + 1;
+            exceptions{warnings} = exception;
+            % if everything else went well, this produces only a warning
+        end
+    else
+        ident = strcat(ident,'.pdb');
     end
 end
 

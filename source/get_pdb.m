@@ -217,7 +217,7 @@ while 1
         if ~isstrprop(atname(1),'alpha')
             atname = strcat('Z_',atname);
         end
-        if length(tline) >= 78
+        if length(tline) >= 78 && ~isempty(strip(tline(77:78)))
             element = strtrim(tline(77:78));
         else
             element = get_element_by_atomname(atname0);

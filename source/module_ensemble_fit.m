@@ -69,6 +69,8 @@ pre_max_Gamma2 = 170;
 
 run_fit = true;
 nnllsq_fit = false;
+bckg_order = 0;
+sas_bckg = false;
 plot_result = false;
 load_options.stripH = true;
 save_csv = false; % saving of fit results to CSV files is off by default
@@ -111,6 +113,12 @@ for d = 1:length(control.directives)
             run_fit = false;
         case 'nnllsq'
             nnllsq_fit = true;
+            if ~isempty(control.directives(d).options{1})
+                bckg_order = str2double(control.directives(d).options{1});
+            end
+            if length(control.directives(d).options) > 1 && ~isempty(control.directives(d).options{2})
+                sas_bckg = true;
+            end
         case 'expand'
             expand_rba = true;
             if ~isempty(control.directives(d).options{1})
@@ -966,40 +974,38 @@ if nnllsq_fit
         if fit_task.deer_valid(kr)
            exp_data = fit_task.deer(kr).exp_ff;
            kernel = fit_task.deer(kr).sim_ff;
-           [popfit,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
+           [~,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
            fit_task.deer(kr).resnorm = resnorm;
-           sim = kernel*popfit;           
-           figure(100+kr); clf; hold on;
-           plot(fit_task.deer(kr).exp_time,exp_data);
-           plot(fit_task.deer(kr).exp_time,sim);
-           title(sprintf('Residual norm: %6.4f',resnorm));
         end
     end
     for kr = 1:length(fit_task.sas_valid)
-        if fit_task.sas_valid
+        if fit_task.sas_valid(kr)
             exp_data = fit_task.sas(kr).fits(:,2);
             kernel = fit_task.sas(kr).fits(:,4:end);
-            [popfit,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
+            [~,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
             fit_task.sas(kr).resnorm = resnorm;
-            sim = kernel*popfit;
-            figure(200+kr); clf; hold on;
-            plot(fit_task.sas(kr).fits(:,1),exp_data);
-            plot(fit_task.sas(kr).fits(:,1),sim);
-            title(sprintf('Residual norm: %6.4f',resnorm));
         end
     end
     data_dim = 0;
+    deer_set_lengths = zeros(length(fit_task.deer_valid),1);
     for kr = 1:length(fit_task.deer_valid)
         if fit_task.deer_valid(kr)
+            deer_set_lengths(kr) = length(fit_task.deer(kr).exp_ff);
             data_dim = data_dim + length(fit_task.deer(kr).exp_ff);
         end
     end
+    sas_set_lengths = zeros(length(fit_task.sas_valid),1);
     for kr = 1:length(fit_task.sas_valid)
-        if fit_task.sas_valid
+        if fit_task.sas_valid(kr)
+            sas_set_lengths(kr) = length(fit_task.sas(kr).fits(:,2));
             data_dim = data_dim + length(fit_task.sas(kr).fits(:,2));
         end
     end
-    kernel = zeros(data_dim,C);
+    n_coeff = C + (2+2*bckg_order)*length(fit_task.deer_valid);
+    if sas_bckg
+        n_coeff = n_coeff + 2*length(fit_task.sas_valid);
+    end
+    kernel = zeros(data_dim,n_coeff);
     all_data = zeros(data_dim,1);
     data_pointer = 0;
     for kr = 1:length(fit_task.deer_valid)
@@ -1007,29 +1013,91 @@ if nnllsq_fit
             ndat = length(fit_task.deer(kr).exp_ff);
             normalizer = sqrt(fit_task.deer(kr).resnorm);
             all_data(data_pointer+1:data_pointer+ndat) = fit_task.deer(kr).exp_ff/normalizer;
-            kernel(data_pointer+1:data_pointer+ndat,:) = fit_task.deer(kr).sim_ff/normalizer;
+            kernel(data_pointer+1:data_pointer+ndat,1:C) = fit_task.deer(kr).sim_ff/normalizer;
             data_pointer = data_pointer + ndat;
         end
     end
     for kr = 1:length(fit_task.sas_valid)
-        if fit_task.sas_valid
+        if fit_task.sas_valid(kr)
             ndat = length(fit_task.sas(kr).fits(:,2));
             normalizer = sqrt(fit_task.sas(kr).resnorm);
             all_data(data_pointer+1:data_pointer+ndat) = fit_task.sas(kr).fits(:,2)/normalizer;
-            kernel(data_pointer+1:data_pointer+ndat,:) = fit_task.sas(kr).fits(:,4:end)/normalizer;
+            kernel(data_pointer+1:data_pointer+ndat,1:C) = fit_task.sas(kr).fits(:,4:end)/normalizer;
             data_pointer = data_pointer + ndat;
+        end
+    end
+    data_pointer = 0;
+    kernel_pointer = C;
+    for kr = 1:length(fit_task.deer_valid)
+        if fit_task.deer_valid(kr)
+            ndat = length(fit_task.deer(kr).exp_ff);
+            linear = linspace(0,1,ndat).';
+            kernel(data_pointer+1:data_pointer+ndat,kernel_pointer+1) = ones(ndat,1);
+            kernel(data_pointer+1:data_pointer+ndat,kernel_pointer+2) = -ones(ndat,1);
+            for kp = 1:bckg_order
+                kernel(data_pointer+1:data_pointer+ndat,kernel_pointer+1+2*kp) = linear.^kp;
+                kernel(data_pointer+1:data_pointer+ndat,kernel_pointer+2+2*kp) = -(linear.^kp);
+            end
+            kernel_pointer = kernel_pointer + 2 + 2*bckg_order;
+            data_pointer = data_pointer + ndat;
+        end
+    end  
+    if sas_bckg
+        for kr = 1:length(fit_task.sas_valid)
+            if fit_task.sas_valid(kr)
+                ndat = length(fit_task.sas(kr).fits(:,2));
+                kernel(data_pointer+1:data_pointer+ndat,kernel_pointer+1) = ones(ndat,1);
+                kernel(data_pointer+1:data_pointer+ndat,kernel_pointer+2) = -ones(ndat,1);
+                kernel_pointer = kernel_pointer + 2;
+                data_pointer = data_pointer + ndat;
+            end
         end
     end
     n_sets = length(fit_task.deer_valid) + length(fit_task.sas_valid);
     tic;
+    [popfit0,resnorm0] = lsqnonneg(kernel(:,1:C),all_data,nnllsq_options);
+    all_sim0 = kernel(:,1:C)*popfit0;
     [popfit,resnorm] = lsqnonneg(kernel,all_data,nnllsq_options);
+    all_sim = kernel*popfit;
     runtime = toc;
+    popfit = popfit(1:C);
+    figure(1); clf; hold on;
+    plot(popfit,'.','MarkerSize',10,'Color',[0.75,0.0,0.0]);
     fit_task.ensemble_populations = popfit.'/sum(popfit);
     loss_of_merit = resnorm/n_sets - 1;
-    fprintf(1,'\n--- Non-negative linear least-squares fit of populations ---\n\n');
-    fprintf(1,'Run time: %6.1f s\n',runtime);
-    fprintf(1,'Population sum: %6.4f\n',sum(popfit));
-    fprintf(1,'Loss of merit: %5.3f\n',loss_of_merit);
+    fprintf(logfid,'\n--- Non-negative linear least-squares fit of populations ---\n\n');
+    fprintf(logfid,'Run time: %6.1f s\n',runtime);
+    fprintf(logfid,'Residual norm with background: %8.4f\n',resnorm);
+    fprintf(logfid,'Residual norm without background: %8.4f\n',resnorm0);
+    fprintf(logfid,'Population sum: %6.4f\n',sum(popfit));
+    fprintf(logfid,'Loss of merit: %5.3f\n',loss_of_merit);
+    data_pointer = 0;
+    for kr = 1:length(fit_task.deer_valid)
+        if fit_task.deer_valid(kr)
+            ndat = length(fit_task.deer(kr).exp_ff);
+            normalizer = sqrt(fit_task.deer(kr).resnorm);
+            sim0 = all_sim0(data_pointer+1:data_pointer+ndat);
+            sim = all_sim(data_pointer+1:data_pointer+ndat);
+            figure(100+kr); clf; hold on;
+            plot(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_ff,'.','MarkerSize',10,'Color',[0.25,0.25,0.25]);
+            plot(fit_task.deer(kr).exp_time,normalizer*sim,'Color',[0,0.6,0],'LineWidth',2);
+            plot(fit_task.deer(kr).exp_time,normalizer*sim0,'Color',[0.75,0,0],'LineWidth',2);
+            data_pointer = data_pointer + ndat;
+       end
+    end
+    for kr = 1:length(fit_task.sas_valid)
+        if fit_task.sas_valid(kr)
+            ndat = length(fit_task.sas(kr).fits(:,2));
+            normalizer = sqrt(fit_task.sas(kr).resnorm);
+            sim0 = all_sim0(data_pointer+1:data_pointer+ndat);
+            sim = all_sim(data_pointer+1:data_pointer+ndat);
+            figure(200+kr); clf; hold on;
+            plot(fit_task.sas(kr).fits(:,1),fit_task.sas(kr).fits(:,2),'.','MarkerSize',10,'Color',[0.25,0.25,0.25]);
+            plot(fit_task.sas(kr).fits(:,1),normalizer*sim,'Color',[0,0.6,0],'LineWidth',2);
+            plot(fit_task.sas(kr).fits(:,1),normalizer*sim0,'Color',[0.75,0,0],'LineWidth',2);
+            data_pointer = data_pointer + ndat;
+        end
+    end
     popfit = popfit.'/sum(popfit);
     above_threshold = (popfit >= opt.threshold); % indicies of conformers above the population threshold
     included = conformers(above_threshold); % these conformers are kept
@@ -1458,10 +1526,17 @@ if ~isempty(pdbout)
     put_pdb(e_entity,pdbout,save_options);
 end
 
+fprintf(logfid,'Mean distances and standard distributions for the ensemble\n');
 for kr = 1:nr
     fit_distr = fit_task.ensemble_populations*fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
     fit_task.ddr(kr).fit_distr = fit_distr;
     restraints.ddr(fit_task.ddr(kr).assignment(1)).fit_distr{fit_task.ddr(kr).assignment(2)} = fit_distr;
+    site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
+    site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
+    norm_distr = fit_distr/sum(fit_distr);
+    rmean = sum(fit_task.r_axis.*norm_distr);
+    sigr = sqrt(sum(norm_distr.*(fit_task.r_axis-rmean).^2));
+    fprintf(logfid,'%s-%s: <r> = %4.1f %c, std. dev. = %4.1f %c\n',site1,site2,rmean,char(197),sigr,char(197));
 end
 
 for kr = 1:nr_deer

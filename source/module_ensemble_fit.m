@@ -82,6 +82,7 @@ opt.threshold = 0.01; % conformers wih population below this threshold are disca
 opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
+opt.overlap_trials = 10000;
 
 fit_mean_distances = false;
 
@@ -1061,8 +1062,7 @@ if nnllsq_fit
     all_sim = kernel*popfit;
     runtime = toc;
     popfit = popfit(1:C);
-    figure(1); clf; hold on;
-    plot(popfit,'.','MarkerSize',10,'Color',[0.75,0.0,0.0]);
+    sorted_populations = sort(popfit,'descend');
     fit_task.ensemble_populations = popfit.'/sum(popfit);
     loss_of_merit = resnorm/n_sets - 1;
     fprintf(logfid,'\n--- Non-negative linear least-squares fit of populations ---\n\n');
@@ -1072,6 +1072,12 @@ if nnllsq_fit
     fprintf(logfid,'Population sum: %6.4f\n',sum(popfit));
     fprintf(logfid,'Loss of merit: %5.3f\n',loss_of_merit);
     data_pointer = 0;
+    popfit = popfit.'/sum(popfit);
+    above_threshold = (popfit >= opt.threshold); % indicies of conformers above the population threshold
+    included = conformers(above_threshold); % these conformers are kept
+    figure(1); clf; hold on;
+    plot(sorted_populations,'.','MarkerSize',12,'Color',[0.75,0.0,0.0]);
+    plot([length(included),length(included)],[0,max(sorted_populations)],'Color',[0.25,0.25,0.25]);
     for kr = 1:length(fit_task.deer_valid)
         if fit_task.deer_valid(kr)
             ndat = length(fit_task.deer(kr).exp_ff);
@@ -1098,9 +1104,7 @@ if nnllsq_fit
             data_pointer = data_pointer + ndat;
         end
     end
-    popfit = popfit.'/sum(popfit);
-    above_threshold = (popfit >= opt.threshold); % indicies of conformers above the population threshold
-    included = conformers(above_threshold); % these conformers are kept
+
     fit_task.remaining_conformers = included; % store numbers of remaining conformers
     popfit(~above_threshold) = 0; % discard low-probability conformers
     popfit = popfit/sum(popfit);
@@ -1630,6 +1634,14 @@ if save_csv
             exp_rstd = '(exp. na)';
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
+                all_overlap = zeros(1,opt.overlap_trials);
+                for trial = 1:opt.overlap_trials
+                    mixer = rand(size(fit_task.ddr(kr).exp_distr));
+                    distr = mixer.*fit_task.ddr(kr).exp_distr_lb + (1-mixer).*fit_task.ddr(kr).exp_distr_ub;
+                    distr = distr/sum(distr);
+                    all_overlap(trial) = sum(min([fit_task.ddr(kr).fit_distr;distr]));
+                end
+                CI95_overlap = 2*std(all_overlap);
                 data = [data dr*fit_task.ddr(kr).exp_distr.']; %#ok<AGROW>
                 column_string = strcat(column_string,',d');
                 if ~isempty(fit_task.ddr(kr).exp_distr_ub)
@@ -1673,9 +1685,9 @@ if save_csv
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
             fprintf(logfid,'%s-%s',site1,site2);
             if ~isempty(overlap_E)
-                fprintf(logfid,' (distribution): overlap = %6.3f.',overlap_E);
+                fprintf(logfid,' (distribution): overlap = %6.3f +/- %6.3f',overlap_E,CI95_overlap);
             elseif ~isempty(overlap_G)
-                fprintf(logfid,' (Gaussian restraint): overlap = %6.3f.',overlap_G);
+                fprintf(logfid,' (Gaussian restraint): overlap = %6.3f',overlap_G);
             else
                 fprintf(logfid,' is unspecified.');
             end
@@ -1741,6 +1753,14 @@ if plot_result
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
+                all_overlap = zeros(1,opt.overlap_trials);
+                for trial = 1:opt.overlap_trials
+                    mixer = rand(size(fit_task.ddr(kr).exp_distr));
+                    distr = mixer.*fit_task.ddr(kr).exp_distr_lb + (1-mixer).*fit_task.ddr(kr).exp_distr_ub;
+                    distr = distr/sum(distr);
+                    all_overlap(trial) = sum(min([fit_task.ddr(kr).fit_distr;distr]));
+                end
+                CI95_overlap = 2*std(all_overlap);
                 maxamp = dr*max([max(fit_task.ddr(kr).fit_distr),max(fit_task.ddr(kr).exp_distr)]);
                 if ~isempty(fit_task.ddr(kr).exp_distr_ub)
                     maxamp = max([maxamp,dr*max(fit_task.ddr(kr).exp_distr_ub)]);
@@ -1772,11 +1792,11 @@ if plot_result
             end
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
-            title_str = sprintf('%s-%s Overlaps:',site1,site2);
+            title_str = sprintf('%s-%s Overlap:',site1,site2);
             if ~isempty(overlap_E)
-                title_str = sprintf('%s exp. %6.3f',title_str,overlap_E);
+                title_str = sprintf('%s %6.3f +/- %6.3f',title_str,overlap_E,CI95_overlap);
             elseif ~isempty(overlap_G)
-                title_str = sprintf('%s Gauss %6.3f',title_str,overlap_G);
+                title_str = sprintf('%s (Gauss) %6.3f',title_str,overlap_G);
             else
                 title_str = sprintf('%s unknown',title_string);
             end

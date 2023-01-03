@@ -1,0 +1,23 @@
+% MMMx Demo: Computation of selected distance distributions for T4 Lysozyme
+
+# log % opens a log file with the same name as the control file
+
+!ExperimentDesign % starts the ExperimentDesign module
+   import 2LZM T4L % loads the T4 lysozyme crystal structure from the PDB and assigns identifier T4L
+   sitescan mtsl T4L T4L_sites % site scan with label MTSL, default set CILMSTV of residues 
+   pairlist T4L_sites T4L T4L_pairs 15 80 % list of all pairs of sites for T4 lysozyme
+   plot T4L_distribution pdf % specifies a basis file name and the graphics format PDF for plots
+   distributions mtsl T4L T4L_distribution % block key, computes selected distributions
+       68   131 % address line, here we have a single chain and two residue numbers suffice 
+       72   131
+       75   131
+       76   131
+       79   131
+       82   131
+       86   131
+       89   131
+      109   131
+   .distributions % block keys must be explicitly closed
+.ExperimentDesign % the module must be explicitly closed
+
+# report % open the log file in the system editor (in Windows usually Notepad)

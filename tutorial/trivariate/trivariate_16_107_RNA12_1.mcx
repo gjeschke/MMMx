@@ -1,0 +1,14 @@
+% MMMx Demo: Computing a trivariate distance distribution from an MMMx generated ensemble
+
+# log
+
+!ExperimentDesign
+
+   getens SRSF1_DEER_PREratio.ens SRSF1_16_107_RNA12 % load SRSF1 in complex with RNA12 ensemble
+   
+   trivariate mtsl|mtsl|r5p SRSF1_16_107_RNA12
+       (A)16   (A)107   (C)1 
+   .trivariate
+
+.ExperimentDesign
+

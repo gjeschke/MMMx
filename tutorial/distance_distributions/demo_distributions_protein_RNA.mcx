@@ -1,0 +1,18 @@
+% MMMx Demo: Computation of distributions for orthogonal spin labelling on protein and RNA 
+
+# log
+
+!ExperimentDesign
+   import 2ADC RRM % load NMR structure of RBD34 of PTBP1 complexed with RNA CUCUCU
+   sitescan mtsl RRM RRM_sites I % sitescan for the protein part of the RRM, only isoleucine     
+   sitescan iap-4tu RRM SL_sites u 3 0.25 % sitescan (only uracil) for the RNA part, at least 3 
+                                          % rotamers, partition function of at least 0.25=   
+   hetpairlist RRM_sites SL_sites RRM RRM_pairs 15 80 % pair list with minimum distance of 15 Å and
+                                                      % maximum distance of 80 Å
+   plot RRM_distribution pdf % specifies a basis file name and the graphics format PDF for plots   
+   distributions mtsl|iap-4tu RRM RRM_distribution % block key for orthogonal labelling
+      RRM_pairs % instead of site pair addresses, we specify a complete pair list
+   .distributions % close block key
+.ExperimentDesign % close module
+
+# report

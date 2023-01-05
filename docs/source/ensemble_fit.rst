@@ -137,14 +137,15 @@ Definition of NMR paramagnetic relaxation enhancement (PRE) restraints as intens
 
 .. code-block:: matlab
 
-    pre label larmor td R2dia [taui [taur [maxrate]]]
+    pre label site Larmor td R2dia [taui [taur [maxrate]]]
        'address_1' 'ratio' ['std']
        ...
     .pre
 
 Arguments
     *   ``label`` - label type, e.g. `mtsl`
-    *   ``larmor`` - proton Larmor frequency in MHz, e.g. 700
+    *   ``site`` - spin-labelled site, e.g. `(A)16`
+    *   ``Larmor`` - proton Larmor frequency in MHz, e.g. 700
     *   ``td`` - total INEPT delay in ms. e.g. 10.8
     *   ``R2dia`` - relaxation rate for the diamagnetic sample in `s^{-1}`, e.g. 66
     *   ``taui`` - correlation time of internal label motion in ns, e.g. 0.6, default 0.5

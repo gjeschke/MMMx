@@ -84,6 +84,7 @@ first_conformer = 1; % first conformer to be computed
 savename = 'mmmx_flex';
 pdbid = 'MMMX';
 chainid = 'A';
+scwrl4_path = '';
 
 restraints.ddr(1).labels{1} = '';
 restraints.oligomer(1).label = '';
@@ -127,6 +128,8 @@ for d = 1:length(control.directives)
             end
         case {'initial','getpdb'}
             initial_ensemble = control.directives(d).options{1};
+        case {'scwrl4'}
+            scwrl4_path = control.directives(d).options{1};
         case 'skipto'
             first_conformer = str2double(control.directives(d).options{1});
         case 'addpdb'
@@ -1373,7 +1376,7 @@ for kent = first_conformer:nent
                     fprintf(logfid,'Model superimposes onto first model with rmsd of %4.1f Angstroem\n',rms);
                 end
                 loopname = write_pdb_backbone(coor,restraints.sequence,fname,success,res1);
-                pmodel = make_SCWRL4_sidegroups(loopname);
+                pmodel = make_SCWRL4_sidegroups(loopname,scwrl4_path);
                 if ~isempty(pmodel)
                     scwrl4_success = true;
                     delete(loopname);
@@ -1755,7 +1758,7 @@ end
 fclose(wfile);
 
 
-function [outname,status,result] = make_SCWRL4_sidegroups(inname)
+function [outname,status,result] = make_SCWRL4_sidegroups(inname,scwrl4_path)
 %
 % Attaches or corrects sidegroups using SCWRL4
 % the program SCWRL4 needs to be on the current Matlab path
@@ -1764,16 +1767,28 @@ function [outname,status,result] = make_SCWRL4_sidegroups(inname)
 % outname  name of the output PDB file with SCWRL4 sidegroups
 %
 
+
 poi = strfind(inname,'.pdb');
 outname = [inname(1:poi-1) '_SCWRL4.pdb'];
 
-s = which_third_party_module('scwrl4');
+if ~exist('scwrl4_path','var') || isempty(scwrl4_path) 
+    s = which_third_party_module('scwrl4');
+else
+    s = scwrl4_path;
+end
 if isempty(s)
     outname = '';
     return
 end
 cmd = [s ' -i ' inname ' -o ' outname];
-[status,result] = dos(cmd);
+switch computer
+    case 'PCWIN64'
+        [status,result] = dos(cmd);
+    case 'GLNXA64'
+        [status,result] = unix(cmd);
+    case 'MACI64'
+        [status,result] = unix(cmd);
+end
 
 function [pclash,iclash,approach_prot,approach_loop] = check_decorated_loop(loopname,prot_coor,res1,resend,min_approach)
 

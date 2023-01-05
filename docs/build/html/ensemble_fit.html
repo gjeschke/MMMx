@@ -174,6 +174,7 @@
 <li class="toctree-l2"><a class="reference internal" href="flex.html#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex.html#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="flex.html#scwrl4"><code class="docutils literal notranslate"><span class="pre">scwrl4</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex.html#sequence"><code class="docutils literal notranslate"><span class="pre">sequence</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex.html#n-anchor"><code class="docutils literal notranslate"><span class="pre">n_anchor</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="flex.html#c-anchor"><code class="docutils literal notranslate"><span class="pre">c_anchor</span></code></a></li>
@@ -578,7 +579,7 @@ The ensemble is contracted by fitting populations and discarding conformers with
 <div class="section" id="pre">
 <h2><code class="docutils literal notranslate"><span class="pre">pre</span></code><a class="headerlink" href="#pre" title="Permalink to this headline">¶</a></h2>
 <p>Definition of NMR paramagnetic relaxation enhancement (PRE) restraints as intensity ratios. This is a block key with <img class="math" src="_images/math/97276f4239711cca2106c8430e82dc0f9b7ab719.svg" alt="n"/> lines for <img class="math" src="_images/math/97276f4239711cca2106c8430e82dc0f9b7ab719.svg" alt="n"/> restraints.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span> <span class="s">label</span> <span class="s">larmor</span> <span class="s">td</span> <span class="s">R2dia</span> <span class="s">[taui</span> <span class="s">[taur</span> <span class="s">[maxrate]]]</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">pre</span> <span class="s">label</span> <span class="s">site</span> <span class="s">Larmor</span> <span class="s">td</span> <span class="s">R2dia</span> <span class="s">[taui</span> <span class="s">[taur</span> <span class="s">[maxrate]]]</span>
    <span class="s">&#39;address_1&#39;</span> <span class="s">&#39;ratio&#39;</span> <span class="p">[</span><span class="s">&#39;std&#39;</span><span class="p">]</span>
    <span class="c">...</span>
 <span class="p">.</span><span class="n">pre</span>
@@ -587,7 +588,8 @@ The ensemble is contracted by fitting populations and discarding conformers with
 <dl class="simple">
 <dt>Arguments</dt><dd><ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">label</span></code> - label type, e.g. <img class="math" src="_images/math/b4ce1a2eabc771a0ab99dd79cc5a2110d217f209.svg" alt="mtsl"/></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">larmor</span></code> - proton Larmor frequency in MHz, e.g. 700</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">site</span></code> - spin-labelled site, e.g. <img class="math" src="_images/math/84d5c6ae02bf681e2e547a0c09374f2a7fe3c770.svg" alt="(A)16"/></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Larmor</span></code> - proton Larmor frequency in MHz, e.g. 700</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">td</span></code> - total INEPT delay in ms. e.g. 10.8</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">R2dia</span></code> - relaxation rate for the diamagnetic sample in <img class="math" src="_images/math/9448b8bb3af3e05de158fcbf26eb72a303a80afe.svg" alt="s^{-1}"/>, e.g. 66</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">taui</span></code> - correlation time of internal label motion in ns, e.g. 0.6, default 0.5</p></li>

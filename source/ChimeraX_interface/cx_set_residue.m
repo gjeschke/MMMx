@@ -59,7 +59,7 @@ switch whichone
     case 'transparency'
         attribute = sprintf('%i',attribute); 
    otherwise
-        exceptions{1} = MException('cx_set_atom:no_such_attribute', 'Attribute %s not supported for an atom', whichone);
+        exceptions{1} = MException('cx_set_residue:no_such_attribute', 'Attribute %s not supported for a residue', whichone);
 end
 
 if strcmpi(whichone,'color')

@@ -109,7 +109,7 @@ Available subkeys
     *   ``width`` - ensemble width and density in Angstroem (output to logfile), also computes pair r.m.s.d. matrix and central conformer
     *   ``correlation`` - correlation matrix, output as figure and to files 'residue\_pair\_correlation_%s' with extensions '.csv'and '.mat'
     *   ``sort`` - sort for computation of correlation matrix
-	*   ``drms`` - uses distance root mean square deviation for correlation matrix and sorting
+    *   ``drms`` - uses distance root mean square deviation for correlation matrix and sorting
     *   ``compactness`` - compactness matrix    
 Remarks
     *   saving output to both Matlab ('.mat') and '.csv' files is allowed 
@@ -146,7 +146,7 @@ Arguments
     *   ``filename`` - name of the output file
     *   ``input`` - identifier of the input ensemble
 Remarks
-    *   the algorithm is based on an adapttation of Flory's  characteristic ratio to polymers with secondary structure
+    *   the algorithm is based on an adaptation of Flory's  characteristic ratio to polymers with secondary structure
     *   the local order parameter ranges between 0 (random) and 1 (perfect order)
     *   the local order parameter is somewhat longer ranged than the flexibility parameter mentioned above
 

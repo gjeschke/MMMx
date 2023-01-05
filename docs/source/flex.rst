@@ -88,6 +88,20 @@ Remarks
     *   '_i%i_m%i.pdb' is appended to the basis file name, the first '%i' is input conformer number, the second '%i' is the model number for this input
     *   if a chain identifier is provided, a free-standing peptide gets this identifier
 	
+``scwrl4``
+---------------------------------
+
+Input of template conformers from PDB files. 
+
+.. code-block:: matlab
+
+    scwrl4 pathname
+
+Arguments
+    *   ``pathname`` - full path to the SCWRL4 executable
+Remarks
+    *   this is required on Linux systems, where Matlab does not find SCWRL4 even if it is on the Matlab path 
+	
 ``sequence``
 ---------------------------------
 

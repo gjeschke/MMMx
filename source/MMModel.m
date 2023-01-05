@@ -99,6 +99,8 @@ for module = 1:length(controller)
             [entity,module_exceptions,failed] = module_ensemble_analysis(controller(module),logfid);
         case {'experimentdesign','experiment_design'}
             [entity,module_exceptions,failed] = module_experiment_design(controller(module),logfid);
+        case 'visualize'
+            module_visualize(controller(module),logfid);
         otherwise
             fprintf(logfid,'Warning: Unknown module %s was ignored.\n\n',controller(module).name);
     end

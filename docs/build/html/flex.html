@@ -174,6 +174,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#expand"><code class="docutils literal notranslate"><span class="pre">expand</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#scwrl4"><code class="docutils literal notranslate"><span class="pre">scwrl4</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#sequence"><code class="docutils literal notranslate"><span class="pre">sequence</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#n-anchor"><code class="docutils literal notranslate"><span class="pre">n_anchor</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#c-anchor"><code class="docutils literal notranslate"><span class="pre">c_anchor</span></code></a></li>
@@ -525,6 +526,23 @@
 <dt>Remarks</dt><dd><ul class="simple">
 <li><p>‘_i%i_m%i.pdb’ is appended to the basis file name, the first ‘%i’ is input conformer number, the second ‘%i’ is the model number for this input</p></li>
 <li><p>if a chain identifier is provided, a free-standing peptide gets this identifier</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="scwrl4">
+<h2><code class="docutils literal notranslate"><span class="pre">scwrl4</span></code><a class="headerlink" href="#scwrl4" title="Permalink to this headline">¶</a></h2>
+<p>Input of template conformers from PDB files.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">scwrl4</span> <span class="s">pathname</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">pathname</span></code> - full path to the SCWRL4 executable</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>this is required on Linux systems, where Matlab does not find SCWRL4 even if it is on the Matlab path</p></li>
 </ul>
 </dd>
 </dl>

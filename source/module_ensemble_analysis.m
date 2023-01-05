@@ -615,7 +615,7 @@ for c = 1:cmd_poi
                         saveas(h,figname);
                     end
                     if cmd.options.matlab
-                        pair_drms = measures.(part).pair_rmsd;
+                        pair_drms = measures.(part).pair_drms;
                         datname = sprintf('pair_drms_%s_%s.mat',basname,part);
                         save(datname,'pair_drms');
                     end

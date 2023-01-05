@@ -1,0 +1,274 @@
+function module_visualize(control,logfid)
+%
+% MODULE_VISUALIZE    Visualizes MMMx results by calling ChimeraX
+%
+%   MODULE_VISUALIZE(control,logfid)
+%   Visualization functions that are specific to ensemble modelling and
+%   to the use of spin labels
+%
+% INPUT
+% control       control structure with fields
+%               .name           'visualize', unused
+%               .options        options struct
+%               .directives     array of struct with directives
+%               .entity_output  number of the entity to be output
+% logfid        file handle for log file, defaults to console output
+%
+% SUPPORTED DIRECTIVES (an ordered list is processed)
+%
+% addpdb        add conformers by reading pdb files
+% getens        get ensemble file
+%
+
+% This file is a part of MMMx. License is MIT (see LICENSE.md). 
+% Copyright(c) 2023: Gunnar Jeschke
+
+global hMain % if MMM is open, these are handles to the MMM gui
+
+% set defaults
+
+figure_format = 'png';
+script = 'MMMx.mmm';
+execution = false;
+normalize = true;
+
+% default output to Matlab console if no log file identifiere was provided 
+if isempty(logfid)
+    logfid = 1;
+end
+
+commands = cell(1,1000); % command list
+graphics = cell(1,1000); % graphics list
+
+cmd_poi = 0; % command pointer
+fig_poi = 0;
+% reorganize command line arguments
+for d = 1:length(control.directives)
+    clear cmd
+    cmd.name = lower(control.directives(d).name);
+    switch lower(control.directives(d).name)
+        case {'getens','input'}
+            [all_pdb,pop] = rd_ensemble_definition(control.directives(d).options{1});
+            all_tags = ':';
+            for k = 1:length(all_pdb)
+                fid=fopen(all_pdb(k).name);
+                tline = fgetl(fid);
+                fclose(fid);
+                if length(tline)>=66
+                    idCode=tline(63:66);
+                    if ~strcmpi(strtrim(idCode),idCode), idCode = ''; end
+                else
+                    idCode='';
+                end
+                stag = idCode;
+                id=tag2id(stag,all_tags);
+                poi=1;
+                while ~isempty(id)
+                    stag = sprintf('%s_%i',idCode,poi);
+                    poi=poi+1;
+                    id = tag2id(stag,all_tags);
+                end
+                all_tags=sprintf('%s%s:',all_tags,stag);
+            end
+        case 'figures'
+            figure_format = control.directives(d).options{1};
+        case 'normalize'
+            if strcmpi(control.directives(d).options{1},'off')
+                normalize = false;
+            end
+        case 'color'
+            cmd_poi = cmd_poi + 1;
+            cmd.address = control.directives(d).options{1};
+            if length(control.directives(d).options) >= 4
+                cmd.rgb = [str2double(control.directives(d).options{2}),str2double(control.directives(d).options{4}),str2double(control.directives(d).options{4})];
+            else
+                cmd.rgb = get_svg_color(control.directives(d).options{2});
+            end
+            commands{cmd_poi} = cmd;
+        case 'colorscheme'
+            cmd_poi = cmd_poi + 1;
+            cmd.address = control.directives(d).options{1};
+            cmd.scheme = control.directives(d).options{2};
+            commands{cmd_poi} = cmd;
+        case 'show'
+            cmd_poi = cmd_poi + 1;
+            cmd.address = control.directives(d).options{1};
+            cmd.mode = control.directives(d).options{2};
+            commands{cmd_poi} = cmd;
+        case 'graphics'
+            fig_poi = fig_poi + 1;
+            cmd.fname = '';
+            cmd.view = '';
+            if ~isempty(control.directives(d).options)
+                cmd.fname = control.directives(d).options{1};                
+                cmd.mode = figure_format;
+                if length(control.directives(d).options) > 1
+                    cmd.mode = control.directives(d).options{2};
+                    cmd.view = '';
+                    for k = 3:length(control.directives(d).options)
+                        cmd.view = strcat(cmd.view,control.directives(d).options{k});
+                    end
+                end
+            end
+            graphics{fig_poi} = cmd;
+        case 'script'
+            script = control.directives(d).options{1};
+            [pname,fname,ext] = fileparts(script);
+            if isempty(ext)
+                ext = '.mmm';
+            end
+            script = fullfile(pname,strcat(fname,ext));
+        case 'execute'
+            execution = true;
+        otherwise
+            fprintf(logfid,'directive %s is unknown and will be ignored',lower(control.directives(d).name));
+    end
+end
+
+graphics = graphics(1:fig_poi);
+commands = commands(1:cmd_poi);
+
+if normalize
+    pop = pop/max(pop);
+end
+
+
+% run the command list for all ensemble members, this creates the
+% visualization
+
+ofid = fopen(script,'wt');
+fprintf(ofid,'%% MMMx visualization script\n');
+fprintf(ofid,'new !\n');
+for k = 1:length(all_pdb)
+    tag = id2tag(k,all_tags);
+    sadr = sprintf('[%s]',tag);
+    fprintf(ofid,'pdbload %s\n',all_pdb(k).name);
+    for c = 1:cmd_poi
+        cmd = commands{c};
+        switch cmd.name
+            case {'show'}
+                fprintf(ofid,'show %s %s\n',strcat(sadr,cmd.address),cmd.mode);
+            case {'color'}
+                fprintf(ofid,'color %s %6.3f%6.3f%6.3f\n',strcat(sadr,cmd.address),cmd.rgb);
+            case {'colorscheme'}
+                fprintf(ofid,'colorscheme %s %s\n',strcat(sadr,cmd.address),cmd.scheme);
+        end
+    end
+    fprintf(ofid,'transparency %s(:) %5.3f\n',sadr,pop(k));
+end
+
+% make all specified graphics (files)
+for g = 1:fig_poi
+    cmd = graphics{g};
+    if ~isempty(cmd.view)
+        fprintf(ofid,'view %s\n',cmd.view);
+    end
+    fprintf(ofid,'detach\n');
+    fprintf(ofid,'zoom out\n');
+    if isempty(cmd.fname) % copy to clipboard
+        fprintf(ofid,'copy\n');
+    else
+        fprintf(ofid,'copy %s %s\n',cmd.fname,cmd.mode);
+    end
+end
+
+fclose(ofid);
+
+if execution
+    script_file = fullfile(pwd,script);
+    MMM_prototype('execute_script_callback',hMain.button_script,script_file,hMain);
+end
+
+function tag = id2tag(id,tags,codelist,delimiter)
+% function tag=id2tag(id,tags,codelist,delimiter)
+%
+% Returns the string tag corresponding to an identification code from
+% a list of possible tags given in a string with colon (:)
+% separation, another separator can be selected by optional parameter
+% delimiter
+% if an array codelist is given the identifier is of the same type as the
+% elements in codelist, the sequence in the codelist must correspond to the
+% one in the tags string
+% if codelist is missing, the id is an integer corresponding to the
+% position of the tag in string tags
+% if the id is larger than the number of tags in the tags string an empty
+% tag is given back
+% if the id appears twice or more in the code list, the first tag is given
+% back
+%
+% id        identifier, for example 7
+% tags      (string) tag list, example ':H:He:Li:Be:C:N:O:F:Ne:'
+% codelist  [optional] (array of ids), example [1,4,7,9,12,14,16,19,20]
+% delimiter [optional] (char), alternative delimiter, defaults to ':'
+%
+% tag       (string) tag
+%           if codelist is missing, tag for the example will be 'O'
+%           if codelist is present, tag for the example will be 'Li'
+%
+% G. Jeschke, 2009
+
+tag=''; % empty default output
+if nargin < 4
+    delimiter=':'; % colon as default delimiter
+end
+
+if nargin > 2
+    poi=find(id==codelist);
+    if ~isempty(poi)
+        id=poi(end);
+    else
+        id=length(tags)+1;
+    end
+end
+
+lookup=find(tags==delimiter);
+if id<length(lookup)
+    tag=tags(lookup(id)+1:lookup(id+1)-1);
+end
+
+function id = tag2id(tag,tags,codelist,delimiter)
+% function id=tag2id(tag,tags,codelist,delimiter)
+%
+% Returns the identification code corresponding to a string tag by
+% comparison with a list of possible tags given in a string with colon (:)
+% separation, another separator can be selected by optional parameter
+% delimiter
+% if an array codelist is given the identifier is of the same type as the
+% elements in codelist, the sequence in the codelist must correspond to the
+% one in the tags string
+% if codelist is missing, the id is an integer corresponding to the
+% position of the tag in string tags
+% if tag is not found in tags or if the position is larger than the number
+% of elements in codelist, an empty id is given back
+%
+% tag       (string) tag to be found, example: 'Be'
+% tags      (string) tag list, example ':H:He:Li:Be:C:N:O:F:Ne:'
+% codelist  [optional] (array of ids), example [1,4,7,9,12,14,16,19,20],
+%           can be empty to allow different delimiter without codelist
+% delimiter [optional] (char), alternative delimiter, defaults to ':'
+%
+% id        id selected from array codelist or integer telling the position
+%           of tag in tags, for example above:
+%           if codelist is missing, id=4
+%           if codelist is present, id=9
+%
+% G. Jeschke, 2009
+
+id=[]; % empty default output
+if nargin < 4
+    delimiter=':'; % colon as default delimiter
+end
+
+etag=[delimiter tag delimiter];
+position=strfind(tags,etag);
+if position
+    id=1+sum(find(tags==delimiter)<position(1));
+    if nargin>=3 && ~isempty(codelist)
+        if id<=length(codelist)
+            id=codelist(id);
+        else
+            id=[];
+        end
+    end
+end
+

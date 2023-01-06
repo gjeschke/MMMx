@@ -1,0 +1,7 @@
+_med_distr.dat contains the following columns:
+r axis     P(r) (median from 1000 bootstrap samples)     lower 95% CI of P(r)     upper 95% CI of P(r)
+
+_med_fit.dat contains the following columns:
+t axis     V(t) raw data     V(t) fit (median from 1000 bootstrap samples)     lower 95% CI of V(t)     upper 95% CI of V(t)
+
+Data analyzed with DeerLab 0.9.2 (see thesis SRSF1 materials & methods for more info)

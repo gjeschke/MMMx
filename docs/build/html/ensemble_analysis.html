@@ -223,11 +223,13 @@
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#csv"><code class="docutils literal notranslate"><span class="pre">csv</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#ddr"><code class="docutils literal notranslate"><span class="pre">ddr</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#deer"><code class="docutils literal notranslate"><span class="pre">deer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#pre"><code class="docutils literal notranslate"><span class="pre">pre</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#prerate"><code class="docutils literal notranslate"><span class="pre">prerate</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#sans"><code class="docutils literal notranslate"><span class="pre">sans</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#saxs"><code class="docutils literal notranslate"><span class="pre">saxs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#nofit"><code class="docutils literal notranslate"><span class="pre">nofit</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#nnllsq"><code class="docutils literal notranslate"><span class="pre">nnllsq</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#rmean"><code class="docutils literal notranslate"><span class="pre">rmean</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#blocksize"><code class="docutils literal notranslate"><span class="pre">blocksize</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="ensemble_fit.html#interactive"><code class="docutils literal notranslate"><span class="pre">interactive</span></code></a></li>
@@ -257,6 +259,22 @@
 <li class="toctree-l2"><a class="reference internal" href="locate.html#reference"><code class="docutils literal notranslate"><span class="pre">reference</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="locate.html#grid"><code class="docutils literal notranslate"><span class="pre">grid</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="locate.html#cube"><code class="docutils literal notranslate"><span class="pre">cube</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="visualize.html">Visualize</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#addpdb"><code class="docutils literal notranslate"><span class="pre">addpdb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#figures"><code class="docutils literal notranslate"><span class="pre">figures</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#normalize"><code class="docutils literal notranslate"><span class="pre">normalize</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#script"><code class="docutils literal notranslate"><span class="pre">script</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#execute"><code class="docutils literal notranslate"><span class="pre">execute</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#graphics"><code class="docutils literal notranslate"><span class="pre">graphics</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#show"><code class="docutils literal notranslate"><span class="pre">show</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#label"><code class="docutils literal notranslate"><span class="pre">label</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#density"><code class="docutils literal notranslate"><span class="pre">density</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#color"><code class="docutils literal notranslate"><span class="pre">color</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#colorscheme"><code class="docutils literal notranslate"><span class="pre">colorscheme</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a><ul>
@@ -611,7 +629,7 @@
 </div>
 <dl class="simple">
 <dt>Arguments</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> - name of the output file, specify with extension ‘.mrc’</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> - name of the output file, specify with extension ‘.mat’ for MMMx density files or ‘.mrc’ for MRC files</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - optional MMMx address that specifies only a range of a conformer for analysis, e.g. <img class="math" src="_images/math/7e6f65e4f52b89b686ac4faa2738b7d97b05b1f6.svg" alt="(A)187-320"/></p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">resolution</span></code> - resolution in Angstroem (optional), defaults to 1</p></li>

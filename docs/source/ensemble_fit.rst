@@ -130,6 +130,28 @@ Remarks
     *   the file name is optional, but using full distributions is strongly recommended
     *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped
 
+``deer``
+---------------------------------
+
+Definition of primary DEER data as restraints or for backcalculation. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    deer label_1 [label_2]
+       'address_1' 'address_2' @'fname'
+       ...
+    .deer
+
+Arguments
+    *   ``label_1``, ``label_2`` - label types, e.g. `mtsl`, `dota-gd`
+    *   ``address_1``, ``address_2`` addresses of the two labelled sites, e.g., `(A)16`, `107`
+    *   ``fname`` file name of the DEER data, must contain a background fit (see Remarks) 
+Remarks
+    *   the data files must contain a time axis as first column, the real part of phase-corrected primary data as second column, and the background fit as fourth column
+    *   Comparative Deer Analyzer in DeerAnalysis 2022 and later provides the required format 
+    *   for backcalculation with the ``nofit`` keyword, the background is not used
+    *   use separate 'deer' blocks for each label combination
+
 ``pre``
 ---------------------------------
 
@@ -238,10 +260,28 @@ Specifies basis name for saving output conformers
 Remarks
     *   the key requests only restraint computation and analysis for the input ensemble, without population fitting
 
+
+``nnllsq``
+---------------------------------
+
+Requests non-negative linear least square fitting of all populations. 
+
+.. code-block:: matlab
+
+    nnllsq bckg sasbckg
+
+Arguments
+    *   ``bckg`` - order of the polynomial for additional DEER background correction, a constant offset (order 0) is default
+    *   ``sasbckg`` - if this argument is present (use, e.g. `on`), constant small-angle scattering background ist fitted, defaults to no fit 
+Remarks
+    *   requires that DEER restraints are defined by primary DEER data including background (keyword ``deer``)
+    *   ``ddr`` distance distribution restraints are ignored 
+    *   currently, PRE restraints are ignored
+
 ``rmean``
 ---------------------------------
 
-Specifies basis name for saving output conformers 
+For fitting mean distances instead of distributions. Provided for method development. 
 
 .. code-block:: matlab
 

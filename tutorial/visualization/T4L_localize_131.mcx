@@ -1,0 +1,35 @@
+% MMMx Demo: Location of residue 131 in T4 Lysozyme
+%
+% Restraints: Islam 2013: S.Islam, R.Stein, H.Mchaourab, B.Roux, J. Phys. Chem. B 2013, 117, 4740-4754.
+%             Christian Altenbach, private communication
+%             restraint derivation from primary data by Yevhen Polyhach
+
+#log
+
+!locate 0.5
+   getpdb 2LZM
+   save loc131R1.mat
+   reference mtsl
+      68   38.6  5.1  % Christian Altenbach
+      72   35.1  2.5  % Christian Altenbach
+      75   32.7  3.9  % Islam 2013
+      76   36.5  1.9  % Islam 2013
+      79   33.1  2.9  % Islam 2013
+      86   27.0  4.0  % Christian Altenbach
+      89   32.6  2.7  % Christian Altenbach
+     109   30.2  2.6  % Christian Altenbach
+   .reference
+.locate
+
+!visualize
+   getpdb 2LZM % load T4 Lysozyme structure from PDB
+   script T4L_localize_131
+   show (A) ribbon
+   label (A)131 mtsl ambient
+   show (A)131 label
+   density loc131R1.mat 0.5 0.25 limegreen
+   graphics T4L_localize_131.png png 0.806 -0.592 0.002 -0.494 -0.675 -0.548
+   execute
+.visualize
+
+# report

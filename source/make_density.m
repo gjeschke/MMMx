@@ -13,7 +13,7 @@ function make_density(entity,fname,address,resolution)
 % fname        file name for output, extension .mrc is
 %              appended, if none is present
 % address      MMMx address, defaults to 'everything'
-% resolution   (optional) grid resolutiin in Angstroem
+% resolution   (optional) grid resolution in Angstroem
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -79,4 +79,10 @@ for c = 1:C
     end
 end
 
-writeMRC(cube,rez,fname,[nx,ny,nz],[x(1),y(1),z(1)]);
+[~,~,ext] = fileparts(fname);
+switch ext
+    case '.mrc'
+        writeMRC(cube,rez,fname,[nx,ny,nz],[x(1),y(1),z(1)]);
+    case '.mat'
+        save(fname,'cube','x','y','z');
+end

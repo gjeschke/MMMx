@@ -160,7 +160,7 @@ Computes a 3D density map (pseudo-electron density) of an ensemble
     density filename input [range [resolution]]
 
 Arguments
-    *   ``filename`` - name of the output file, specify with extension '.mrc'
+    *   ``filename`` - name of the output file, specify with extension '.mat' for MMMx density files or '.mrc' for MRC files
     *   ``input`` - identifier of the input ensemble
     *   ``range`` - optional MMMx address that specifies only a range of a conformer for analysis, e.g. `(A)187-320`
     *   ``resolution`` - resolution in Angstroem (optional), defaults to 1

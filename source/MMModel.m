@@ -52,7 +52,9 @@ failed = false;
 module_exceptions ={};
 
 for module = 1:length(controller)
-    fprintf(logfid,'> Executing %s <\n\n',controller(module).name);
+    if exist('logfid','var')
+        fprintf(logfid,'> Executing %s <\n\n',controller(module).name);
+    end
     switch lower(controller(module).name)
         case 'logfile'
             close_log = true;

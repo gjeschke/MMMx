@@ -40,9 +40,9 @@ Specifies basis name for saving output conformers
     save file
 
 Arguments
-    *   ``file`` - file name for output density cube file in '.mrc' format
+    *   ``file`` - file name for output density cube file
 Remarks
-    *   extension '.mrc' is appended if there is none
+    *   extension '.mat' is appended if there is none, use extension '.mat' for MMMx density files or '.mrc' for MRC files
 	
 ``reference``
 ---------------------------------

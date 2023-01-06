@@ -38,10 +38,12 @@ if isempty(logfid)
 end
 
 commands = cell(1,1000); % command list
+densities = cell(1,1000); % command list
 graphics = cell(1,1000); % graphics list
 
 cmd_poi = 0; % command pointer
 fig_poi = 0;
+dens_poi = 0;
 % reorganize command line arguments
 for d = 1:length(control.directives)
     clear cmd
@@ -49,27 +51,15 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case {'getens','input'}
             [all_pdb,pop] = rd_ensemble_definition(control.directives(d).options{1});
-            all_tags = ':';
-            for k = 1:length(all_pdb)
-                fid=fopen(all_pdb(k).name);
-                tline = fgetl(fid);
-                fclose(fid);
-                if length(tline)>=66
-                    idCode=tline(63:66);
-                    if ~strcmpi(strtrim(idCode),idCode), idCode = ''; end
-                else
-                    idCode='';
-                end
-                stag = idCode;
-                id=tag2id(stag,all_tags);
-                poi=1;
-                while ~isempty(id)
-                    stag = sprintf('%s_%i',idCode,poi);
-                    poi=poi+1;
-                    id = tag2id(stag,all_tags);
-                end
-                all_tags=sprintf('%s%s:',all_tags,stag);
-            end
+        case {'getpdb','import'}
+            entity = get_pdb(control.directives(d).options{1});
+            fname = sprintf('MMMx_locate_%s.pdb',control.directives(d).options{1});
+            put_pdb(entity,fname);
+            all_pdb(1).name = fname;
+            pop = 1;
+        case 'addpdb'
+            all_pdb = dir(control.directives(d).options{1});
+            pop = ones(length(all_pdb),1)/length(all_pdb);
         case 'figures'
             figure_format = control.directives(d).options{1};
         case 'normalize'
@@ -80,7 +70,7 @@ for d = 1:length(control.directives)
             cmd_poi = cmd_poi + 1;
             cmd.address = control.directives(d).options{1};
             if length(control.directives(d).options) >= 4
-                cmd.rgb = [str2double(control.directives(d).options{2}),str2double(control.directives(d).options{4}),str2double(control.directives(d).options{4})];
+                cmd.rgb = [str2double(control.directives(d).options{2}),str2double(control.directives(d).options{3}),str2double(control.directives(d).options{4})];
             else
                 cmd.rgb = get_svg_color(control.directives(d).options{2});
             end
@@ -90,11 +80,37 @@ for d = 1:length(control.directives)
             cmd.address = control.directives(d).options{1};
             cmd.scheme = control.directives(d).options{2};
             commands{cmd_poi} = cmd;
+        case 'label'
+            cmd_poi = cmd_poi + 1;
+            cmd.address = control.directives(d).options{1};
+            cmd.type = 'mtsl';
+            if length(control.directives(d).options) >= 2
+                cmd.type = control.directives(d).options{2};
+            end
+            commands{cmd_poi} = cmd;
         case 'show'
             cmd_poi = cmd_poi + 1;
             cmd.address = control.directives(d).options{1};
             cmd.mode = control.directives(d).options{2};
             commands{cmd_poi} = cmd;
+        case 'density'
+            dens_poi = dens_poi + 1;
+            cmd.fname = control.directives(d).options{1};  
+            cmd.level = '';
+            cmd.opacity = '';
+            cmd.rgb = [0.75,0,0];
+            if length(control.directives(d).options) > 1
+                cmd.level = control.directives(d).options{2};
+            end
+            if length(control.directives(d).options) > 2
+                cmd.opacity = control.directives(d).options{3};
+            end
+            if length(control.directives(d).options) >= 6
+                cmd.rgb = [str2double(control.directives(d).options{4}),str2double(control.directives(d).options{5}),str2double(control.directives(d).options{6})];
+            else
+                cmd.rgb = get_svg_color(control.directives(d).options{4});
+            end
+            densities{dens_poi} = cmd;
         case 'graphics'
             fig_poi = fig_poi + 1;
             cmd.fname = '';
@@ -106,7 +122,7 @@ for d = 1:length(control.directives)
                     cmd.mode = control.directives(d).options{2};
                     cmd.view = '';
                     for k = 3:length(control.directives(d).options)
-                        cmd.view = strcat(cmd.view,control.directives(d).options{k});
+                        cmd.view = sprintf('%s %s',cmd.view,control.directives(d).options{k});
                     end
                 end
             end
@@ -124,8 +140,30 @@ for d = 1:length(control.directives)
             fprintf(logfid,'directive %s is unknown and will be ignored',lower(control.directives(d).name));
     end
 end
+all_tags = ':';
+for k = 1:length(all_pdb)
+    fid=fopen(all_pdb(k).name);
+    tline = fgetl(fid);
+    fclose(fid);
+    if length(tline)>=66
+        idCode=tline(63:66);
+        if ~strcmpi(strtrim(idCode),idCode), idCode = ''; end
+    else
+        idCode='';
+    end
+    stag = idCode;
+    id=tag2id(stag,all_tags);
+    poi=1;
+    while ~isempty(id)
+        stag = sprintf('%s_%i',idCode,poi);
+        poi=poi+1;
+        id = tag2id(stag,all_tags);
+    end
+    all_tags=sprintf('%s%s:',all_tags,stag);
+end
 
 graphics = graphics(1:fig_poi);
+densities = densities(1:dens_poi);
 commands = commands(1:cmd_poi);
 
 if normalize
@@ -152,9 +190,18 @@ for k = 1:length(all_pdb)
                 fprintf(ofid,'color %s %6.3f%6.3f%6.3f\n',strcat(sadr,cmd.address),cmd.rgb);
             case {'colorscheme'}
                 fprintf(ofid,'colorscheme %s %s\n',strcat(sadr,cmd.address),cmd.scheme);
+            case {'label'}
+                fprintf(ofid,'rotamers %s %s ambient\n',strcat(sadr,cmd.address),cmd.type);
+                fprintf(ofid,'label %s %s ambient\n',strcat(sadr,cmd.address),cmd.type);
         end
     end
     fprintf(ofid,'transparency %s(:) %5.3f\n',sadr,pop(k));
+end
+
+% generate all specified density isosurfaces
+for d = 1:dens_poi
+    cmd = densities{d};
+    fprintf(ofid,'density %s %s %s %5.3f %5.3f %5.3f\n',cmd.fname,cmd.level,cmd.opacity,cmd.rgb);
 end
 
 % make all specified graphics (files)

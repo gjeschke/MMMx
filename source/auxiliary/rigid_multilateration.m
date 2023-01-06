@@ -136,11 +136,16 @@ for k=1:m
     border_prop = max([m1,m2,m3,m4,m5,m6])/mm;
     fprintf(logfid,'The maximum relative probability at density cube border is %5.2f%%\n',100*border_prop);
     cube_name = restraints.save_name;
-    if m > 1
-        [pname,fname,ext] = fileparts(cube_name);
+    [pname,fname,ext] = fileparts(cube_name);
+    if m > 1        
         cube_name = fullfile(pname,sprintf('%s_%i%s',fname,k,ext));
     end
-    writeMRC(cube,x(2)-x(1),cube_name,[nx,ny,nz],[x(1),y(1),z(1)]);
+    switch ext
+        case '.mrc'
+            writeMRC(cube,x(2)-x(1),cube_name,[nx,ny,nz],[x(1),y(1),z(1)]);
+        case '.mat'
+            save(cube_name,'cube','x','y','z');
+    end
 end
 
 function [point, sos, singular] = multilaterate(ref_points,dist)

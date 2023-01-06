@@ -46,6 +46,7 @@ MMMx is available at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_ and `at 
     ./ensemble_fit
     ./ensemble_analysis
     ./locate
+    ./visualize
     ./yasara_refine
 	
 .. toctree::

@@ -78,7 +78,10 @@ for d = 1:length(control.directives)
         case 'colorscheme'
             cmd_poi = cmd_poi + 1;
             cmd.address = control.directives(d).options{1};
-            cmd.scheme = control.directives(d).options{2};
+            cmd.scheme = '';
+            for arg = 2:length(control.directives(d).options)
+                cmd.scheme = sprintf('%s %s',cmd.scheme,control.directives(d).options{arg});
+            end
             commands{cmd_poi} = cmd;
         case 'label'
             cmd_poi = cmd_poi + 1;
@@ -177,6 +180,7 @@ end
 ofid = fopen(script,'wt');
 fprintf(ofid,'%% MMMx visualization script\n');
 fprintf(ofid,'new !\n');
+pop_encode_transparency = true;
 for k = 1:length(all_pdb)
     tag = id2tag(k,all_tags);
     sadr = sprintf('[%s]',tag);
@@ -185,7 +189,12 @@ for k = 1:length(all_pdb)
         cmd = commands{c};
         switch cmd.name
             case {'show'}
-                fprintf(ofid,'show %s %s\n',strcat(sadr,cmd.address),cmd.mode);
+                if strcmpi(cmd.mode,'snake')
+                    show_snake(ofid,pop(k),sadr,cmd.address);
+                    pop_encode_transparency = false;
+                else
+                    fprintf(ofid,'show %s %s\n',strcat(sadr,cmd.address),cmd.mode);
+                end
             case {'color'}
                 fprintf(ofid,'color %s %6.3f%6.3f%6.3f\n',strcat(sadr,cmd.address),cmd.rgb);
             case {'colorscheme'}
@@ -195,9 +204,16 @@ for k = 1:length(all_pdb)
                 fprintf(ofid,'label %s %s ambient\n',strcat(sadr,cmd.address),cmd.type);
         end
     end
-    fprintf(ofid,'transparency %s(:) %5.3f\n',sadr,pop(k));
 end
-
+% transparency slows down thing. Hence, it is applied only after everything
+% else was drawn
+for k = 1:length(all_pdb)
+    tag = id2tag(k,all_tags);
+    sadr = sprintf('[%s]',tag);
+    if pop_encode_transparency
+        fprintf(ofid,'transparency %s(:) %5.3f\n',sadr,pop(k));
+    end
+end
 % generate all specified density isosurfaces
 for d = 1:dens_poi
     cmd = densities{d};
@@ -319,3 +335,32 @@ if position
     end
 end
 
+function color=color_grade(k,n)
+% k-th color grade in a rainbow starting blue and ending red with n grades 
+
+if isnan(k), k=n; end
+k=round(k); % allow for real number
+if k<1, k=1; end % limit to range
+if k>n, k=n; end
+
+if n<=3
+    colmap = flipud(hsv(n));
+else
+    colmap = jet(n);
+end
+color = colmap(k,:);
+
+function show_snake(ofid,pop,sadr,address)
+% 
+fprintf(ofid,'show %s%s coil %6.3f\n',sadr,address,pop);
+[chains,residues] = split_address(address);
+seg_length = residues(end) - residues(1) + 1;
+for c = 1:length(chains)
+    first = sprintf('%s(%s)%i',sadr,chains(c),residues(1));
+    fprintf(ofid,'colorscheme %s%s sequence %s %i\n',sadr,address,first,seg_length);
+end
+% for r = 1:length(residues)
+%     for c = 1:length(chains)        
+%         fprintf(ofid,'color %s(%s)%i %6.3f %6.3f %6.3f\n',sadr,chains(c),residues(r),color_grade(r,length(residues)));
+%     end
+% end

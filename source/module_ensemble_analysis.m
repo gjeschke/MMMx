@@ -150,7 +150,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % flexibility analysis is performed for current entity
+                cmd.entity = '.'; 
             end
             if length(control.directives(d).options) > 2 % further directive
                 if strcmpi(control.directives(d).options{3},'drms')
@@ -167,7 +167,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % flexibility analysis is performed for current entity
+                cmd.entity = '.'; 
             end
             commands{cmd_poi} = cmd;
         case 'measures'
@@ -176,7 +176,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % flexibility analysis is performed for current entity
+                cmd.entity = '.'; 
             end
             cmd.options.chain_mode = false;
             cmd.options.Rg = false;
@@ -227,7 +227,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
-                cmd.entity = '.'; % flexibility analysis is performed for current entity
+                cmd.entity = '.'; 
             end
             cmd.address = '(*)'; % by default, all chains are selected
             if length(control.directives(d).options) > 2 % chain and possibly range given

@@ -63,6 +63,7 @@ for c = 1:length(chains)
         residues = fieldnames(entity.(chain));
         flexibilities = zeros(length(residues),1);
         resnums = zeros(length(residues),1);
+        restypes = ones(length(residues),1);
         respoi = 0;
         for r = 1:length(residues)
             residue = residues{r};
@@ -117,6 +118,13 @@ for c = 1:length(chains)
                         respoi = respoi + 1;
                         resnums(respoi) = resnum;
                         flexibilities(respoi) = 1-Rav;
+                        restype = upper(entity.(chain).(residue).name);
+                        switch restype
+                            case 'GLY'
+                                restypes(respoi) = 2;
+                            case 'PRO'
+                                restypes(respoi) = 3;
+                        end
                     case 'na'
                         if ~isfield(entity.(chain).(previous),'C4_') % if C4' atom of previous nucleic acid is missing, phi is undetermined
                             continue
@@ -153,7 +161,10 @@ for c = 1:length(chains)
         resnums = resnums(1:respoi);
         flexibilities = flexibilities(1:respoi);
         h = figure; clf; hold on;
-        plot(resnums,flexibilities,'.','MarkerSize',14,'Color',[0.25,0.25,0.25]);
+        colors = [0,0,0.8;0.75,0,0;0,0.6,0];
+        for res = 1:length(resnums)
+            plot(resnums(res),flexibilities(res),'.','MarkerSize',14,'Color',colors(restypes(res),:));
+        end
         xlabel('Residue number');
         ylabel('Ramachandran flexibility');
         title(sprintf('%s chain %s',entity.name, chain));

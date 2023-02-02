@@ -144,6 +144,7 @@ Label    Synonyms                         Class           Attachment       Rotam
 ``R5P``  ``r5p``                          nitroxide       5'-thiophosphate 2048      1
 ``R3P``  ``r3p``                          nitroxide       3'-thiophosphate 512       1
 ``K1H``  ``HF-K1``                        nitroxide       unnatural aa     288       1
+``HO4``  ``HO4451``                       nitroxide       unnatural aa     1024      1
 ``NC1``  ``cNox@Tyr``                     nitroxide       tyrosine         128       1
 ``NX1``  ``lNox@Tyr``                     nitroxide       tyrosine         256       1
 ``CNR``  ``CNC-NO``                       nitroxide       cofactor         144       1

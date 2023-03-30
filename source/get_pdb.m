@@ -213,6 +213,9 @@ while 1
             if atname(kk) == '"'
                 atname(kk) = '_';
             end
+            if atname(kk) == '*'
+                atname(kk) = '_';
+            end
         end
         if ~isstrprop(atname(1),'alpha')
             atname = strcat('Z_',atname);

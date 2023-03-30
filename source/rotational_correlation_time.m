@@ -117,6 +117,7 @@ function [taur,Rhc,Tr] = get_taurc(entity,options,info)
 % empty output
 taur = [];
 Rhc = [];
+Tr = [];
 
 kB = 1.38064852e-23; % Boltzmann constant
 

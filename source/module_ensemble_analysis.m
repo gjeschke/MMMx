@@ -523,7 +523,8 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            exceptions0 = put_pdb(c_entity,cmd.outname);
+            save_options.pop = true;
+            exceptions0 = put_pdb(c_entity,cmd.outname,save_options);
             for exci = 1:length(exceptions0)
                 if ~isempty(exceptions0{exci})
                     warnings = warnings +1;

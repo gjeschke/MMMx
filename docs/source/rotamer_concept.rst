@@ -133,6 +133,7 @@ Label    Synonyms                         Class           Attachment       Rotam
 ``R7A``  ``br-mtsl``, ``br-mtssl``        nitroxide       cysteine         216       1
 ``V1A``  ``v1``                           nitroxide       cysteine         72        1
 ``IA1``  ``ia-proxyl``                    nitroxide       cysteine         108       1
+``BAS``  ``basl``                         nitroxide       cysteine         240       1
 ``MA1``  ``ma-proxyl``                    nitroxide       cysteine         108       2.0
 ``DZD``  ``dzd``                          nitroxide       cysteine         216       1
 ``DZC``  ``dzc``                          nitroxide       cysteine         216       1

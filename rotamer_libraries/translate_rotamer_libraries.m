@@ -11,10 +11,10 @@ defs = load('labels.mat');
 
 ff = load('uff_parameters.mat');
 
-fid = fopen('library_assignment.txt','rt');
+fid = fopen('library_additions.txt','rt');
 while 1
     tline = fgetl(fid);
-    if ~ischar(tline) 
+    if ~ischar(tline) || isempty(tline)
         break 
     end
     clear rot_lib

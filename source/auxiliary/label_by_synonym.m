@@ -48,6 +48,7 @@ synonyms{24} = 'HCU,dHis-Cu,';
 synonyms{25} = 'GBH,br-py-do3a,';
 synonyms{26} = 'GBM,br-py-do3ma,';
 synonyms{26} = 'HO4,HO4451,';
+synonyms{27} = 'BAS,BASL,';
 
 for k = 1:length(synonyms)
     if contains(upper(synonyms{k}),[',' upper(synonym) ','])...

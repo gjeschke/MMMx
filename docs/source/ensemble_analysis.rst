@@ -153,7 +153,7 @@ Remarks
 ``density``
 ---------------------------------
 
-Computes a 3D density map (pseudo-electron density) of an ensemble 
+Computes a 3D electron density map of an ensemble 
 
 .. code-block:: matlab
 

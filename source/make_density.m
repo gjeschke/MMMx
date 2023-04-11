@@ -1,6 +1,6 @@
 function make_density(entity,fname,address,resolution)
 %
-% MAKE_DENSITY Pseudo-electron density for an ensemble 
+% MAKE_DENSITY Electron density map for an ensemble 
 %
 %   MAKE_DENSITY(entity,fname)
 %   Computes density and stores it in MRC cube file fname
@@ -15,6 +15,13 @@ function make_density(entity,fname,address,resolution)
 % address      MMMx address, defaults to 'everything'
 % resolution   (optional) grid resolution in Angstroem
 %
+% algorithm according to:
+% R. Briones, C. Blau, C. Kutzner, B. L. de Groot, C. Aponte-Santamarı,
+% Biophys. J. 116, 4–11 (2019). https://doi.org/10.1016/j.bpj.2018.11.3126
+%
+% Gaussian coefficients for point-spread functions are taken from the SI of
+% the same paper and are provided via function point_spread.m
+% all atoms except for H, N, O, P, and S are treated as C
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2021: Gunnar Jeschke
@@ -36,8 +43,6 @@ rez = slater_generic/2; % default resolution, very high
 if exist('resolution','var') && ~isempty(resolution)
     rez = resolution;
 end
-
-sig = 3/sqrt(8*log(2)); % 3 Angstr?m FWHH resolution
 
 C = length(entity.populations); % number of conformers
 min_xyz = [1e6,1e6,1e6];
@@ -66,12 +71,18 @@ z = linspace(min_xyz(3), max_xyz(3), nz);
 for c = 1:C
     fprintf(1,'Conformer %i\n',c);
     pop = entity.populations(c);
-    coor = get_coor(entity,sprintf('{%i}%s',c,address),true);
+    [coor,~,elements] = get_coor(entity,sprintf('{%i}%s',c,address),true);
     [n,~] = size(coor);
     for at = 1:n
-        xpsf = exp(-(x-coor(at,1)).^2/(2*sig^2)); % point-spread function along x
-        ypsf = exp(-(y-coor(at,2)).^2/(2*sig^2)); % point-spread function along y
-        zpsf = exp(-(z-coor(at,3)).^2/(2*sig^2)); % point-spread function along y
+        AB = point_spread(elements(at));
+        xpsf = zeros(size(x));
+        ypsf = zeros(size(y));
+        zpsf = zeros(size(z));
+        for g = 1:4
+            xpsf = xpsf + AB(g,1)*exp(-AB(g,2)*(x-coor(at,1)).^2); % point-spread function along x
+            ypsf = ypsf + AB(g,1)*exp(-AB(g,2)*(y-coor(at,2)).^2); % point-spread function along y
+            zpsf = zpsf + AB(g,1)*exp(-AB(g,2)*(z-coor(at,3)).^2); % point-spread function along z
+        end
         transverse = xpsf.'*ypsf; % transverse point-spread function
         for kz = 1:nz
             cube(:,:,kz) = cube(:,:,kz) + pop*zpsf(kz)*transverse;

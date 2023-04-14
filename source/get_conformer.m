@@ -50,8 +50,6 @@ function [argout,exceptions] = get_conformer(entity,attribute,conformer)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
-profile on
-
 % initialize empty output
 argout = {[]};
 exceptions = {[]};
@@ -223,5 +221,3 @@ switch attribute
         exceptions = {MException('get_conformer:unsupported_attribute', 'Attribute %s not supported',attribute)};
 end
 
-
-profile viewer

@@ -1,11 +1,11 @@
-function make_density(entity,fname,address,resolution)
+function [x,y,z,cube] = make_density(entity,fname,address,resolution)
 %
 % MAKE_DENSITY Electron density map for an ensemble 
 %
-%   MAKE_DENSITY(entity,fname)
+%   [x,y,z,cube] = MAKE_DENSITY(entity,fname)
 %   Computes density and stores it in MRC cube file fname
 %
-%   MAKE_DENSITY(entity,fname,address)
+%   [x,y,z,cube] = MAKE_DENSITY(entity,fname,address)
 %   Restricts computation to the part selected by address
 %
 % INPUT
@@ -14,6 +14,10 @@ function make_density(entity,fname,address,resolution)
 %              appended, if none is present
 % address      MMMx address, defaults to 'everything'
 % resolution   (optional) grid resolution in Angstroem
+%
+% OUTPUT
+% x,y,z        cube axes (Angstrom)
+% cube         density cube
 %
 % algorithm according to:
 % R. Briones, C. Blau, C. Kutzner, B. L. de Groot, C. Aponte-Santamarı,

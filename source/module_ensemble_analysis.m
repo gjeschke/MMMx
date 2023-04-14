@@ -263,6 +263,19 @@ for d = 1:length(control.directives)
                 cmd.central = true;
             end
             commands{cmd_poi} = cmd;    
+        case 'inertiaframe'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; % superposition is performed for current entity
+            end
+            cmd.address = '';
+            if length(control.directives(d).options) > 4 % chain and possibly range given for template
+                cmd.address = control.directives(d).options{5};
+            end
+            commands{cmd_poi} = cmd;    
         otherwise
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_ensembleanalysis:unknown_directive',...
@@ -719,9 +732,7 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            tic,
             make_density(c_entity,cmd.outname,cmd.address,cmd.resolution);
-            toc,
         case 'superimpose'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -767,6 +778,41 @@ for c = 1:cmd_poi
                     record_exception(exceptions{warnings},logfid);
                 end
             end
+            pop = c_entity.populations;
+            ensemble_name = strcat(basname,'.ens');
+            ens_fid = fopen(ensemble_name,'wt');
+            for conf = 1:length(pop)
+                oname = sprintf('%s_m%i.pdb',basname,conf);
+                clear save_options
+                save_options.order = conf;
+                exceptions = put_pdb(c_entity,oname,save_options);
+                fprintf(ens_fid,'%s  %8.6f\n',oname,pop(conf));
+            end
+            fclose(ens_fid);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'inertiaframe'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to transform entity %s, which is unknown, to inertia frame',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [pname,fname,~] = fileparts(cmd.outname);
+            basname = fullfile(pname,fname);
+            selected = '';
+            if ~isempty(cmd.address)
+                selected = cmd.address;
+            end
+            c_entity = inertia_frame(c_entity,selected);
             pop = c_entity.populations;
             ensemble_name = strcat(basname,'.ens');
             ens_fid = fopen(ensemble_name,'wt');

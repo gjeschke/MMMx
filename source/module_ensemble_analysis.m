@@ -238,6 +238,35 @@ for d = 1:length(control.directives)
                 cmd.resolution = str2double(control.directives(d).options{4});
             end
             commands{cmd_poi} = cmd;            
+        case 'property'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; 
+            end
+            cmd.address = '(*)'; % by default, all chains are selected
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.address = control.directives(d).options{3};
+            end
+            cmd.resolution = 1;
+            if length(control.directives(d).options) > 3 
+                cmd.resolution = str2double(control.directives(d).options{4});
+            end
+            cmd.property = 'electrostatic';
+            if length(control.directives(d).options) > 4 
+                cmd.property = control.directives(d).options{5};
+            end
+            cmd.pH = 7;
+            if length(control.directives(d).options) > 5 
+                cmd.pH = str2double(control.directives(d).options{6});
+            end
+            cmd.I = 0.150;
+            if length(control.directives(d).options) > 7 
+                cmd.I = str2double(control.directives(d).options{7});
+            end
+            commands{cmd_poi} = cmd;            
         case 'superimpose'
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
@@ -733,6 +762,21 @@ for c = 1:cmd_poi
                 end
             end
             make_density(c_entity,cmd.outname,cmd.address,cmd.resolution);
+        case 'property'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            make_density(c_entity,cmd.outname,cmd.address,cmd.resolution);
+            property_cube(c_entity,cmd.outname,cmd.property,cmd.address,cmd.resolution,cmd.pH,cmd.I)
         case 'superimpose'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;

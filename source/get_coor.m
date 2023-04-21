@@ -78,7 +78,7 @@ end
 coor = entity.xyz(indices,:);
 
 % retrieve elements, if requested
-if nargout > 3 || heavy
+if nargout >= 3 || heavy
     elements = entity.elements(indices);
 end
 

@@ -116,19 +116,20 @@ density = d.cube;
 
 total_density = sum(sum(sum(density)));
 isovalue = max(max(max(density)));
-while sum(sum(sum(density >= isovalue))) < options.level*total_density
+while sum(sum(sum(density(density >= isovalue)))) < options.level*total_density
     isovalue = 0.99*isovalue;
 end
 
 h = figure; clf; 
 h.Color = options.background;
-if exist('property_file','var')
+if exist('property_file','var') && ~isempty(property_file)
     p = load(property_file);
     s = isosurface(d.y,d.x,d.z,density,isovalue,p.cube);
     patch(s,'FaceColor','interp','EdgeColor','none','FaceLighting','gouraud','BackFaceLighting','lit','FaceAlpha',options.opaqueness);
+    fprintf(1,'Range: %6.3f, %6.3f\n',min(s.facevertexcdata),max(s.facevertexcdata));
     switch options.colorscheme
         case 'cation-pi'
-            colormap(colorscale('orange','navy'));
+            colormap(colorscale('gold','blue'));
             if ~isfield(options,'limits')
                 options.limits = [-0.2,0.2];
             end

@@ -301,8 +301,20 @@ for d = 1:length(control.directives)
                 cmd.entity = '.'; % superposition is performed for current entity
             end
             cmd.address = '';
-            if length(control.directives(d).options) > 4 % chain and possibly range given for template
-                cmd.address = control.directives(d).options{5};
+            if length(control.directives(d).options) > 2 % chain and possibly range given for template
+                cmd.address = control.directives(d).options{3};
+            end
+            commands{cmd_poi} = cmd;    
+        case 'asphericity'
+            cmd_poi = cmd_poi + 1;
+            if ~isempty(control.directives(d).options) % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{1};
+            else
+                cmd.entity = '.'; % asphericity is computed for current entity
+            end
+            cmd.address = '';
+            if length(control.directives(d).options) > 1 % chain and possibly range given
+                cmd.address = control.directives(d).options{1};
             end
             commands{cmd_poi} = cmd;    
         otherwise
@@ -415,13 +427,17 @@ for c = 1:cmd_poi
                record_exception(exceptions{warnings},logfid);
                return
            end
-           entity2 = retrieve_ensemble(cmd.entity2,ensembles,logfid);
-           if isempty(entity2)
-               warnings = warnings +1;
-               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                   'tried to comparison with entity %s, which is unknown',cmd.entity2);
-               record_exception(exceptions{warnings},logfid);
-               return
+           if ~strcmpi(cmd.entity2,'-self')
+               entity2 = retrieve_ensemble(cmd.entity2,ensembles,logfid);
+               if isempty(entity2)
+                   warnings = warnings +1;
+                   exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                       'tried to comparison with entity %s, which is unknown',cmd.entity2);
+                   record_exception(exceptions{warnings},logfid);
+                   return
+               end
+           else
+               entity2 = [];
            end
            if cmd.resolved
                [chain,range] = split_chain_range(cmd.address);
@@ -872,6 +888,38 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'asphericity'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to compute asphericity of entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            selected = '';
+            if ~isempty(cmd.address)
+                selected = cmd.address;
+            end
+            c_entity = asphericity(c_entity,selected);
+            pop = c_entity.populations;
+            h = plot_correlation(entity.tg_c,entity.asphericity_c,pop);
+            ha = h.CurrentAxes;
+            ha.Title.String = sprintf('Mean asphericity %5.3f',entity.asphericity);
+            ha.XLabel.String = sprintf('R_g (%c)',char(197));
+            ha.YLabel.String = 'Asphericity';
+            if save_figures
+                figname = sprintf('Asphericity_%s.%s',cmd.entity,figure_format);
+                saveas(h,figname);
+            end
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
     end
 end
 
@@ -1063,3 +1111,13 @@ xlabel('Segment sequence length k');
 ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
 legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_seglen,segments.nu_seglen),'Location','southeast');
 axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);
+
+function h = plot_correlation(x,y,pop)
+
+h = figure;
+for k = 1:length(pop)
+    MS = 12*round(pop(k)*length(pop));
+    if MS > 0
+        plot(x(k),y(k),'k.','MarkerSize',MS);
+    end
+end

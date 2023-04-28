@@ -125,12 +125,12 @@ for kc = 1:length(chains)
                     case 'electrostatic'
                         switch resname
                             case 'ASP'
-                                q = -get_charge(3.90,pH);
+                                q = get_charge(3.90,pH) - 1;
                                 indices = zeros(2,C);
                                 indices(1,:) = entity.(chain).(residue).OD1.tab_indices;
                                 indices(2,:) = entity.(chain).(residue).OD2.tab_indices;
                             case 'GLU'
-                                q = -get_charge(4.07,pH);
+                                q = get_charge(4.07,pH) - 1;
                                 indices = zeros(2,C);
                                 indices(1,:) = entity.(chain).(residue).OE1.tab_indices;
                                 indices(2,:) = entity.(chain).(residue).OE2.tab_indices;

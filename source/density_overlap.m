@@ -28,7 +28,7 @@ if ~exist('address','var') || isempty(address)
     address = '(*)';
 end
 
-sig = 3/sqrt(8*log(2)); % 3 Angstr?m FWHH resolution
+sig = 2*3/sqrt(8*log(2)); % 3 Angstr?m FWHH resolution
 rez = sig;
 
 if exist('resolution','var') && ~isempty(resolution)
@@ -36,11 +36,33 @@ if exist('resolution','var') && ~isempty(resolution)
 end
 
 C1 = length(entity1.populations); % number of conformers
-C2 = length(entity2.populations); % number of conformers
+if isempty(entity2) % comparison of two halfs of the same ensemble
+    C1 = floor(C1/2);
+    C2 = C1;
+    conf1 = zeros(1,C1);
+    conf2 = zeros(1,C2);
+    pop1 = conf1;
+    pop2 = conf2;
+    for c = 1:C1
+        c1 = 2*c-1;
+        c2 = 2*c;
+        conf1(c) = c1;
+        conf2(c) = c2;
+        pop1(c) = entity1.populations(c1);
+        pop2(c) = entity1.populations(c2);
+    end
+    entity2 = entity1;
+else % comparison of two distinct ensembles
+    conf1 = 1:C1;
+    pop1 = entity1.populations;
+    C2 = length(entity2.populations); % number of conformers
+    conf2 = 1:C2;
+    pop2 = entity2.populations;
+end
 min_xyz = [1e6,1e6,1e6];
 max_xyz = [-1e6,-1e6,-1e6];
 for c = 1:C1
-    coor = get_coor(entity1,sprintf('{%i}%s',c,address),true);
+    coor = get_coor(entity1,sprintf('{%i}%s',conf1(c),address),true);
     max_xyz0 = max(coor) + 3*sig;
     min_xyz0 = min(coor) - 3*sig;
     for k = 1:3
@@ -53,7 +75,7 @@ for c = 1:C1
     end
 end
 for c = 1:C2
-    coor = get_coor(entity2,sprintf('{%i}%s',c,address),true);
+    coor = get_coor(entity2,sprintf('{%i}%s',conf2(c),address),true);
     max_xyz0 = max(coor) + 3*sig;
     min_xyz0 = min(coor) - 3*sig;
     for k = 1:3
@@ -75,8 +97,8 @@ y = linspace(min_xyz(2) , max_xyz(2), ny);
 z = linspace(min_xyz(3), max_xyz(3), nz);
 
 for c = 1:C1
-    pop = entity1.populations(c);
-    coor = get_coor(entity1,sprintf('{%i}%s',c,address),true);
+    pop = pop1(c);
+    coor = get_coor(entity1,sprintf('{%i}%s',conf1(c),address),true);
     [n,~] = size(coor);
     for at = 1:n
         xpsf = exp(-(x-coor(at,1)).^2/(2*sig^2)); % point-spread function along x
@@ -91,8 +113,8 @@ end
 cube1 = cube1/sum(sum(sum(cube1)));
 
 for c = 1:C2
-    pop = entity2.populations(c);
-    coor = get_coor(entity2,sprintf('{%i}%s',c,address),true);
+    pop = pop2(c);
+    coor = get_coor(entity2,sprintf('{%i}%s',conf2(c),address),true);
     [n,~] = size(coor);
     for at = 1:n
         xpsf = exp(-(x-coor(at,1)).^2/(2*sig^2)); % point-spread function along x

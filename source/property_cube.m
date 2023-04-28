@@ -273,7 +273,7 @@ for kc = 1:length(chains)
                                 indices(4,:) = entity.(chain).(residue).CG2.tab_indices;
                             case 'GLU'
                                 charge = get_charge(4.07,pH);
-                                q = 0.19*charge + 0.12*(1-charge);
+                                q = 0.19*(1-charge) + 0.12*charge;
                                 indices = zeros(6,C);
                                 indices(1,:) = entity.(chain).(residue).CA.tab_indices;
                                 indices(2,:) = entity.(chain).(residue).CB.tab_indices;
@@ -329,7 +329,7 @@ for kc = 1:length(chains)
                                 indices(5,:) = entity.(chain).(residue).ND2.tab_indices;
                             case 'ASP'
                                 charge = get_charge(3.90,pH);
-                                q = 2.41*charge + 0.50*(1-charge);
+                                q = 2.41*(1-charge) + 0.50*charge;
                                 indices = zeros(5,C);
                                 indices(1,:) = entity.(chain).(residue).CA.tab_indices;
                                 indices(2,:) = entity.(chain).(residue).CB.tab_indices;

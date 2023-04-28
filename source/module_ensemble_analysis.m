@@ -267,6 +267,39 @@ for d = 1:length(control.directives)
                 cmd.I = str2double(control.directives(d).options{7});
             end
             commands{cmd_poi} = cmd;            
+        case 'coulomb'
+            cmd_poi = cmd_poi + 1;
+            cmd.outname = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+                cmd.entity = control.directives(d).options{2};
+            else
+                cmd.entity = '.'; 
+            end
+            cmd.address = '(A)'; % by default, chain A is selected
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.address = control.directives(d).options{3};
+            end
+            cmd.aa1 = 'Arg';
+            if length(control.directives(d).options) > 3 
+                cmd.aa1 = control.directives(d).options{4};
+            end
+            cmd.aa2 = 'Glu';
+            if length(control.directives(d).options) > 4 
+                cmd.aa2 = control.directives(d).options{5};
+            end
+            cmd.pH = 7;
+            if length(control.directives(d).options) > 5 
+                cmd.pH = str2double(control.directives(d).options{6});
+            end
+            cmd.I = 0.150;
+            if length(control.directives(d).options) > 6 
+                cmd.I = str2double(control.directives(d).options{7});
+            end
+            cmd.maxscale = [];
+            if length(control.directives(d).options) > 7 
+                cmd.maxscale = str2double(control.directives(d).options{8});
+            end
+            commands{cmd_poi} = cmd;            
         case 'superimpose'
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
@@ -786,13 +819,36 @@ for c = 1:cmd_poi
                 if isempty(c_entity)
                     warnings = warnings +1;
                     exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                        'tried to compute property cube for entity %s, which is unknown',cmd.entity);
                     record_exception(exceptions{warnings},logfid);
                     return
                 end
             end
-            make_density(c_entity,cmd.outname,cmd.address,cmd.resolution);
             property_cube(c_entity,cmd.outname,cmd.property,cmd.address,cmd.resolution,cmd.pH,cmd.I)
+        case 'coulomb'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to compute Coulomb pairs for entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [pname,fname,~] = fileparts(cmd.outname);
+            basname = fullfile(pname,fname);
+            [pairs,coulomb,~,resnums] = coulomb_pairs(c_entity,cmd.address,cmd.aa1,cmd.aa2,cmd.pH,cmd.I);
+            coulomb_matrix = [pairs coulomb];
+            h = plot_interaction(pairs,coulomb,resnums,cmd.maxscale);
+            if save_figures
+                figname = sprintf('coulomb_interaction_%s_%s_%s.%s',basname,cmd.aa1,cmd.aa2,figure_format);
+                exportgraphics(h,figname);
+            end
+            datname = sprintf('coulomb_matrix_%s_%s_%s.csv',cmd.aa1,cmd.aa2,basname);
+            writematrix(coulomb_matrix,datname);
         case 'superimpose'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -1121,3 +1177,41 @@ for k = 1:length(pop)
         plot(x(k),y(k),'k.','MarkerSize',MS);
     end
 end
+
+function h = plot_interaction(pairs,interaction,resnums,maxscale)
+
+interaction = abs(interaction);
+max_interaction = max(interaction);
+if isempty(maxscale)
+    maxscale = max_interaction;
+end
+h = figure;
+hold on;
+for k = 1:length(interaction)
+    col = color_grade(interaction(k),maxscale);
+    plot(pairs(k,1),pairs(k,2),'.','MarkerSize',12,'Color',col);
+    plot(pairs(k,2),pairs(k,1),'.','MarkerSize',12,'Color',col);
+end
+curr_axis = gca;
+set(curr_axis,'Color','k');
+xlabel('Residue number');
+ylabel('Residue number');
+axis equal
+axis([min(resnums),max(resnums),min(resnums),max(resnums)]);
+title(sprintf('Mean Coulomb interaction with maximum %4.1f K',maxscale));
+
+
+
+function color = color_grade(p,P)
+% color grade in a hot map from 0 to P corresponding to value p  
+
+if p < 0
+    p = 0;
+end
+if p > P
+    p = P;
+end
+k = 1 + round(100*p/P);
+
+colmap = hot(101);
+color = colmap(k,:);

@@ -248,6 +248,9 @@
 <li class="toctree-l2"><a class="reference internal" href="#flexibility"><code class="docutils literal notranslate"><span class="pre">flexibility</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#order"><code class="docutils literal notranslate"><span class="pre">order</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#density"><code class="docutils literal notranslate"><span class="pre">density</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#property"><code class="docutils literal notranslate"><span class="pre">property</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#coulomb"><code class="docutils literal notranslate"><span class="pre">coulomb</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#asphericity"><code class="docutils literal notranslate"><span class="pre">asphericity</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#compare"><code class="docutils literal notranslate"><span class="pre">compare</span></code></a></li>
@@ -636,8 +639,80 @@
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>output is as a ‘.mrc’ file, which can be visualized by most protein graphics programs</p></li>
+<li><p>output is as a ‘.mrc’ file, which can be visualized by most protein graphics programs
+*   output can also be as a Matlab file for visualization with MMM or the ‘visualize_isosuface’ function</p></li>
 <li><p>a larger value for resolution leads to faster computation and a smaller file and may still be adequate for strong disorder</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="property">
+<h2><code class="docutils literal notranslate"><span class="pre">property</span></code><a class="headerlink" href="#property" title="Permalink to this headline">¶</a></h2>
+<p>Computes a 3D property map of an ensemble</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">property</span> <span class="s">filename</span> <span class="s">input</span> <span class="s">[range</span> <span class="s">[resolution</span> <span class="s">[property</span> <span class="s">[pH</span> <span class="s">[I]]]]]</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> - name of the output file, specify with extension ‘.mat’ for MMMx density files or ‘.mrc’ for MRC files</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - optional MMMx address that specifies only a range of a conformer for analysis, e.g. <img class="math" src="_images/math/7e6f65e4f52b89b686ac4faa2738b7d97b05b1f6.svg" alt="(A)187-320"/></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resolution</span></code> - resolution in Angstroem (optional), defaults to 1</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">property</span></code> - can be <img class="math" src="_images/math/7e56d5f39380232b07bb6b3b3bde94aff53db01d.svg" alt="electrostatic"/> (default), <img class="math" src="_images/math/d240226b1fac6160b5e2e4da566206029a562faf.svg" alt="cation-pi"/>, or <img class="math" src="_images/math/57e7eaf2821a94eba908c33d2dad5a9533e7dda1.svg" alt="hydrophobic"/></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pH</span></code> - pH value, default is 7</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">I</span></code> - ionic strength, default is 0.150 M</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>output is as a ‘.mrc’ file, which can be visualized by most protein graphics programs</p></li>
+<li><p>output can also be as a Matlab file for visualization with MMM or the ‘visualize_isosuface’ function</p></li>
+<li><p>a larger value for resolution leads to faster computation and a smaller file and may still be adequate for strong disorder</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="coulomb">
+<h2><code class="docutils literal notranslate"><span class="pre">coulomb</span></code><a class="headerlink" href="#coulomb" title="Permalink to this headline">¶</a></h2>
+<p>Computes and displays the ensemble averaged Coulomb interaction for pairs of charged residues</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">coulomb</span> <span class="s">filename</span> <span class="s">input</span> <span class="s">[aa1</span> <span class="s">[aa2</span> <span class="s">[pH</span> <span class="s">[I</span> <span class="s">[Tmax]]]]]</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> - name of the output file, comma-separated value file</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aa1</span></code> - amino acid type 1, defaults to <img class="math" src="_images/math/47f4620835825ce50a8685e34b1ef93771886bff.svg" alt="Arg"/>, use three-letter code</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">aa2</span></code> - amino acid type 2, defaults to <img class="math" src="_images/math/13de5bacaf7d2492b68374e723457eb0dd888f14.svg" alt="Glu"/>, use three-letter code</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pH</span></code> - pH value, default is 7</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">I</span></code> - ionic strength, default is 0.150 M</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tmax</span></code> - temperature corresponding to white on the color scale, defaults to the maximum interaction among all pairs</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>output is as a ‘.csv’ file, with the residue numbers in the first and second column and the Coulomb interaction in the third column</p></li>
+<li><p>in addition, a figure is output with a <img class="math" src="_images/math/a67edb828b1a93bec964e2ed7f00a031519f7e07.svg" alt="hot"/> colormap, where black is no interaction and white the maximum interaction</p></li>
+<li><p>the interaction is scaled by the Boltzmann constant, so that it corresponds to the temeparture where it matches thermal energy</p></li>
+<li><p>specify parameter <img class="math" src="_images/math/59548df680ac30abef90edb95286ec83580cee04.svg" alt="Tmax"/> if you want to compare different residue pairs for the same ensemble</p></li>
+<li><p>a salt bridge at 0.150 M ionic strength is in the range of 350-400 K</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="asphericity">
+<h2><code class="docutils literal notranslate"><span class="pre">asphericity</span></code><a class="headerlink" href="#asphericity" title="Permalink to this headline">¶</a></h2>
+<p>Computes the ensemble averaged asphericity and plots asphericity versus radius of gyration for all conformers</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">asphericity</span> <span class="s">input</span> <span class="s">[address]</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - chain address or chain and residue ranges, e.g. <img class="math" src="_images/math/dd9f53e3e7e1d08eb2e1e244e69b524cf0a62b14.svg" alt="(A)4-270"/>, defaults to <img class="math" src="_images/math/0b446443cd13ccf6df38944aa3693cfaa89a46bb.svg" alt="(A)"/></p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>output is a figure with Rg on the x axis and asphericity on the y axis</p></li>
+<li><p>each conformer corresponds to one point marker, with MarkerSize corresponding to population</p></li>
 </ul>
 </dd>
 </dl>

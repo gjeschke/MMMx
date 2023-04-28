@@ -166,7 +166,70 @@ Arguments
     *   ``resolution`` - resolution in Angstroem (optional), defaults to 1
 Remarks
     *   output is as a '.mrc' file, which can be visualized by most protein graphics programs
+	*   output can also be as a Matlab file for visualization with MMM or the 'visualize_isosuface' function
     *   a larger value for resolution leads to faster computation and a smaller file and may still be adequate for strong disorder
+		
+``property``
+---------------------------------
+
+Computes a 3D property map of an ensemble 
+
+.. code-block:: matlab
+
+    property filename input [range [resolution [property [pH [I]]]]]
+
+Arguments
+    *   ``filename`` - name of the output file, specify with extension '.mat' for MMMx density files or '.mrc' for MRC files
+    *   ``input`` - identifier of the input ensemble
+    *   ``range`` - optional MMMx address that specifies only a range of a conformer for analysis, e.g. `(A)187-320`
+    *   ``resolution`` - resolution in Angstroem (optional), defaults to 1
+    *   ``property`` - can be `electrostatic` (default), `cation-pi`, or `hydrophobic`
+    *   ``pH`` - pH value, default is 7
+    *   ``I`` - ionic strength, default is 0.150 M 
+Remarks
+    *   output is as a '.mrc' file, which can be visualized by most protein graphics programs
+    *   output can also be as a Matlab file for visualization with MMM or the 'visualize_isosuface' function
+    *   a larger value for resolution leads to faster computation and a smaller file and may still be adequate for strong disorder
+
+``coulomb``
+---------------------------------
+
+Computes and displays the ensemble averaged Coulomb interaction for pairs of charged residues 
+
+.. code-block:: matlab
+
+    coulomb filename input [aa1 [aa2 [pH [I [Tmax]]]]]
+
+Arguments
+    *   ``filename`` - name of the output file, comma-separated value file
+    *   ``input`` - identifier of the input ensemble
+    *   ``aa1`` - amino acid type 1, defaults to `Arg`, use three-letter code
+    *   ``aa2`` - amino acid type 2, defaults to `Glu`, use three-letter code
+    *   ``pH`` - pH value, default is 7
+    *   ``I`` - ionic strength, default is 0.150 M 
+    *   ``Tmax`` - temperature corresponding to white on the color scale, defaults to the maximum interaction among all pairs
+Remarks
+    *   output is as a '.csv' file, with the residue numbers in the first and second column and the Coulomb interaction in the third column
+    *   in addition, a figure is output with a `hot` colormap, where black is no interaction and white the maximum interaction
+    *   the interaction is scaled by the Boltzmann constant, so that it corresponds to the temeparture where it matches thermal energy
+    *   specify parameter `Tmax` if you want to compare different residue pairs for the same ensemble
+    *   a salt bridge at 0.150 M ionic strength is in the range of 350-400 K
+
+``asphericity``
+---------------------------------
+
+Computes the ensemble averaged asphericity and plots asphericity versus radius of gyration for all conformers 
+
+.. code-block:: matlab
+
+    asphericity input [address]
+
+Arguments
+    *   ``input`` - identifier of the input ensemble
+    *   ``address`` - chain address or chain and residue ranges, e.g. `(A)4-270`, defaults to `(A)`
+Remarks
+    *   output is a figure with Rg on the x axis and asphericity on the y axis
+    *   each conformer corresponds to one point marker, with MarkerSize corresponding to population
 	
 ``superimpose``
 ---------------------------------

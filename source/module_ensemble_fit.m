@@ -1784,7 +1784,9 @@ if plot_result
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
             end
             plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0]);
-            axis([fit_task.ddr(kr).rax_exp(1),fit_task.ddr(kr).rax_exp(end),0,1.05*maxamp]);
+            if isfield(fit_task.ddr(kr),'rax_exp')
+                axis([fit_task.ddr(kr).rax_exp(1),fit_task.ddr(kr).rax_exp(end),0,1.05*maxamp]);
+            end
             if ~isempty(overlap_E)
                 overlap = overlap*overlap_E;
             else

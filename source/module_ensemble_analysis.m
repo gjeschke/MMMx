@@ -963,15 +963,18 @@ for c = 1:cmd_poi
             end
             c_entity = asphericity(c_entity,selected);
             pop = c_entity.populations;
-            h = plot_correlation(entity.tg_c,entity.asphericity_c,pop);
+            h = plot_correlation(c_entity.Rg_c,c_entity.asphericity_c,pop);
             ha = h.CurrentAxes;
-            ha.Title.String = sprintf('Mean asphericity %5.3f',entity.asphericity);
+            ha.Title.String = sprintf('Mean asphericity %5.3f',c_entity.asphericity);
             ha.XLabel.String = sprintf('R_g (%c)',char(197));
             ha.YLabel.String = 'Asphericity';
             if save_figures
                 figname = sprintf('Asphericity_%s.%s',cmd.entity,figure_format);
                 saveas(h,figname);
             end
+            asphericity_matrix = [c_entity.populations c_entity.Rg_c c_entity.asphericity_c];
+            datname = sprintf('asphericity_%s.csv',cmd.entity);
+            writematrix(asphericity_matrix,datname);
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end
@@ -1171,8 +1174,9 @@ axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);
 function h = plot_correlation(x,y,pop)
 
 h = figure;
+hold on
 for k = 1:length(pop)
-    MS = 12*round(pop(k)*length(pop));
+    MS = 24*round(sqrt(pop(k)/max(pop)));
     if MS > 0
         plot(x(k),y(k),'k.','MarkerSize',MS);
     end

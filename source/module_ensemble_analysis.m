@@ -963,7 +963,7 @@ for c = 1:cmd_poi
             end
             c_entity = asphericity(c_entity,selected);
             pop = c_entity.populations;
-            h = plot_correlation(c_entity.Rg_c,c_entity.asphericity_c,pop);
+            h = plot_asphericity(c_entity.Rg_c,c_entity.asphericity_c,pop);
             ha = h.CurrentAxes;
             ha.Title.String = sprintf('Mean asphericity %5.3f',c_entity.asphericity);
             ha.XLabel.String = sprintf('R_g (%c)',char(197));
@@ -1171,16 +1171,33 @@ ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
 legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_seglen,segments.nu_seglen),'Location','southeast');
 axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);
 
-function h = plot_correlation(x,y,pop)
+function h = plot_asphericity(Rg,asph,pop)
 
 h = figure;
-hold on
+min_Rg = floor(min(Rg));
+max_Rg = ceil(max(Rg));
+Rg_ax = min_Rg:max_Rg; % 1 Angstroem resolution
+asph_ax = 0:0.01:ceil(100*max(asph))/100; % 0.01 resolution for asphericity
+pop = pop/max(pop);
+
+pd = zeros(length(asph_ax),length(Rg_ax));
+dec_Rg = 1/(sqrt(2)*(Rg_ax(2)-Rg_ax(1)));
+dec_asph = 1/(sqrt(2)*(asph_ax(2)-asph_ax(1)));
 for k = 1:length(pop)
-    MS = 24*round(sqrt(pop(k)/max(pop)));
-    if MS > 0
-        plot(x(k),y(k),'k.','MarkerSize',MS);
-    end
+    xpsf = exp(-(dec_Rg*(Rg_ax-Rg(k))).^2); % point-spread function along x
+    ypsf = exp(-(dec_asph*(asph_ax-asph(k))).^2); % point-spread function along x
+    pd = pd + pop(k)*ypsf.'*xpsf;
 end
+pd = pd/max(max(pd));
+levels = 0:0.025:1;
+contourf(Rg_ax,asph_ax,pd,levels,'edgecolor','none');
+c = colorbar;
+c.Label.String = 'Relative probability density';
+c.FontSize = 12;
+set(gca,'FontSize',12);
+xlabel(sprintf('R_g (%c)',char(197)));
+ylabel('asphericity');
+
 
 function h = plot_interaction(pairs,interaction,resnums,maxscale)
 

@@ -38,12 +38,6 @@ function [x,y,z,cube] = property_cube(entity,fname,property,address,resolution,p
 % J.P. Gallivan, D.A. Dougherty, PNAS 96, 9459-9464 (1999)
 % DOI: 10.1073/pnas.96.17.9459
 %
-% scaling exponent for cation-pi interaction obtained by fitting data from:
-% Q. Hou, R. Bourgeas, F. Pucci, M. Rooman, Scientific Reports, 8, 14661
-% (2018), DOI: DOI10.1038/s41598-018-32988-w
-% by Delta W = Delta W0 + a(r-3 Å)^n
-% which gave Delta W0 = -0.578 kcal/mol, a = 0.368 (unit), n = 1.854
-%
 % hydrophobicity corresponds to the Wimley-White scale:
 % W.C. Wimley, S.H. White, Nat. Struct. Mol. Biol. 3, 842-848 (1996)
 % DOI: 10.1038/nsb1096-842

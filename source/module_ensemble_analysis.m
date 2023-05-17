@@ -146,7 +146,8 @@ for d = 1:length(control.directives)
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
             cmd.oriented = false;
-            cmd.drms = false;
+            cmd.drms = true;
+            cmd.maxpop = false;
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
@@ -156,8 +157,13 @@ for d = 1:length(control.directives)
                 if strcmpi(control.directives(d).options{3},'drms')
                     cmd.drms = true;
                 end
+                if strcmpi(control.directives(d).options{3},'similarity')
+                    cmd.drms = true;
+                    cmd.maxpop = true;
+                end
                 if strcmpi(control.directives(d).options{3},'oriented')
                     cmd.oriented = true;
+                    cmd.drms = false;
                 end
             end
             commands{cmd_poi} = cmd;
@@ -562,8 +568,16 @@ for c = 1:cmd_poi
                     'sorting of ensemble %s failed since backbone could not be retrieved',cmd.entity);
                 record_exception(exceptions{warnings},logfid);
                 return
-            end                
-            [pair_rmsd,ordering,~,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
+            end 
+            if cmd.maxpop
+                [pair_rmsd,ordering] = similarity_sorting(pair_rmsd,pop);
+                cluster_sizes = ones(1,length(ordering));
+                cluster_pop = pop(ordering);
+            else
+                [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
+                D = dunn_index(pair_rmsd,cluster_assignment);
+                fprintf(logfid,'\nCluster assignment has a Dunn index of %5.3f\n',D);
+            end
             [pname,fname,~] = fileparts(cmd.outname);
             basname = fullfile(pname,fname);
             ensemble_name = strcat(basname,'.ens');

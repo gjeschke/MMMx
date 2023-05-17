@@ -529,7 +529,7 @@
 </div>
 <div class="section" id="sort">
 <h2><code class="docutils literal notranslate"><span class="pre">sort</span></code><a class="headerlink" href="#sort" title="Permalink to this headline">¶</a></h2>
-<p>Iterative hierarchical clustering and sorting of an ensemble.</p>
+<p>Iterative hierarchical clustering and sorting of an ensemble bsed on distance root-mean square deviation.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">sort</span> <span class="s">filename</span> <span class="s">input</span> <span class="s">[option]</span>
 </pre></div>
 </div>
@@ -538,7 +538,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">filename</span></code> - name of the output ensemble list, extension should be ‘.ens’</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘oriented’ assumes that the conformers are already in the same frame, otherwise they are optimally superimposed</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘drms’ uses orientation-independent distance root-mean square as a metric</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘similarity’ starts from the conformer with highest population and builds a list with maximum similarity between neighbours</p></li>
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">

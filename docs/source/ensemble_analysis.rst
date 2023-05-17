@@ -70,7 +70,7 @@ Remarks
 ``sort``
 ---------------------------------
 
-Iterative hierarchical clustering and sorting of an ensemble. 
+Iterative hierarchical clustering and sorting of an ensemble bsed on distance root-mean square deviation. 
 
 .. code-block:: matlab
 
@@ -80,7 +80,7 @@ Arguments
     *   ``filename`` - name of the output ensemble list, extension should be '.ens'
     *   ``input`` - identifier of the input ensemble
     *   ``option`` - option 'oriented' assumes that the conformers are already in the same frame, otherwise they are optimally superimposed
-    *   ``option`` - option 'drms' uses orientation-independent distance root-mean square as a metric
+    *   ``option`` - option 'similarity' starts from the conformer with highest population and builds a list with maximum similarity between neighbours
 Remarks
     *   the algorithm attempts to group similar conformers and to start from the most typical conformers
 

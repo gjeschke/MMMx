@@ -148,6 +148,7 @@ for d = 1:length(control.directives)
             cmd.oriented = false;
             cmd.drms = true;
             cmd.maxpop = false;
+            cmd.population = false;
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
@@ -164,6 +165,11 @@ for d = 1:length(control.directives)
                 if strcmpi(control.directives(d).options{3},'oriented')
                     cmd.oriented = true;
                     cmd.drms = false;
+                end
+                if strcmpi(control.directives(d).options{3},'population')
+                    cmd.oriented = true;
+                    cmd.drms = false;
+                    cmd.population = true;
                 end
             end
             commands{cmd_poi} = cmd;
@@ -551,32 +557,38 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            if cmd.drms
-                [pair_rmsd,pop,exceptions0] = pair_drms_matrix(c_entity);
-            elseif cmd.oriented
-                [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
-            else
-                [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
-            end
-            if ~isempty(exceptions0{1})
-                for k = 1:exceptions0
-                    warnings = warnings + 1;
-                    exceptions{warnings} = exceptions0{k};
-                end
-                warnings = warnings + 1;
-                exceptions{warnings} = MException('module_ensembleanalysis:backbone_retrieval_failed',...
-                    'sorting of ensemble %s failed since backbone could not be retrieved',cmd.entity);
-                record_exception(exceptions{warnings},logfid);
-                return
-            end 
-            if cmd.maxpop
-                [pair_rmsd,ordering] = similarity_sorting(pair_rmsd,pop);
+            if cmd.population
+                pop = c_entity.populations;
+                [cluster_pop,ordering] = sort(pop,'descend');
                 cluster_sizes = ones(1,length(ordering));
-                cluster_pop = pop(ordering);
             else
-                [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
-                D = dunn_index(pair_rmsd,cluster_assignment);
-                fprintf(logfid,'\nCluster assignment has a Dunn index of %5.3f\n',D);
+                if cmd.drms
+                    [pair_rmsd,pop,exceptions0] = pair_drms_matrix(c_entity);
+                elseif cmd.oriented
+                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
+                else
+                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
+                end
+                if ~isempty(exceptions0{1})
+                    for k = 1:exceptions0
+                        warnings = warnings + 1;
+                        exceptions{warnings} = exceptions0{k};
+                    end
+                    warnings = warnings + 1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:backbone_retrieval_failed',...
+                        'sorting of ensemble %s failed since backbone could not be retrieved',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+                if cmd.maxpop
+                    [pair_rmsd,ordering] = similarity_sorting(pair_rmsd,pop);
+                    cluster_sizes = ones(1,length(ordering));
+                    cluster_pop = pop(ordering);
+                else
+                    [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
+                    D = dunn_index(pair_rmsd,cluster_assignment);
+                    fprintf(logfid,'\nCluster assignment has a Dunn index of %5.3f\n',D);
+                end
             end
             [pname,fname,~] = fileparts(cmd.outname);
             basname = fullfile(pname,fname);
@@ -603,7 +615,7 @@ for c = 1:cmd_poi
                     figname = sprintf('pair_drms_sorting_%s.%s',basname,figure_format);
                     saveas(h,figname);
                 end
-            else
+            elseif ~cmd.population
                 h = plot_pair_rmsd(pair_rmsd);
                 if save_figures
                     figname = sprintf('pair_rmsd_sorting_%s.%s',basname,figure_format);

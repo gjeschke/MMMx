@@ -81,8 +81,10 @@ Arguments
     *   ``input`` - identifier of the input ensemble
     *   ``option`` - option 'oriented' assumes that the conformers are already in the same frame, otherwise they are optimally superimposed
     *   ``option`` - option 'similarity' starts from the conformer with highest population and builds a list with maximum similarity between neighbours
+    *   ``option`` - option 'population' sorts conformers by descending population
 Remarks
-    *   the algorithm attempts to group similar conformers and to start from the most typical conformers
+    *   by default (no option specified) similar conformers are grouped to clusters and the clusters are sorted by descending population
+    *   for cases with multiple discrete states, the default is strongly recommended
 
 ``measures``
 ---------------------------------

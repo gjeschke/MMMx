@@ -579,7 +579,7 @@ for kent = first_conformer:nent
                     seq = sequence(2);
                     err = 0;
             end
-            if err == 0
+            if err == 0 && ~strcmpi(RNA_type,'freestanding')
                 threaded = check_RNA_threading(environment,ecoor(:,2:4),atomtags);
                 if isempty(threaded) || threaded
                     err = 1;

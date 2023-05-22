@@ -539,10 +539,12 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘oriented’ assumes that the conformers are already in the same frame, otherwise they are optimally superimposed</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘similarity’ starts from the conformer with highest population and builds a list with maximum similarity between neighbours</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">option</span></code> - option ‘population’ sorts conformers by descending population</p></li>
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>the algorithm attempts to group similar conformers and to start from the most typical conformers</p></li>
+<li><p>by default (no option specified) similar conformers are grouped to clusters and the clusters are sorted by descending population</p></li>
+<li><p>for cases with multiple discrete states, the default is strongly recommended</p></li>
 </ul>
 </dd>
 </dl>

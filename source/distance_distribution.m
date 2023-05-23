@@ -23,7 +23,7 @@ function [r_axis,distribution,entity,exceptions] = distance_distribution(entity,
 % label2    label name, such as 'mtsl' or 'I1A' or atom specifier for this
 %           residue, such as 'atom.CA', for label at site 2
 % options   computation options
-%           .rmin         minimum distance (Angstroem), default 10, double
+%           .rmin         minimum distance (Angstroem), default 0, double
 %           .rmax         maximum distance (Angstroem), default 150, double
 %           .resolution   resolution (Angstroem), default 0.5, double
 %           .units        string, 'probability' makes sum(distribution) = 1

@@ -142,6 +142,7 @@ Label    Synonyms                         Class           Attachment       Rotam
 ``TUP``  ``iap-4tu``, ``iap-thiouracil``  nitroxide       4-thiouracil     72        1                          
 ``TUM``  ``mts-4tu``, ``mts-thiouracil``  nitroxide       4-thiouracil     192       1
 ``RTT``  ``r5-tpt``                       nitroxide       5'-thiophosphate 576       1
+``R5T``  ``r5-tp``                        nitroxide       thiophosphate    360       1
 ``R5P``  ``r5p``                          nitroxide       5'-thiophosphate 2048      1
 ``R3P``  ``r3p``                          nitroxide       3'-thiophosphate 512       1
 ``K1H``  ``HF-K1``                        nitroxide       unnatural aa     288       1

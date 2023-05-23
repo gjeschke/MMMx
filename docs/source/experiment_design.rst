@@ -164,7 +164,7 @@ Compute, save, and plot distance distributions for directly specified site pairs
 
 .. code-block:: matlab
 
-    distributions labels entity outname
+    distributions labels entity outname [rmin [rmax [resolution]]]
        'address_1' 'address_2'
        []
        'pairlist'
@@ -174,6 +174,9 @@ Arguments
     *   ``labels`` - label or labels for directly specified site pairs, see :ref:`Rotamer libraries <rotamer_concept>` for list of available labels 
     *   ``entity`` - entity identifier specified in any of the input commands
     *   ``outname`` - basis file name for the output distributions and plots
+    *   ``rmin`` - minimum of distance axis, defaults to 10 Angstrom
+    *   ``rmax`` - maximum of distance axis, defaults to 150 Angstrom
+    *   ``resolution`` - resolution of distance axis, defaults to 0.5 Angstrom
     *   ``address_1`` - MMMx :ref:`residue address <MMMx_addresses>` for first site
     *   ``address_2`` - MMMx :ref:`residue address <MMMx_addresses>` for second site
     *   ``pairlist`` - file name of a site pair list obtained by commands ``pairlist`` or ``hetpairlist``

@@ -630,7 +630,7 @@ The latter example is a two-module pipeline that uses module <a class="reference
 <div class="section" id="distributions">
 <h2><code class="docutils literal notranslate"><span class="pre">distributions</span></code><a class="headerlink" href="#distributions" title="Permalink to this headline">¶</a></h2>
 <p>Compute, save, and plot distance distributions for directly specified site pairs or pair lists. This is a block key.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">distributions</span> <span class="s">labels</span> <span class="s">entity</span> <span class="s">outname</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">distributions</span> <span class="s">labels</span> <span class="s">entity</span> <span class="s">outname</span> <span class="s">[rmin</span> <span class="s">[rmax</span> <span class="s">[resolution]]]</span>
    <span class="s">&#39;address_1&#39;</span> <span class="s">&#39;address_2&#39;</span>
    <span class="p">[]</span>
    <span class="s">&#39;pairlist&#39;</span>
@@ -642,6 +642,9 @@ The latter example is a two-module pipeline that uses module <a class="reference
 <li><p><code class="docutils literal notranslate"><span class="pre">labels</span></code> - label or labels for directly specified site pairs, see <a class="reference internal" href="rotamer_concept.html#rotamer-concept"><span class="std std-ref">Rotamer libraries</span></a> for list of available labels</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity identifier specified in any of the input commands</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">outname</span></code> - basis file name for the output distributions and plots</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rmin</span></code> - minimum of distance axis, defaults to 10 Angstrom</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">rmax</span></code> - maximum of distance axis, defaults to 150 Angstrom</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">resolution</span></code> - resolution of distance axis, defaults to 0.5 Angstrom</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">address_1</span></code> - MMMx <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">residue address</span></a> for first site</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">address_2</span></code> - MMMx <a class="reference internal" href="MMMx_addresses.html#mmmx-addresses"><span class="std std-ref">residue address</span></a> for second site</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">pairlist</span></code> - file name of a site pair list obtained by commands <code class="docutils literal notranslate"><span class="pre">pairlist</span></code> or <code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></p></li>

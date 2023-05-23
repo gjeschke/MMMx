@@ -185,6 +185,9 @@ for d = 1:length(control.directives)
             commands{cmd_poi} = cmd;
         case 'distributions'
             cmd_poi = cmd_poi + 1;
+            cmd.options.rmin = 10;
+            cmd.options.rmax = 150;
+            cmd.options.resolution = 0.5;
             cmd.label = control.directives(d).options{1};
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
@@ -195,6 +198,15 @@ for d = 1:length(control.directives)
                 cmd.fname = control.directives(d).options{3};
             else
                 cmd.fname = 'MMMx_distribution'; % default basis output file name
+            end
+            if length(control.directives(d).options) > 3 % minimum distance is provided
+                cmd.options.rmin = str2double(control.directives(d).options{4});
+            end
+            if length(control.directives(d).options) > 4 % maximum distance is provided
+                cmd.options.rmax = str2double(control.directives(d).options{5});
+            end
+            if length(control.directives(d).options) > 5 % resolution is provided
+                cmd.options.resolution = str2double(control.directives(d).options{6});
             end
             [n,narg] = size(control.directives(d).block);
             pair_lists = cell(n,1);
@@ -413,7 +425,7 @@ for c = 1:cmd_poi
             [pairs,~] = size(cmd.site_pairs);
             for p = 1:pairs
                c_entity =  mk_distribution(c_entity,cmd.site_pairs{p,1},labels{1},cmd.site_pairs{p,2},labels{2},...
-                   cmd.fname,figures,cmd.fname);
+                   cmd.fname,figures,cmd.fname,cmd.options);
             end
             labels0 = labels;
             for l = 1:length(cmd.pair_lists)
@@ -428,7 +440,7 @@ for c = 1:cmd_poi
                 end
                 for p = 1:length(pairs)
                     c_entity =  mk_distribution(c_entity,pairs(p).address1,labels{1},...
-                        pairs(p).address2,labels{2},cmd.fname,figures,cmd.fname);
+                        pairs(p).address2,labels{2},cmd.fname,figures,cmd.fname,cmd.options);
                 end
             end
             if strcmp(cmd.entity,'.')
@@ -631,14 +643,14 @@ function record_exception(exception,logfid)
 
 fprintf(logfid,'### ensembleanalysis exception: %s ###\n',exception.message);
 
-function entity = mk_distribution(entity,site1,label1,site2,label2,fname,figures,figname)
+function entity = mk_distribution(entity,site1,label1,site2,label2,fname,figures,figname,options)
 
 [~,site1] = split_conformer_site(site1);
 [~,site2] = split_conformer_site(site2);
 tag = sprintf('%s;%s-%s;%s',site1,label1,site2,label2);
 filename = sprintf('%s_%s_%s-%s_%s.csv',fname,site1,label1,site2,label2);
 figfilename = sprintf('%s_%s_%s-%s_%s.%s',figname,site1,label1,site2,label2,figures);
-[r_axis,distribution,entity] = distance_distribution(entity,site1,label1,site2,label2);
+[r_axis,distribution,entity] = distance_distribution(entity,site1,label1,site2,label2,options);
 if ~isempty(r_axis) && ~isempty(distribution) 
     distribution = distribution/sum(distribution);
     distribution = distribution/(r_axis(2)-r_axis(1));

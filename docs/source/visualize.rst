@@ -223,3 +223,32 @@ Remarks
     *   `helix` _ `propensity` - rainbow colors from blue to red according to helix propensity, with the blue end corresponding to residues that tend to form and alpha helix and the red end to helix-breaking residues (Pro). Color grade is proportional to the square root of helix propensity
     *   `sequence` can be used with two additional arguments, address of the first residue and number od residues for the color grade
     *   if `sequence` is used with additional arguments, all residues before and after the indicated segment are colored blue and red, respectively
+
+``isosurface``
+---------------------------------
+
+Stand-alone isosurface visualization for density and property files (does not require MMM). This is a block key with options. 
+
+.. code-block:: matlab
+
+    isosurface density-file [property-file]
+       option1 argument1 [argument2 argument3]
+       ...
+    .isosurface
+
+Arguments
+    *   ``density-file`` - name of the density file, use the EnsembleAnalysis module to generate one
+    *   ``property-file`` - optional name of the property file for isosurface coloring, use the EnsembleAnalysis module to generate one
+Available subkeys (options)
+    *   ``colorscheme`` - property related color scheme, can be ``electrostatic`` (default), ``cation-pi``, or ``hydrophobic``
+    *   ``level`` - fraction of total density included by the isosurface, defaults to 0.999, which is appropriate for ensemble pseudo-electron density
+    *   ``camvec`` - vector pointing from isosurface to camera, three values, defaults to '1 0 0'
+    *   ``camupvec`` - vector indicating the top of the camera, defaulst to '0 1 0'
+    *   ``limits`` - property level corresponding to extrema of the color scale, default depends on selected color scheme
+    *   ``figname`` - figure name for saving, extension determines graphics format, defaults to 'isosurface.png', default extension is '.png'
+    *   ``opaqueness`` - opaqueness of the isosurface, 0 is invisible, 1 is fully opaque, defaults to 1
+Remarks
+    *   if no property file is specified, the density isosurface is colored uniformly with SVG color 'gainsboro' 
+    *   if a property file is specified, but no color scheme is specified, the Matlab default scheme 'parula' applies
+    *   if a property file is specified, but no color scheme and no limits are specified, the limits of the color scale are the minimum and maximum property value 
+	

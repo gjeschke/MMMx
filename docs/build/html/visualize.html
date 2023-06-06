@@ -278,6 +278,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#density"><code class="docutils literal notranslate"><span class="pre">density</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#color"><code class="docutils literal notranslate"><span class="pre">color</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#colorscheme"><code class="docutils literal notranslate"><span class="pre">colorscheme</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#isosurface"><code class="docutils literal notranslate"><span class="pre">isosurface</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="yasara_refine.html">YasaraRefine</a><ul>
@@ -702,6 +703,39 @@ The same normalization applies to coil radius in mode <code class="docutils lite
 <li><p><img class="math" src="_images/math/d9ee7af1a3caf9cc77689285f2da931b1e9ffc17.svg" alt="helix"/> _ <img class="math" src="_images/math/e1cc69ac70353e453d01c5cf23c1b74b391e0a70.svg" alt="propensity"/> - rainbow colors from blue to red according to helix propensity, with the blue end corresponding to residues that tend to form and alpha helix and the red end to helix-breaking residues (Pro). Color grade is proportional to the square root of helix propensity</p></li>
 <li><p><img class="math" src="_images/math/f72014e869afcdc872b7dc76140a53e11d568b0b.svg" alt="sequence"/> can be used with two additional arguments, address of the first residue and number od residues for the color grade</p></li>
 <li><p>if <img class="math" src="_images/math/f72014e869afcdc872b7dc76140a53e11d568b0b.svg" alt="sequence"/> is used with additional arguments, all residues before and after the indicated segment are colored blue and red, respectively</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="isosurface">
+<h2><code class="docutils literal notranslate"><span class="pre">isosurface</span></code><a class="headerlink" href="#isosurface" title="Permalink to this headline">¶</a></h2>
+<p>Stand-alone isosurface visualization for density and property files (does not require MMM). This is a block key with options.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">isosurface</span> <span class="s">density-file</span> <span class="s">[property-file]</span>
+   <span class="n">option1</span> <span class="s">argument1</span> <span class="s">[argument2</span> <span class="s">argument3]</span>
+   <span class="c">...</span>
+<span class="p">.</span><span class="n">isosurface</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">density-file</span></code> - name of the density file, use the EnsembleAnalysis module to generate one</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">property-file</span></code> - optional name of the property file for isosurface coloring, use the EnsembleAnalysis module to generate one</p></li>
+</ul>
+</dd>
+<dt>Available subkeys (options)</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">colorscheme</span></code> - property related color scheme, can be <code class="docutils literal notranslate"><span class="pre">electrostatic</span></code> (default), <code class="docutils literal notranslate"><span class="pre">cation-pi</span></code>, or <code class="docutils literal notranslate"><span class="pre">hydrophobic</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">level</span></code> - fraction of total density included by the isosurface, defaults to 0.999, which is appropriate for ensemble pseudo-electron density</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">camvec</span></code> - vector pointing from isosurface to camera, three values, defaults to ‘1 0 0’</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">camupvec</span></code> - vector indicating the top of the camera, defaulst to ‘0 1 0’</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">limits</span></code> - property level corresponding to extrema of the color scale, default depends on selected color scheme</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">figname</span></code> - figure name for saving, extension determines graphics format, defaults to ‘isosurface.png’, default extension is ‘.png’</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">opaqueness</span></code> - opaqueness of the isosurface, 0 is invisible, 1 is fully opaque, defaults to 1</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>if no property file is specified, the density isosurface is colored uniformly with SVG color ‘gainsboro’</p></li>
+<li><p>if a property file is specified, but no color scheme is specified, the Matlab default scheme ‘parula’ applies</p></li>
+<li><p>if a property file is specified, but no color scheme and no limits are specified, the limits of the color scale are the minimum and maximum property value</p></li>
 </ul>
 </dd>
 </dl>

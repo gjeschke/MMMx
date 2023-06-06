@@ -30,7 +30,7 @@ function visualize_isosurface(density_file,property_file,options)
 %                               colormap as default
 %               .opaqueness     opaqueness of the isosurface, value between
 %                               0 and 1, with 1 being dully opaque and 0
-%                               fully transparent
+%                               fully transparent, defaults to 1
 %               .limits         used only with property file, limits of the
 %                               color axis, defaults to [minimum, maximum]
 %                               of the face color data unless the color
@@ -49,7 +49,7 @@ function visualize_isosurface(density_file,property_file,options)
 %                               options manually, if you want to save with
 %                               non-transparent background
 %               .figname        file name for saving the figure, figure is
-%                               save automatically only .figname is
+%                               saved automatically only .figname is
 %                               present, the extension determines file
 %                               format, .png is recommended
 
@@ -168,5 +168,8 @@ axis equal
 axis off
 
 if isfield(options,'figname')
+    if isempty(strfind(options.figname,'.'))
+        options.figname = strcat(options.figname,'.png');
+    end
     saveas(h,options.figname);
 end

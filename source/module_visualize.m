@@ -139,6 +139,46 @@ for d = 1:length(control.directives)
             script = fullfile(pname,strcat(fname,ext));
         case 'execute'
             execution = true;
+        case 'isosurface'
+            cmd_poi = cmd_poi + 1;
+            cmd.density = control.directives(d).options{1};
+            if length(control.directives(d).options) > 1 % property file exists
+                cmd.property = control.directives(d).options{2};
+            else
+                cmd.property = ''; 
+            end
+            cmd.options.level = 0.999;
+            cmd.options.camvec = [1,0,0];
+            cmd.options.colorscheme = 'electrostatic';
+            cmd.options.opaqueness = 1;
+            cmd.options.limits = [];
+            cmd.options.camupvec = [0,1,0];
+            cmd.options.figname = 'isosurface.png';
+            [n,~] = size(control.directives(d).block);
+            % set requested options
+            for k = 1:n
+                switch lower(control.directives(d).block{k,1})
+                    case 'level'
+                        cmd.options.level = str2double(control.directives(d).block{k,2});
+                    case 'camvec'
+                        cmd.options.camvec(1) = str2double(control.directives(d).block{k,2});
+                        cmd.options.camvec(2) = str2double(control.directives(d).block{k,3});
+                        cmd.options.camvec(3) = str2double(control.directives(d).block{k,4});
+                    case 'camupvec'
+                        cmd.options.camupvec(1) = str2double(control.directives(d).block{k,2});
+                        cmd.options.camupvec(2) = str2double(control.directives(d).block{k,3});
+                        cmd.options.camupvec(3) = str2double(control.directives(d).block{k,4});
+                    case 'limits'
+                        cmd.options.limits = str2double(control.directives(d).block{k,2});
+                    case 'figname'
+                        cmd.options.figname = control.directives(d).block{k,2};
+                    case 'opaqueness'
+                        cmd.options.opaqueness = str2double(control.directives(d).block{k,2});
+                    case 'colorscheme'
+                        cmd.options.colorscheme = control.directives(d).block{k,2};
+                end
+            end
+            commands{cmd_poi} = cmd;            
         otherwise
             fprintf(logfid,'directive %s is unknown and will be ignored',lower(control.directives(d).name));
     end
@@ -177,6 +217,17 @@ end
 % run the command list for all ensemble members, this creates the
 % visualization
 
+if ~exist('all_pdb','var') || isempty(all_pdb)
+    for c = 1:cmd_poi
+        cmd = commands{c};
+        switch cmd.name
+            case {'isosurface'}
+                visualize_isosurface(cmd.density,cmd.property,cmd.options);
+        end
+    end
+    return
+end
+
 ofid = fopen(script,'wt');
 fprintf(ofid,'%% MMMx visualization script\n');
 fprintf(ofid,'new !\n');
@@ -188,6 +239,10 @@ for k = 1:length(all_pdb)
     for c = 1:cmd_poi
         cmd = commands{c};
         switch cmd.name
+            case {'isosurface'}
+                if k == 1
+                    visualize_isosurface(cmd.density,cmd.property,cmd.options);
+                end
             case {'show'}
                 if strcmpi(cmd.mode,'snake')
                     show_snake(ofid,pop(k),sadr,cmd.address);

@@ -184,34 +184,35 @@ for d = 1:length(control.directives)
     end
 end
 all_tags = ':';
-for k = 1:length(all_pdb)
-    fid=fopen(all_pdb(k).name);
-    tline = fgetl(fid);
-    fclose(fid);
-    if length(tline)>=66
-        idCode=tline(63:66);
-        if ~strcmpi(strtrim(idCode),idCode), idCode = ''; end
-    else
-        idCode='';
+if exist('all_pdb','var') 
+    for k = 1:length(all_pdb)
+        fid=fopen(all_pdb(k).name);
+        tline = fgetl(fid);
+        fclose(fid);
+        if length(tline)>=66
+            idCode=tline(63:66);
+            if ~strcmpi(strtrim(idCode),idCode), idCode = ''; end
+        else
+            idCode='';
+        end
+        stag = idCode;
+        id=tag2id(stag,all_tags);
+        poi=1;
+        while ~isempty(id)
+            stag = sprintf('%s_%i',idCode,poi);
+            poi=poi+1;
+            id = tag2id(stag,all_tags);
+        end
+        all_tags=sprintf('%s%s:',all_tags,stag);
     end
-    stag = idCode;
-    id=tag2id(stag,all_tags);
-    poi=1;
-    while ~isempty(id)
-        stag = sprintf('%s_%i',idCode,poi);
-        poi=poi+1;
-        id = tag2id(stag,all_tags);
+    if normalize
+        pop = pop/max(pop);
     end
-    all_tags=sprintf('%s%s:',all_tags,stag);
 end
 
 graphics = graphics(1:fig_poi);
 densities = densities(1:dens_poi);
 commands = commands(1:cmd_poi);
-
-if normalize
-    pop = pop/max(pop);
-end
 
 
 % run the command list for all ensemble members, this creates the

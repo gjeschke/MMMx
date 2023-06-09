@@ -102,7 +102,7 @@ Arguments
     *   ``filename`` - basis name for the output files, abbreviated below as '%s'
     *   ``input`` - identifier for the input ensemble
     *   ``range`` - optional MMMx address that specifies only a range of a conformer for analysis, e.g. `(A)187-320`
-    *   ``measure`` - a subkey that specifies a measure from the following list
+    *   ``subkey`` - a subkey that specifies a measure from the following list
 Available subkeys
     *   ``matlab`` - save output data to Matlab files
 	*   ``csv`` - save output data to comma-separated value files
@@ -115,7 +115,7 @@ Available subkeys
     *   ``compactness`` - compactness matrix    
 Remarks
     *   saving output to both Matlab ('.mat') and '.csv' files is allowed 
-	*   if neither the ``matlab`` nor the ``csv`` subkey is present, output is only to figures or logfile
+    *   if neither the ``matlab`` nor the ``csv`` subkey is present, output is only to figures or logfile
     *   ``oriented`` affects only computation of pair r.m.s.d. (correlation matrix) 
 	
 ``flexibility``

@@ -51,9 +51,9 @@ else
 end
 
 if ~exist('template','var') || isempty(template)
-    [tcoor,~,exceptions] = get_coor(entity,['{1}' selected]);
+    [tcoor,~,~,exceptions] = get_coor(entity,['{1}' selected]);
 else
-    [tcoor,~,exceptions] = get_coor(template,selection_template);
+    [tcoor,~,~,exceptions] = get_coor(template,selection_template);
 end
 
 if ~exist('central','var') || isempty(central)
@@ -78,7 +78,7 @@ if ~isempty(exceptions)
 end
 
 for c = 1:length(entity.populations)
-    [ccoor,~,exceptions] = get_coor(entity,[sprintf('{%i}',c) selected]);
+    [ccoor,~,~,exceptions] = get_coor(entity,[sprintf('{%i}',c) selected]);
     if ~isempty(exceptions)
         if ~isempty(exceptions{1})
             return

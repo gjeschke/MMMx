@@ -88,12 +88,6 @@ for c = 1:length(entity.populations)
     rmsd(c) = rms;
     indices = find(entity.index_array(:,4) == c);
     ccoor = entity.xyz(indices,:);
-    % [ccoor,indices,exceptions] = get_coor(entity,sprintf('{%i}(*)',c));
-%     if ~isempty(exceptions)
-%         if ~isempty(exceptions{1})
-%             return
-%         end
-%     end
     xyz = [ccoor ones(length(indices),1)]*transmat';
     entity.xyz(indices,:) = xyz(:,1:3);
 end

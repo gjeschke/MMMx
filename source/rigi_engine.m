@@ -189,22 +189,35 @@ for k1 = 1:3*rbnum-1
     end
 end
 
-[trials,res,trial_pattern] = get_restraint_resolution(restraints.lb,restraints.ub,target_resolution);
-if options.max_trials > 0
-    while trials > options.max_trials
-        target_resolution = target_resolution + 0.1;
-        [trials,res,trial_pattern] = get_restraint_resolution(restraints.lb,restraints.ub,target_resolution);
+% Reduce upper bounds using linker restraints
+if ~isempty(restraints.links(1).maxr) % only if there exist any linker restraints
+    for j = 1:length(restraints.links) % loop over all linker restraints
+        lj = restraints.links(1).maxr; % maxmum linker length
+        rb_a_points = restraints.points{restraints.links(j).ref_indices(1)}; % all point coordinates in rigid body a
+        rb_b_points = restraints.points{restraints.links(j).ref_indices(3)}; % all point coordinates in rigid body b
+        A_a = rb_a_points(restraints.links(j).ref_indices(2),:); % anchor point coordinates in rigid body a
+        A_b = rb_b_points(restraints.links(j).ref_indices(4),:); % anchor point coordinates in rigid body b
+        for i = 1:3 % loop over all reference points in rigid body a
+            i_index = 3*(restraints.links(j).ref_indices(1)-1)+i; % index into bound table for rigid body a reference point
+            ra = norm(rb_a_points(i,:)-A_a);
+            for k = 1:3 % loop over all reference points in rigid body b
+                k_index = 3*(restraints.links(j).ref_indices(3)-1)+k;  % index into bound table for rigid body b reference point
+                rb = norm(rb_b_points(k,:)-A_b);
+                ub_ijk = lj + ra + rb; % upper bound for reference point pair i,k and linker j
+                if restraints.ub(i_index,k_index) > ub_ijk
+                    restraints.ub(i_index,k_index) = ub_ijk;
+                    restraints.ub(k_index,i_index) = ub_ijk;
+                end
+            end
+        end
     end
 end
-intervals = trial_pattern(:,3);
-digitbase = trial_pattern(:,4);
-irbr = trial_pattern(:,1:2);
 
 [lb,ub,err]=triangle(restraints.lb,restraints.ub);
 
 switch err
     case 0
-        fprintf(logfid,'Successful bound smoothing with experimental restraints.\n');
+        fprintf(logfid,'Successful bound smoothing.\n');
     case 1
         fprintf(logfid,'ERROR: Some distance restraints are inconsistent.\n');
         diagnostics.success = -1;
@@ -214,6 +227,20 @@ switch err
         diagnostics.success = -1;
         return
 end
+
+[trials,res,trial_pattern] = get_restraint_resolution(lb,ub,target_resolution);
+if options.max_trials > 0
+    while trials > options.max_trials
+        target_resolution = target_resolution + 0.1;
+        [trials,res,trial_pattern] = get_restraint_resolution(lb,ub,target_resolution);
+    end
+end
+fprintf(logfid,'Sampling resolution for distance geometry is %4.1f %c.\n',res,char(197));
+
+intervals = trial_pattern(:,3);
+digitbase = trial_pattern(:,4);
+irbr = trial_pattern(:,1:2);
+
 
 % initalize failure counters
 met_err = 0;

@@ -254,6 +254,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#save"><code class="docutils literal notranslate"><span class="pre">save</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#compare"><code class="docutils literal notranslate"><span class="pre">compare</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#match"><code class="docutils literal notranslate"><span class="pre">match</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="locate.html">Locate</a><ul>
@@ -781,6 +782,30 @@
 <li><p>the range argument ‘(*)’ selects the complete structure</p></li>
 <li><p>the two ensembles may have different numbers of conformers</p></li>
 <li><p>residue-wise comparison of large ensembles can take very long</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="match">
+<h2><code class="docutils literal notranslate"><span class="pre">match</span></code><a class="headerlink" href="#match" title="Permalink to this headline">¶</a></h2>
+<p>Match conformers in one ensemble by conformers in a second ensemble</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">match</span> <span class="s">ensemble_1</span> <span class="s">ensemble_2</span> <span class="s">[range</span> <span class="s">[range2]]</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">ensemble_1</span></code> - identifier of the first ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">ensemble_2</span></code> - identifier of the second ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - optional MMMx address that specifies a chain/residue range for matching, e.g. <img class="math" src="_images/math/7e6f65e4f52b89b686ac4faa2738b7d97b05b1f6.svg" alt="(A)187-320"/></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - optional MMMx address that specifies a different range in the second ensemble for comparison, e.g. <img class="math" src="_images/math/c99b12c6c404b5adc37e1ddb02d1fcab18fd93f2.svg" alt="(B)1-134"/></p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the algorithm finds the closest conformer by distance root mean square in the second ensemble for each conformer in the first ensemble</p></li>
+<li><p>the range argument ‘(*)’ selects the complete structure</p></li>
+<li><p>the range argument can be missing (complete structure is the default)</p></li>
+<li><p>if the first range argument is given and the second one is missing, the same range is applied in the second ensemble</p></li>
+<li><p>the list of matches and the maximum mismatch are reported in the log file</p></li>
 </ul>
 </dd>
 </dl>

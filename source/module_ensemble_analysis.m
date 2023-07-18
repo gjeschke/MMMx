@@ -137,6 +137,21 @@ for d = 1:length(control.directives)
                 end
             end
             commands{cmd_poi} = cmd;
+        case 'match'
+            cmd_poi = cmd_poi + 1;
+            cmd.entity1 = control.directives(d).options{1};
+            cmd.entity2 = control.directives(d).options{2};
+            cmd.address = '';
+            cmd.resolved = false;
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.address = control.directives(d).options{3};
+            end
+            if length(control.directives(d).options) > 3 % seoarate chain and possibly range given for second ensemble
+                cmd.address2 = control.directives(d).options{4};
+            else
+                cmd.address2 = cmd.address;
+            end
+            commands{cmd_poi} = cmd;
         case 'subsample'
             cmd_poi = cmd_poi + 1;
             cmd.stride = str2double(control.directives(d).options{1});
@@ -480,7 +495,7 @@ for c = 1:cmd_poi
                 if isempty(c_entity)
                     warnings = warnings +1;
                     exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'HYdration analysis cannot be performed for entity %s, since entity is unknown',cmd.entity);
+                        'Hydration analysis cannot be performed for entity %s, since entity is unknown',cmd.entity);
                     record_exception(exceptions{warnings},logfid);
                     return
                 end
@@ -540,6 +555,38 @@ for c = 1:cmd_poi
                overlap = density_overlap(entity1,entity2,cmd.address);
                fprintf(logfid,'Ensemble density overlap between %s and %s is %6.3f\n',cmd.entity1,cmd.entity2,overlap);
            end
+        case 'match'
+           entity1 = retrieve_ensemble(cmd.entity1,ensembles,logfid);
+           if isempty(entity1)
+               warnings = warnings +1;
+               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                   'tried to comparison with entity %s, which is unknown',cmd.entity1);
+               record_exception(exceptions{warnings},logfid);
+               return
+           end
+           entity2 = retrieve_ensemble(cmd.entity2,ensembles,logfid);
+           if isempty(entity2)
+               warnings = warnings +1;
+               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                   'tried to comparison with entity %s, which is unknown',cmd.entity2);
+               record_exception(exceptions{warnings},logfid);
+               return
+           end
+           [chain,range] = split_chain_range(cmd.address);
+           [chain2,range2] = split_chain_range(cmd.address2);
+           pair_drms = pair_drms_matrix(entity,chain,range,entity2,chain2,range2);
+           max_mismatch = 0;
+           fprintf(logfid,'\n--- Matching conformers in %s by conformers in %s ---\n\n',cmd.entity1,cmd.entity2);
+           m1 = length(entity1.populations);
+           for k = 1:m1
+               matches = pair_drms(k,m1+1:end);
+               [mismatch,c] = min(matches);
+               if mismatch > max_mismatch
+                   max_mismatch = mismatch;
+               end
+               fprintf(logfid,'%s.%i is matched by %s.%i with DRMSD of %4.1f %c\n',cmd.entity1,k,cmd.entity2,c,mismatch,char(197));
+           end
+           fprintf(logfid,'\nMaximum mismatch is %4.1f %c\n\n',max_mismatch,char(197));
         case 'subsample'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -1071,7 +1118,11 @@ fprintf(logfid,'### ensembleanalysis exception: %s ###\n',exception.message);
 
 function [chain,range] = split_chain_range(address)
 
+chain = '';
 range = [];
+if isempty(address)
+    return
+end
 
 poia = strfind(address,'(');
 poie = strfind(address,')');

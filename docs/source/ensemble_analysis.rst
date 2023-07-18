@@ -288,4 +288,26 @@ Remarks
     *   the range argument '(*)' selects the complete structure
     *   the two ensembles may have different numbers of conformers
     *   residue-wise comparison of large ensembles can take very long
-  	
+
+``match``
+---------------------------------
+
+Match conformers in one ensemble by conformers in a second ensemble 
+
+.. code-block:: matlab
+
+    match ensemble_1 ensemble_2 [range [range2]]
+
+Arguments
+    *   ``ensemble_1`` - identifier of the first ensemble
+    *   ``ensemble_2`` - identifier of the second ensemble
+    *   ``range`` - optional MMMx address that specifies a chain/residue range for matching, e.g. `(A)187-320`
+    *   ``range`` - optional MMMx address that specifies a different range in the second ensemble for comparison, e.g. `(B)1-134`
+Remarks
+    *   the algorithm finds the closest conformer by distance root mean square in the second ensemble for each conformer in the first ensemble 
+    *   the range argument '(*)' selects the complete structure
+    *   the range argument can be missing (complete structure is the default)
+    *   if the first range argument is given and the second one is missing, the same range is applied in the second ensemble
+    *   the list of matches and the maximum mismatch are reported in the log file
+
+  	  	

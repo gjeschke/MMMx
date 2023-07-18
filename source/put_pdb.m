@@ -1,4 +1,4 @@
-function exceptions = put_pdb(entity,fname,options)
+function [exceptions,fid] = put_pdb(entity,fname,options)
 %
 % PUT_PDB Writes a minimal PDB file (one header line and coordinates)
 %
@@ -11,6 +11,9 @@ function exceptions = put_pdb(entity,fname,options)
 %
 %   exceptions = GET_PDB(entity,fname,options)
 %   Writes minimal PDB file with additional specifications
+%
+%   [exceptions,fid] = put_pdb(entity,fname,options)
+%   Does not end and does not close the file and returns file identifier
 %
 % INPUT
 % entity    entity structure in MMMx:atomic representation
@@ -40,11 +43,20 @@ function exceptions = put_pdb(entity,fname,options)
 %           .hetframe  flag, if true, write out only HETATM records for
 %                      SCWRL4 heteroatom frame, defaults to false
 %           .cleaned   flag, if true, write out residues without side 
-%                      chains for SCWRL4 repacking, defaults to false 
+%                      chains for SCWRL4 repacking, defaults to false
+%           .dxyz      coordinate offset, double(1,3), in Angstroem,
+%                      defaults to [0,0,0]]
+%           .datnum    atom number offset, defaults to zero
+%           .dresnum   residue number offset, defaults to zero
+%           .fid       if present and not -1, output is appended to the
+%                      file with identifier fid
+%           
 %
 % OUTPUT
 % exceptions   error message if something went wrong, cell containing an 
 %              empty array, if no exception
+% fid          if requested, the END record is not written, the file is not
+%              closed, and the file identifier is returned
 %
 % the PDB identifier in the HEADER line is derived from the first four
 % characters of entity.name, if entity.name is empty or shorter, it is MMMX
@@ -89,6 +101,26 @@ if ~isfield(options,'bfactor') || isempty(options.bfactor)
     options.bfactor = false;
 end
 
+if ~isfield(options,'dxyz') || isempty(options.dxyz)
+    options.dxyz = zeros(1,3);
+end
+
+if ~isfield(options,'datnum') || isempty(options.datnum)
+    options.datnum = 0;
+end
+
+if ~isfield(options,'dresnum') || isempty(options.dresnum)
+    options.dresnum = 0;
+end
+
+if ~isfield(options,'fid') || isempty(options.fid)
+    options.fid = -1;
+end
+
+% apply coordinate offset
+[na,~] = size(entity.xyz);
+entity.xyz = entity.xyz + repmat(options.dxyz,na,1);
+
 % complete file name, if neceesary
 if ~contains(fname,'.pdb')
     fname = strcat(fname,'.pdb');
@@ -125,26 +157,32 @@ else
     replace_chains = 0;
 end
 
-[fid,message] = fopen(fname,'wt');
+if options.fid == -1
+    [fid,message] = fopen(fname,'wt');
+else % append to existing file
+    fid = options.fid;
+end
 
 if fid == -1 % file could not be opened
     exceptions = {MException('put_pdb:file_could_not_be_opened', 'File could not be opened (%s)',message)};
     return
 end
 
-% write header line
-fprintf(fid,'HEADER    MMMX MINIMAL PDB FILE                   %s   %s\n', ...
-    datestr(datetime,'dd-mmm-yy'),pdbid);
+if options.fid == -1
+    % write header line
+    fprintf(fid,'HEADER    MMMX MINIMAL PDB FILE                   %s   %s\n', ...
+        datestr(datetime,'dd-mmm-yy'),pdbid);
 
-% write original entity name as remark, lines are padded to 80 characters
-pdbline = 'REMARK 400 COMPOUND';
-fprintf(fid,'%s\n',pad(pdbline,80));
-pdbline = sprintf('REMARK 400 ENTITY NAME: %s',entity.name);
-% the line should not have more than 80 characters
-if length(pdbline) > 80
-    pdbline = pdbline(1:80);
+    % write original entity name as remark, lines are padded to 80 characters
+    pdbline = 'REMARK 400 COMPOUND';
+    fprintf(fid,'%s\n',pad(pdbline,80));
+    pdbline = sprintf('REMARK 400 ENTITY NAME: %s',entity.name);
+    % the line should not have more than 80 characters
+    if length(pdbline) > 80
+        pdbline = pdbline(1:80);
+    end
+    fprintf(fid,'%s\n',pad(pdbline,80));
 end
-fprintf(fid,'%s\n',pad(pdbline,80));
 
 % write conformer population information if requested
 if isfield(options,'pop') && ~isempty(options.pop) && options.pop
@@ -169,7 +207,7 @@ end
 chains = fieldnames(entity);
 select_all = ~options.selected;
 indices = zeros(1,5);
-atnum = 0;
+atnum = options.datnum;
 save_conf = 0;
 for kconf = 1:length(conformer_order)
     % should all conformers be written?
@@ -187,9 +225,11 @@ for kconf = 1:length(conformer_order)
     end
     % write MODEL line, if more than one conformer
     if length(conformer_order) > 1
-        save_conf = save_conf + 1;
-        pdbline = sprintf('MODEL %8i',save_conf);
-        fprintf(fid,'%s\n',pad(pdbline,80));
+        if ~conformer_selected || length(entity.selected) > 1
+            save_conf = save_conf + 1;
+            pdbline = sprintf('MODEL %8i',save_conf);
+            fprintf(fid,'%s\n',pad(pdbline,80));
+        end
     end
     indices(4) = conformer_order(kconf);
     for kc = 1:length(chains)
@@ -218,7 +258,7 @@ for kconf = 1:length(conformer_order)
                     residue = residues{kr};
                     if strcmp(residue(1),'R') % these are residue fields
                         indices(2) =  entity.(chain).(residue).index;
-                        info.resnum = str2double(residue(2:end));
+                        info.resnum = str2double(residue(2:end)) + options.dresnum;
                         info.resname = entity.(chain).(residue).name;
                         info.atomtype = get_atom_type(entity.(chain).(residue).name,biomer);
                         if options.hetframe && strcmp(info.atomtype,'ATOM')
@@ -414,11 +454,16 @@ for kconf = 1:length(conformer_order)
     end
     % write ENDMDL line, if more than one conformer
     if length(conformer_order) > 1
-        fprintf(fid,'%s\n',pad('ENDMDL',80));
+        if ~conformer_selected || length(entity.selected) > 1
+            fprintf(fid,'%s\n',pad('ENDMDL',80));
+        end
     end
 end
-fprintf(fid,'%s\n',pad('END',80));
-fclose(fid);
+
+if nargout < 2
+    fprintf(fid,'%s\n',pad('END',80));
+    fclose(fid);
+end
 
 function atomtype = get_atom_type(name,biomer)
 % Determines atom type (ATOM or HETATM) from a residue name using

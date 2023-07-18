@@ -42,7 +42,13 @@ while 1
                 fprintf(1,'Token %s is skipped\n',ctoken);
         end
     end
+    if contains(tline,'!GEOMETRY!')
+        properties = get_geometry(properties,rfid);
+    end
 end
+
+
+
 fclose(rfid);
 
 function properties = get_SCF_energy(properties,rfid)
@@ -206,5 +212,36 @@ for n = 1:nuclei
     end
 end
         
+function properties = get_geometry(properties,rfid)
 
-
+coordinates = zeros(1000,3);
+numbers = zeros(1000,1);
+elements = cell(1000,1);
+key = 'Coordinates:';
+key_found = false;
+while ~key_found
+    tline = fgetl(rfid);
+    if ~ischar(tline) 
+        break
+    end
+    if contains(tline,key)
+        key_found = true;
+    end
+end
+poi = 0;
+while 1
+    tline = fgetl(rfid);
+    if ~ischar(tline) 
+        break
+    end
+    args = split(tline);
+    poi = poi + 1;
+    numbers(poi) = str2double(args{2});
+    elements{poi} = args{3};
+    coordinates(poi,1) = str2double(args{4});
+    coordinates(poi,2) = str2double(args{5});
+    coordinates(poi,3) = str2double(args{6});
+end
+properties.coordinates = coordinates(1:poi,:);
+properties.numbers = numbers(1:poi);
+properties.elements = elements(1:poi);

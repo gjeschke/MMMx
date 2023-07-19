@@ -153,17 +153,27 @@ domains = zeros(length(freq),2);
 variability = zeros(length(freq),1);
 dpoi = 0;
 dstart = 1;
-for k = 2:length(freq)
-    if freq(k)-dstart >= options.minsize
-        mean_uncert = mean(mean(pairdist(dstart:freq(k),dstart:freq(k))));
-        if mean_uncert <= options.threshold
-            dpoi = dpoi + 1;
-            variability(dpoi) = mean_uncert;
-            domains(dpoi,1) = dstart;
-            domains(dpoi,2) = freq(k);
+if length(freq) ==1
+   mean_uncert = mean(mean(pairdist)); 
+   if mean_uncert <= options.threshold
+       dpoi = dpoi + 1;
+       variability(dpoi) = mean_uncert;
+       domains(dpoi,1) = dstart;
+       domains(dpoi,2) = freq(1);
+   end
+else
+    for k = 2:length(freq)
+        if freq(k)-dstart >= options.minsize
+            mean_uncert = mean(mean(pairdist(dstart:freq(k),dstart:freq(k))));
+            if mean_uncert <= options.threshold
+                dpoi = dpoi + 1;
+                variability(dpoi) = mean_uncert;
+                domains(dpoi,1) = dstart;
+                domains(dpoi,2) = freq(k);
+            end
         end
+        dstart = freq(k);
     end
-    dstart = freq(k);
 end
 
 % unify domains separated by too short linkers, if requested
@@ -181,6 +191,9 @@ if options.minlink > 1
     dpoi = cdpoi;
 end
 
+if max(max(domains)) == 0
+    dpoi = 0;
+end
 folded = 0;
 for k = 1:dpoi
     k1 = domains(k,1);
@@ -201,8 +214,10 @@ entity.domains = domains(1:dpoi,:);
 entity.variability = variability(1:dpoi);
 
 if dpoi == 0
+    lpoi = 1;
     linkers(1).range = [1,n];
     linkers(1).sequence = entity.sequence;
+    domains = [];
 else
     linkers(dpoi+1).range = [];
     linkers(dpoi+1).sequence = '';
@@ -227,7 +242,7 @@ entity.linkers = linkers(1:lpoi);
 
 entity.folded = folded/n;
 
-if~isempty(options.rbfile)
+if~isempty(options.rbfile) && dpoi > 0
     mentity = rigid_domains(entity,domains(1:dpoi,:));
     put_pdb(mentity,options.rbfile);
 end
@@ -291,56 +306,65 @@ if ~isempty(options.script)
         end
         fprintf(fid,'\n.rigi\n');
     end
-    N_terminal = false;
-    % make flex block for N-terminal section if present and requested
-    if domains(1,1) > 1 && options.termini
-        N_terminal = true;
+    if dpoi == 0
         fprintf(fid,'\n');
-        fprintf(fid,'!flex %% N-terminal section\n');
-        if rba
-            fprintf(fid,'   expand %s_rba\n',entity.UniProt);       
-        else
-            fprintf(fid,'   addpdb %s\n',options.rbfile);
-        end
-        modelfile = sprintf('%s_N_terminal',entity.UniProt);
+        fprintf(fid,'!flex %% whole protein\n');
+        modelfile = sprintf('%s_full_length',entity.UniProt);
         fprintf(fid,'   save %s\n',modelfile);
-        fprintf(fid,'   sequence 1 %i %s\n',domains(1,1)-1,entity.sequence(1:domains(1,1)-1));
-        fprintf(fid,'   c_anchor   (A)%i\n',domains(1,1));
+        fprintf(fid,'   sequence 1 %i %s\n',n,entity.sequence(1:n));
         fprintf(fid,'.flex\n');
-    end
-    % make flex blocks for peptide linkers
-    for k = 2:dpoi
-        ctag1 = char(double('A')+k-2); % chain tag for first anchor domain
-        ctag2 = char(double('A')+k-1); % chain tag for second anchor domain
-        fprintf(fid,'\n');
-        fprintf(fid,'!flex %% linker %i\n',k-1);
-        if k == 2 && ~N_terminal
-            fprintf(fid,'   expand %s_rba\n',entity.UniProt);
-        else
-            fprintf(fid,'   addpdb %s*.pdb\n',modelfile);
+    else
+        N_terminal = false;
+        % make flex block for N-terminal section if present and requested
+        if domains(1,1) > 1 && options.termini
+            N_terminal = true;
+            fprintf(fid,'\n');
+            fprintf(fid,'!flex %% N-terminal section\n');
+            if rba
+                fprintf(fid,'   expand %s_rba\n',entity.UniProt);
+            else
+                fprintf(fid,'   addpdb %s\n',options.rbfile);
+            end
+            modelfile = sprintf('%s_N_terminal',entity.UniProt);
+            fprintf(fid,'   save %s\n',modelfile);
+            fprintf(fid,'   sequence 1 %i %s\n',domains(1,1)-1,entity.sequence(1:domains(1,1)-1));
+            fprintf(fid,'   c_anchor   (A)%i\n',domains(1,1));
+            fprintf(fid,'.flex\n');
         end
-        modelfile = sprintf('%s_linker_%i',entity.UniProt,k-1);
-        fprintf(fid,'   save %s\n',modelfile);
-        fprintf(fid,'   sequence %i %i %s\n',domains(k-1,2)+1,domains(k,1)-1,entity.sequence(domains(k-1,2)+1:domains(k,1)-1));
-        fprintf(fid,'   n_anchor   (%s)%i\n',ctag1,domains(k-1,2));
-        fprintf(fid,'   c_anchor   (%s)%i\n',ctag2,domains(k,1));
-        fprintf(fid,'.flex\n');
-    end
-    % make flex block for C-terminal section if present and requested
-    if domains(dpoi,2) < n && options.termini
-        fprintf(fid,'\n');
-        ctag = char(double('A')+dpoi-1);
-        fprintf(fid,'!flex %% C-terminal section\n');
-        if rba || N_terminal
-            fprintf(fid,'   addpdb %s*.pdb\n',modelfile);
-        else
-            fprintf(fid,'   addpdb %s\n',options.rbfile);
+        % make flex blocks for peptide linkers
+        for k = 2:dpoi
+            ctag1 = char(double('A')+k-2); % chain tag for first anchor domain
+            ctag2 = char(double('A')+k-1); % chain tag for second anchor domain
+            fprintf(fid,'\n');
+            fprintf(fid,'!flex %% linker %i\n',k-1);
+            if k == 2 && ~N_terminal
+                fprintf(fid,'   expand %s_rba\n',entity.UniProt);
+            else
+                fprintf(fid,'   addpdb %s*.pdb\n',modelfile);
+            end
+            modelfile = sprintf('%s_linker_%i',entity.UniProt,k-1);
+            fprintf(fid,'   save %s\n',modelfile);
+            fprintf(fid,'   sequence %i %i %s\n',domains(k-1,2)+1,domains(k,1)-1,entity.sequence(domains(k-1,2)+1:domains(k,1)-1));
+            fprintf(fid,'   n_anchor   (%s)%i\n',ctag1,domains(k-1,2));
+            fprintf(fid,'   c_anchor   (%s)%i\n',ctag2,domains(k,1));
+            fprintf(fid,'.flex\n');
         end
-        modelfile = sprintf('%s_C_terminal',entity.UniProt);
-        fprintf(fid,'   save %s\n',modelfile);
-        fprintf(fid,'   sequence %i %i %s\n',domains(dpoi,2)+1,n,entity.sequence(domains(dpoi,2)+1:n));
-        fprintf(fid,'   n_anchor   (%s)%i\n',ctag,domains(dpoi,2));
-        fprintf(fid,'.flex\n');
+        % make flex block for C-terminal section if present and requested
+        if domains(dpoi,2) < n && options.termini
+            fprintf(fid,'\n');
+            ctag = char(double('A')+dpoi-1);
+            fprintf(fid,'!flex %% C-terminal section\n');
+            if rba || N_terminal
+                fprintf(fid,'   addpdb %s*.pdb\n',modelfile);
+            else
+                fprintf(fid,'   addpdb %s\n',options.rbfile);
+            end
+            modelfile = sprintf('%s_C_terminal',entity.UniProt);
+            fprintf(fid,'   save %s\n',modelfile);
+            fprintf(fid,'   sequence %i %i %s\n',domains(dpoi,2)+1,n,entity.sequence(domains(dpoi,2)+1:n));
+            fprintf(fid,'   n_anchor   (%s)%i\n',ctag,domains(dpoi,2));
+            fprintf(fid,'.flex\n');
+        end
     end
     fprintf(fid,'\n#report\n');
     fclose(fid);

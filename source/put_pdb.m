@@ -259,6 +259,7 @@ for kconf = 1:length(conformer_order)
                     if strcmp(residue(1),'R') % these are residue fields
                         indices(2) =  entity.(chain).(residue).index;
                         info.resnum = str2double(residue(2:end)) + options.dresnum;
+                        % fprintf(1,'(%s).%i\n',chain,info.resnum);
                         info.resname = entity.(chain).(residue).name;
                         info.atomtype = get_atom_type(entity.(chain).(residue).name,biomer);
                         if options.hetframe && strcmp(info.atomtype,'ATOM')

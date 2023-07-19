@@ -281,6 +281,10 @@ for d = 1:length(control.directives)
                 cmd.r_max = max_distance; % use default
             end
             commands{cmd_poi} = cmd;
+        case 'rigiflex'
+            cmd_poi = cmd_poi + 1;
+            cmd.UniProtID = control.directives(d).options{1};
+            commands{cmd_poi} = cmd;
         otherwise
             warnings = warnings + 1;
             exceptions{warnings} = MException('module_experiment_design:unknown_directive',...
@@ -607,6 +611,18 @@ for c = 1:cmd_poi
                 entity = c_entity;
             end
             ensembles = store_ensemble(cmd.entity,c_entity,ensembles);
+        case 'rigiflex'
+            cmd_options.keep_file = true;
+            [c_entity,exceptions] = get_AF(cmd.UniProtID,cmd_options);
+            if isempty(c_entity)
+                warnings = warnings +1;
+                exceptions{warnings} = MException('module_experiment_design:no_AlphaFold_prediction',...
+                    'AlphaFold prediction does not exist for UniProt ID %s',cmd.UniProtID);
+                record_exception(exceptions{warnings},logfid);
+                return
+            end
+            c_entity = domain_partitioning(c_entity);
+            ensembles = store_ensemble(cmd.UniProtID,c_entity,ensembles);
     end
 end
 

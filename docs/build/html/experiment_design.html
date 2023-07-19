@@ -124,8 +124,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#hetpairlist"><code class="docutils literal notranslate"><span class="pre">hetpairlist</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#distributions"><code class="docutils literal notranslate"><span class="pre">distributions</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#trivariate"><code class="docutils literal notranslate"><span class="pre">trivariate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#rigiflex"><code class="docutils literal notranslate"><span class="pre">RigiFlex</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#enmpairs"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="#id1"><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#rbreference"><code class="docutils literal notranslate"><span class="pre">RBreference</span></code></a></li>
 </ul>
 </li>
@@ -690,31 +690,27 @@ The latter example is a two-module pipeline that uses module <a class="reference
 </dd>
 </dl>
 </div>
-<div class="section" id="enmpairs">
-<h2><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code><a class="headerlink" href="#enmpairs" title="Permalink to this headline">¶</a></h2>
-<p>Score site pairs for elastic network modeling.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">ENMpairs</span> <span class="s">sitescan</span> <span class="s">entity</span> <span class="s">outname</span> <span class="s">[rmin</span> <span class="s">[rmax]]</span>
+<div class="section" id="rigiflex">
+<h2><code class="docutils literal notranslate"><span class="pre">RigiFlex</span></code><a class="headerlink" href="#rigiflex" title="Permalink to this headline">¶</a></h2>
+<p>Prepare RigiFlex rigid-body file and MMMx script template from AlphaFold prediction</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">RigiFlex</span> <span class="s">UniProtID</span>
 </pre></div>
 </div>
 <dl class="simple">
 <dt>Arguments</dt><dd><ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">sitescan</span></code> - file name of a site scan list, generated, e.g., by the <code class="docutils literal notranslate"><span class="pre">sitescan</span></code> keyword, extension <code class="docutils literal notranslate"><span class="pre">.lst</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">entity</span></code> - entity identifier specified in any of the input commands</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">outname</span></code> - file name for the site scan list output, extension is <code class="docutils literal notranslate"><span class="pre">.lst</span></code></p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rmin</span></code> - minimum mean distance (Å) for a site pair to be considered, optional, defaults to 20 Å</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">rmax</span></code> - maximum mean distance (Å) for a site pair to be considered, optional, defaults to 60 Å</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">UniProtID</span></code> - sequence ID from UniProt, for which a prediction exists in the AlphaFold Protein Structure Database</p></li>
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>the output pair list is ordered by a score that predicts sensitivity of the pair to motion along the normal modes of the elastic network model</p></li>
-<li><p>the input entity should be a single conformer, for an ensemble, only the first conformer is considered</p></li>
-<li><p>the label type is taken from the site scan list</p></li>
+<li><p>output file names are automatically generated from the UniProt ID</p></li>
+<li><p>if no prediction exists in the database, no output is generated and an error message is written to the log file</p></li>
+<li><p>the task also prepares spin-labelling site scan lists for all detected folded domains</p></li>
 </ul>
 </dd>
 </dl>
 </div>
-<div class="section" id="id1">
-<h2><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code><a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="enmpairs">
+<h2><code class="docutils literal notranslate"><span class="pre">ENMpairs</span></code><a class="headerlink" href="#enmpairs" title="Permalink to this headline">¶</a></h2>
 <p>Score site pairs for elastic network modeling.</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">ENMpairs</span> <span class="s">sitescan</span> <span class="s">entity</span> <span class="s">outname</span> <span class="s">[rmin</span> <span class="s">[rmax]]</span>
 </pre></div>

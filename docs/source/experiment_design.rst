@@ -212,25 +212,21 @@ Remarks
     *   sequence of dimensions is 'site1-site2', 'site1-site3', 'site2-site3'
     *   use 'scipy.io.loadmat' from the SciPy library for importing to Python
 
-``ENMpairs``
+``RigiFlex``
 ---------------------------------
 
-Score site pairs for elastic network modeling.
+Prepare RigiFlex rigid-body file and MMMx script template from AlphaFold prediction
 
 .. code-block:: matlab
 
-    ENMpairs sitescan entity outname [rmin [rmax]]
+    RigiFlex UniProtID
 
 Arguments
-    *   ``sitescan`` - file name of a site scan list, generated, e.g., by the ``sitescan`` keyword, extension ``.lst`` 
-    *   ``entity`` - entity identifier specified in any of the input commands
-    *   ``outname`` - file name for the site scan list output, extension is ``.lst``
-    *   ``rmin`` - minimum mean distance (Å) for a site pair to be considered, optional, defaults to 20 Å 
-    *   ``rmax`` - maximum mean distance (Å) for a site pair to be considered, optional, defaults to 60 Å
+    *   ``UniProtID`` - sequence ID from UniProt, for which a prediction exists in the AlphaFold Protein Structure Database
 Remarks
-    *   the output pair list is ordered by a score that predicts sensitivity of the pair to motion along the normal modes of the elastic network model 
-    *   the input entity should be a single conformer, for an ensemble, only the first conformer is considered
-    *   the label type is taken from the site scan list
+    *   output file names are automatically generated from the UniProt ID 
+    *   if no prediction exists in the database, no output is generated and an error message is written to the log file
+    *   the task also prepares spin-labelling site scan lists for all detected folded domains
 
 ``ENMpairs``
 ---------------------------------

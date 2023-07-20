@@ -24,10 +24,11 @@ function [measures,correlations] = analyze_ensemble(backbones,pop,options)
 %               .Rg             Boolean, if true, radius of gyration is
 %                               analyzed, defaults to true
 %               .pair_rmsd      Boolean, pairwise root mean square 
+%                               deviation,
+%                               defaults to false
+%               .pair_drms      Boolean, pairwise distance root mean square 
 %                               deviation, ensemble width, and density,
 %                               defaults to true
-%               .pair_drms      Boolean, pairwise distance root mean square 
-%                               deviation, defaults to false
 %               .superimpose    Boolean, optimal superposition of
 %                               conformers for computing pair rmsd,
 %                               defaults to true, effect only if .pair_rmsd
@@ -115,7 +116,7 @@ if ~isfield(options,'Rg') || isempty(options.Rg)
 end
 
 if ~isfield(options,'pair_rmsd') || isempty(options.pair_rmsd)
-    options.pair_rmsd = true;
+    options.pair_rmsd = false;
 end
 
 if ~isfield(options,'superimpose') || isempty(options.superimpose)
@@ -123,7 +124,7 @@ if ~isfield(options,'superimpose') || isempty(options.superimpose)
 end
 
 if ~isfield(options,'pair_drms') || isempty(options.pair_drms)
-    options.pair_drms = false;
+    options.pair_drms = true;
 end
 
 if ~isfield(options,'sorted') || isempty(options.sorted)
@@ -224,8 +225,6 @@ for kc = 1:length(chains)
             end
         end
         measures.(chains{kc}).pair_rmsd = pair_rmsd;        
-        measures.(chains{kc}).width = get_ensemble_width(pair_rmsd,pop);
-        measures.(chains{kc}).density = get_ensemble_density(pair_rmsd);
         if options.sorted && ~options.pair_drms
             rmsdsum = sum(pair_rmsd);
             [~,sorting] = sort(rmsdsum);
@@ -255,6 +254,8 @@ for kc = 1:length(chains)
         end
         pair_drms = sqrt(pair_drms/N2); % normalized root mean square deviation
         measures.(chains{kc}).pair_drms = pair_drms;
+        measures.(chains{kc}).width = get_ensemble_width(pair_drms,pop);
+        measures.(chains{kc}).density = get_ensemble_density(pair_drms);
         if options.sorted
             rmsdsum = sum(pair_drms);
             [~,sorting] = sort(rmsdsum);

@@ -217,7 +217,7 @@ for d = 1:length(control.directives)
             cmd.options.chain_mode = false;
             cmd.options.Rg = false;
             cmd.options.pair_rmsd = false;
-            cmd.options.pair_drms = false;
+            cmd.options.pair_drms = true;
             cmd.options.superimpose = true;
             cmd.options.sorted = false;
             cmd.options.pair_corr = false;
@@ -574,19 +574,58 @@ for c = 1:cmd_poi
            end
            [chain,range] = split_chain_range(cmd.address);
            [chain2,range2] = split_chain_range(cmd.address2);
-           pair_drms = pair_drms_matrix(entity,chain,range,entity2,chain2,range2);
-           max_mismatch = 0;
-           fprintf(logfid,'\n--- Matching conformers in %s by conformers in %s ---\n\n',cmd.entity1,cmd.entity2);
+           pair_drms = pair_drms_matrix(entity1,chain,range,entity2,chain2,range2);
+           mismatch = 0;
            m1 = length(entity1.populations);
-           for k = 1:m1
-               matches = pair_drms(k,m1+1:end);
-               [mismatch,c] = min(matches);
-               if mismatch > max_mismatch
-                   max_mismatch = mismatch;
+           m2 = length(entity2.populations);
+           matches = pair_drms(1:m1,m1+1:end);
+           selfmatch1 = pair_drms(1:m1,1:m1);
+           selfmatch2 = pair_drms(m1+1:end,m1+1:end);
+           var11 = kron(entity1.populations,entity1.populations').*selfmatch1.^2;
+           var22 = kron(entity2.populations,entity2.populations').*selfmatch2.^2;
+           var12 = kron(entity1.populations,entity2.populations').*matches.^2;
+           diff = sqrt(sum(sum(var12)) - sum(sum(var11))/2 - sum(sum(var22))/2);
+           width1 = sqrt(sum(sum(var11))); 
+           width2 = sqrt(sum(sum(var22)));
+           similarity = (width1*width2)/sum(sum(var12));
+           fprintf(logfid,'\nEnsembles %s and %s have a mean deviation of %4.1f %c at ensemble widths of %4.1f and %4.1f %c\n',cmd.entity1,cmd.entity2,diff,char(197),width1,width2,char(197));
+           fprintf(logfid,'The similarity measure is %4.2f\n\n',similarity);
+           fprintf(logfid,'\n--- Matching conformers in %s by conformers in %s ---\n\n',cmd.entity1,cmd.entity2);
+           if m1 <= m2
+               mismatches = zeros(m1,1);
+               best = zeros(m1,1);
+               for k = 1:m1
+                   [colmin,lines] = min(matches);
+                   [~,col] = min(colmin);
+                   best(lines(col)) = col;
+                   mismatches(lines(col)) = matches(lines(col),col);
+                   mismatch = mismatch + entity1.populations(lines(col))*mismatches(lines(col))^2;
+                   matches(lines(col),:) = 1e12;
+                   matches(:,col) = 1e12;
                end
-               fprintf(logfid,'%s.%i is matched by %s.%i with DRMSD of %4.1f %c\n',cmd.entity1,k,cmd.entity2,c,mismatch,char(197));
+               fprintf(logfid,'Mean mismatch is %4.1f %c\n',sqrt(mismatch/sum(entity1.populations)),char(197));
+               for k = 1:m1
+                   fprintf(logfid,'%s.%i is matched by %s.%i with DRMSD of %4.1f %c\n',cmd.entity1,k,cmd.entity2,best(k),mismatches(k),char(197));
+               end
            end
-           fprintf(logfid,'\nMaximum mismatch is %4.1f %c\n\n',max_mismatch,char(197));
+           if m1 > m2
+               fprintf(logfid,'\nSmaller ensemble is %s, reverse matching\n\n',cmd.entity2);
+               mismatches = zeros(m2,1);
+               best = zeros(m2,1);
+               for k = 1:m2
+                   [colmin,lines] = min(matches);
+                   [~,col] = min(colmin);
+                   best(col) = lines(col);
+                   mismatches(col) = matches(lines(col),col);
+                   mismatch = mismatch + entity2.populations(col)*mismatches(col)^2;
+                   matches(lines(col),:) = 1e12;
+                   matches(:,col) = 1e12;
+               end
+               fprintf(logfid,'Mean mismatch is %4.1f %c\n',sqrt(mismatch/sum(entity1.populations)),char(197));
+               for k = 1:m2
+                   fprintf(logfid,'%s.%i is matched by %s.%i with DRMSD of %4.1f %c\n',cmd.entity1,best(k),cmd.entity2,k,mismatches(k),char(197));
+               end
+           end
         case 'subsample'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -770,9 +809,6 @@ for c = 1:cmd_poi
                         measures.(part).Rg,char(197),measures.(part).Rg_std,char(197));
                 end
                 if cmd.options.pair_rmsd
-                    fprintf(logfid,'\nEnsemble width and density for %s (%s)\n',name,part);
-                    fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
-                        measures.(part).width,char(197),measures.(part).density,char(197));
                     h = plot_pair_rmsd(measures.(part).pair_rmsd,cmd.options.superimpose);
                     sum_msq = sum(measures.(part).pair_rmsd.^2);
                     [C,~] = size(measures.(part).pair_rmsd);
@@ -796,6 +832,9 @@ for c = 1:cmd_poi
                     end
                 end
                 if cmd.options.pair_drms
+                    fprintf(logfid,'\nEnsemble width and density for %s (%s)\n',name,part);
+                    fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
+                        measures.(part).width,char(197),measures.(part).density,char(197));
                     h = plot_pair_rmsd(measures.(part).pair_drms,cmd.options.superimpose,cmd.options.pair_drms);
                     sum_msq = sum(measures.(part).pair_drms.^2);
                     [C,~] = size(measures.(part).pair_drms);

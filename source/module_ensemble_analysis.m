@@ -587,9 +587,9 @@ for c = 1:cmd_poi
            diff = sqrt(sum(sum(var12)) - sum(sum(var11))/2 - sum(sum(var22))/2);
            width1 = sqrt(sum(sum(var11))); 
            width2 = sqrt(sum(sum(var22)));
-           similarity = (width1*width2)/sum(sum(var12));
+           similarity = sqrt((width1*width2)/sum(sum(var12)));
            fprintf(logfid,'\nEnsembles %s and %s have a mean deviation of %4.1f %c at ensemble widths of %4.1f and %4.1f %c\n',cmd.entity1,cmd.entity2,diff,char(197),width1,width2,char(197));
-           fprintf(logfid,'The similarity measure is %4.2f\n\n',similarity);
+           fprintf(logfid,'The similarity measure is %5.3f\n\n',similarity);
            fprintf(logfid,'\n--- Matching conformers in %s by conformers in %s ---\n\n',cmd.entity1,cmd.entity2);
            if m1 <= m2
                mismatches = zeros(m1,1);

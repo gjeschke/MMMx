@@ -20,7 +20,7 @@ Input of an ensemble in MMMx ensemble list format.
 Arguments
     *   ``file`` - file name, extension .ens is appended if there is none
 Remarks
-    *   there should be only one ``getens`` line, or, alternatively, an ``addpdb`` line, or an ``import`` line 
+    *   there should be only one ``getens`` line, or, alternatively, an ``addpdb`` line, an ``import``, or a ``getAlphaFold`` line 
 	
 ``addpdb``
 ---------------------------------
@@ -36,12 +36,12 @@ Arguments
 Remarks
     *   all populations are equal
     *   each PDB file should hold only a single conformer or, alternatively, there should be only one PDB file with all conformers
-    *   there should be only one ``addpdb`` line, or, alternatively, a ``getens`` line or an ``import`` line 
+    *   there should be only one ``addpdb`` line, or, alternatively, a ``getens``, an ``import``, or a ``getAlphaFold`` line 
 	
 ``import``
 ---------------------------------
 
-Inmport an ensemble from PDB via its PDB identifier. This can also be used for loading a single PDB file. 
+Import an ensemble from PDB via its PDB identifier. This can also be used for loading a single PDB file. 
 
 .. code-block:: matlab
 
@@ -51,7 +51,22 @@ Arguments
     *   ``pdbid`` - PDB identifier, e.g. ``2LZM``, can also be a PDB file name, but then must have extension `.pdb`
 Remarks
     *   if the PDB file has several conformers, all populations are set equal
-    *   there should be only one ``import`` line, or, alternatively, a ``getens`` line or a ``addpdb`` line 
+    *   there should be only one ``import`` line, or, alternatively, a ``getens``, an ``addpdb``, or a ``getAlphaFold`` line 
+	
+``getAlphaFold``
+---------------------------------
+
+Import an AlphaFold prediction via its UniProt identifier. 
+
+.. code-block:: matlab
+
+    getAlphaFold UniProtID
+
+Arguments
+    *   ``UniProtID`` - UniProt identifier, e.g. ``P61626``
+Remarks
+    *   note that not all proteins in UniProt have an AlphaFold prediction in the database
+    *   there should be only one ``getAlphaFold`` line, or, alternatively, a ``getens``, an ``addpdb``, or an ``import`` line 
 	
 ``figures``
 ---------------------------------

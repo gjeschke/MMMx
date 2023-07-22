@@ -300,6 +300,9 @@ while 1
             residues = trial_resnum;
         end
         xyz(atoms,:) = [x,y,z];
+        if isempty(element_number(element))
+            element = 'C';
+        end
         [elements(atoms),element] = element_number(element);
         occupancies(atoms) = round(100*occupancy);
         if strcmpi(resname,'HOH') % special treatment for water

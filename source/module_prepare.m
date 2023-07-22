@@ -91,6 +91,20 @@ for d = 1:length(control.directives)
             entity_descriptor.conformer = conformer;
             entities{entity_poi} = entity_descriptor;
             commands{cmd_poi} = cmd;
+        case 'getalphafold'
+            cmd_poi = cmd_poi + 1;
+            entity_poi = entity_poi + 1;
+            cmd.input = control.directives(d).options{1};
+            cmd.entity = entity_poi;
+            if length(control.directives(d).options) > 1 % the entity has an explicit internal name
+                entity_descriptor.name = control.directives(d).options{2};
+            else % the internal name is derived from the order of loading entities
+                entity_descriptor.name = sprintf('E%i',entity_poi);
+            end
+            entity_descriptor.entity = get_AF(cmd.input); % load the entity
+            entity_descriptor.conformer = conformer;
+            entities{entity_poi} = entity_descriptor;
+            commands{cmd_poi} = cmd;
         case 'getcyana'
             cmd_poi = cmd_poi + 1;
             entity_poi = entity_poi + 1;
@@ -352,7 +366,7 @@ entity_name = 'input';
 for c = 1:cmd_poi
     cmd = commands{c};
     switch cmd.name
-        case {'getpdb','getcyana'}
+        case {'getpdb','getcyana','getalphafold'}
             entity_poi = cmd.entity;
             entity_descriptor = entities{entity_poi};
             entity_name = entity_descriptor.name;

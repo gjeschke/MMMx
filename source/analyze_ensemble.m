@@ -155,6 +155,8 @@ if options.type_analysis
     options.chain_mode = true;
 end
 
+measures.entropy = -sum(pop.*log10(pop/sum(pop)))/sum(pop);
+
 if ~options.chain_mode
     % determine total size of coordinate array
     N = 0;

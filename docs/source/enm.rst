@@ -19,6 +19,20 @@ Arguments
 Remarks
     *   the PDB file can contain several models (conformers) or a single one, by default, the first conformer is used
 	
+``getAlphaFold``
+---------------------------------
+
+Input of an AlphaFold prediction. 
+
+.. code-block:: matlab
+
+    getAlphaFold UniProtID
+
+Arguments
+    *   ``UniProtID`` - UniProt identifier for the AlphaFold prediction
+Remarks
+    *   note that not all proteins in UniProt have AlphaFold predictions in the database
+	
 ``save``
 ---------------------------------
 

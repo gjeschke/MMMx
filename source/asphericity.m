@@ -61,7 +61,7 @@ for c = 1:length(entity.populations)
     asph_all(c) = 1 - 3*I2/I1^2;   
     Rg_all(c) = gyration_radius(coor);
 end
-entity.Rg_c = Rg_all;
+entity.rg_c = Rg_all;
 entity.asphericity_c = asph_all;
 entity.asphericity = 1 - 3*I2_mean/I1_squared_mean;
 

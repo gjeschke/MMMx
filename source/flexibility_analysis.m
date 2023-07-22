@@ -33,6 +33,18 @@ function flexibility_analysis(entity,fname,figures)
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % this number is too small and is memory-intensive, if it is too large
 
+% Flexibility parameters fro residue types from analysis of unrestrained 
+% FUS NTD
+flexpar(2).mean = 0.7158; % GLY
+flexpar(2).std = 0.023;
+flexpar(3).mean = 0.257; % PRO
+flexpar(3).std = 0.009;
+flexpar(4).mean = 0.3437; % THR
+flexpar(4).std = 0.005;
+flexpar(1).mean = 0.407; % all others
+flexpar(1).std = 0.020;
+
+
 % initialize empty outputs
 if ~exist('fname','var')
     fname = '';
@@ -124,6 +136,8 @@ for c = 1:length(chains)
                                 restypes(respoi) = 2;
                             case 'PRO'
                                 restypes(respoi) = 3;
+                            case 'THR'
+                                restypes(respoi) = 4;
                         end
                     case 'na'
                         if ~isfield(entity.(chain).(previous),'C4_') % if C4' atom of previous nucleic acid is missing, phi is undetermined
@@ -161,13 +175,16 @@ for c = 1:length(chains)
         resnums = resnums(1:respoi);
         flexibilities = flexibilities(1:respoi);
         h = figure; clf; hold on;
-        colors = [0,0,0.8;0.75,0,0;0,0.6,0];
+        colors = [0.25,0.25,0.25;0.7,0,0;0,0.5,0;0,0,0.7];
         for res = 1:length(resnums)
+            errorbar(resnums(res),flexpar(restypes(res)).mean,2*flexpar(restypes(res)).std,...
+                'Color',colors(restypes(res),:)+[0.3,0.3,0.3]);
             plot(resnums(res),flexibilities(res),'.','MarkerSize',14,'Color',colors(restypes(res),:));
         end
         xlabel('Residue number');
         ylabel('Ramachandran flexibility');
         title(sprintf('%s chain %s',entity.name, chain));
+        axis([0,resnums(end)+1,0,1]);
         if ~isempty(figures)
             figname = sprintf('%s_chain_%s.%s',figname0,chain,figures);
             saveas(h,figname);

@@ -30,6 +30,20 @@ Arguments
 Remarks
     *   if the template has several conformers, the first one is used
 	
+``getAlphaFold``
+---------------------------------
+
+Input of a template by reading an AlphaFold prediction from the database. 
+
+.. code-block:: matlab
+
+    getAlphaFold UniProtID
+
+Arguments
+    *   ``UniProtID`` - UniProt identifier of the AlphaFold prediction
+Remarks
+    *   note that not all proteins in UniProt have an AlphaFold prediction in the database
+	
 ``save``
 ---------------------------------
 

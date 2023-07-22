@@ -33,6 +33,10 @@ function local_order(entity,fname,figures)
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % this number is too small and is memory-intensive, if it is too large
 
+disordered.mean = 0.1906;
+disordered.std = 0.0007;
+
+
 % initialize empty outputs
 if ~exist('fname','var')
     fname = '';
@@ -136,9 +140,29 @@ for c = 1:length(chains)
         order = order(1:order_poi);
         res_order = res_order(1:order_poi);
         h = figure(c); clf; hold on;
-        plot(res_order,order,'.','MarkerSize',14,'Color',[0.25,0.25,0.25]);
+        ub = disordered.mean + 2*disordered.std;
+        lb = disordered.mean - 2*disordered.std;
+        liner = ones(size(res_order'));
+        fill([res_order', fliplr(res_order')],[ub*liner, lb*liner],0.75*[1,1,1],'LineStyle','none');
+        plot(res_order,disordered.mean*liner,'-','LineWidth',2,'Color',0.25*[1,1,1]);
+        plot(res_order,order,'.','MarkerSize',14,'Color',[0,0,0.7]);
         xlabel('Residue number');
         ylabel('Local order parameter');
+        mi = min(order) - 0.05;
+        if mi > disordered.mean - 2*disordered.std-0.05
+            mi = disordered.mean - 2*disordered.std-0.05;
+        end
+        if mi < 0
+            mi = 0;
+        end
+        ma = max(order) + 0.05;
+        if ma < disordered.mean + 2*disordered.std + 0.05
+            ma = disordered.mean + 2*disordered.std + 0.05;
+        end
+        if ma > 1
+            ma = 1;
+        end
+        axis([0,max(res_order)+1,mi,ma]);
         title(sprintf('%s chain %s',entity.name, chain));
         if ~isempty(figures)
             figname = sprintf('%s_chain_%s.%s',figname0,chain,figures);

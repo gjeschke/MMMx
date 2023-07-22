@@ -51,11 +51,28 @@ Arguments
     *   ``output`` - identifier of the output (reduced) ensemble
 Remarks
     *   this is particularly useful for molecular dynamics trajectories
+	
+``cluster``
+---------------------------------
+
+Reduce ensemble size by clustering. 
+
+.. code-block:: matlab
+
+    cluster input output size
+
+Arguments
+    *   ``input`` - identifier of the input ensemble
+    *   ``output`` - identifier of the output (reduced) ensemble
+    *   ``size`` - number of conformers in the reduced ensemble
+Remarks
+    *   ensemble Shannon entropy and width before and after size reduction are reported in the log file
+    *   a similarity measure is reported in the log file 
 
 ``figures``
 ---------------------------------
 
-Subsample an ensemble to a smaller ensemble. 
+Specify figure output format. 
 
 .. code-block:: matlab
 
@@ -254,6 +271,24 @@ Remarks
     *   if a template and central are specified, superposition is to central conformer of a superensemble consisting of input and template
     *   the range argument '(*)' selects the complete structure
 	
+``inertiaframe``
+---------------------------------
+
+Transform all conformers to their respective inertia frames 
+
+.. code-block:: matlab
+
+    inertiaframe output input range
+
+Arguments
+    *   ``output`` - name of the output file, extension '.pdb' is appended, if none
+    *   ``input`` - identifier of the input ensemble
+    *   ``range`` - optional MMMx address that specifies only a range of a conformer for analysis, e.g. `(A)187-320`
+Remarks
+    *   the x axis corresponds to the minimum and the z axis to the maximum moment of inertia
+    *   the smallest x and z coordinates correspond to the N terminus
+    *   the center of origin of the coordinate frame is the center of gravity of the conformer
+
 ``save``
 ---------------------------------
 

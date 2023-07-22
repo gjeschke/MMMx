@@ -17,9 +17,10 @@ function [entity,exceptions] = get_AF(UniProtID,options)
 %              .name            first four characters of the UniProt
 %                               identifier
 %              in addition to PDB entities, AlphaFold entities contain
-%              .origin          'AlphaFold'
-%              .UniProt         UniProt identifier
-%              .UniProtName     protein name in UniProt
+%              .origin          'AlphaFold v%i', where %i is the version
+%                               number
+%              .uniprot         UniProt identifier
+%              .uniprotname     protein name in UniProt
 %              .sequence        amino acid sequence
 %              .pae             AlphaFold predicted aligned error matrix
 % exceptions   error message if something went wrong, entity is empty for
@@ -55,10 +56,10 @@ catch exception
 end
 entity = get_pdb(fname);
 entity.name = AF_info.uniprotAccession(1:4);
-entity.UniProt = AF_info.uniprotAccession;
-entity.UniProtName = AF_info.uniprotId;
+entity.uniprot = AF_info.uniprotAccession;
+entity.uniprotname = AF_info.uniprotId;
 entity.sequence = AF_info.uniprotSequence;
-entity.origin = 'AlphaFold';
+entity.origin = sprintf('AlphaFold v%i',AF_info.latestVersion);
 
 wroptions = weboptions('ContentType','json');
 pae = webread(AF_info.paeDocUrl,wroptions);

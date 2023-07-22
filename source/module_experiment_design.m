@@ -73,7 +73,7 @@ for d = 1:length(control.directives)
     clear cmd
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
-        case {'addpdb','getens','expand','import','input'}
+        case {'addpdb','getens','expand','import','input','getalphafold'}
             cmd_poi = cmd_poi + 1;
             ensemble_poi = ensemble_poi + 1;
             cmd.input = control.directives(d).options{1};
@@ -339,6 +339,21 @@ for c = 1:cmd_poi
                     end
                 end
                 entity.populations = ones(1,length(added_files))/length(added_files);
+            end
+            ensemble_descriptor.entity = entity;
+            fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
+            ensembles = store_ensemble(ensemble_name,entity,ensembles);
+        case 'getalphafold'
+            ensemble_poi = cmd.ensemble;
+            ensemble_descriptor = ensembles{ensemble_poi};
+            ensemble_name = ensemble_descriptor.name;
+            [entity,exceptions] = get_AF(cmd.input);
+            if ~isempty(exceptions) && ~isempty(exceptions{1})
+                warnings = warnings +1;
+                exceptions{warnings} = MException('module_ensembleanalysis:file_does_not_exist',...
+                    'AlphaFold prediction for UniProt %s could not be opened',cmd.input);
+                record_exception(exceptions{warnings},logfid);
+                return
             end
             ensemble_descriptor.entity = entity;
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);

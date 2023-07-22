@@ -26,6 +26,21 @@ Remarks
     *   the PDB file can contain several models (conformers) or a single one
     *   for MMMx ensemble PDB files with population information in ``REMARK 400``, such information is discarded
 	
+``getAlphaFold``
+---------------------------------
+
+Input of an AlphaFold prediction. 
+
+.. code-block:: matlab
+
+    import UniProtID identifier
+
+Arguments
+    *   ``UniProtID`` - UniProt identifier for the AlphaFold prediction
+    *   ``identifier`` - module-internal entity identifier of this ensemble
+Remarks
+    *   note that not for all sequences in UniProt, AlphaFold predictions exist in the database 
+	
 ``addpdb``
 ---------------------------------
 

@@ -22,8 +22,13 @@ function entity = domain_partitioning(entity,options)
 %                           empty, no RigiFlex script is written
 %               .threshold  maximum predicted aligned error inside domain,
 %                           defaults to 10 Angstroem
+%               .unify      maximum predicted aligned error for unifying
+%                           domains connected by short linkers, defaults to
+%                           15 Angstroem
 %               .minsize    minimum domain size, defaults to 50 residues
 %               .minlink    minimum linker length, defaults to 3 residues
+%               .minterm    minimum terminal section length, used only for
+%                           classification, defaults to 10
 %               .local      local context length, defaults to 5 residues
 %               .figname    name of output figure file, defaults to
 %                           <entity.name>_domains.pdf, if present and
@@ -49,26 +54,38 @@ function entity = domain_partitioning(entity,options)
 %                               residue ranges, can be empty
 %              .variability     (n,1) mean predicted aligned error (Å) 
 %                               within each folded domain
+%              .maxpae          (n,1) maxumum predicted aligned error (Å)
+%                               within each folded domain
 %              .linkers         list of m flexible linkers, each with
 %                               subfields
 %                               .range      (1,2) first, second residue
 %                               .sequence   amino acid sequence
 %              .folded          fraction of residues in folded domains
+%              .class           flexibility class, one of the classes
+%                               'folded'
+%                               'short flexible terminus'
+%                               'long flexible terminus'
+%                               'RigiFlex'
+%                               'disordered'
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2023: Gunnar Jeschke
 
 if ~exist('options','var') || ~isfield(options,'rbfile')
-    options.rbfile = sprintf('%s_rigid_bodies.pdb',entity.name);
+    options.rbfile = sprintf('%s_rigid_bodies.pdb',entity.uniprot);
 end
 
 if ~isfield(options,'script')
-    options.script = sprintf('%s_RigiFlex.mcx',entity.name);
+    options.script = sprintf('%s_RigiFlex.mcx',entity.uniprot);
 end
 
 if ~isfield(options,'threshold') || isempty(options.threshold)
     options.threshold = 10;
+end
+
+if ~isfield(options,'unfify') || isempty(options.unify)
+    options.unify = 15;
 end
 
 if ~isfield(options,'minsize') || isempty(options.minsize)
@@ -83,8 +100,12 @@ if ~isfield(options,'local') || isempty(options.local)
     options.local = 5;
 end
 
+if ~isfield(options,'minterm') || isempty(options.minterm)
+    options.minterminal = 10;
+end
+
 if ~isfield(options,'figname')
-    options.figname = sprintf('%s_domains.pdf',entity.name);
+    options.figname = sprintf('%s_domains.pdf',entity.uniprot);
 end
 
 if ~isfield(options,'rmin') || isempty(options.rmin)
@@ -151,6 +172,7 @@ freq = find( value == 0 );
 
 domains = zeros(length(freq),2);
 variability = zeros(length(freq),1);
+maxpae = zeros(length(freq),1);
 dpoi = 0;
 dstart = 1;
 if length(freq) ==1
@@ -160,6 +182,7 @@ if length(freq) ==1
        variability(dpoi) = mean_uncert;
        domains(dpoi,1) = dstart;
        domains(dpoi,2) = freq(1);
+       maxpae(dpoi) =  max(max(pairdist(dstart:freq(1),dstart:freq(1))));
    end
 else
     for k = 2:length(freq)
@@ -170,6 +193,7 @@ else
                 variability(dpoi) = mean_uncert;
                 domains(dpoi,1) = dstart;
                 domains(dpoi,2) = freq(k);
+                maxpae(dpoi) =  max(max(pairdist(dstart:freq(k),dstart:freq(k))));
             end
         end
         dstart = freq(k);
@@ -181,9 +205,15 @@ if options.minlink > 1
     cdpoi = 1;
     for k = 2:dpoi
         if domains(k,1) - domains(k-1,2) < options.minlink + 1
-            domains(cdpoi,2) = domains(k,2);
-            mean_uncert = mean(mean(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
-            variability(cdpoi) = mean_uncert;
+            test = max(max(pairdist(domains(k-1,1):domains(k,2),domains(k-1,1):domains(k,2))));
+            if test <= options.unify
+                domains(cdpoi,2) = domains(k,2);
+                mean_uncert = mean(mean(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
+                variability(cdpoi) = mean_uncert;
+                maxpae(cdpoi) = max(max(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
+            else
+                cdpoi = cdpoi + 1;
+            end
         else
             cdpoi = cdpoi + 1;
         end
@@ -210,8 +240,33 @@ if ~isempty(options.figname)
     saveas(h,options.figname);
 end
 
+max_terminal = NaN;
+if dpoi > 0
+    max_terminal = domains(1,1) - 1;
+    if n - domains(dpoi,2) > max_terminal
+        max_terminal = n - domains(end,2);
+    end
+end
+
+% classify this protein
+if dpoi < 1
+    entity.class = 'disordered';
+else
+    if dpoi > 1
+        entity.class = 'RigiFlex';
+    elseif max_terminal == 0
+        entity.class = 'folded';
+    elseif max_terminal < options.minterminal
+        entity.class = 'short flexible terminus';
+    else
+        entity.class = 'long flexible terminus';
+    end
+end
+
+
 entity.domains = domains(1:dpoi,:);
 entity.variability = variability(1:dpoi);
+entity.maxpae = maxpae(1:dpoi);
 
 if dpoi == 0
     lpoi = 1;
@@ -249,7 +304,7 @@ end
 
 if ~isempty(options.script)
     fid = fopen(options.script,'wt');
-    fprintf(fid,'%% RigiFlex script template for AlphaFold prediction %s (%s)\n\n',entity.UniProt,entity.UniProtName);
+    fprintf(fid,'%% RigiFlex script template for AlphaFold prediction %s (%s)\n\n',entity.uniprot,entity.uniprotname);
     fprintf(fid,'#log\n\n');
     rba = false;
     if dpoi > 1 % Rigi block is written only if more than one folded domain exists
@@ -259,7 +314,7 @@ if ~isempty(options.script)
         fprintf(fid,'   separate on\n');
         fprintf(fid,'   maxtrials 10000\n');
         fprintf(fid,'   models 200\n');
-        fprintf(fid,'   save %s_rba\n',entity.UniProt);
+        fprintf(fid,'   save %s_rba\n',entity.uniprot);
         % generate reference points for rigid bodies
         rb_entity = get_pdb(options.rbfile);
         chains = fieldnames(rb_entity);
@@ -309,7 +364,7 @@ if ~isempty(options.script)
     if dpoi == 0
         fprintf(fid,'\n');
         fprintf(fid,'!flex %% whole protein\n');
-        modelfile = sprintf('%s_full_length',entity.UniProt);
+        modelfile = sprintf('%s_full_length',entity.uniprot);
         fprintf(fid,'   save %s\n',modelfile);
         fprintf(fid,'   sequence 1 %i %s\n',n,entity.sequence(1:n));
         fprintf(fid,'.flex\n');
@@ -321,11 +376,11 @@ if ~isempty(options.script)
             fprintf(fid,'\n');
             fprintf(fid,'!flex %% N-terminal section\n');
             if rba
-                fprintf(fid,'   expand %s_rba\n',entity.UniProt);
+                fprintf(fid,'   expand %s_rba\n',entity.uniprot);
             else
                 fprintf(fid,'   addpdb %s\n',options.rbfile);
             end
-            modelfile = sprintf('%s_N_terminal',entity.UniProt);
+            modelfile = sprintf('%s_N_terminal',entity.uniprot);
             fprintf(fid,'   save %s\n',modelfile);
             fprintf(fid,'   sequence 1 %i %s\n',domains(1,1)-1,entity.sequence(1:domains(1,1)-1));
             fprintf(fid,'   c_anchor   (A)%i\n',domains(1,1));
@@ -338,11 +393,11 @@ if ~isempty(options.script)
             fprintf(fid,'\n');
             fprintf(fid,'!flex %% linker %i\n',k-1);
             if k == 2 && ~N_terminal
-                fprintf(fid,'   expand %s_rba\n',entity.UniProt);
+                fprintf(fid,'   expand %s_rba\n',entity.uniprot);
             else
                 fprintf(fid,'   addpdb %s*.pdb\n',modelfile);
             end
-            modelfile = sprintf('%s_linker_%i',entity.UniProt,k-1);
+            modelfile = sprintf('%s_linker_%i',entity.uniprot,k-1);
             fprintf(fid,'   save %s\n',modelfile);
             fprintf(fid,'   sequence %i %i %s\n',domains(k-1,2)+1,domains(k,1)-1,entity.sequence(domains(k-1,2)+1:domains(k,1)-1));
             fprintf(fid,'   n_anchor   (%s)%i\n',ctag1,domains(k-1,2));
@@ -359,7 +414,7 @@ if ~isempty(options.script)
             else
                 fprintf(fid,'   addpdb %s\n',options.rbfile);
             end
-            modelfile = sprintf('%s_C_terminal',entity.UniProt);
+            modelfile = sprintf('%s_C_terminal',entity.uniprot);
             fprintf(fid,'   save %s\n',modelfile);
             fprintf(fid,'   sequence %i %i %s\n',domains(dpoi,2)+1,n,entity.sequence(domains(dpoi,2)+1:n));
             fprintf(fid,'   n_anchor   (%s)%i\n',ctag,domains(dpoi,2));

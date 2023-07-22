@@ -91,6 +91,12 @@ for d = 1:length(control.directives)
             end
             ensembles{ensemble_poi} = ensemble_descriptor;
             commands{cmd_poi} = cmd;
+        case 'cluster'
+            cmd_poi = cmd_poi + 1;
+            cmd.entity = control.directives(d).options{1};
+            cmd.new_ensemble = control.directives(d).options{2};
+            cmd.size = str2double(control.directives(d).options{3});
+            commands{cmd_poi} = cmd;
         case 'figures'
             cmd_poi = cmd_poi + 1;
             cmd.extension = control.directives(d).options{1};
@@ -444,6 +450,45 @@ for c = 1:cmd_poi
             entity = get_ensemble(cmd.input);
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
             ensembles = store_ensemble(ensemble_name,entity,ensembles);
+        case {'cluster'}
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'entity %s cannot be clustered, since entity is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            cluster_options.size = cmd.size;
+            [ensemble,info] = cluster_ensemble(entity,cluster_options);
+            [C,~] = size(ensemble);
+            fprintf(logfid,'\n--- Ensemble %s clustered to ensemble %s with %i conformers\n\n',cmd.entity,cmd.new_ensemble,C);
+            fprintf(logfid,'Ensemble entropy reduced from %5.2f to %5.2f\n',info.entropies);
+            fprintf(logfid,'Ensemble width changed from %4.1f to %4.1f %c\n',info.widths,char(197));
+            fprintf(logfid,'Clustering resolution is %4.1f %c\n',info.resolution,char(197));
+            fprintf(logfid,'Similarity of reduced ensemble to original ensemble is %6.4f\n',info.similarity);
+            ensemble_name = strcat(cmd.new_ensemble,'.ens');
+            ens_fid = fopen(ensemble_name,'wt');
+            fprintf(ens_fid,'%% Clustered ensemble %s by MMMx derived from ensemble %\n\n',cmd.new_ensemble,cmd.entity);
+            poi = 0;
+            for clust = 1:C
+                fprintf(logfid,'Cluster %i with population %6.4f is represented by conformer %i of original ensemble\n',clust,ensemble(clust,2),ensemble(clust,1));
+                oname = sprintf('%s_m%i.pdb',cmd.new_ensemble,poi);
+                clear save_options
+                save_options.order = ensemble(clust,1);
+                exceptions = put_pdb(c_entity,oname,save_options);
+                fprintf(ens_fid,'%s  %8.6f\n',oname,ensemble(clust,2));
+            end
+            fclose(ens_fid);
+            c_entity = get_ensemble(ensemble_name);
+            if strcmp(cmd.entity,'.')
+                entity = c_entity;
+            end
+            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);            
         case 'figures'
             if strcmpi(cmd.extension,'off')
                 save_figures = false;
@@ -541,7 +586,7 @@ for c = 1:cmd_poi
                xlabel('Residue number');
                ylabel('Overlap');
                axis([range(1),range(2),0,1]);
-               title(sprintf('Overlap between ensembles %s and %s',cmd.entity1,cmd.entity2));
+               title(sprintf('\nOverlap between ensembles %s and %s',cmd.entity1,cmd.entity2));
                if save_figures
                    figname = sprintf('overlap_%s_%s.%s',cmd.entity1,cmd.entity2,figure_format);
                    saveas(h,figname);
@@ -553,7 +598,7 @@ for c = 1:cmd_poi
                writematrix(data,datname);
            else
                overlap = density_overlap(entity1,entity2,cmd.address);
-               fprintf(logfid,'Ensemble density overlap between %s and %s is %6.3f\n',cmd.entity1,cmd.entity2,overlap);
+               fprintf(logfid,'\nEnsemble density overlap between %s and %s is %6.3f\n',cmd.entity1,cmd.entity2,overlap);
            end
         case 'match'
            entity1 = retrieve_ensemble(cmd.entity1,ensembles,logfid);
@@ -588,7 +633,21 @@ for c = 1:cmd_poi
            width1 = sqrt(sum(sum(var11))); 
            width2 = sqrt(sum(sum(var22)));
            similarity = sqrt((width1*width2)/sum(sum(var12)));
-           fprintf(logfid,'\nEnsembles %s and %s have a mean deviation of %4.1f %c at ensemble widths of %4.1f and %4.1f %c\n',cmd.entity1,cmd.entity2,diff,char(197),width1,width2,char(197));
+           ens1 = cmd.entity1;
+           if ~isempty(chain)
+               ens1 = sprintf('%s (%s)',ens1,chain);
+           end
+           if ~isempty(range)
+               ens1 = sprintf(ens1,'%s %i-%i',range);
+           end
+           ens2 = cmd.entity2;
+           if ~isempty(chain2)
+               ens2 = sprintf('%s (%s)',ens2,chain2);
+           end
+           if ~isempty(range2)
+               ens2 = sprintf(ens2,'%s %i-%i',range2);
+           end
+           fprintf(logfid,'\nEnsembles %s and %s have a mean variability deviation of %4.1f %c at ensemble widths of %4.1f and %4.1f %c\n',ens1,ens2,diff,char(197),width1,width2,char(197));
            fprintf(logfid,'The similarity measure is %5.3f\n\n',similarity);
            fprintf(logfid,'\n--- Matching conformers in %s by conformers in %s ---\n\n',cmd.entity1,cmd.entity2);
            if m1 <= m2
@@ -794,146 +853,157 @@ for c = 1:cmd_poi
                 record_exception(exceptions{warnings},logfid);
                 return
             end
+            
+            
+            fprintf(logfid,'\n--- Analysis of ensemble %s ---\n',cmd.entity);
+            if cmd.options.chain_mode
+                fprintf(logfid,'   Restricted to chain %s and residue range %i-%i\n',cmd.options.chain,cmd.options.range);
+            end
+            fprintf(logfid,'\n');
             [measures,correlations] = analyze_ensemble(backbones,pop,cmd.options);
+            
+            fprintf(logfid,'Ensemble Shannon entropy (decadic logarithm): %4.2f\n',measures.entropy);
             parts = fieldnames(measures);
             for p = 1:length(parts)
                 part = parts{p};
-                if strcmp(part,'all')
-                    name = 'whole structure';
-                else
-                    name = sprintf('chain %s',part);
-                end
-                if cmd.options.Rg
-                    fprintf(logfid,'\nRadius of gyration analysis for %s (%s)\n',name,part);
-                    fprintf(logfid,'   Rg = %4.1f %s with standard deviation %4.1f %s\n',...
-                        measures.(part).Rg,char(197),measures.(part).Rg_std,char(197));
-                end
-                if cmd.options.pair_rmsd
-                    h = plot_pair_rmsd(measures.(part).pair_rmsd,cmd.options.superimpose);
-                    sum_msq = sum(measures.(part).pair_rmsd.^2);
-                    [C,~] = size(measures.(part).pair_rmsd);
-                    [msq,conf] = min(sum_msq);
-                    rmsd = sqrt(msq/C);
-                    fprintf(logfid,'\nCentral conformer %i has rmsd distance of %4.1f %s from other conformers\n',...
-                        conf,rmsd,char(197));
-                    if save_figures
-                        figname = sprintf('pair_rmsd_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
+                if isstrprop(part(1),'upper') || strcmp(part,'all')
+                    if strcmp(part,'all')
+                        name = 'whole structure';
+                    else
+                        name = sprintf('chain %s',part);
                     end
-                    if cmd.options.matlab
-                        pair_rmsd = measures.(part).pair_rmsd;
-                        datname = sprintf('pair_rmsd_%s_%s.mat',basname,part);
-                        save(datname,'pair_rmsd');
+                    if cmd.options.Rg
+                        fprintf(logfid,'\nRadius of gyration analysis for %s (%s)\n',name,part);
+                        fprintf(logfid,'   Rg = %4.1f %s with standard deviation %4.1f %s\n',...
+                            measures.(part).Rg,char(197),measures.(part).Rg_std,char(197));
                     end
-                    if cmd.options.csv
-                        pair_rmsd = measures.(part).pair_rmsd;
-                        datname = sprintf('pair_rmsd_%s_%s.csv',basname,part);
-                        writematrix(pair_rmsd,datname);
+                    if cmd.options.pair_rmsd
+                        h = plot_pair_rmsd(measures.(part).pair_rmsd,cmd.options.superimpose);
+                        sum_msq = sum(measures.(part).pair_rmsd.^2);
+                        [C,~] = size(measures.(part).pair_rmsd);
+                        [msq,conf] = min(sum_msq);
+                        rmsd = sqrt(msq/C);
+                        fprintf(logfid,'\nCentral conformer %i has rmsd distance of %4.1f %s from other conformers\n',...
+                            conf,rmsd,char(197));
+                        if save_figures
+                            figname = sprintf('pair_rmsd_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        if cmd.options.matlab
+                            pair_rmsd = measures.(part).pair_rmsd;
+                            datname = sprintf('pair_rmsd_%s_%s.mat',basname,part);
+                            save(datname,'pair_rmsd');
+                        end
+                        if cmd.options.csv
+                            pair_rmsd = measures.(part).pair_rmsd;
+                            datname = sprintf('pair_rmsd_%s_%s.csv',basname,part);
+                            writematrix(pair_rmsd,datname);
+                        end
                     end
-                end
-                if cmd.options.pair_drms
-                    fprintf(logfid,'\nEnsemble width and density for %s (%s)\n',name,part);
-                    fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
-                        measures.(part).width,char(197),measures.(part).density,char(197));
-                    h = plot_pair_rmsd(measures.(part).pair_drms,cmd.options.superimpose,cmd.options.pair_drms);
-                    sum_msq = sum(measures.(part).pair_drms.^2);
-                    [C,~] = size(measures.(part).pair_drms);
-                    [msq,conf] = min(sum_msq);
-                    drms = sqrt(msq/C);
-                    fprintf(logfid,'\nCentral conformer %i has drms of %4.1f %s from other conformers\n',...
-                        conf,drms,char(197));
-                    if save_figures
-                        figname = sprintf('pair_drms_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
+                    if cmd.options.pair_drms
+                        fprintf(logfid,'\nEnsemble width and density for %s (%s)\n',name,part);
+                        fprintf(logfid,'   width = %4.1f %s; density %4.1f %s\n',...
+                            measures.(part).width,char(197),measures.(part).density,char(197));
+                        h = plot_pair_rmsd(measures.(part).pair_drms,cmd.options.superimpose,cmd.options.pair_drms);
+                        sum_msq = sum(measures.(part).pair_drms.^2);
+                        [C,~] = size(measures.(part).pair_drms);
+                        [msq,conf] = min(sum_msq);
+                        drms = sqrt(msq/C);
+                        fprintf(logfid,'\nCentral conformer %i has drms of %4.1f %s from other conformers\n',...
+                            conf,drms,char(197));
+                        if save_figures
+                            figname = sprintf('pair_drms_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        if cmd.options.matlab
+                            pair_drms = measures.(part).pair_drms;
+                            datname = sprintf('pair_drms_%s_%s.mat',basname,part);
+                            save(datname,'pair_drms');
+                        end
+                        if cmd.options.csv
+                            pair_drms = measures.(part).pair_drms;
+                            datname = sprintf('pair_drms_%s_%s.csv',basname,part);
+                            writematrix(pair_drms,datname);
+                        end
                     end
-                    if cmd.options.matlab
-                        pair_drms = measures.(part).pair_drms;
-                        datname = sprintf('pair_drms_%s_%s.mat',basname,part);
-                        save(datname,'pair_drms');
+                    if cmd.options.pair_corr
+                        h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr);
+                        if save_figures
+                            figname = sprintf('residue_pair_correlation_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr,correlations.(part).dmat);
+                        if save_figures
+                            figname = sprintf('residue_pair_correlation_normalized_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        if cmd.options.matlab
+                            pair_corr = correlations.(part).pair_corr;
+                            dmat = correlations.(part).dmat;
+                            datname = sprintf('residue_pair_correlation_%s_%s.mat',basname,part);
+                            save(datname,'pair_corr','dmat');
+                        end
+                        if cmd.options.csv
+                            pair_corr = correlations.(part).pair_corr;
+                            dmat = correlations.(part).dmat;
+                            datname = sprintf('residue_pair_correlation_%s_%s.csv',basname,part);
+                            writematrix(pair_corr,datname);
+                            datname = sprintf('distance_matrix_%s_%s.csv',basname,part);
+                            writematrix(dmat,datname);
+                        end
                     end
-                    if cmd.options.csv
-                        pair_drms = measures.(part).pair_drms;
-                        datname = sprintf('pair_drms_%s_%s.csv',basname,part);
-                        writematrix(pair_drms,datname);
-                    end
-                end
-                if cmd.options.pair_corr
-                    h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr);
-                    if save_figures
-                        figname = sprintf('residue_pair_correlation_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
-                    end
-                    h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr,correlations.(part).dmat);
-                    if save_figures
-                        figname = sprintf('residue_pair_correlation_normalized_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
-                    end
-                    if cmd.options.matlab
-                        pair_corr = correlations.(part).pair_corr;
-                        dmat = correlations.(part).dmat;
-                        datname = sprintf('residue_pair_correlation_%s_%s.mat',basname,part);
-                        save(datname,'pair_corr','dmat');
-                    end
-                    if cmd.options.csv
-                        pair_corr = correlations.(part).pair_corr;
-                        dmat = correlations.(part).dmat;
-                        datname = sprintf('residue_pair_correlation_%s_%s.csv',basname,part);
-                        writematrix(pair_corr,datname);
-                        datname = sprintf('distance_matrix_%s_%s.csv',basname,part);
-                        writematrix(dmat,datname);
-                    end
-                end
-                if cmd.options.compactness
-                    fprintf(logfid,'\nCompactness analysis for %s (%s)\n',name,part);
-                    offset = 0;
-                    if ~isempty(cmd.options.range)
-                        offset = cmd.options.range(1); 
-                    end                    
-                    compactness = correlations.(part).compact;
-                    h = plot_compactness(compactness,'Compactness matrix',[-1,1],offset);
-                    if save_figures
-                        figname = sprintf('compactness_matrix_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
-                    end
-                    proximity = correlations.(part).proximity;
-                    h = plot_compactness(proximity,'Proximity matrix',[-1,1],offset);                    
-                    if save_figures
-                        figname = sprintf('proximity_matrix_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
-                    end
-                    Rdev = correlations.(part).Rdev;
-                    extent = max([abs(min(min(Rdev))),max(max(Rdev))]);
-                    h = plot_compactness(Rdev,'Segment length deviation',1.05*[-extent,extent],offset);
-                    if save_figures
-                        figname = sprintf('segment_length_deviation_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
-                    end
-                    h = plot_segments(measures.(part));
-                    if save_figures
-                        figname = sprintf('segment_length_distribution_%s_%s.%s',basname,part,figure_format);
-                        saveas(h,figname);
-                    end
-                    seg_lengths = measures.(part).seg_lengths;
-                    R2fct = measures.(part).R0_seglen*seg_lengths.^measures.(part).nu_seglen;
-                    mean_R2 = measures.(part).mean_R2;                    
-                    min_R2 = measures.(part).min_R2;                    
-                    max_R2 = measures.(part).max_R2;
-                    fprintf(logfid,'   Random coil fit\n   R0 = %5.2f; nu %5.3f\n',...
-                        measures.(part).R0_seglen,measures.(part).nu_seglen);
-                    segment_data = [seg_lengths' mean_R2' min_R2' max_R2' R2fct']; 
-                    if cmd.options.matlab
-                        datname = sprintf('compactness_analysis_%s_%s.mat',basname,part);
-                        save(datname,'compactness','proximity','Rdev','seg_lengths','mean_R2','min_R2','max_R2','R2fct');
-                    end
-                    if cmd.options.csv
-                        datname = sprintf('compactness_matrix_%s_%s.csv',basname,part);
-                        writematrix(compactness,datname);
-                        datname = sprintf('proximity_matrix_%s_%s.csv',basname,part);
-                        writematrix(proximity,datname);
-                        datname = sprintf('segment_length_deviation_%s_%s.csv',basname,part);
-                        writematrix(Rdev,datname);
-                        datname = sprintf('segment_length_distribution_%s_%s.csv',basname,part);
-                        writematrix(segment_data,datname);
+                    if cmd.options.compactness
+                        fprintf(logfid,'\nCompactness analysis for %s (%s)\n',name,part);
+                        offset = 0;
+                        if ~isempty(cmd.options.range)
+                            offset = cmd.options.range(1);
+                        end
+                        compactness = correlations.(part).compact;
+                        h = plot_compactness(compactness,'Compactness matrix',[-1,1],offset);
+                        if save_figures
+                            figname = sprintf('compactness_matrix_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        proximity = correlations.(part).proximity;
+                        h = plot_compactness(proximity,'Proximity matrix',[-1,1],offset);
+                        if save_figures
+                            figname = sprintf('proximity_matrix_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        Rdev = correlations.(part).Rdev;
+                        extent = max([abs(min(min(Rdev))),max(max(Rdev))]);
+                        h = plot_compactness(Rdev,'Segment length deviation',1.05*[-extent,extent],offset);
+                        if save_figures
+                            figname = sprintf('segment_length_deviation_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        h = plot_segments(measures.(part));
+                        if save_figures
+                            figname = sprintf('segment_length_distribution_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
+                        seg_lengths = measures.(part).seg_lengths;
+                        R2fct = measures.(part).R0_seglen*seg_lengths.^measures.(part).nu_seglen;
+                        mean_R2 = measures.(part).mean_R2;
+                        min_R2 = measures.(part).min_R2;
+                        max_R2 = measures.(part).max_R2;
+                        fprintf(logfid,'   Random coil fit\n   R0 = %5.2f; nu %5.3f\n',...
+                            measures.(part).R0_seglen,measures.(part).nu_seglen);
+                        segment_data = [seg_lengths' mean_R2' min_R2' max_R2' R2fct'];
+                        if cmd.options.matlab
+                            datname = sprintf('compactness_analysis_%s_%s.mat',basname,part);
+                            save(datname,'compactness','proximity','Rdev','seg_lengths','mean_R2','min_R2','max_R2','R2fct');
+                        end
+                        if cmd.options.csv
+                            datname = sprintf('compactness_matrix_%s_%s.csv',basname,part);
+                            writematrix(compactness,datname);
+                            datname = sprintf('proximity_matrix_%s_%s.csv',basname,part);
+                            writematrix(proximity,datname);
+                            datname = sprintf('segment_length_deviation_%s_%s.csv',basname,part);
+                            writematrix(Rdev,datname);
+                            datname = sprintf('segment_length_distribution_%s_%s.csv',basname,part);
+                            writematrix(segment_data,datname);
+                        end
                     end
                 end
             end
@@ -1103,7 +1173,7 @@ for c = 1:cmd_poi
             end
             c_entity = asphericity(c_entity,selected);
             pop = c_entity.populations;
-            h = plot_asphericity(c_entity.Rg_c,c_entity.asphericity_c,pop);
+            h = plot_asphericity(c_entity.rg_c,c_entity.asphericity_c,pop);
             ha = h.CurrentAxes;
             ha.Title.String = sprintf('Mean asphericity %5.3f',c_entity.asphericity);
             ha.XLabel.String = sprintf('R_g (%c)',char(197));
@@ -1112,7 +1182,7 @@ for c = 1:cmd_poi
                 figname = sprintf('Asphericity_%s.%s',cmd.entity,figure_format);
                 saveas(h,figname);
             end
-            asphericity_matrix = [c_entity.populations c_entity.Rg_c c_entity.asphericity_c];
+            asphericity_matrix = [c_entity.populations c_entity.rg_c c_entity.asphericity_c];
             datname = sprintf('asphericity_%s.csv',cmd.entity);
             writematrix(asphericity_matrix,datname);
             if strcmp(cmd.entity,'.')

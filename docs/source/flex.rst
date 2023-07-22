@@ -91,7 +91,7 @@ Remarks
 ``scwrl4``
 ---------------------------------
 
-Input of template conformers from PDB files. 
+Specify full SCWRL4 pathname. 
 
 .. code-block:: matlab
 

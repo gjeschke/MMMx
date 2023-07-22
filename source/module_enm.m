@@ -82,6 +82,8 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case 'getpdb'
             entity = get_pdb(control.directives(d).options{1});
+        case 'getalphafold'
+            entity = get_AF(control.directives(d).options{1});
         case 'save'
             save_name = control.directives(d).options{1};
         case 'remove'

@@ -53,7 +53,13 @@ for d = 1:length(control.directives)
             [all_pdb,pop] = rd_ensemble_definition(control.directives(d).options{1});
         case {'getpdb','import'}
             entity = get_pdb(control.directives(d).options{1});
-            fname = sprintf('MMMx_locate_%s.pdb',control.directives(d).options{1});
+            fname = sprintf('MMMx_visualize_%s.pdb',control.directives(d).options{1});
+            put_pdb(entity,fname);
+            all_pdb(1).name = fname;
+            pop = 1;
+        case {'getalphafold'}
+            entity = get_AF(control.directives(d).options{1});
+            fname = sprintf('MMMx_visualize_%s.pdb',control.directives(d).options{1});
             put_pdb(entity,fname);
             all_pdb(1).name = fname;
             pop = 1;

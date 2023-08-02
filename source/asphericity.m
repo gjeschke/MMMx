@@ -47,7 +47,7 @@ for c = 1:length(entity.populations)
         atom_indices = argout{1}.indices;
     end
     coor = entity.xyz(atom_indices,:);
-    elements = entity.elements(atom_indices);
+    elements = entity.elements(atom_indices - (c-1)*length(entity.elements));
     % compute atom masses
     masses = chemistry.pse.mass(elements).';
     % get the inertia tensor in the original frame

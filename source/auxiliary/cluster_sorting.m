@@ -127,7 +127,7 @@ block_pointer = 0;
 new_ordering = 1:length(ordering);
 depth = depth + 1;
 for k = 1:length(cluster_sizes)
-    if cluster_sizes(k) > 2
+    if cluster_sizes(k) > 2 && max(abs(c-mean(c))) > 0
         block_pair_rmsd = pair_rmsd(block_pointer+1:block_pointer+cluster_sizes(k),...
             block_pointer+1:block_pointer+cluster_sizes(k));
         block_pop = pop(ordering(block_pointer+1:block_pointer+cluster_sizes(k)));

@@ -21,6 +21,9 @@ function [entity,exceptions] = get_ensemble(fname,name)
 %              errors but not for warnings, for warnings, only the last one
 %              is reported, cell containing an empty array, if no exception
 %
+% REMARKS
+% populations are normalized to unity sum
+%
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
@@ -44,7 +47,7 @@ if ~isempty(exceptions) && ~isempty(exceptions{1})
     return
 end
 
-entity.populations = pop;
+entity.populations = pop/sum(pop);
 
 if exist('name','var')
     entity.name = name;

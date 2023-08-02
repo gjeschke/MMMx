@@ -39,6 +39,8 @@ function [entity,exceptions,failed,restraints,fit_task] = module_ensemble_fit(co
 %               defaults to 100
 % save          file name for saving ensemble, if not given, the ensemble
 %               is saved as ensemble.ens to the current directory
+% archive       make a zip file of included conformers and the ensemble
+%               list
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -87,6 +89,7 @@ opt.overlap_trials = 10000;
 fit_mean_distances = false;
 
 outname = 'ensemble.ens';
+save_archive = false;
 
 sas_options.lm = 20;
 sas_options.fb = 18;
@@ -159,6 +162,9 @@ for d = 1:length(control.directives)
             plot_groups(pg_poi).conformers = decode_number_list(control.directives(d).options{2}); %#ok<AGROW>
         case 'save'
             outname = control.directives(d).options{1};
+        case 'archive'
+            outname = control.directives(d).options{1};
+            save_archive = true;
         case 'csv'
             save_csv = true;
         case {'pdbsave','pdb_save'}
@@ -1507,6 +1513,8 @@ fprintf(logfid,'%i conformers remain included\n\n',length(fit_task.ensemble_popu
 
 % save ensemble
 ofid = fopen(outname,'wt');
+filenames = cell(1,1+length(fit_task.remaining_conformers));
+filenames{1} = outname; 
 if ofid == -1
     warnings = warnings + 1;
     exceptions{warnings} = MException('module_ensemble_fit:ensemble_not_saved', 'Output file %s could not be written.',outname);
@@ -1515,8 +1523,15 @@ else
     fprintf(ofid,'%% %s, %s\n',outname,datetime);
     for c = 1:length(fit_task.remaining_conformers)
         fprintf(ofid,'%s%10.6f\n',fit_task.file_list{fit_task.remaining_conformers(c)},fit_task.ensemble_populations(c));
+        filenames{1+c} = fit_task.file_list{fit_task.remaining_conformers(c)};
     end
     fclose(ofid);
+end
+
+if save_archive
+    [~,basname,~] = fileparts(outname);
+    zip(strcat(basname,'.zip'),filenames);
+    fprintf(logfid,'\nEnsemble was archived as file %s.zip\n',basname);
 end
 
 % save ensemble PDB if requested

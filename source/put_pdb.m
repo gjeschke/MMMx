@@ -207,9 +207,9 @@ end
 chains = fieldnames(entity);
 select_all = ~options.selected;
 indices = zeros(1,5);
-atnum = options.datnum;
 save_conf = 0;
 for kconf = 1:length(conformer_order)
+    atnum = options.datnum;
     % should all conformers be written?
     selected = select_all | all_conformers;
     % or is this specific one selected?

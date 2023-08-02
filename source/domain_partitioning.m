@@ -146,7 +146,7 @@ colorbar;
 axis tight
 xlabel('Residue number');
 ylabel('Residue number');
-title('Predicted aligned error and domains');
+title(sprintf('PAE and domains for %s',entity.uniprotname),'Interpreter','none');
 axis equal
 
 [n,~] = size(pairdist);

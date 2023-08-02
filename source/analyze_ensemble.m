@@ -532,7 +532,7 @@ for i = 1:N-1 % first residue of segment
         R2 = 0;
         for c = 1:C
             coor = backbone.bb{c};
-            R2 = R2 + pop(c)*norm(coor(orig_ind(end),:)-coor(orig_ind(1),:))^2; % means square end-to-end distance of segment
+            R2 = R2 + pop(c)*norm(coor(orig_ind(end),:)-coor(orig_ind(1),:))^2; % mean square end-to-end distance of segment
             segment_coor(seg_ind,:) = coor(orig_ind,:); % coordinates for whole segment
             seg_ind = seg_ind + len; % increment coordinate index by segment length
         end
@@ -586,7 +586,7 @@ R0_P = v(1);
 nu_P = v(2);
 
 
-% Subtract reference state from compactness and prioximity matrix and normalize to
+% Subtract reference state from compactness and proximity matrix and normalize to
 % reference state
 % double loop over all residue pairs, indices as in the white paper on
 % ensemble analysis

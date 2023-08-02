@@ -165,7 +165,7 @@ for c = 1:length(chains)
                             eta(co) = dihedral_mmmx(C4pm,P,C4p,Pp);
                             theta(co) = dihedral_mmmx(P,C4p,Pp,C4pp);                                                        
                         end
-                        Rav = sqrt((sum(cos(eta))^2 + sum(sin(eta))^2 + sum(cos(theta))^2 + sum(sin(theta))^2)/2)/length(phi);
+                        Rav = sqrt((sum(pop.*cos(eta))^2 + sum(pop.*sin(eta))^2 + sum(pop.*cos(theta))^2 + sum(pop.*sin(theta))^2)/2);
                         respoi = respoi + 1;
                         resnums(respoi) = resnum;
                         flexibilities(respoi) = 1-Rav;

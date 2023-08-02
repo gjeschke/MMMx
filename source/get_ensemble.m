@@ -28,28 +28,26 @@ function [entity,exceptions] = get_ensemble(fname,name)
 % initialize empty outputs
 entity = [];
 
-if ~exist('name','var') || isempty(name)
-    name = 'MMMx';
-end
-
 [all_files,pop,exceptions] = rd_ensemble_definition(fname);
 
 if isempty(pop)
     return
 end
 
-[entity,exceptions] = get_pdb(all_files(1).name);
+filenames = cell(1,length(all_files));
+for conf = 1:length(all_files)
+    filenames{conf} = all_files(conf).name;
+end
+[entity,exceptions] = entity_from_filelist(filenames);
 
 if ~isempty(exceptions) && ~isempty(exceptions{1})
     return
 end
 
-for c = 2:length(pop)
-    [entity,exceptions] = get_pdb(all_files(c).name,[],entity);
-    if ~isempty(exceptions) && ~isempty(exceptions{1})
-        return
-    end
-end
 entity.populations = pop;
 
-entity.name = name;
+if exist('name','var')
+    entity.name = name;
+elseif isempty(entity.name)
+    entity.name = 'MMMx';
+end

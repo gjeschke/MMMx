@@ -22,6 +22,8 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 %                   that are not expected to be always attached
 %                   needed to generate consistent ensembles, defaults to
 %                   false
+%           .conf   conformer, conformer number, defaults to 1
+%           .atoff  atom offset, atom offset for indexing, defaults to 0
 % entity    optional, if present, models from the PDB file are added as
 %           conformers to an existing entity, the caller is responsible for
 %           consistency of primary structure of the conformers
@@ -41,7 +43,7 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 maxatoms = 1000000;
 maxwater = 100000;
 maxmodels = 100000;
-resdefs = load('monomers.mat');
+% resdefs = load('monomers.mat');
 
 % initialize empty outputs
 if ~exist('entity','var')
@@ -61,6 +63,14 @@ if ~isfield(options,'stripH') || isempty(options.stripH)
     options.stripH = false;
 elseif options.stripH
     min_atoms = load('minimal_protonation.mat');
+end
+force_conformer = true;
+if ~isfield(options,'conf') || isempty(options.conf)
+    options.conf = 1;
+    force_conformer = false;
+end
+if ~isfield(options,'atoff') || isempty(options.atoff)
+    options.atoff = 0;
 end
 
 % placeholder for downloaded file later to be deleted
@@ -126,7 +136,6 @@ residues = 0;
 chains = '';
 curr_chain = '';
 models = 1;
-current_model = 1;
 model_offset = 0;
 populations = ones(maxmodels,1);
 conformers = 0;
@@ -144,6 +153,8 @@ if ~isempty(entity)
     conformers = length(entity.populations) + 1;
     populations(1:conformers-1) = entity.populations;
     populations(conformers) = mean(populations);
+else
+    current_model = options.conf;
 end
 old_resname = 'HOH'; % avoid location entry for water residues
 % initialize information on modified residues
@@ -171,7 +182,7 @@ while 1
         modres(modified_residues).chain = tline(17); 
         modres(modified_residues).residue = str2double(tline(18:22)); 
     end
-    if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL')
+    if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL') && ~force_conformer
         if length(tline) < 14
             tline = pad(tline,14); % because PED does not check for correct format
         end
@@ -327,10 +338,10 @@ while 1
             entity.(chainfield).(resfield).(atname).selected = 0;
             entity.(chainfield).(resfield).(atname).selected_locations = 1;
             if ~isfield(entity.(chainfield).(resfield).(atname),'tab_indices')
-                entity.(chainfield).(resfield).(atname).tab_indices = atoms;
+                entity.(chainfield).(resfield).(atname).tab_indices = atoms + options.atoff;
             else
                 entity.(chainfield).(resfield).(atname).tab_indices = ...
-                    [entity.(chainfield).(resfield).(atname).tab_indices atoms];
+                    [entity.(chainfield).(resfield).(atname).tab_indices atoms + options.atoff];
             end
             % determine missing rotamer indices
             rotamer_index = strfind(altlocs,altloc);

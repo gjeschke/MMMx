@@ -79,7 +79,7 @@ for d = 1:length(control.directives)
     clear cmd
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
-        case {'addpdb','getens','input'}
+        case {'addpdb','getens','input','get_ped','get_zenodo','get_mmmx'}
             cmd_poi = cmd_poi + 1;
             ensemble_poi = ensemble_poi + 1;
             cmd.input = control.directives(d).options{1};
@@ -203,10 +203,10 @@ for d = 1:length(control.directives)
                 end
             end
             commands{cmd_poi} = cmd;
-        case 'save'
+        case {'save','archive','put_mmmx'}
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
-            if length(control.directives(d).options) > 1 % a selected entity is analyzed
+            if length(control.directives(d).options) > 1 % a selected entity is saved
                 cmd.entity = control.directives(d).options{2};
             else
                 cmd.entity = '.'; 
@@ -389,7 +389,7 @@ for d = 1:length(control.directives)
             end
             cmd.address = '';
             if length(control.directives(d).options) > 1 % chain and possibly range given
-                cmd.address = control.directives(d).options{1};
+                cmd.address = control.directives(d).options{2};
             end
             commands{cmd_poi} = cmd;    
         otherwise
@@ -419,26 +419,13 @@ for c = 1:cmd_poi
                 cmd.input = strcat(cmd.input,'.pdb');
             end
             added_files = dir(cmd.input); % find all files that match the pattern
-            [entity,exceptions] = get_pdb(added_files(1).name);
-            if ~isempty(exceptions) && ~isempty(exceptions{1})
-                warnings = warnings +1;
-                exceptions{warnings} = MException('module_ensembleanalysis:file_does_not_exist',...
-                    'PDB file %s could not be opened',added_files(1).name);
-                record_exception(exceptions{warnings},logfid);
-                return
+            filenames = cell(1,length(added_files));
+            for conf = 1:length(added_files)
+                filenames{conf} = added_files(conf).name;
             end
-            if length(added_files) > 1
-                for cf = 2:length(added_files)
-                    [entity,exceptions] = get_pdb(added_files(cf).name,[],entity);
-                    if ~isempty(exceptions) && ~isempty(exceptions{1})
-                        warnings = warnings +1;
-                        exceptions{warnings} = MException('module_ensembleanalysis:file_does_not_exist',...
-                            'PDB file %s could not be opened',added_files(cf).name);
-                        record_exception(exceptions{warnings},logfid);
-                        return
-                    end
-                end
-                entity.populations = ones(1,length(added_files))/length(added_files);
+            [entity,exceptions] = entity_from_filelist(filenames);
+            if ~isempty(exceptions) && ~isempty(exceptions{1})
+                return
             end
             ensemble_descriptor.entity = entity;
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
@@ -450,6 +437,37 @@ for c = 1:cmd_poi
             entity = get_ensemble(cmd.input);
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
             ensembles = store_ensemble(ensemble_name,entity,ensembles);
+        case {'get_ped'}
+            ensemble_poi = cmd.ensemble;
+            ensemble_descriptor = ensembles{ensemble_poi};
+            ensemble_name = ensemble_descriptor.name;
+            args = split(cmd.input,'.');
+            entity = get_PED(args{1},args{2});
+            fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
+            ensembles = store_ensemble(ensemble_name,entity,ensembles);
+        case {'get_zenodo'}
+            ensemble_poi = cmd.ensemble;
+            ensemble_descriptor = ensembles{ensemble_poi};
+            ensemble_name = ensemble_descriptor.name;
+            args = split(cmd.input,'.');
+            fname = args{2};
+            k = 2;
+            while k < length(args)
+                k = k + 1;
+                fname = sprintf('%s.%s',fname,args{k});
+            end
+            entity = get_zenodo(args{1},fname);
+            fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
+            ensembles = store_ensemble(ensemble_name,entity,ensembles);
+        case {'get_mmmx'}
+            ensemble_poi = cmd.ensemble;
+            ensemble_descriptor = ensembles{ensemble_poi};
+            ensemble_name = ensemble_descriptor.name;
+            temp_data = load(cmd.input);
+            entity = temp_data.entity;
+            fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
+            ensembles = store_ensemble(ensemble_name,entity,ensembles);
+            clear temp_data
         case {'cluster'}
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -474,10 +492,9 @@ for c = 1:cmd_poi
             ensemble_name = strcat(cmd.new_ensemble,'.ens');
             ens_fid = fopen(ensemble_name,'wt');
             fprintf(ens_fid,'%% Clustered ensemble %s by MMMx derived from ensemble %\n\n',cmd.new_ensemble,cmd.entity);
-            poi = 0;
             for clust = 1:C
                 fprintf(logfid,'Cluster %i with population %6.4f is represented by conformer %i of original ensemble\n',clust,ensemble(clust,2),ensemble(clust,1));
-                oname = sprintf('%s_m%i.pdb',cmd.new_ensemble,poi);
+                oname = sprintf('%s_m%i.pdb',cmd.new_ensemble,clust);
                 clear save_options
                 save_options.order = ensemble(clust,1);
                 exceptions = put_pdb(c_entity,oname,save_options);
@@ -808,7 +825,7 @@ for c = 1:cmd_poi
                 if isempty(c_entity)
                     warnings = warnings +1;
                     exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'tried to subsample entity %s, which is unknown',cmd.entity);
+                        'tried to save entity %s, which is unknown',cmd.entity);
                     record_exception(exceptions{warnings},logfid);
                     return
                 end
@@ -822,6 +839,54 @@ for c = 1:cmd_poi
                     record_exception(exceptions{warnings},logfid);
                 end
             end
+            fprintf(logfid,'\nEnsemble %s saved to single PDB file %s\n',cmd.entity,cmd.outname);
+        case 'archive'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to archive entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            [~,basname,~] = fileparts(cmd.outname);
+            filenames = cell(1,1+length(c_entity.populations));
+            filenames{1} = strcat(basname,'.ens');
+            ens_fid = fopen(filenames{1},'wt');
+            fprintf(ens_fid,'%% Ensemble %s (%s)\n',cmd.entity,c_entity.name);
+            for conf = 1:length(c_entity.populations)
+                filenames{1+conf} = sprintf('%s_m%i.pdb',basname,conf);
+                clear save_options
+                save_options.order = conf;
+                exceptions = put_pdb(c_entity,filenames{1+conf},save_options);
+            end
+            fclose(ens_fid);
+            zip(strcat(basname,'.zip'),filenames);
+            fprintf(logfid,'\nEnsemble %s was archived as file %s.zip\n',cmd.entity,basname);
+        case 'put_mmmx'
+            if strcmp(cmd.entity,'.')
+                c_entity = entity;
+            else
+                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
+                if isempty(c_entity)
+                    warnings = warnings +1;
+                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                        'tried to save entity %s, which is unknown',cmd.entity);
+                    record_exception(exceptions{warnings},logfid);
+                    return
+                end
+            end
+            entity0 = entity;
+            entity = c_entity;
+            [pathname,basname,~] = fileparts(cmd.outname);
+            outname = fullfile(pathname,strcat(basname,'.mat'));
+            save(outname,'entity');
+            entity = entity0;
+            fprintf(logfid,'\nEnsemble %s saved in MMMx internal format as %s\n',cmd.entity,cmd.outname);
         case 'measures'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -1172,6 +1237,7 @@ for c = 1:cmd_poi
                 selected = cmd.address;
             end
             c_entity = asphericity(c_entity,selected);
+            fprintf(logfid,'\nMean asphericity for ensemble %s: %5.3f\n',cmd.entity,c_entity.asphericity);
             pop = c_entity.populations;
             h = plot_asphericity(c_entity.rg_c,c_entity.asphericity_c,pop);
             ha = h.CurrentAxes;

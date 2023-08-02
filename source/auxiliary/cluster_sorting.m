@@ -53,7 +53,7 @@ z = linkage(pairdist);
 % is found
 inconsistency = 1.51;
 c = ones(C,1);
-while max(c) < 2
+while max(c) < 2 && inconsistency > 0.01
     inconsistency = inconsistency - 0.01;
     c = cluster(z,'cutoff',inconsistency);
 end

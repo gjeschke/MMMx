@@ -215,7 +215,11 @@ switch attribute
         coor.indices = all_indices(entity.index_array(:,4) == conformer);
         coor.all_indices = entity.index_array(coor.indices,:);
         coor.xyz = entity.xyz(coor.indices,:);
-        coor.elements = entity.elements(coor.indices-(conformer-1)*length(entity.elements));
+        if max(coor.indices) > length(entity.elements)
+            coor.elements = entity.elements(coor.indices-(conformer-1)*length(entity.elements));
+        else
+            coor.elements = entity.elements(coor.indices);
+        end
         argout = {coor};
     otherwise
         exceptions = {MException('get_conformer:unsupported_attribute', 'Attribute %s not supported',attribute)};

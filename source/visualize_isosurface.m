@@ -99,7 +99,7 @@ if ~isfield(options,'opaqueness')
     options.opaqueness = 1;
 end
 
-if isfield(options,'limits') && length(options.limits) == 1
+if isfield(options,'limits') && length(options.limits) == 1 && ~isnan(options.limits)
     options.limits = [-options.limits,options.limits];
 end
 
@@ -127,20 +127,26 @@ if exist('property_file','var') && ~isempty(property_file)
     s = isosurface(d.y,d.x,d.z,density,isovalue,p.cube);
     patch(s,'FaceColor','interp','EdgeColor','none','FaceLighting','gouraud','BackFaceLighting','lit','FaceAlpha',options.opaqueness);
     fprintf(1,'Range: %6.3f, %6.3f\n',min(s.facevertexcdata),max(s.facevertexcdata));
+    if ~isempty(options.limits) && isnan(options.limits)
+        options.limits = [-max(s.facevertexcdata),max(s.facevertexcdata)];
+        if -min(s.facevertexcdata) > max(s.facevertexcdata)
+            options.limits = [min(s.facevertexcdata),-min(s.facevertexcdata)];
+        end
+    end
     switch options.colorscheme
         case 'cation-pi'
             colormap(colorscale('gold','blue'));
-            if ~isfield(options,'limits')
+            if ~isfield(options,'limits') || isempty(options.limits)
                 options.limits = [-0.2,0.2];
             end
-        case 'electrostatic'
+        case 'electrostatic' 
             colormap(colorscale('red','blue'));
-            if ~isfield(options,'limits')
+            if ~isfield(options,'limits') || isempty(options.limits)
                 options.limits = [-1,1];
             end
         case 'hydrophobic'
             colormap(colorscale('green','darkviolet'));
-            if ~isfield(options,'limits')
+            if ~isfield(options,'limits') || isempty(options.limits)
                 options.limits = [-10,10];
             end
         otherwise

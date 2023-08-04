@@ -3,8 +3,8 @@
 # log
 
 !visualize
-   getens PTBP1_EMCV_IRES_Fred_oriented_sorted PTBP1 % load PTBP1 ensemble fitted to all restraints
-   script PTBP1_visualization
+   get_Zenodo 7798970.PTBP1_EMCV_IRES_main_ensemble.zip PTBP1_EMCV_IRES % Integrative structure determination of PTBP1-viral IRES complex in solution
+   script PTBP1_standard_visualization
    show (:) ribbon
    color (A)58-154 1.0 0.2 0.2
    color (A)155-182 0.8 0.8 0.8

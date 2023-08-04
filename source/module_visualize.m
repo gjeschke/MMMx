@@ -50,7 +50,14 @@ for d = 1:length(control.directives)
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
         case {'getens','input'}
-            [all_pdb,pop] = rd_ensemble_definition(control.directives(d).options{1});
+            % [all_pdb,pop] = rd_ensemble_definition(control.directives(d).options{1});
+            entity = get_ensemble(control.directives(d).options{1});
+            args = split(control.directives(d).options{1},'.');
+            fname = args{1};
+            svname = sprintf('MMMx_visualize_%s.pdb',fname);
+            put_pdb(entity,svname);
+            all_pdb(1).name = svname;
+            pop = entity.populations;
         case {'getpdb','import'}
             entity = get_pdb(control.directives(d).options{1});
             fname = sprintf('MMMx_visualize_%s.pdb',control.directives(d).options{1});
@@ -63,6 +70,19 @@ for d = 1:length(control.directives)
             put_pdb(entity,fname);
             all_pdb(1).name = fname;
             pop = 1;
+        case {'get_zenodo'}
+            args = split(control.directives(d).options{1},'.');
+            fname = args{2};
+            svname = sprintf('MMMx_visualize_%s.pdb',fname);
+            k = 2;
+            while k < length(args)
+                k = k + 1;
+                fname = sprintf('%s.%s',fname,args{k});
+            end
+            entity = get_zenodo(args{1},fname);
+            put_pdb(entity,svname);
+            all_pdb(1).name = svname;
+            pop = entity.populations;
         case 'addpdb'
             all_pdb = dir(control.directives(d).options{1});
             pop = ones(length(all_pdb),1)/length(all_pdb);
@@ -175,7 +195,11 @@ for d = 1:length(control.directives)
                         cmd.options.camupvec(2) = str2double(control.directives(d).block{k,3});
                         cmd.options.camupvec(3) = str2double(control.directives(d).block{k,4});
                     case 'limits'
-                        cmd.options.limits = str2double(control.directives(d).block{k,2});
+                        if strcmpi(cmd.options.limits,'adapted')
+                            cmd.options.limits = NaN;
+                        else
+                            cmd.options.limits = str2double(control.directives(d).block{k,2});
+                        end
                     case 'figname'
                         cmd.options.figname = control.directives(d).block{k,2};
                     case 'opaqueness'
@@ -241,7 +265,7 @@ fprintf(ofid,'new !\n');
 pop_encode_transparency = true;
 for k = 1:length(all_pdb)
     tag = id2tag(k,all_tags);
-    sadr = sprintf('[%s]',tag);
+    sadr = sprintf('[%s]{:}',tag);
     fprintf(ofid,'pdbload %s\n',all_pdb(k).name);
     for c = 1:cmd_poi
         cmd = commands{c};
@@ -267,13 +291,23 @@ for k = 1:length(all_pdb)
         end
     end
 end
-% transparency slows down thing. Hence, it is applied only after everything
-% else was drawn
-for k = 1:length(all_pdb)
-    tag = id2tag(k,all_tags);
+% transparency slows down drawing. Hence, it is applied only after
+% everything else was drawn
+if length(all_pdb) > 1
+    for k = 1:length(all_pdb)
+        tag = id2tag(k,all_tags);
+        sadr = sprintf('[%s]',tag);
+        if pop_encode_transparency
+            fprintf(ofid,'transparency %s(:) %5.3f\n',sadr,pop(k));
+        end
+    end
+else
+    tag = id2tag(1,all_tags);
     sadr = sprintf('[%s]',tag);
-    if pop_encode_transparency
-        fprintf(ofid,'transparency %s(:) %5.3f\n',sadr,pop(k));
+    for k = 1:length(pop)
+        if pop_encode_transparency
+            fprintf(ofid,'transparency %s{%i}(:) %5.3f\n',sadr,k,pop(k));
+        end
     end
 end
 % generate all specified density isosurfaces

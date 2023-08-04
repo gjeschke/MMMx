@@ -73,7 +73,9 @@ y = linspace(min_xyz(2) , max_xyz(2), ny);
 z = linspace(min_xyz(3), max_xyz(3), nz);
 
 for c = 1:C
-    fprintf(1,'Conformer %i\n',c);
+    if C > 100 && mod(c,10) == 0
+        fprintf(1,'Conformer %i\n',c);
+    end
     pop = entity.populations(c);
     [coor,~,elements] = get_coor(entity,sprintf('{%i}%s',c,address),true);
     [n,~] = size(coor);

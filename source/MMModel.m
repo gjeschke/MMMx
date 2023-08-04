@@ -50,11 +50,9 @@ show_report = false;
 logfile_name = def_logfile;
 failed = false;
 module_exceptions ={};
+fprintf(logfid,'> Executing %s <\n\n',control_file);
 
 for module = 1:length(controller)
-    if exist('logfid','var')
-        fprintf(logfid,'> Executing %s <\n\n',controller(module).name);
-    end
     switch lower(controller(module).name)
         case 'logfile'
             close_log = true;
@@ -64,8 +62,12 @@ for module = 1:length(controller)
             else
                 logfid = fopen(def_logfile,'wt');
             end
+            fprintf(logfid,'> Executing %s <\n\n',control_file);
+            timing = tic;
         case 'log'
             logfid = fopen(def_logfile,'wt');
+            fprintf(logfid,'> Executing %s <\n\n',control_file);
+            timing = tic;
         case 'report'
             show_report = true;
         case 'getpdb'
@@ -117,6 +119,19 @@ for module = 1:length(controller)
         end
     end
 end
+
+runtime = toc(timing);
+fprintf(logfid,'\nExecution took ');
+hours = floor(runtime/3600);
+if hours > 0
+    fprintf(logfid,'%i h, ',hours);
+end
+minutes = floor((runtime-3600*hours)/60);
+if minutes > 0
+    fprintf(logfid,'%i min, ',minutes);
+end
+seconds = runtime-3600*hours-60*minutes;
+fprintf(logfid,'%4.1f s\n\n',seconds);
 
 fprintf(logfid,'\n*** MMMx modeling finished ***\n');
 

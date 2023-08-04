@@ -863,6 +863,7 @@ for c = 1:cmd_poi
                 clear save_options
                 save_options.order = conf;
                 exceptions = put_pdb(c_entity,filenames{1+conf},save_options);
+                fprintf(ens_fid,'%s  %8.6f\n',filenames{1+conf},c_entity.populations(conf));
             end
             fclose(ens_fid);
             zip(strcat(basname,'.zip'),filenames);
@@ -1099,7 +1100,7 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            property_cube(c_entity,cmd.outname,cmd.property,cmd.address,cmd.resolution,cmd.pH,cmd.I)
+            property_cube(c_entity,cmd.outname,cmd.property,cmd.address,cmd.resolution,cmd.pH,cmd.I);
         case 'coulomb'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;

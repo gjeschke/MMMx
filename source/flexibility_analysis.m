@@ -36,13 +36,13 @@ function flexibility_analysis(entity,fname,figures)
 % Flexibility parameters fro residue types from analysis of unrestrained 
 % FUS NTD
 flexpar(2).mean = 0.7158; % GLY
-flexpar(2).std = 0.023;
-flexpar(3).mean = 0.257; % PRO
-flexpar(3).std = 0.009;
+flexpar(2).std = 0.0226;
+flexpar(3).mean = 0.2574; % PRO
+flexpar(3).std = 0.0089;
 flexpar(4).mean = 0.3437; % THR
-flexpar(4).std = 0.005;
-flexpar(1).mean = 0.407; % all others
-flexpar(1).std = 0.020;
+flexpar(4).std = 0.0051;
+flexpar(1).mean = 0.4065; % all others
+flexpar(1).std = 0.0203;
 
 
 % initialize empty outputs

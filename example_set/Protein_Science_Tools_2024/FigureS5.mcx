@@ -5,14 +5,14 @@
 % an approximate electrostatic potential and visualizes the result 
 # log
 
-%!EnsembleAnalysis
+!EnsembleAnalysis
 
-%   get_PED PED00159.e001 Sic1 % yeast Sic1 N-terminal targeting domain  
-%   inertiaframe Sic1_inertia_frame Sic1
-%   density Sic1_density.mat Sic1 (A)3-92 1 % do not include initial tag residues
-%   property Sic1_electrostatic.mat Sic1 (A)3-92 1 electrostatic % do not include initial tag residues
+   get_PED PED00159.e001 Sic1 % yeast Sic1 N-terminal targeting domain  
+   inertiaframe Sic1_inertia_frame Sic1
+   density Sic1_density.mat Sic1 (A)3-92 1 % do not include initial tag residues
+   property Sic1_electrostatic.mat Sic1 (A)3-92 1 electrostatic % do not include initial tag residues
 
-%.EnsembleAnalysis
+.EnsembleAnalysis
 
 !Visualize
 

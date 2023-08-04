@@ -393,7 +393,6 @@ for c = 1:cmd_poi
             else
                 save_figures = true;
                 figure_format = cmd.extension;
-                figure_basname = cmd.fname;
             end
         case {'sitescan','sitescan!'}
             c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);

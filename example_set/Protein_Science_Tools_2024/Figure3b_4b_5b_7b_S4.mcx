@@ -14,7 +14,7 @@
 
    get_PED PED00159.e001 Sic_1 % yeast Sic1 N-terminal targeting domain (1-90)
    
-   sort Sic_1_sorted Sic_1
+   sort Sic1_sorted Sic_1
 
    measures Sic_1_measures Sic_1
      Rg

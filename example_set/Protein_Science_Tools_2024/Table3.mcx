@@ -1,0 +1,30 @@
+% Table 3
+% Comparison of various ensembles for hnRNP A1
+% data is imported from Zenodo
+%
+
+# log
+
+!ensembleanalysis
+
+   Zenodo 6384003.raw_superensemble_with_jackknife_ensembles.zip % import all files of the raw superensemble from Zenodo
+   get_Zenodo 6384003.hnRNP_A1_ddr_saxs_ensemble.ens hnRNP_A1_DEER_SAXS % construct DEER/SAXS ensemble
+   get_Zenodo 6384003.hnRNP_A1_ddr_saxs_pre_ensemble.ens hnRNP_A1_DEER_SAXS_PRE % construct DEER/SAXS/PRE ensemble
+   get_Zenodo 6384003.hnRNP_A1_ddr_only_ensemble.ens hnRNP_A1_DEER_SAXS_PRE % construct DEER ensemble
+
+   get_Zenodo 6384003.hnRNPA1_unrestrained_raw_ensemble.zip hnRNP_A1_unrestrained % very large unrestrained ensemble
+   get_Zenodo 6384003.hnRNP_A1_pre_from_unrestrained_ensemble.ens hnRNP_A1_PRE % construct PRE-only ensemble
+   cluster hnRNP_A1_unrestrained hnRNP_A1_unrestrained_500 500 % cluster ensemble for computational efficiency
+   
+   match hnRNP_A1_unrestrained_clustered hnRNP_A1_DEER_SAXS_PRE
+   match hnRNP_A1_unrestrained_clustered hnRNP_A1_DEER_SAXS
+   match hnRNP_A1_unrestrained_clustered hnRNP_A1_DEER
+   match hnRNP_A1_unrestrained_clustered hnRNP_A1_PRE
+   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_DEER_SAXS
+   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_DEER
+   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_PRE
+   match hnRNP_A1_DEER_SAXS hnRNP_A1_DEER
+   match hnRNP_A1_DEER_SAXS hnRNP_A1_PRE
+   match hnRNP_A1_DEER hnRNP_A1_PRE
+
+.ensembleanalysis

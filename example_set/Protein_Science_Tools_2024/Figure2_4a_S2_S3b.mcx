@@ -1,0 +1,32 @@
+% MMMx script generating Figure 2, Figure 4a, Figure S2, and Figure S3b
+# log
+
+!EnsembleAnalysis
+
+   get_PED PED00020.e001 MeV_1 % measles virus nucleoprotein (400-525)
+   flexibility MeV_1_flexibility MeV_1
+   order MeV_1_order MeV_1
+
+   measures MeV_1_measures MeV_1
+     Rg
+     matlab
+     csv
+     oriented
+	 compactness
+   .measures
+
+   get_PED PED00216.e001 CBP_ID4 % ID4 region from the human CREB-binding protein (CBP)
+   flexibility CBP_ID4_flexibility CBP_ID4
+   order CBP_ID4_order CBP_ID4
+   
+   measures CBP_ID4_measures CBP_ID4
+     Rg
+     matlab
+     csv
+     oriented
+	 compactness
+   .measures
+
+.EnsembleAnalysis
+
+# report

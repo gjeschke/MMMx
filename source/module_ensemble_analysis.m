@@ -91,6 +91,10 @@ for d = 1:length(control.directives)
             end
             ensembles{ensemble_poi} = ensemble_descriptor;
             commands{cmd_poi} = cmd;
+        case 'zenodo'
+            cmd_poi = cmd_poi + 1;
+            cmd.input = control.directives(d).options{1};
+            commands{cmd_poi} = cmd;
         case 'cluster'
             cmd_poi = cmd_poi + 1;
             cmd.entity = control.directives(d).options{1};
@@ -410,6 +414,55 @@ fprintf(logfid,'\n%i commands will be executed on %i ensembles\n\n',cmd_poi,ense
 for c = 1:cmd_poi
     cmd = commands{c};
     switch cmd.name
+        case 'zenodo'
+            args = split(cmd.input,'.');
+            fname = args{2};
+            k = 2;
+            while k < length(args)
+                k = k + 1;
+                fname = sprintf('%s.%s',fname,args{k});
+            end
+            query = sprintf('https://zenodo.org/api/records/%s',args{1});
+            try
+                zenodo_info = webread(query);
+            catch
+                fprintf(logfid,'ERROR: Access to Zenodo ID %s failed.\n',args{1});
+            end            
+            query = '';
+            k = 0;
+            while k < length(zenodo_info.files)
+                k = k + 1;
+                if strcmpi(zenodo_info.files(k).filename,fname)
+                    query = zenodo_info.files(k).links.download;
+                    break
+                end
+            end            
+            try
+                websave(fname,query);
+            catch
+                fprintf(logfid,'ERROR: Download of file %s from Zenodo ID %s failed.\n',fname,args{1});
+            end            
+            fprintf(logfid,'\nDownloaded file %s from Zenodo ID %s.\n',fname,args{1});
+            % unzip file if required
+            [~,~,ext] = fileparts(fname);            
+            switch ext
+                case '.zip'
+                    unzip(fname);
+                    fprintf(logfid,'Archive %s was unzipped.\n',fname);
+                case '.gz'
+                    filenames = gunzip(fname);
+                    fprintf(logfid,'Archive %s was unzipped.\n',fname);
+                    if length(filenames) == 1
+                        [~,~,ext2] = fileparts(filenames{1});
+                        if strcmpi(ext2,'.tar')
+                            untar(filenames{1});
+                            fprintf(logfid,'Archive %s was unzipped.\n',filenames{1});
+                        end
+                    end
+                case '.tar'
+                    untar(fname);
+                    fprintf(logfid,'Archive %s was unzipped.\n',fname);
+            end
         case 'addpdb'
             ensemble_poi = cmd.ensemble;
             ensemble_descriptor = ensembles{ensemble_poi};

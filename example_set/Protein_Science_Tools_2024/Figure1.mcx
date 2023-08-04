@@ -1,0 +1,15 @@
+% MMMx script generating Figure 1
+% this script additionally downloads AlphaFold predictions, and generates rigid-body files
+% and spin-labelling site scan lists for rigid bodies for PTBP1 
+# log
+
+!ExperimentDesign
+
+   RigiFlex A6PVI3 % UniProt ID of Nuclear cap-binding protein subunit 2-like, class F
+   RigiFlex Q6IPF2 % UniProt ID of Human ribonucleoprotein A1, class Sf
+   RigiFlex P26599 % UniProt ID of Polypyrimidine tract-binding protein 1, class Mf
+   RigiFlex A6NN06 % UnitProt ID of Putative UPF0633 protein MGC21881, class U
+   
+.ExperimentDesign
+
+# report

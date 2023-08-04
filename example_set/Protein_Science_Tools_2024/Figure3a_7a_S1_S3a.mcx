@@ -1,0 +1,31 @@
+% Figure S6b
+% loads PTBP1/EMCV-IRES DtoF ensemble from Zenodo, superimposes it on RRM2, and visualizes the result
+% MMM must be opened in the same Matlab instance or the 'execute' line must be deleted
+%
+
+# log
+
+!ensembleanalysis
+
+   get_Zenodo 8214049.FUS_unrestrained.zip FUS_unrestrained 
+   
+   flexibility FUS_unrestrained_flexibility FUS_unrestrained
+   
+   order FUS_unrestrained_order FUS_unrestrained
+   
+   measures FUS_measures FUS_unrestrained (A)4-270
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+
+   asphericity FUS_unrestrained (A)4-270
+
+.ensembleanalysis
+
+
+# report

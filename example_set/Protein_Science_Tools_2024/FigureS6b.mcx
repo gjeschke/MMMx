@@ -1,0 +1,30 @@
+% Figure S6b
+% loads PTBP1/EMCV-IRES DtoF ensemble from Zenodo, superimposes it on RRM2, and visualizes the result
+% MMM must be opened in the same Matlab instance or the 'execute' line must be deleted
+%
+
+# log
+
+!EnsembleAnalysis
+   get_Zenodo 7798970.PTBP1_EMCV_IRES_main_ensemble.zip PTBP1_EMCV_IRES % Integrative structure determination of PTBP1-viral IRES complex in solution
+   superimpose PTBP1_EMCV_IRES_superimposed_RRM2 PTBP1_EMCV_IRES (A)183-274
+.EnsembleAnalysis
+
+!visualize
+   getens PTBP1_EMCV_IRES_superimposed_RRM2.ens % the RRM1-superimposed ensemble generated above
+   script PTBP1_superimposed_RRM2_visualization
+   show (:) ribbon
+   color (A)58-154 crimson
+   color (A)155-182 darkgrey
+   color (A)183-274 mediumseagreen
+   color (A)275-337 darkgrey
+   color (A)338-429 deepskyblue
+   color (A)430-454 darkgrey
+   color (A)455-531 slateblue
+   color (B)287-371 goldenrod % this is the RNA
+   graphics PTBP1_RRM2_view_x.png png x
+   graphics PTBP1_RRM2_view_y.png png y
+   execute % comment out or delete this line if you want to generate only the MMM visualization script
+.visualize
+
+# report

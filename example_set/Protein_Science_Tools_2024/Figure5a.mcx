@@ -1,0 +1,13 @@
+% MMMx script generating Figure 5a
+% Downloads ensemble of PTBP1/EMCV-IRES DtoF from Zenodo and sorts it 
+# log
+
+!EnsembleAnalysis
+
+   get_Zenodo 7798970.PTBP1_EMCV_IRES_main_ensemble.zip PTBP1_EMCV_IRES % Integrative structure determination of PTBP1-viral IRES complex in solution
+
+   sort PTBP1_EMCV_IRES_sorted PTBP1_EMCV_IRES
+
+.EnsembleAnalysis
+
+# report

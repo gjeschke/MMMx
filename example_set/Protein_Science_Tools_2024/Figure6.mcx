@@ -1,0 +1,37 @@
+% MMMx script generating Figure 6
+% this script downloads one ensemble of MKK4 from the Protein Ensemble Database,
+% superimposes conformers in the principal axes system of the inertia tensor, 
+% computes a pseudo-electron density of the superimposed ensemble as well as
+% an approximate electrostatic potential and visualizes the result 
+# log
+
+!EnsembleAnalysis
+
+   get_PED PED00154.e001 MKK4 % regulatory domain of MKK4 (12–86)  
+   inertiaframe MKK4_inertia_frame MKK4
+   density MKK4_density.mat MKK4 (A)12-86 1
+   property MKK4_electrostatic.mat MKK4 (A)12-86 1 electrostatic
+
+.EnsembleAnalysis
+
+!Visualize
+
+   isosurface MKK4_density.mat MKK4_electrostatic.mat
+      colorscheme electrostatic
+      camvec 1 0 0
+      camupvec 0 1 0
+      limits adapted
+      figname MKK4_density_electrostatic_x.png
+   .isosurface
+
+   isosurface MKK4_density.mat MKK4_electrostatic.mat
+      colorscheme electrostatic
+      camvec 0 0 1
+      camupvec 0 1 0
+      limits adapted
+      figname MKK4_density_electrostatic_z.png
+   .isosurface
+
+.Visualize
+
+# report

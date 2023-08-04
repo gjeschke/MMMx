@@ -1,0 +1,28 @@
+% Comparison of ensembles for MKK4 regulatory domain
+% PED00154
+%
+%
+
+# log
+
+!ensembleanalysis
+
+   get_PED PED00154.e001 MKK4_1
+   get_PED PED00154.e002 MKK4_2
+   get_PED PED00154.e003 MKK4_3
+   get_PED PED00154.e004 MKK4_4
+   get_PED PED00154.e005 MKK4_5
+
+   match MKK4_1 MKK4_2
+   match MKK4_1 MKK4_3
+   match MKK4_1 MKK4_4
+   match MKK4_1 MKK4_5
+   match MKK4_2 MKK4_3
+   match MKK4_2 MKK4_4
+   match MKK4_2 MKK4_5
+   match MKK4_3 MKK4_4
+   match MKK4_3 MKK4_5
+   match MKK4_4 MKK4_5
+
+
+.ensembleanalysis

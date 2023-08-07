@@ -487,6 +487,12 @@ for c = 1:cmd_poi
             ensemble_poi = cmd.ensemble;
             ensemble_descriptor = ensembles{ensemble_poi};
             ensemble_name = ensemble_descriptor.name;
+            % allow for input of zipped ensembles 
+            [pname,fname,extension] = fileparts(cmd.input);
+            if strcmpi(extension,'.zip')
+                gunzip(cmd.input);
+                cmd.input = fullfile(pname,sprintf('%s.ens',fname));
+            end
             entity = get_ensemble(cmd.input);
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
             ensembles = store_ensemble(ensemble_name,entity,ensembles);
@@ -622,6 +628,7 @@ for c = 1:cmd_poi
                 local_order(c_entity,cmd.fname);
             end
         case 'compare'
+           fprintf(logfid,'\n*** We advise to use the keyword "match" for ensemble comparison ***\n\n');
            entity1 = retrieve_ensemble(cmd.entity1,ensembles,logfid);
            if isempty(entity1)
                warnings = warnings +1;

@@ -37,15 +37,15 @@ MMMx is available at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_ and `at 
     :caption: Modules
     :maxdepth: 2
 
+    ./enm
+    ./ensemble_analysis
+    ./ensemble_fit
     ./experiment_design
-    ./prepare
-    ./rigi
     ./flex
     ./flex_RNA
-    ./enm
-    ./ensemble_fit
-    ./ensemble_analysis
     ./locate
+    ./prepare
+    ./rigi
     ./visualize
     ./yasara_refine
 	

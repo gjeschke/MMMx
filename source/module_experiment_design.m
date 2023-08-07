@@ -319,26 +319,13 @@ for c = 1:cmd_poi
                 cmd.input = strcat(cmd.input,'.pdb');
             end
             added_files = dir(cmd.input); % find all files that match the pattern
-            [entity,exceptions] = get_pdb(added_files(1).name);
-            if ~isempty(exceptions) && ~isempty(exceptions{1})
-                warnings = warnings +1;
-                exceptions{warnings} = MException('module_ensembleanalysis:file_does_not_exist',...
-                    'PDB file %s could not be opened',added_files(1).name);
-                record_exception(exceptions{warnings},logfid);
-                return
+            filenames = cell(1,length(added_files));
+            for conf = 1:length(added_files)
+                filenames{conf} = added_files(conf).name;
             end
-            if length(added_files) > 1
-                for cf = 2:length(added_files)
-                    [entity,exceptions] = get_pdb(added_files(cf).name,[],entity);
-                    if ~isempty(exceptions) && ~isempty(exceptions{1})
-                        warnings = warnings +1;
-                        exceptions{warnings} = MException('module_ensembleanalysis:file_does_not_exist',...
-                            'PDB file %s could not be opened',added_files(cf).name);
-                        record_exception(exceptions{warnings},logfid);
-                        return
-                    end
-                end
-                entity.populations = ones(1,length(added_files))/length(added_files);
+            [entity,exceptions] = entity_from_filelist(filenames);
+            if ~isempty(exceptions) && ~isempty(exceptions{1})
+                return
             end
             ensemble_descriptor.entity = entity;
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);

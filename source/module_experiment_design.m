@@ -349,6 +349,17 @@ for c = 1:cmd_poi
             ensemble_poi = cmd.ensemble;
             ensemble_descriptor = ensembles{ensemble_poi};
             ensemble_name = ensemble_descriptor.name;
+            % allow for input of zipped ensembles 
+            [~,~,extension] = fileparts(cmd.input);
+            if strcmpi(extension,'.zip')
+                filenames = unzip(cmd.input);
+                for f = 1:length(filenames)
+                    [~,~,ext] = fileparts(filenames{f});
+                    if strcmpi(ext,'.ens')
+                        cmd.input = filenames{f};
+                    end
+                end
+            end
             entity = get_ensemble(cmd.input);
             fprintf(logfid,'\nCurrent ensemble is: %s\n',ensemble_name);
             ensembles = store_ensemble(ensemble_name,entity,ensembles);

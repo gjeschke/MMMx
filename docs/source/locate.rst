@@ -16,20 +16,22 @@ Arguments
 Remarks
     *   the density level corresponding to this isosurface is written to the logfile
 
-``getpdb``
+``cube``
 ---------------------------------
 
-Input of a template by reading a single local PDB file or retrieving a PDB structure from a server. 
+Specifies edge length of the density cube 
 
 .. code-block:: matlab
 
-    getpdb file
+    cube size
 
 Arguments
-    *   ``file`` - file name or PDB identifier, must have extension '.pdb' if it specifies a file
+    *   ``size`` - edge length of the density cube in Angstroem, cube volume is `size \times size \times size`, default is 75
 Remarks
-    *   if the template has several conformers, the first one is used
-	
+    *   the most probable location defines the cube center
+    *   the largest relative probability density at a cube border is reported in the logfile
+    *   if there is high relative probability density with the default values, the location is very poorly restrained
+
 ``getAlphaFold``
 ---------------------------------
 
@@ -44,19 +46,33 @@ Arguments
 Remarks
     *   note that not all proteins in UniProt have an AlphaFold prediction in the database
 	
-``save``
+``getpdb``
 ---------------------------------
 
-Specifies basis name for saving output conformers 
+Input of a template by reading a single local PDB file or retrieving a PDB structure from a server. 
 
 .. code-block:: matlab
 
-    save file
+    getpdb file
 
 Arguments
-    *   ``file`` - file name for output density cube file
+    *   ``file`` - file name or PDB identifier, must have extension '.pdb' if it specifies a file
 Remarks
-    *   extension '.mat' is appended if there is none, use extension '.mat' for MMMx density files or '.mrc' for MRC files
+    *   if the template has several conformers, the first one is used
+	
+``grid``
+---------------------------------
+
+Specifies number of grid points along one dimension of the density cube 
+
+.. code-block:: matlab
+
+    grid size
+
+Arguments
+    *   ``size`` - number of grid points along one dimension, grid size is `size \times size \times size`, default is 176
+Remarks
+    *   memory and computation time scale with `size^3`
 	
 ``reference``
 ---------------------------------
@@ -81,33 +97,17 @@ Remarks
     *   the file name is optional, full distributions can be used
     *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped
 
-``grid``
+``save``
 ---------------------------------
 
-Specifies number of grid points along one dimension of the density cube 
+Specifies basis name for saving output conformers 
 
 .. code-block:: matlab
 
-    grid size
+    save file
 
 Arguments
-    *   ``size`` - number of grid points along one dimension, grid size is `size \times size \times size`, default is 176
+    *   ``file`` - file name for output density cube file
 Remarks
-    *   memory and computation time scale with `size^3`
+    *   extension '.mat' is appended if there is none, use extension '.mat' for MMMx density files or '.mrc' for MRC files
 	
-``cube``
----------------------------------
-
-Specifies edge length of the density cube 
-
-.. code-block:: matlab
-
-    cube size
-
-Arguments
-    *   ``size`` - edge length of the density cube in Angstroem, cube volume is `size \times size \times size`, default is 75
-Remarks
-    *   the most probable location defines the cube center
-    *   the largest relative probability density at a cube border is reported in the logfile
-    *   if there is high relative probability density with the default values, the location is very poorly restrained
-

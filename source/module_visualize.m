@@ -50,8 +50,19 @@ for d = 1:length(control.directives)
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
         case {'getens','input'}
-            % [all_pdb,pop] = rd_ensemble_definition(control.directives(d).options{1});
-            entity = get_ensemble(control.directives(d).options{1});
+            cmd.input = control.directives(d).options{1};
+            % allow for input of zipped ensembles
+            [~,~,extension] = fileparts(cmd.input);
+            if strcmpi(extension,'.zip')
+                filenames = unzip(cmd.input);
+                for f = 1:length(filenames)
+                    [~,~,ext] = fileparts(filenames{f});
+                    if strcmpi(ext,'.ens')
+                        cmd.input = filenames{f};
+                    end
+                end
+            end
+            entity = get_ensemble(cmd.input);
             args = split(control.directives(d).options{1},'.');
             fname = args{1};
             svname = sprintf('MMMx_visualize_%s.pdb',fname);

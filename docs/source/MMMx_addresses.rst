@@ -133,7 +133,7 @@ If you want to address a location by its tag, you must not address rotamers in t
 Changes compared to MMM
 -----------------------
 
-The MMMx address format was designed to be as close as possible to the MMM address format, but allowing for full access to the ``MMMx:atomic`` representation of ensemble structure.
+The MMMx address format was designed to be as close as possible to the MMM address format, yet allowing for full access to the ``MMMx:atomic`` representation of ensemble structure.
 This entailed the following changes:
 
 * the structure identifier in square brackets is no longer required, since MMMx methods work on an entity
@@ -147,7 +147,7 @@ This entailed the following changes:
 Correspondence with ChimeraX
 ----------------------------
 
-MMMx has a function that can translate a subset of basic ChimeraX target specifications into MMM addresses. The following functionality of ChimeraX target specifications is **not** translated:
+MMMx has a function that can translate a subset of basic ChimeraX target specifications into MMMx addresses. The following functionality of ChimeraX target specifications is **not** translated:
 
 * usage of ``start`` and ``end`` in ranges, except for conformers
 * structure hierarchy with a depth of more than two (only structure and conformers allowed)

@@ -23,6 +23,44 @@ Remarks
 
 The following keywords are supported:
 
+``a_prop``
+---------------------------------
+
+Definition of `\alpha`-helix propensities. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    a_prop
+       'resnum' 'propensity'
+       ...
+    .a_prop
+
+Arguments
+    *   ``resnum`` - residue number, e.g. `120`
+    *   ``propensity`` - `\alpha`-helical propensity, number between 0 (none) and 1 (always `\alpha`-helical)
+Remarks
+    *   secondary structure propensities can be specified only for residues in the newly generated peptide
+    *   `\alpha`-helical propensity is realized by imposing backbone dihedrals `\psi` and `\phi` corresponding to `\alpha`-helical structure
+
+``acceptance``
+---------------------------------
+
+Controls acceptance threshold. 
+
+.. code-block:: matlab
+
+    acceptance threshold [mode]
+
+Arguments
+    *   ``threshold`` - fraction of models that should be accepted
+    *   ``mode`` - acceptance mode, can be 'uniform' or 'individual', default is 'uniform'  
+Remarks
+    *   this option requires that full distance distributions are used as restraints
+    *   with the acceptance key switches, a variant of von-Neumann rejection sampling is used
+    *   by default, Gaussian restraints are used even if full distributions are provided
+    *   the higher `threshold` is, the faster is model generaton, but the worse is agreement of the raw ensemble with distance distributions
+    *   use higher `threshold` if model yield is too low for the downstream part of the pipeline 
+
 ``addpdb``
 ---------------------------------
 
@@ -39,6 +77,128 @@ Remarks
     *   without any input, Flex generates free peptide chains
     *   use this command for attaching flexible peptide chains or linkers to existing structures
     *   in pipelines, use this command after previous Flex or FlexRNA modules
+	
+``b_prop``
+---------------------------------
+
+Definition of `\beta`-strand propensities. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    b_prop
+       'resnum' 'propensity'
+       ...
+    .b_prop
+
+Arguments
+    *   ``resnum`` - residue number, e.g. `147`
+    *   ``propensity`` - `\beta`-strand propensity, number between 0 (none) and 1 (always `\beta`-strand)
+Remarks
+    *   secondary structure propensities can be specified only for residues in the newly generated peptide
+    *   `\beta`-strand propensity is realized by imposing backbone dihedrals `\psi` and `\phi` corresponding to `\beta`-strand structure
+
+``c_anchor``
+---------------------------------
+
+C-terminal anchor residue for the peptide chain 
+
+.. code-block:: matlab
+
+    c_anchor address
+
+Arguments
+    *   ``address`` - MMMx residue address, such as '(D)121' 
+Remarks
+    *   the addressed residue must exist in the input conformers and must be a native amino acid
+    *   in pipelines with consecutive Flex modules, address is affected by automatic chain identifier changes when chains are concatenated by linkers
+
+``c_prop``
+---------------------------------
+
+Definition of cis-propensities. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    c_prop
+       'resnum' 'propensity'
+       ...
+    .c_prop
+
+Arguments
+    *   ``resnum`` - residue number, e.g. `211`
+    *   ``propensity`` - cis-propensity, number between 0 (always trans) and 1 (always cis)
+Remarks
+    *   cis-propensities can be specified only for residues in the newly generated peptide
+    *   cis-propensity is realized by imposing backbone dihedral `\omega = 0^\circ` corresponding to  a cis-residue
+    *   cis conformation usually occurs only for proline residues
+
+``clashtest``
+---------------------------------
+
+Number of generated residues after which intermediate clashtests are performed
+
+.. code-block:: matlab
+
+    clashtest spacing
+
+Arguments
+    *   ``spacing`` - spacing between intermediate clashtests during backbone generation, defaults to 10000 (practically never)
+Remarks
+    *   change default only if you suspect a problem that can be solved this way
+    *   usually, intermediate clashtests slow down model generation
+
+``ddr``
+---------------------------------
+
+Definition of distance distribution restraints. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    ddr label_1 [label_2]
+       'address_1' 'address_2' 'rmean' 'rstd' [@'fname']
+       ...
+    .ddr
+
+Arguments
+    *   ``label_1``, ``label_2`` - label types, e.g. `mtsl`, `dota-gd`
+    *   ``address_1``, ``address_2`` addresses of the two labelled sites, e.g., `(A)16`, `107`
+    *   ``rmean`` mean distance in Angstroem, e.g. `32.5`
+    *   ``rstd`` standard deviation in Angstroem, e.g. `15.5`
+    *   ``fname`` optional file name of the distance distribution 
+Remarks
+    *   if both labels are the same, it is sufficient to specify the label type once
+    *   use separate 'ddr' blocks for each label combination
+    *   if a residue is in the newly generated peptide, use only the residue number as its address
+    *   the file name is optional, full distributions can be used
+    *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped, these parameters are then automatically computed from the distribution
+    *   for monomodal distributions, the advantage of using full distributions in terms of ensemble quality is (at best) minor 
+    *   using full distributions provides more convenient control over model yield with the 'acceptance' keyword
+ 
+``depth``
+---------------------------------
+
+Definition of bilayer immersion depth restraints. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    depth label
+       'resnum' 'rmean' 'rstd'
+       ...
+    .depth
+
+Arguments
+    *   ``label`` - label types, e.g. `CA` for Calpha
+    *   ``resnum`` - residue number of the site, e.g., `3`
+    *   ``rmean`` mean distance from bilayer central plane in Angstroem, e.g. `20`
+    *   ``rstd`` standard deviation if the distribution in Angstroem, e.g. `15.5`
+    *   ``fname`` file name of the distance distribution 
+Remarks
+    *   input structures must be in a frame where the bilayer normal is the z axis, use Prepare
+    *   use `CA` as label identifier if you are unsure
+    *   use separate 'depth' blocks for different labels
+    *   depth restraints can be specified only for sites in the newly generated peptide
+    *   use a negative argument instead of `rmean` for specifying a lower bound
+    *   use a negative argument instead of `rstd` for specifying an upper bound
 	
 ``expand``
 ---------------------------------
@@ -71,6 +231,75 @@ Remarks
     *   the PDB file can contain several models (conformers) or a single one
     *   for MMMx ensemble PDB files with population information in ``REMARK 400``, such information is read
 	
+``loose``
+---------------------------------
+
+Switches off sidechain clash test
+
+.. code-block:: matlab
+
+    loose
+
+Remarks
+    *   this option is intended only for cases where model generation is extremely slow or impossible otherwise
+    *   do not use models obtained with the `loose` option without subsequent refinement (e.g. using YasaraRefine)
+    *   models may clash so strongly that refinement with other programs fails
+
+``n_anchor``
+---------------------------------
+
+N-terminal anchor residue for the peptide chain 
+
+.. code-block:: matlab
+
+    n_anchor address
+
+Arguments
+    *   ``address`` - MMMx residue address, such as '(A)89' 
+Remarks
+    *   the addressed residue must exist in the input conformers and must be a native amino acid
+    *   in pipelines with consecutive Flex modules, address is affected by automatic chain identifier changes when chains are concatenated by linkers
+
+``oligomer``
+---------------------------------
+
+Definition of oligomer distance distribution restraints. This is a block key with `n` lines for `n` restraints. 
+
+.. code-block:: matlab
+
+    oligomer label n
+       'resnum' 'rmean' 'rstd' [@'fname']
+       ...
+    .oligomer
+
+Arguments
+    *   ``label`` - label types, e.g. `ia-proxyl`
+    *   ``n`` - number of symmetry-related protomers in the oligomer, e.g. `3`
+    *   ``resnum`` - residue number of the site, e.g. `7`
+    *   ``rmean`` mean distance in Angstroem, e.g. `32.5`
+    *   ``rstd`` standard deviation in Angstroem, e.g. `15.5`
+    *   ``fname`` file name of the distance distribution 
+Remarks
+    *   input structures must be in a frame where the Cn symmetry axis is the z axis, use Prepare
+    *   use separate 'oligomer' blocks for different labels
+    *   oligomer restraints can be specified only for sites in the newly generated peptide
+    *   the file name is optional, full distributions can be used
+    *   the use of full distributions is implemented, but has not yet been tested in detail
+	
+``parallel``
+---------------------------------
+
+Controls parallelization of conformer generation. 
+
+.. code-block:: matlab
+
+    parallel trials
+
+Arguments
+    *   ``trials`` - number of trials computed in parallel before analysis, defaults to 100
+Remarks
+    *   change default only if you have a very good reason
+
 ``save``
 ---------------------------------
 
@@ -118,172 +347,20 @@ Arguments
 Remarks
     *   the sequence must consist of native amino acids
 
-``n_anchor``
+``skipto``
 ---------------------------------
 
-N-terminal anchor residue for the peptide chain 
+Skips input conformers. 
 
 .. code-block:: matlab
 
-    n_anchor address
+    skipto first
 
 Arguments
-    *   ``address`` - MMMx residue address, such as '(A)89' 
+    *   ``first`` - first input conformer for which models are generated
 Remarks
-    *   the addressed residue must exist in the input conformers and must be a native amino acid
-    *   in pipelines with consecutive Flex modules, address is affected by automatic chain identifier changes when chains are concatenated by linkers
-
-``c_anchor``
----------------------------------
-
-C-terminal anchor residue for the peptide chain 
-
-.. code-block:: matlab
-
-    c_anchor address
-
-Arguments
-    *   ``address`` - MMMx residue address, such as '(D)121' 
-Remarks
-    *   the addressed residue must exist in the input conformers and must be a native amino acid
-    *   in pipelines with consecutive Flex modules, address is affected by automatic chain identifier changes when chains are concatenated by linkers
-
-``ddr``
----------------------------------
-
-Definition of distance distribution restraints. This is a block key with `n` lines for `n` restraints. 
-
-.. code-block:: matlab
-
-    ddr label_1 [label_2]
-       'address_1' 'address_2' 'rmean' 'rstd' [@'fname']
-       ...
-    .ddr
-
-Arguments
-    *   ``label_1``, ``label_2`` - label types, e.g. `mtsl`, `dota-gd`
-    *   ``address_1``, ``address_2`` addresses of the two labelled sites, e.g., `(A)16`, `107`
-    *   ``rmean`` mean distance in Angstroem, e.g. `32.5`
-    *   ``rstd`` standard deviation in Angstroem, e.g. `15.5`
-    *   ``fname`` optional file name of the distance distribution 
-Remarks
-    *   if both labels are the same, it is sufficient to specify the label type once
-    *   use separate 'ddr' blocks for each label combination
-    *   if a residue is in the newly generated peptide, use only the residue number as its address
-    *   the file name is optional, full distributions can be used
-    *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped, these parameters are then automatically computed from the distribution
-    *   for monomodal distributions, the advantage of using full distributions in terms of ensemble quality is (at best) minor 
-    *   using full distributions provides more convenient control over model yield with the 'acceptance' keyword
- 
-``oligomer``
----------------------------------
-
-Definition of oligomer distance distribution restraints. This is a block key with `n` lines for `n` restraints. 
-
-.. code-block:: matlab
-
-    oligomer label n
-       'resnum' 'rmean' 'rstd' [@'fname']
-       ...
-    .oligomer
-
-Arguments
-    *   ``label`` - label types, e.g. `ia-proxyl`
-    *   ``n`` - number of symmetry-related protomers in the oligomer, e.g. `3`
-    *   ``resnum`` - residue number of the site, e.g. `7`
-    *   ``rmean`` mean distance in Angstroem, e.g. `32.5`
-    *   ``rstd`` standard deviation in Angstroem, e.g. `15.5`
-    *   ``fname`` file name of the distance distribution 
-Remarks
-    *   input structures must be in a frame where the Cn symmetry axis is the z axis, use Prepare
-    *   use separate 'oligomer' blocks for different labels
-    *   oligomer restraints can be specified only for sites in the newly generated peptide
-    *   the file name is optional, full distributions can be used
-    *   the use of full distributions is implemented, but has not yet been tested in detail
-	
-``depth``
----------------------------------
-
-Definition of bilayer immersion depth restraints. This is a block key with `n` lines for `n` restraints. 
-
-.. code-block:: matlab
-
-    depth label
-       'resnum' 'rmean' 'rstd'
-       ...
-    .depth
-
-Arguments
-    *   ``label`` - label types, e.g. `CA` for Calpha
-    *   ``resnum`` - residue number of the site, e.g., `3`
-    *   ``rmean`` mean distance from bilayer central plane in Angstroem, e.g. `20`
-    *   ``rstd`` standard deviation if the distribution in Angstroem, e.g. `15.5`
-    *   ``fname`` file name of the distance distribution 
-Remarks
-    *   input structures must be in a frame where the bilayer normal is the z axis, use Prepare
-    *   use `CA` as label identifier if you are unsure
-    *   use separate 'depth' blocks for different labels
-    *   depth restraints can be specified only for sites in the newly generated peptide
-    *   use a negative argument instead of `rmean` for specifying a lower bound
-    *   use a negative argument instead of `rstd` for specifying an upper bound
-	
-``a_prop``
----------------------------------
-
-Definition of `\alpha`-helix propensities. This is a block key with `n` lines for `n` restraints. 
-
-.. code-block:: matlab
-
-    a_prop
-       'resnum' 'propensity'
-       ...
-    .a_prop
-
-Arguments
-    *   ``resnum`` - residue number, e.g. `120`
-    *   ``propensity`` - `\alpha`-helical propensity, number between 0 (none) and 1 (always `\alpha`-helical)
-Remarks
-    *   secondary structure propensities can be specified only for residues in the newly generated peptide
-    *   `\alpha`-helical propensity is realized by imposing backbone dihedrals `\psi` and `\phi` corresponding to `\alpha`-helical structure
-
-``b_prop``
----------------------------------
-
-Definition of `\beta`-strand propensities. This is a block key with `n` lines for `n` restraints. 
-
-.. code-block:: matlab
-
-    b_prop
-       'resnum' 'propensity'
-       ...
-    .b_prop
-
-Arguments
-    *   ``resnum`` - residue number, e.g. `147`
-    *   ``propensity`` - `\beta`-strand propensity, number between 0 (none) and 1 (always `\beta`-strand)
-Remarks
-    *   secondary structure propensities can be specified only for residues in the newly generated peptide
-    *   `\beta`-strand propensity is realized by imposing backbone dihedrals `\psi` and `\phi` corresponding to `\beta`-strand structure
-
-``c_prop``
----------------------------------
-
-Definition of cis-propensities. This is a block key with `n` lines for `n` restraints. 
-
-.. code-block:: matlab
-
-    c_prop
-       'resnum' 'propensity'
-       ...
-    .c_prop
-
-Arguments
-    *   ``resnum`` - residue number, e.g. `211`
-    *   ``propensity`` - cis-propensity, number between 0 (always trans) and 1 (always cis)
-Remarks
-    *   cis-propensities can be specified only for residues in the newly generated peptide
-    *   cis-propensity is realized by imposing backbone dihedral `\omega = 0^\circ` corresponding to  a cis-residue
-    *   cis conformation usually occurs only for proline residues
+    *   by default, there is no skipping
+    *   this can be used after a crash or job timeout
 
 ``verbose``
 ---------------------------------
@@ -300,81 +377,3 @@ Remarks
     *   by default, verbose is off
     *   verbose without argument has a default of 200 trials
     *   verbose writes time per generated model, an estimate of remaining computation time, and statistics on the reasons for failed trials
-
-``acceptance``
----------------------------------
-
-Controls acceptance threshold. 
-
-.. code-block:: matlab
-
-    acceptance threshold [mode]
-
-Arguments
-    *   ``threshold`` - fraction of models that should be accepted
-    *   ``mode`` - acceptance mode, can be 'uniform' or 'individual', default is 'uniform'  
-Remarks
-    *   this option requires that full distance distributions are used as restraints
-    *   with the acceptance key switches, a variant of von-Neumann rejection sampling is used
-    *   by default, Gaussian restraints are used even if full distributions are provided
-    *   the higher `threshold` is, the faster is model generaton, but the worse is agreement of the raw ensemble with distance distributions
-    *   use higher `threshold` if model yield is too low for the downstream part of the pipeline 
-
-``skipto``
----------------------------------
-
-Skips input conformers. 
-
-.. code-block:: matlab
-
-    skipto first
-
-Arguments
-    *   ``first`` - first input conformer for which models are generated
-Remarks
-    *   by default, there is no skipping
-    *   this can be used after a crash or job timeout
-
-``parallel``
----------------------------------
-
-Controls parallelization of conformer generation. 
-
-.. code-block:: matlab
-
-    parallel trials
-
-Arguments
-    *   ``trials`` - number of trials computed in parallel before analysis, defaults to 100
-Remarks
-    *   change default only if you have a very good reason
-
-``loose``
----------------------------------
-
-Switches off sidechain clash test
-
-.. code-block:: matlab
-
-    loose
-
-Remarks
-    *   this option is intended only for cases where model generation is extremely slow or impossible otherwise
-    *   do not use models obtained with the `loose` option without subsequent refinement (e.g. using YasaraRefine)
-    *   models may clash so strongly that refinement with other programs fails
-
-``clashtest``
----------------------------------
-
-Number of generated residues after which intermediate clashtests are performed
-
-.. code-block:: matlab
-
-    clashtest spacing
-
-Arguments
-    *   ``spacing`` - spacing between intermediate clashtests during backbone generation, defaults to 10000 (practically never)
-Remarks
-    *   change default only if you suspect a problem that can be solved this way
-    *   usually, intermediate clashtests slow down model generation
-

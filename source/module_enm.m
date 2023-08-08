@@ -102,7 +102,7 @@ for d = 1:length(control.directives)
                 chains(k) = control.directives(d).options{k}(1);
             end
             restraints.chains = chains;
-        case {'deer','ddr'}
+        case 'ddr'
             ddr_poi = ddr_poi + 1; % increase ddr block counter
             fprintf(logfid,'ddr %s',control.directives(d).options{1}); % echo directive to log file
             restraints.ddr(ddr_poi).labels{1} = control.directives(d).options{1};

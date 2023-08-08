@@ -38,14 +38,14 @@ Arguments
 Remarks
     *   if the key is missing, the first conformer is used
 	
-``deer``
+``ddr``
 ---------------------------------
 
 Definition of distance distribution restraints. This is a block key with `n` lines for `n` restraints. 
 
 .. code-block:: matlab
 
-    deer label_1 [label_2]
+    ddr label_1 [label_2]
        'address_1' 'address_2' 'rmean' 'rstd' [@'fname']
        ...
     .ddr
@@ -64,7 +64,6 @@ Remarks
     *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped
     *   distance distribution restraints are always treated as full distribution, if only ``rmean`` and ``rstd`` are provided, the distance is computed
     *   test of distance distribution restraints is done with full models and based on the overlap metric
-    *   keyword ``ddr`` is synonymous with ``deer`` for backward compatibility
 
 ``drag``
 ---------------------------------

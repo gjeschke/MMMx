@@ -63,13 +63,13 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case {'input','getpdb'}
             inname = control.directives(d).options{1};
-            fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
+            fprintf(logfid,'Structure from PDB file(s) %s will be optimized\n',inname);
         case 'addpdb'
             inname = control.directives(d).options{1};
-            fprintf(logfid,'Structure from PDB file(s) %s will be optimized instead of input entity\n',inname);
-        case 'ensemble'
+            fprintf(logfid,'Structure from PDB file(s) %s will be optimized\n',inname);
+        case {'getens','ensemble'}
             initial_ensemble = control.directives(d).options{1};
-            fprintf(logfid,'Ensemble %s will be optimized instead of input entity\n',initial_ensemble);
+            fprintf(logfid,'Ensemble %s will be optimized\n',initial_ensemble);
         case 'repack'
             repack = true;
         case 'save'
@@ -91,6 +91,17 @@ end
 
 pop = [];
 if ~isempty(initial_ensemble)
+    % allow for input of zipped ensembles
+    [~,~,extension] = fileparts(initial_ensemble);
+    if strcmpi(extension,'.zip')
+        filenames = unzip(ininitial_ensemble);
+        for f = 1:length(filenames)
+            [~,~,ext] = fileparts(filenames{f});
+            if strcmpi(ext,'.ens')
+                initial_ensemble = filenames{f};
+            end
+        end
+    end
     [all_files,pop,exceptions0] = rd_ensemble_definition(initial_ensemble);
     if ~isempty(exceptions0) && ~isempty(exceptions{1})
         warnings = warnings + 1;

@@ -132,6 +132,55 @@ for d = 1:length(control.directives)
             plot_result = true;
         case {'initial'}
             initial_ensemble = control.directives(d).options{1};
+        case 'zenodo'
+            args = split(control.directives(d).options{1},'.');
+            fname = args{2};
+            k = 2;
+            while k < length(args)
+                k = k + 1;
+                fname = sprintf('%s.%s',fname,args{k});
+            end
+            query = sprintf('https://zenodo.org/api/records/%s',args{1});
+            try
+                zenodo_info = webread(query);
+            catch
+                fprintf(logfid,'ERROR: Access to Zenodo ID %s failed.\n',args{1});
+            end
+            query = '';
+            k = 0;
+            while k < length(zenodo_info.files)
+                k = k + 1;
+                if strcmpi(zenodo_info.files(k).filename,fname)
+                    query = zenodo_info.files(k).links.download;
+                    break
+                end
+            end
+            try
+                websave(fname,query);
+            catch
+                fprintf(logfid,'ERROR: Download of file %s from Zenodo ID %s failed.\n',fname,args{1});
+            end
+            fprintf(logfid,'\nDownloaded file %s from Zenodo ID %s.\n',fname,args{1});
+            % unzip file if required
+            [~,~,ext] = fileparts(fname);
+            switch ext
+                case '.zip'
+                    unzip(fname);
+                    fprintf(logfid,'Archive %s was unzipped.\n',fname);
+                case '.gz'
+                    filenames = gunzip(fname);
+                    fprintf(logfid,'Archive %s was unzipped.\n',fname);
+                    if length(filenames) == 1
+                        [~,~,ext2] = fileparts(filenames{1});
+                        if strcmpi(ext2,'.tar')
+                            untar(filenames{1});
+                            fprintf(logfid,'Archive %s was unzipped.\n',filenames{1});
+                        end
+                    end
+                case '.tar'
+                    untar(fname);
+                    fprintf(logfid,'Archive %s was unzipped.\n',fname);
+            end
         case 'figures'
             if ~isempty(control.directives(d).options) && strcmpi(control.directives(d).options{1},'off')
                 save_figures = false;
@@ -400,6 +449,19 @@ if ~isempty(added_ensemble)
     end
 end
 
+if ~isempty(initial_ensemble)
+    % allow for input of zipped ensembles
+    [~,~,extension] = fileparts(initial_ensemble);
+    if strcmpi(extension,'.zip')
+        filenames = unzip(initial_ensemble);
+        for f = 1:length(filenames)
+            [~,~,ext] = fileparts(filenames{f});
+            if strcmpi(ext,'.ens')
+                initial_ensemble = filenames{f};
+            end
+        end
+    end
+end
 [initial_files,pop] = rd_ensemble_definition(initial_ensemble);
 pop = pop';
 [~,~,ext] = fileparts(added_conformers);

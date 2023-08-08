@@ -40,6 +40,7 @@ Remarks
     *   the file-list-with-weights format of the included '.ens' file is human readable and easy to process by other software
     *   we favour this format for deposition on Zenodo
     *   the format can be reimported with the ``get_Zenodo`` keyword
+    *   for processing with some other software, saving to a single PDB file with the keyword ``save`` may be the better option
   
 	
 ``asphericity``
@@ -381,7 +382,8 @@ Arguments
     *   ``output`` - name of the output file, extension '.pdb' is appended, if none
     *   ``ensemble_id`` - identifier of the ensemble to be save
 Remarks
-    *   populations are stored in a REMARK 400 field
+    *   weights (populations) are stored in a REMARK 400 field, MMMx can read them on reloading, but other software cannot
+    *   in some contexts, saving to an archive of individual conformer files and a file list with weights is better, use keyword ``archive`` for that 
   
 ``sort``
 ---------------------------------

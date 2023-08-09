@@ -94,7 +94,7 @@ if ~isempty(initial_ensemble)
     % allow for input of zipped ensembles
     [~,~,extension] = fileparts(initial_ensemble);
     if strcmpi(extension,'.zip')
-        filenames = unzip(ininitial_ensemble);
+        filenames = unzip(initial_ensemble);
         for f = 1:length(filenames)
             [~,~,ext] = fileparts(filenames{f});
             if strcmpi(ext,'.ens')

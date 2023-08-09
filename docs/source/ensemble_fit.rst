@@ -274,7 +274,7 @@ Remarks
     *   for disordered systems, a general 'taur' for all conformers may be a poor approximation
     *   if standard deviation is missing, all PRE restraints in this block have the same weight 
 	
-``prerate``
+``prerates``
 ---------------------------------
 
 Definition of NMR paramagnetic relaxation enhancement (PRE) restraints as relaxation enhancement rates `\Gamma_2`. This is a block key with `n` lines for `n` restraints. 

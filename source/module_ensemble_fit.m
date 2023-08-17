@@ -1146,6 +1146,9 @@ if nnllsq_fit
     figure(1); clf; hold on;
     plot(sorted_populations,'.','MarkerSize',12,'Color',[0.75,0.0,0.0]);
     plot([length(included),length(included)],[0,max(sorted_populations)],'Color',[0.25,0.25,0.25]);
+    data = [(1:length(sorted_populations))' sorted_populations opt.threshold*ones(length(sorted_populations),1)];
+    description = {'conformer' 'population' 'threshold'}; 
+    put_csv('nnllsq_reduction.csv',data,description);
     for kr = 1:length(fit_task.deer_valid)
         if fit_task.deer_valid(kr)
             ndat = length(fit_task.deer(kr).exp_ff);
@@ -1706,7 +1709,7 @@ if save_csv
             overlap_E = [];
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
             data = fit_task.r_axis.';
-            column_string = 'r';
+            column_string = 'r';            
             exp_rmean = '(exp. na)';
             exp_rstd = '(exp. na)';
             if ~isempty(fit_task.ddr(kr).exp_distr)
@@ -1772,7 +1775,9 @@ if save_csv
             % save the data
             fprintf(logfid,' CSV columns: %s\n',column_string);
             datname = sprintf('ddr_fit_%s_%s.csv',site1,site2);
-            writematrix(data,datname);
+            description = split(column_string,',');
+            put_csv(datname,data,description');
+%            writematrix(data,datname);
         end
     end
     overlap = overlap^(1/nr);
@@ -1786,7 +1791,9 @@ if save_csv
             data = data(:,1:4);
             % save the data
             datname = sprintf('sas_fit_%s.csv',datafile);
-            writematrix(data,datname);
+            description = {'q' 'experimental' 'error' 'fit'};
+            put_csv(datname,data,description);
+%            writematrix(data,datname);
         end
     end
     if nr_pre > 0
@@ -1807,7 +1814,9 @@ if save_csv
             end
             data = data(1:kft,:);
             datname = sprintf('PRE_fit_%s.csv',restraints.pre(kr).site);
-            writematrix(data,datname);
+            description = {'residue' 'experimental' 'error' 'fit'};
+            put_csv(datname,data,description);
+            % writematrix(data,datname);
             codename = sprintf('PRE_residues_%s.csv',restraints.pre(kr).site);
             fid = fopen(codename,'wt');
             for nr_pre = 1:kft

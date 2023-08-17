@@ -27,6 +27,8 @@ entity = [];
 
 my_path = pwd;
 
+timing = tic;
+
 if ~exist('control_file','var') || isempty(control_file)
     [control_file,path] = uigetfile('*.mcx');
     cd(path);
@@ -63,7 +65,6 @@ for module = 1:length(controller)
                 logfid = fopen(def_logfile,'wt');
             end
             fprintf(logfid,'> Executing %s <\n\n',control_file);
-            timing = tic;
         case 'log'
             logfid = fopen(def_logfile,'wt');
             fprintf(logfid,'> Executing %s <\n\n',control_file);

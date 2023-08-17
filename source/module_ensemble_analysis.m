@@ -101,6 +101,19 @@ for d = 1:length(control.directives)
             cmd.new_ensemble = control.directives(d).options{2};
             cmd.size = str2double(control.directives(d).options{3});
             commands{cmd_poi} = cmd;
+        case 'transition'
+            cmd_poi = cmd_poi + 1;
+            cmd.entity1 = control.directives(d).options{1};
+            cmd.entity2 = control.directives(d).options{2};
+            cmd.superimposed = '';
+            cmd.visualize = '';
+            if length(control.directives(d).options) >= 3
+                cmd.superimposed = control.directives(d).options{3};
+            end
+            if length(control.directives(d).options) >= 4
+                cmd.visualize = control.directives(d).options{4};
+            end
+            commands{cmd_poi} = cmd;
         case 'figures'
             cmd_poi = cmd_poi + 1;
             cmd.extension = control.directives(d).options{1};
@@ -687,7 +700,7 @@ for c = 1:cmd_poi
            if isempty(entity1)
                warnings = warnings +1;
                exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                   'tried to comparison with entity %s, which is unknown',cmd.entity1);
+                   'tried comparison with entity %s, which is unknown',cmd.entity1);
                record_exception(exceptions{warnings},logfid);
                return
            end
@@ -695,7 +708,7 @@ for c = 1:cmd_poi
            if isempty(entity2)
                warnings = warnings +1;
                exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                   'tried to comparison with entity %s, which is unknown',cmd.entity2);
+                   'tried comparison with entity %s, which is unknown',cmd.entity2);
                record_exception(exceptions{warnings},logfid);
                return
            end
@@ -767,6 +780,43 @@ for c = 1:cmd_poi
                    fprintf(logfid,'%s.%i is matched by %s.%i with DRMSD of %4.1f %c\n',cmd.entity1,best(k),cmd.entity2,k,mismatches(k),char(197));
                end
            end
+        case 'transition'
+           clear options
+           args = split(cmd.entity1,'.');
+           cmd.entity1 = args{1};
+           if length(args)>1
+               options.chain1 = args{2};
+           else
+               options.chain1 = '';
+           end
+           args = split(cmd.entity2,'.');
+           cmd.entity2 = args{1};
+           if length(args)>1
+               options.chain2 = args{2};
+           else
+               options.chain1 = '';
+           end
+           entity1 = retrieve_ensemble(cmd.entity1,ensembles,logfid);
+           if isempty(entity1)
+               warnings = warnings +1;
+               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                   'tried comparison with entity %s, which is unknown',cmd.entity1);
+               record_exception(exceptions{warnings},logfid);
+               return
+           end
+           entity2 = retrieve_ensemble(cmd.entity2,ensembles,logfid);
+           if isempty(entity2)
+               warnings = warnings +1;
+               exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
+                   'tried to comparison with entity %s, which is unknown',cmd.entity2);
+               record_exception(exceptions{warnings},logfid);
+               return
+           end
+           options.visualize = cmd.visualize;
+           options.fname1 = cmd.entity1;
+           options.fname2 = cmd.entity2;
+           options.superimposed = cmd.superimposed;
+           clusters = cluster_transition(entity1,entity2,options);
         case 'subsample'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;

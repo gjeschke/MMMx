@@ -113,7 +113,7 @@ for kc = 1:length(chains)
                     else % no selection on residue level
                         for ka = 1:length(atoms) % test all atoms for selection
                             atom = atoms{ka};
-                            if isstrprop(atom(1),'upper') % these are atom fields
+                            if isstrprop(atom(1),'upper') && isfield(entity.(chain).(residue).(atom),'index') % these are atom fields
                                 at_index =  entity.(chain).(residue).(atom).index;
                                 old_selection(:,3) = at_index; % set current atom index
                                 if entity.(chain).(residue).(atom).selected

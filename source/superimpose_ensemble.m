@@ -50,6 +50,7 @@ else
     selection_template = selected;
 end
 
+% selection_template = strcat(selection_template,'.N,CA,C,O');
 if ~exist('template','var') || isempty(template)
     [tcoor,~,~,exceptions] = get_coor(entity,['{1}' selected]);
 else
@@ -79,6 +80,7 @@ end
 
 for c = 1:length(entity.populations)
     [ccoor,~,~,exceptions] = get_coor(entity,[sprintf('{%i}',c) selected]);
+    % [ccoor,~,~,exceptions] = get_coor(entity,[sprintf('{%i}',c) selected '.N,CA,C,O']);
     if ~isempty(exceptions)
         if ~isempty(exceptions{1})
             return

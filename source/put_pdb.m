@@ -276,7 +276,7 @@ for kconf = 1:length(conformer_order)
                         atoms = fieldnames(entity.(chain).(residue));
                         for ka = 1:length(atoms) % expand over all atoms
                             atom = atoms{ka};
-                            if isstrprop(atom(1),'upper') % these are atom fields
+                            if isstrprop(atom(1),'upper') && isfield(entity.(chain).(residue).(atom),'index');% these are atom fields
                                 indices(3) =  entity.(chain).(residue).(atom).index;
                                 atname = atom;
                                 if length(atname) > 2 && strcmp(atname(1:2),'Z_')
@@ -492,7 +492,9 @@ function atnum = wr_pdb_line(fid,entity,atom_index,info,atnum)
 % .bfactor    temperature factor, B factor
 % .charge     charge
 
-if ~isempty(atom_index)
+[m,~] = size(entity.xyz);
+
+if ~isempty(atom_index) && atom_index > 0 && atom_index <= m
     atnum = atnum + 1;
     xyz = entity.xyz(atom_index,:);
     occ = double(entity.occupancies(atom_index))/100;

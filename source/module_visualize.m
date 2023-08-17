@@ -287,7 +287,13 @@ for k = 1:length(all_pdb)
                 end
             case {'show'}
                 if strcmpi(cmd.mode,'snake')
-                    show_snake(ofid,pop(k),sadr,cmd.address);
+                    if length(all_pdb) == 1
+                        for conformer = 1:length(pop)
+                            show_snake(ofid,pop(conformer),sprintf('[%s]{%i}',tag,conformer),cmd.address);
+                        end
+                    else
+                        show_snake(ofid,pop(k),sadr,cmd.address);
+                    end
                     pop_encode_transparency = false;
                 else
                     fprintf(ofid,'show %s %s\n',strcat(sadr,cmd.address),cmd.mode);
@@ -444,7 +450,7 @@ end
 
 function show_snake(ofid,pop,sadr,address)
 % 
-fprintf(ofid,'show %s%s coil %6.3f\n',sadr,address,pop);
+fprintf(ofid,'show %s%s coil %6.3f\n',sadr,address,sqrt(pop));
 [chains,residues] = split_address(address);
 seg_length = residues(end) - residues(1) + 1;
 for c = 1:length(chains)

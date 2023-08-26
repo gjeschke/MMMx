@@ -1,5 +1,5 @@
-function [coor1,err,violations]=bound_refiner(coor0,lower_bounds,upper_bounds,iter,vtol)
-% coor1=bound_refiner(coor0,lower_bounds,upper_bounds,iter)
+function [coor1,err,violations,all_violations] = embedding_refiner(coor0,lower_bounds,upper_bounds,iter,vtol)
+% coor1 = embedding_refiner(coor0,lower_bounds,upper_bounds,iter)
 %
 % A set of coordinates obtained from embedding is iteratively changed until
 % it conforms to given lower and upper distance bounds within tolerance
@@ -37,19 +37,28 @@ lambda=linspace(1/iter,1,iter);
 
 coor=coor0;
 coor1=coor0;
+violations = 1e12;
+all_violations = zeros(iter,1);
 for k=1:iter
     if mod(k,100)==0
         [lower_dev,upper_dev]=test_embed(coor,lower_bounds,upper_bounds);
+        violations0 = violations;
         violations=sum(sum(lower_dev.^2+upper_dev.^2));
-        if violations<vtol
+        all_violations(k) = violations;
+        if violations<vtol || violations > violations0
+            k = k - 1; %#ok<FXSET>
             break;
         end
-        % disp(sprintf('%s%i%s%5.3f','Iteration ',k,' Violation number: ',violations));
+        % fprintf(1,'%s%i%s%5.3f\n','Iteration ',k,' Violation number: ',violations);
     end
     dmat=coor2dmat(coor);
     ndmat=dmat+(dmat==0);
     [lower_dev,upper_dev]=test_embed(coor,lower_bounds,upper_bounds);
     ndev=(lower_dev-upper_dev)./ndmat;
+    if sum(sum(isnan(ndev)))
+        k = k - 1; %#ok<FXSET>
+        break
+    end
     for p=1:n
         cvec=zeros(1,3);
         for pp=1:n
@@ -59,6 +68,7 @@ for k=1:iter
     end
     coor=coor1;
 end
+all_violations = all_violations(1:k);
 if violations<vtol
     % disp(sprintf('%s%i%s','Refinement converged after ',k,' iterations.'));
 else

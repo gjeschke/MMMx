@@ -816,7 +816,40 @@ for c = 1:cmd_poi
            options.fname1 = cmd.entity1;
            options.fname2 = cmd.entity2;
            options.superimposed = cmd.superimposed;
+           if save_figures
+               options.figname = sprintf('transition_%s_%s.%s',cmd.entity1,cmd.entity2,figure_format);
+           end
            clusters = cluster_transition(entity1,entity2,options);
+           fprintf(logfid,'\n--- Transition analysis ---\n\n');
+           fprintf(logfid,'Enemble 1 (%s) has %i conformers.\n',cmd.entity1,clusters.C1);
+           fprintf(logfid,'Enemble 2 (%s) has %i conformers.\n',cmd.entity2,clusters.C2);
+           fprintf(logfid,'%i clusters were generated\n',clusters.nc);
+           fprintf(logfid,'%i pure ensemble 1 clusters\n',sum(clusters.type == 1));
+           fprintf(logfid,'%i pure ensemble 2 clusters\n',sum(clusters.type == 2));
+           fprintf(logfid,'%i mixed clusters\n',sum(clusters.type == 0));
+           [sorted,sorting] = sort(clusters.type);
+           for clust = 1:clusters.nc
+               switch sorted(clust)
+                   case 0
+                       ctype = 'mixed';
+                   case 1
+                       ctype = 'pure ensemble 1';
+                   case 2
+                       ctype = 'pure ensemble 2';
+               end
+               index = sorting(clust);
+               fprintf(logfid,'\nCluster %i is of %s type with Rg = %4.1f %c and on similarity scale %5.3f\n',clust,ctype,clusters.Rg(index),char(197),clusters.scale(index));
+               c1 = length(clusters.members{index,1});
+               c2 = length(clusters.members{index,2});
+               switch sorted(clust)
+                   case 0
+                       fprintf(logfid,'%i members, %i from ensemble 1, %i from ensemble 2\n',c1+c2,c1,c2);
+                   case 1
+                       fprintf(logfid,'%i members from ensemble 1\n',c1);
+                   case 2
+                       fprintf(logfid,'%i members from ensemble 2\n',21);
+               end
+           end
         case 'subsample'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;

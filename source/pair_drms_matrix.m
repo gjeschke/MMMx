@@ -1,4 +1,4 @@
-function [pair_drms,pop,exceptions] = pair_drms_matrix(entity,chain,range,entity2,chain2,range2)
+function [pair_drms,pop,Rg,exceptions] = pair_drms_matrix(entity,chain,range,entity2,chain2,range2)
 %
 % PAIR_DRMS_MATRIX Computes the matrix of conformer pair backbone distance
 % root-mean square deviations
@@ -39,6 +39,7 @@ function [pair_drms,pop,exceptions] = pair_drms_matrix(entity,chain,range,entity
 % OUTPUT
 % pair_drms     (C,C) double matrix of backbone pair rmsds (Angstrom)
 % pop           (1,C) population vector for C conformers
+% Rg            vecor (1,c) of radii of gyration
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
 %
@@ -87,9 +88,12 @@ if exist('entity2','var') && ~isempty(entity2) % ensemble comparison
     end
     C2 = length(pop2);
     C = C1 + C2;
+    pop = [pop;pop2];
 else
     compare = false;
 end
+
+Rg = zeros(length(pop),1);
 
 coor = cell(1,C);
 chains = fieldnames(backbones);
@@ -121,6 +125,7 @@ for conf = 1:C1
         atom_pointer = atom_pointer + n;
     end
     coor{conf} = coor0;
+    Rg(conf) = gyration_radius(coor0);
 end
 
 if compare
@@ -134,6 +139,7 @@ if compare
             atom_pointer = atom_pointer + n;
         end
         coor{C1+conf} = coor0;
+        Rg(C1+conf) = gyration_radius(coor0);
     end
 end
 

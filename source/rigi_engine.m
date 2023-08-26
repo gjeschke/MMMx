@@ -319,7 +319,7 @@ while bask < trials && runtime <= 3600*max_time && success < options.max_clust
             if isempty(coor0)
                 eerr_vec(kt) = 1;
             else
-                [coor1,err] = bound_refiner(coor0,lb,ub);
+                [coor1,err] = embedding_refiner(coor0,lb,ub);
                 if err > 0
                     berr_vec(kt) = 1;
                 else

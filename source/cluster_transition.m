@@ -405,13 +405,13 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
         conformers = clusters.members{clust,1};
         for c = 1:length(conformers)
             pop = entity1.populations(conformers(c));
-            fprintf(ofid,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop)/4);
+            fprintf(ofid,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
             fprintf(ofid,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
         end
         conformers = clusters.members{clust,2};
         for c = 1:length(conformers)
             pop = entity2.populations(conformers(c));
-            fprintf(ofid,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop)/4);
+            fprintf(ofid,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
             fprintf(ofid,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
         end
     end

@@ -1137,7 +1137,7 @@ for kent = first_conformer:nent
     Rama_res.allowed_G = defs.Ramachandran.allowed_G;
     Rama_res.allowed_gen = defs.Ramachandran.allowed_gen;
     
-    if ~isempty(control.options) || ~isempty(control.options{1})
+    if ~isempty(control.options) && ~isempty(control.options{1})
         pmodel = str2double(control.options{1});
     else
         pmodel = 0.5;

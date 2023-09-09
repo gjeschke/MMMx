@@ -56,7 +56,7 @@ warnings = 0; % counter for warnings
 % initialize options, if it does not exist
 if ~exist('options','var') || isempty(options)...
         || ~isfield(options,'rmin') || isempty(options.rmin)
-    options.rmin = 10;
+    options.rmin = 0;
 end
 
 % set defaults of computation options if required
@@ -312,7 +312,9 @@ else
 end
 
 % renormalize
-distribution = distribution/sum(distribution);
+if sum(distribution) > 0
+    distribution = distribution/sum(distribution);
+end
 
 % rescale units if requested
 if strcmpi(options.units,'density')
@@ -380,5 +382,9 @@ inverted_distribution = ifft(pair_distribution).*ifft(broadening);
 pair_distribution = real(fft(inverted_distribution));
 
 % normalization
-pair_distribution = (1-missing)*pair_distribution/max(pair_distribution);
+if max(pair_distribution) > 0
+    pair_distribution = (1-missing)*pair_distribution/max(pair_distribution);
+else
+    pair_distribution = zeros(size(pair_distribution));
+end
 

@@ -391,6 +391,10 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
     [pname,bname,ext] = fileparts(options.visualize);
     graphics_x =  fullfile(pname,sprintf('%s_view_x.png',bname));
     graphics_y =  fullfile(pname,sprintf('%s_view_y.png',bname));
+    graphics_mx =  fullfile(pname,sprintf('%s_view_-x.png',bname));
+    graphics_my =  fullfile(pname,sprintf('%s_view_-y.png',bname));
+    graphics_z =  fullfile(pname,sprintf('%s_view_z.png',bname));
+    graphics_mz =  fullfile(pname,sprintf('%s_view_-z.png',bname));
     if isempty(ext)
         options.visualize = fullfile(pname,sprintf('%s.mmm',bname));
     end
@@ -424,6 +428,20 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
     fprintf(ofid,'view  y\n');
     fprintf(ofid,'zoom out\n');
     fprintf(ofid,'copy %s png\n',graphics_y);
+    fprintf(ofid,'view  -x\n');
+    fprintf(ofid,'detach\n');
+    fprintf(ofid,'zoom out\n');
+    fprintf(ofid,'copy %s png\n',graphics_mx);
+    fprintf(ofid,'view  -y\n');
+    fprintf(ofid,'zoom out\n');
+    fprintf(ofid,'copy %s png\n',graphics_my);
+    fprintf(ofid,'view  z\n');
+    fprintf(ofid,'detach\n');
+    fprintf(ofid,'zoom out\n');
+    fprintf(ofid,'copy %s png\n',graphics_z);
+    fprintf(ofid,'view  -z\n');
+    fprintf(ofid,'zoom out\n');
+    fprintf(ofid,'copy %s png\n',graphics_mz);
     fclose(ofid);
 end
 

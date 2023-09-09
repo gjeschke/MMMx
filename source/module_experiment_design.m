@@ -284,6 +284,10 @@ for d = 1:length(control.directives)
         case 'rigiflex'
             cmd_poi = cmd_poi + 1;
             cmd.UniProtID = control.directives(d).options{1};
+            cmd.label = 'atom.CA';
+            if length(control.directives(d).options) > 1 % label for rigid-body reference points is provided
+                cmd.label = control.directives(d).options{2};
+            end
             commands{cmd_poi} = cmd;
         otherwise
             warnings = warnings + 1;
@@ -633,7 +637,8 @@ for c = 1:cmd_poi
                 record_exception(exceptions{warnings},logfid);
                 return
             end
-            c_entity = domain_partitioning(c_entity);
+            rigiflex_options.label = cmd.label;
+            c_entity = domain_partitioning(c_entity,rigiflex_options);
             ensembles = store_ensemble(cmd.UniProtID,c_entity,ensembles);
     end
 end

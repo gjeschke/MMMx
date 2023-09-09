@@ -117,7 +117,7 @@ for d = 1:length(control.directives)
             run_fit = false;
         case 'nnllsq'
             nnllsq_fit = true;
-            if ~isempty(control.directives(d).options{1})
+            if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
                 bckg_order = str2double(control.directives(d).options{1});
             end
             if length(control.directives(d).options) > 1 && ~isempty(control.directives(d).options{2})
@@ -531,7 +531,7 @@ opt.pre_max_Gamma2 = pre_max_Gamma2;
 % evaluate restraints for individual conformers
 
 % distance distribution restraints
-options.rmin = 10; % minimal distance
+options.rmin = 0; % minimal distance
 options.rmax = 150; % maximal distance
 options.resolution = 0.5;
 fit_task.r_axis = options.rmin:options.resolution:options.rmax;

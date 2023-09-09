@@ -72,12 +72,22 @@ function entity = domain_partitioning(entity,options)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2023: Gunnar Jeschke
 
+my_base = load('deer_kernel.mat','base','t','r');
+Pake_base.kernel = my_base.base-ones(size(my_base.base)); % kernel format for pcf2deer
+Pake_base.t = my_base.t;
+Pake_base.r = my_base.r;
+clear my_base
+
 if ~exist('options','var') || ~isfield(options,'rbfile')
     options.rbfile = sprintf('%s_rigid_bodies.pdb',entity.uniprot);
 end
 
 if ~isfield(options,'script')
     options.script = sprintf('%s_RigiFlex.mcx',entity.uniprot);
+    options.fit_script = sprintf('%s_EnsembleFit.mcx',entity.uniprot);
+elseif ~isempty(options.script)
+    [pname,bname] = fileparts(options.script);
+    options.fit_script = fullfile(pname,sprintf('%s_EnsembleFit.mcx',bname));
 end
 
 if ~isfield(options,'threshold') || isempty(options.threshold)
@@ -121,7 +131,11 @@ if ~isfield(options,'restypes') || isempty(options.restypes)
 end
 
 if ~isfield(options,'minrot') || isempty(options.minrot)
-    options.minrot = 5;
+    if isfield(options,'label') && length(options.label) > 5 && strcmpi(options.label(1:5),'atom.')
+        options.minrot = 1;
+    else
+        options.minrot = 5;
+    end
 end
 
 if ~isfield(options,'minZ') || isempty(options.minZ)
@@ -136,7 +150,9 @@ if ~isfield(options,'termini') || isempty(options.termini)
     options.termini = true;
 end
 
-pairdist = (entity.pae + entity.pae')/2;
+% pairdist = (entity.pae + entity.pae')/2;
+pairdist = entity.pae';
+pairdist(pairdist < entity.pae) = entity.pae(pairdist < entity.pae);
 
 h = figure; clf; hold on
 image(entity.pae,'CDataMapping','scaled');
@@ -211,6 +227,10 @@ if options.minlink > 1
                 mean_uncert = mean(mean(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
                 variability(cdpoi) = mean_uncert;
                 maxpae(cdpoi) = max(max(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
+            elseif domains(k,1) - domains(k-1,2) < 3
+                domains(k,1) = domains(k,1) + 1;
+                domains(k-1,2) = domains(k-1,2) - 1;
+                cdpoi = cdpoi + 1;
             else
                 cdpoi = cdpoi + 1;
             end
@@ -300,12 +320,24 @@ entity.folded = folded/n;
 if~isempty(options.rbfile) && dpoi > 0
     mentity = rigid_domains(entity,domains(1:dpoi,:));
     put_pdb(mentity,options.rbfile);
+    if strcmpi(options.label,'atom.CA')
+        mentity = get_pdb(options.rbfile);
+    end
 end
 
 if ~isempty(options.script)
     fid = fopen(options.script,'wt');
     fprintf(fid,'%% RigiFlex script template for AlphaFold prediction %s (%s)\n\n',entity.uniprot,entity.uniprotname);
     fprintf(fid,'#log\n\n');
+    fidef = fopen(options.fit_script,'wt');
+    fprintf(fidef,'%% EnsembleFit script template for AlphaFold prediction %s (%s)\n\n',entity.uniprot,entity.uniprotname);
+    fprintf(fidef,'#log\n\n');
+    fprintf(fidef,'!EnsembleFit\n');
+    fprintf(fidef,'   csv\n');
+    fprintf(fidef,'   plot\n');
+    fprintf(fidef,'   nnllsq\n');
+    fprintf(fidef,'   save %s_ensemble.ens',entity.uniprot);
+    fprintf(fidef,'\n   deer atom.CA\n');
     rba = false;
     if dpoi > 1 % Rigi block is written only if more than one folded domain exists
         rba = true;
@@ -325,6 +357,8 @@ if ~isempty(options.script)
         sitescan_options.min_Z = options.minZ;
         sitescan_options.ensemble = false;
         rbi = 0;
+        all_refpoints = cell(length(chains),1);
+        complete_reference = true;
         for kc = 1:length(chains)
             chain = chains{kc};
             if isstrprop(chain(1),'upper') % chain fields start with a capital
@@ -341,7 +375,9 @@ if ~isempty(options.script)
                 [refpoints,failed] = get_refpoints(site_coor_pop,refpoint_options);
                 if failed
                     fprintf(fid,'\nReference point computation failed for rigid body %s\n',chain);
+                    complete_reference = false;
                 else
+                    all_refpoints{kc} = refpoints;
                     fprintf(fid,'   rigid (%s) %% %i-%i\n',chain,domains(rbi,:));
                     for k = 1:3
                         fprintf(fid,'      %s %s\n',refpoints(k).site,refpoints(k).label);
@@ -359,6 +395,107 @@ if ~isempty(options.script)
             fprintf(fid,'      (%s)%i   (%s)%i   %i\n',ctag1,domains(k-1,2),ctag2,domains(k,1),domains(k,1)-domains(k-1,2));
             fprintf(fid,'   .plink\n');
         end
+        % make distance distribution restraints, if AlphaFold-based modeling is possible and requested 
+        if complete_reference && strcmpi(options.label,'atom.CA')
+            site_pair_list = zeros(100,2);
+            spl_pointer = 0;
+            fprintf(fid,'\n   ddr atom.CA\n');
+            % restraints between reference points
+            nr1 = 0;
+            for kc1 = 1:length(chains)-1
+                chain = chains{kc1};
+                if isstrprop(chain(1),'upper') % chain fields start with a capital
+                    nr1 = nr1 + 1;
+                    ref1 = all_refpoints{kc1};
+                    for kr1 = 1:3
+                        coor1 = get_label(mentity,ref1(kr1).label,'coor',ref1(kr1).site);
+                        poi = strfind(ref1(kr1).site,')');
+                        res1 = str2double(ref1(kr1).site(poi+1:end));
+                        poi = strfind(ref1(kr1).site,'}');
+                        if isempty(poi)
+                            poi = 0;
+                        end
+                        site1 = ref1(kr1).site(poi+1:end);
+                        nr2 = nr1;
+                        for kc2 = kc1+1:length(chains)
+                            chain = chains{kc2};
+                            if isstrprop(chain(1),'upper') % chain fields start with a capital
+                                nr2 = nr2 + 1;
+                                ref2 = all_refpoints{kc2};
+                                for kr2 = 1:3
+                                    coor2 = get_label(mentity,ref2(kr2).label,'coor',ref2(kr2).site);
+                                    poi = strfind(ref2(kr2).site,')');
+                                    res2 = str2double(ref2(kr2).site(poi+1:end));
+                                    poi = strfind(ref2(kr2).site,'}');
+                                    if isempty(poi)
+                                        poi = 0;
+                                    end
+                                    site2 = ref2(kr2).site(poi+1:end);
+                                    rmean = norm(coor1{1}-coor2{1});
+                                    sigr = max([entity.pae(res1,res2),entity.pae(res2,res1)])/2; % assuming CI95 = 2 sigma
+                                    if sigr <= 15
+                                        fprintf(fid,'      %s   %s   %4.1f   %4.1f %% ref %i.%i to %i.%i\n',site1,site2,rmean,sigr,nr1,kr1,nr2,kr2);
+                                        sim_deer_file = sprintf('sim_deer_CA_CA_%s_%s.csv',site1,site2);
+                                        [t,ff] = get_ff(rmean,sigr,Pake_base);
+                                        fprintf(fidef,'      (A)%i   (A)%i   @%s %% ref %i.%i to %i.%i\n',res1,res2,sim_deer_file,nr1,kr1,nr2,kr2);
+                                        sim_deer = [t',ff',ff',zeros(size(ff'))];
+                                        description = {'% time (ns)','simulated','simulated','zero background'};
+                                        put_csv(sim_deer_file,sim_deer,description);
+                                        spl_pointer = spl_pointer + 1;
+                                        site_pair_list(spl_pointer,:) = [res1,res2];
+                                    end
+                                end
+                            end
+                        end
+                    end
+                end
+            end
+            % auxiliary restraints
+            for d1 = 1:dpoi-1
+                d1_offset = domains(d1,1)-1;
+                chain1 = char(double('A') -1 + d1);
+                for d2 = d1+1:dpoi
+                    chain2 = char(double('A') -1 + d2);
+                    d2_offset = domains(d2,1)-1;
+                    id_pae_upper = entity.pae(domains(d1,1):domains(d1,2),domains(d2,1):domains(d2,2));
+                    id_pae_lower = entity.pae(domains(d2,1):domains(d2,2),domains(d1,1):domains(d1,2))';
+                    id_sigr = id_pae_upper;
+                    id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
+                    id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                    min_err = min(min(id_sigr));
+                    aux = 0;
+                    while min_err <= 15 && aux < 20
+                        [colmin,rows] = min(id_sigr);
+                        [min_err,col] = min(colmin);
+                        row = rows(col);
+                        add_it = true;
+                        for sp = 1:spl_pointer % search for existing sitepairs very close to this one
+                            if abs(site_pair_list(sp,1) - (row + d1_offset)) < 5 &&  abs(site_pair_list(sp,2) - (col + d2_offset)) < 5
+                                add_it = false;
+                            end
+                        end
+                        id_sigr(row,col) = 1000;
+                        coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',row + d1_offset));
+                        coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',col + d2_offset));
+                        rmean = norm(coor1{1}-coor2{1});
+                        if add_it
+                            aux = aux + 1;
+                            spl_pointer = spl_pointer + 1;
+                            site_pair_list(spl_pointer,:) = [row + d1_offset,col + d2_offset];
+                            fprintf(fid,'      (%c)%i   (%c)%i   %4.1f   %4.1f %% aux %i to %i\n',chain1,row + d1_offset,chain2,col + d2_offset,rmean,min_err,d1,d2);
+                            sim_deer_file = sprintf('sim_deer_CA_CA_(%c)%i_(%c)%i.csv',chain1,row + d1_offset,chain2,col + d2_offset);
+                            [t,ff] = get_ff(rmean,sigr,Pake_base);
+                            fprintf(fidef,'      (A)%i   (A)%i   @%s %% aux %i to %i\n',row + d1_offset,col + d2_offset,sim_deer_file,d1,d2);
+                            sim_deer = [t',ff',ff',zeros(size(ff'))];
+                            description = {'% time (ns)','simulated','simulated','zero background'};
+                            put_csv(sim_deer_file,sim_deer,description);
+                        end
+                        min_err = min(min(id_sigr));
+                    end
+                end
+            end
+            fprintf(fid,'   .ddr\n');
+        end
         fprintf(fid,'\n.rigi\n');
     end
     if dpoi == 0
@@ -374,7 +511,7 @@ if ~isempty(options.script)
         if domains(1,1) > 1 && options.termini
             N_terminal = true;
             fprintf(fid,'\n');
-            fprintf(fid,'!flex %% N-terminal section\n');
+            fprintf(fid,'!flex 0.5 1 0.25 %% N-terminal section\n');
             if rba
                 fprintf(fid,'   expand %s_rba\n',entity.uniprot);
             else
@@ -384,14 +521,50 @@ if ~isempty(options.script)
             fprintf(fid,'   save %s\n',modelfile);
             fprintf(fid,'   sequence 1 %i %s\n',domains(1,1)-1,entity.sequence(1:domains(1,1)-1));
             fprintf(fid,'   c_anchor   (A)%i\n',domains(1,1));
+            % make distance distribution restraints, if requested
+            if strcmpi(options.label,'atom.CA')
+                fprintf(fid,'\n   ddr atom.CA\n');
+                for refd = 1:dpoi % loop over reference domains
+                    chain1 = char(double('A') -1 + refd);
+                    unrestrained = 0;
+                    for res = 1:domains(1,1)-1 % loop over residues in the N-terminal linker
+                        id_pae_upper = entity.pae(res,domains(refd,1):domains(refd,2));
+                        id_pae_lower = entity.pae(domains(refd,1):domains(refd,2),res)';
+                        id_sigr = id_pae_upper;
+                        id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
+                        id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                        [min_err,refpoi] = min(id_sigr);
+                        if min_err <= 15
+                            if min_err/unrestrained <= 5
+                                coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',refpoi + domains(refd,1)-1));
+                                coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',res));
+                                rmean = norm(coor1{1}-coor2{1});
+                                fprintf(fid,'      (%c)%i   %i   %4.1f   %4.1f %% N-terminal flexible domain to folded domain %i\n',chain1,refpoi + domains(refd,1)-1,res,rmean,min_err,refd);
+                                sim_deer_file = sprintf('sim_deer_CA_CA_(A)%i_(A)%i.csv',refpoi + domains(refd,1)-1,res);
+                                [t,ff] = get_ff(rmean,min_err,Pake_base);
+                                sim_deer = [t',ff',ff',zeros(size(ff'))];
+                                description = {'% time (ns)','simulated','simulated','zero background'};
+                                put_csv(sim_deer_file,sim_deer,description);
+                                fprintf(fidef,'      (A)%i   (A)%i   @%s %% N-terminal loop to domain %i\n',refpoi + domains(refd,1)-1,res,sim_deer_file,refd);
+                                unrestrained = 0;
+                            else
+                                unrestrained = unrestrained + 1;
+                            end
+                        else
+                            unrestrained = unrestrained + 1;
+                        end
+                    end
+                end
+                fprintf(fid,'   .ddr\n');
+            end
             fprintf(fid,'.flex\n');
         end
         % make flex blocks for peptide linkers
         for k = 2:dpoi
-            ctag1 = char(double('A')+k-2); % chain tag for first anchor domain
+            ctag1 = 'A'; % chain tag for first anchor domain
             ctag2 = char(double('A')+k-1); % chain tag for second anchor domain
             fprintf(fid,'\n');
-            fprintf(fid,'!flex %% linker %i\n',k-1);
+            fprintf(fid,'!flex 0.5 1 0.25 %% linker %i\n',k-1);
             if k == 2 && ~N_terminal
                 fprintf(fid,'   expand %s_rba\n',entity.uniprot);
             else
@@ -402,13 +575,53 @@ if ~isempty(options.script)
             fprintf(fid,'   sequence %i %i %s\n',domains(k-1,2)+1,domains(k,1)-1,entity.sequence(domains(k-1,2)+1:domains(k,1)-1));
             fprintf(fid,'   n_anchor   (%s)%i\n',ctag1,domains(k-1,2));
             fprintf(fid,'   c_anchor   (%s)%i\n',ctag2,domains(k,1));
+            % make distance distribution restraints, if requested
+            if strcmpi(options.label,'atom.CA')
+                fprintf(fid,'\n   ddr atom.CA\n');
+                for refd = 1:dpoi % loop over reference domains
+                    if refd < k
+                        chain1 = 'A';
+                    else
+                        chain1 = char(double('A') + refd - 1);
+                    end
+                    unrestrained = 0;
+                    for res = domains(k-1,2)+1:domains(k,1)-1 % loop over residues in this flexible linker
+                        id_pae_upper = entity.pae(res,domains(refd,1):domains(refd,2));
+                        id_pae_lower = entity.pae(domains(refd,1):domains(refd,2),res)';
+                        id_sigr = id_pae_upper;
+                        id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
+                        id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                        [min_err,refpoi] = min(id_sigr);
+                        if min_err <= 15
+                            if min_err/unrestrained <= 5
+                                coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',refpoi + domains(refd,1)-1));
+                                coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',res));
+                                rmean = norm(coor1{1}-coor2{1});
+                                fprintf(fid,'      (%c)%i   %i   %4.1f   %4.1f %% linker %i to domain %i\n',chain1,refpoi + domains(refd,1)-1,res,rmean,min_err,k-1,refd);
+                                sim_deer_file = sprintf('sim_deer_CA_CA_(A)%i_(A)%i.csv',refpoi + domains(refd,1)-1,res);
+                                [t,ff] = get_ff(rmean,min_err,Pake_base);
+                                sim_deer = [t',ff',ff',zeros(size(ff'))];
+                                description = {'% time (ns)','simulated','simulated','zero background'};
+                                put_csv(sim_deer_file,sim_deer,description);
+                                fprintf(fidef,'      (A)%i   (A)%i   @%s %% linker %i-%i to domain %i\n',refpoi + domains(refd,1)-1,res,sim_deer_file,k-1,k,refd);
+                                unrestrained = 0;
+                            else
+                                unrestrained = unrestrained + 1;
+                            end
+                        else
+                            unrestrained = unrestrained + 1;
+                        end
+                    end
+                end
+                fprintf(fid,'   .ddr\n');
+            end
             fprintf(fid,'.flex\n');
         end
         % make flex block for C-terminal section if present and requested
         if domains(dpoi,2) < n && options.termini
             fprintf(fid,'\n');
-            ctag = char(double('A')+dpoi-1);
-            fprintf(fid,'!flex %% C-terminal section\n');
+            ctag = 'A';
+            fprintf(fid,'!flex 0.5 1 0.25 %% C-terminal section\n');
             if rba || N_terminal
                 fprintf(fid,'   addpdb %s*.pdb\n',modelfile);
             else
@@ -418,11 +631,54 @@ if ~isempty(options.script)
             fprintf(fid,'   save %s\n',modelfile);
             fprintf(fid,'   sequence %i %i %s\n',domains(dpoi,2)+1,n,entity.sequence(domains(dpoi,2)+1:n));
             fprintf(fid,'   n_anchor   (%s)%i\n',ctag,domains(dpoi,2));
+            fprintf(fid,'   sequence 1 %i %s\n',domains(1,1)-1,entity.sequence(1:domains(1,1)-1));
+            fprintf(fid,'   c_anchor   (A)%i\n',domains(1,1));
+            % make distance distribution restraints, if requested
+            if strcmpi(options.label,'atom.CA')
+                fprintf(fid,'\n   ddr atom.CA\n');
+                for refd = 1:dpoi % loop over reference domains
+                    chain1 = 'A';
+                    unrestrained = 0;
+                    for res = 1:domains(1,1)-1 % loop over residues in the N-terminal linker
+                        id_pae_upper = entity.pae(res,domains(refd,1):domains(refd,2));
+                        id_pae_lower = entity.pae(domains(refd,1):domains(refd,2),res)';
+                        id_sigr = id_pae_upper;
+                        id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
+                        id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                        [min_err,refpoi] = min(id_sigr);
+                        if min_err <= 15
+                            if min_err/unrestrained <= 5
+                                coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',refpoi + domains(refd,1)-1));
+                                coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',res));
+                                rmean = norm(coor1{1}-coor2{1});
+                                fprintf(fid,'      (%c)%i   %i   %4.1f   %4.1f %% C-terminal flexible domain to folded domain %i\n',chain1,refpoi + domains(refd,1)-1,res,rmean,min_err,refd);
+                                sim_deer_file = sprintf('sim_deer_CA_CA_(A)%i_(A)%i.csv',refpoi + domains(refd,1)-1,res);
+                                [t,ff] = get_ff(rmean,min_err,Pake_base);
+                                sim_deer = [t',ff',ff',zeros(size(ff'))];
+                                description = {'% time (ns)','simulated','simulated','zero background'};
+                                put_csv(sim_deer_file,sim_deer,description);
+                                fprintf(fidef,'      (A)%i   (A)%i   @%s %% C-terminal loop to domain %i\n',refpoi + domains(refd,1)-1,res,sim_deer_file,refd);
+                                unrestrained = 0;
+                            else
+                                unrestrained = unrestrained + 1;
+                            end
+                        else
+                            unrestrained = unrestrained + 1;
+                        end
+                    end
+                end
+                fprintf(fid,'   .ddr\n');
+            end
             fprintf(fid,'.flex\n');
         end
     end
     fprintf(fid,'\n#report\n');
     fclose(fid);
+    fprintf(fidef,'   .deer\n\n');
+    fprintf(fidef,'   addpdb %s*.pdb\n',modelfile);
+    fprintf(fidef,'.EnsembleFit\n');
+    fprintf(fidef,'\n#report\n');
+    fclose(fidef);
 end
 
 function mentity = rigid_domains(entity,domains)
@@ -562,3 +818,18 @@ b2 = repmat(sum(positions2.^2,2),1,n_rot_1).';
 pair_dist = sqrt(abs(a2 + b2 - 2*positions1*positions2.'));
 weights = populations1*populations2.';
 r_mean = sum(sum(pair_dist.*weights));
+
+function [t,sim_ff] = get_ff(rmean,sigr,Pake_base)
+
+arg = 10*(Pake_base.r - rmean/10)/sigr;
+distr = exp(-arg.^2/2);
+distr = distr/sum(distr);
+sim_ff = form_factor_deer(Pake_base.r,distr,Pake_base.t,Pake_base);
+determine = abs(sim_ff) < 0.02;
+n = length(determine);
+while Pake_base.t(n) > 5 && determine(n) == 1
+    n = n - 1;
+end
+sim_ff = sim_ff(1:n);
+t = Pake_base.t(1:n);
+

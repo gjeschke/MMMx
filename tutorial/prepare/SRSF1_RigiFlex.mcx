@@ -1,0 +1,9 @@
+% RigiFlex script template for AlphaFold prediction P99999 (CYC_HUMAN)
+
+#log
+
+!ExperimentDesign
+   RigiFlex Q07955 % UniProt identifier for human SRSF1 
+.ExperimentDesign
+
+#report

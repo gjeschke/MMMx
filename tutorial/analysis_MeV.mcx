@@ -1,0 +1,20 @@
+% Ensemble analysis of measles virus nucleoprotein (400-525)
+# log
+
+!EnsembleAnalysis
+
+   get_PED PED00020.e001 MeV_1 % measles virus nucleoprotein (400-525)
+   flexibility MeV_1_flexibility MeV_1
+   order MeV_1_order MeV_1
+
+   measures MeV_1_measures MeV_1
+     Rg
+     matlab
+     csv
+     oriented
+	 compactness
+   .measures
+
+.EnsembleAnalysis
+
+# report

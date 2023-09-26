@@ -713,7 +713,7 @@ for c = 1:C
                 properties.ddr(n_comp).label2 = label2;
                 properties.ddr(n_comp).distr = distr;
             end
-            if ~isempty(distr)
+            if ~isempty(distr) && sum(distr) > 0
                 fit_task.ddr(block_offset+kr).distr(c,:) = distr/sum(distr);
             else
                 fprintf(logfid,'Warning: ddr between sites %s and %s cannot be evaluated for conformer %i\n',site1,site2,c);

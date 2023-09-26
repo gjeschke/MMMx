@@ -83,6 +83,10 @@ if ~isfield(options,'mode')
     options.mode = 'drms';
 end
 
+if ~isfield(options,'graphics') || isempty(options.graphics) || isempty(options.graphics{1})
+    options.graphics = {};
+end
+
 populations = [entity1.populations;entity2.populations];
 [D,~,Rg] = pair_drms_matrix(entity1,options.chain1,[],entity2,options.chain2,[]);
 
@@ -388,61 +392,106 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
     entity2.name = 'ORDE';
     put_pdb(entity1,options.fname1);
     put_pdb(entity2,options.fname2);
-    [pname,bname,ext] = fileparts(options.visualize);
-    graphics_x =  fullfile(pname,sprintf('%s_view_x.png',bname));
-    graphics_y =  fullfile(pname,sprintf('%s_view_y.png',bname));
-    graphics_mx =  fullfile(pname,sprintf('%s_view_-x.png',bname));
-    graphics_my =  fullfile(pname,sprintf('%s_view_-y.png',bname));
-    graphics_z =  fullfile(pname,sprintf('%s_view_z.png',bname));
-    graphics_mz =  fullfile(pname,sprintf('%s_view_-z.png',bname));
-    if isempty(ext)
-        options.visualize = fullfile(pname,sprintf('%s.mmm',bname));
-    end
-    ofid = fopen(options.visualize,'wt');
-    fprintf(ofid,'%% MMMx transition visualization script\n');
-    fprintf(ofid,'new !\n');
-    fprintf(ofid,'pdbload %s\n',options.fname1);
-    fprintf(ofid,'pdbload %s\n',options.fname2);
+    [pname,bname] = fileparts(options.visualize);
+    visualize_cs = fullfile(pname,sprintf('%s_conformational_selection.mmm',bname));
+    ofid_cs = fopen(visualize_cs,'wt');
+    visualize_dp = fullfile(pname,sprintf('%s_depopulated.mmm',bname));
+    ofid_dp = fopen(visualize_dp,'wt');
+    visualize_if = fullfile(pname,sprintf('%s_induced_fit.mmm',bname));
+    ofid_if = fopen(visualize_if,'wt');
+    fprintf(ofid_cs,'%% MMMx transition visualization script for conformational selection\n');
+    fprintf(ofid_cs,'new !\n');
+    fprintf(ofid_cs,'pdbload %s\n',options.fname1);
+    fprintf(ofid_cs,'pdbload %s\n',options.fname2);
+    fprintf(ofid_dp,'%% MMMx transition visualization script for depopulated conformers\n');
+    fprintf(ofid_dp,'new !\n');
+    fprintf(ofid_dp,'pdbload %s\n',options.fname1);
+    fprintf(ofid_dp,'pdbload %s\n',options.fname2);
+    fprintf(ofid_if,'%% MMMx transition visualization script for induced fit\n');
+    fprintf(ofid_if,'new !\n');
+    fprintf(ofid_if,'pdbload %s\n',options.fname1);
+    fprintf(ofid_if,'pdbload %s\n',options.fname2);
     for clust = 1:clusters.nc
-        color_index = 1 + round(100*rescaled(clust));
-        col = colors(color_index,:);
+        switch clusters.type(clust)
+            case 0
+                ofid = ofid_cs;
+                col = [0,0.6,0];
+            case 1
+                ofid = ofid_dp;
+                col = [0.75,0,0];
+            case 2
+                ofid = ofid_if;
+                col = [0,0,0.75];
+        end
+%         color_index = 1 + round(100*rescaled(clust));
+%         col = colors(color_index,:);
         conformers = clusters.members{clust,1};
         for c = 1:length(conformers)
-            pop = entity1.populations(conformers(c));
-            fprintf(ofid,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
-            fprintf(ofid,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+            pop = entity1.populations(conformers(c))/max(entity1.populations);
+            if isempty(options.graphics)
+                fprintf(ofid,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
+                fprintf(ofid,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+            else
+                [ngcmd,~] = size(options.graphics);
+                for gcmd = 1:ngcmd
+                    fprintf(ofid,'%s [DISO]{%i}%s %s\n',options.graphics{gcmd,1},conformers(c),options.graphics{gcmd,2},options.graphics{gcmd,3});
+                end
+                fprintf(ofid,'transparency [DISO]{%i} %5.3f\n',conformers(c),pop);
+            end
         end
         conformers = clusters.members{clust,2};
         for c = 1:length(conformers)
-            pop = entity2.populations(conformers(c));
-            fprintf(ofid,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
-            fprintf(ofid,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+            pop = entity2.populations(conformers(c))/max(entity2.populations);
+            if isempty(options.graphics)
+                fprintf(ofid,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
+                fprintf(ofid,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+            else
+                [ngcmd,~] = size(options.graphics);
+                for gcmd = 1:ngcmd
+                    fprintf(ofid,'%s [ORDE]{%i}%s %s\n',options.graphics{gcmd,1},conformers(c),options.graphics{gcmd,2},options.graphics{gcmd,3});
+                end
+                fprintf(ofid,'transparency [ORDE]{%i} %5.3f\n',conformers(c),pop);
+            end
         end
     end
-    fprintf(ofid,'color [DISO]{:}%s darkgrey\n',options.superimposed);
-    fprintf(ofid,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
-    fprintf(ofid,'view  x\n');
-    fprintf(ofid,'detach\n');
-    fprintf(ofid,'zoom out\n');
-    fprintf(ofid,'copy %s png\n',graphics_x);
-    fprintf(ofid,'view  y\n');
-    fprintf(ofid,'zoom out\n');
-    fprintf(ofid,'copy %s png\n',graphics_y);
-    fprintf(ofid,'view  -x\n');
-    fprintf(ofid,'detach\n');
-    fprintf(ofid,'zoom out\n');
-    fprintf(ofid,'copy %s png\n',graphics_mx);
-    fprintf(ofid,'view  -y\n');
-    fprintf(ofid,'zoom out\n');
-    fprintf(ofid,'copy %s png\n',graphics_my);
-    fprintf(ofid,'view  z\n');
-    fprintf(ofid,'detach\n');
-    fprintf(ofid,'zoom out\n');
-    fprintf(ofid,'copy %s png\n',graphics_z);
-    fprintf(ofid,'view  -z\n');
-    fprintf(ofid,'zoom out\n');
-    fprintf(ofid,'copy %s png\n',graphics_mz);
-    fclose(ofid);
+    if isempty(options.graphics)
+        fprintf(ofid_cs,'color [DISO]{:}%s darkgrey\n',options.superimposed);
+        fprintf(ofid_cs,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
+        fprintf(ofid_dp,'color [DISO]{:}%s darkgrey\n',options.superimposed);
+        fprintf(ofid_dp,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
+        fprintf(ofid_if,'color [DISO]{:}%s darkgrey\n',options.superimposed);
+        fprintf(ofid_if,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
+    end
+    types = {'conformational_selection' 'depopulated' 'induced_fit'};
+    ofids = [ofid_cs,ofid_dp,ofid_if];
+    for tp = 1:3
+        ofid = ofids(tp);
+        my_type = types{tp};
+        fprintf(ofid,'view  x\n');
+        fprintf(ofid,'detach\n');
+        fprintf(ofid,'zoom out\n');
+        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_x.png',bname,my_type)));
+        fprintf(ofid,'view  y\n');
+        fprintf(ofid,'zoom out\n');
+        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_y.png',bname,my_type)));
+        fprintf(ofid,'view  -x\n');
+        fprintf(ofid,'detach\n');
+        fprintf(ofid,'zoom out\n');
+        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_-x.png',bname,my_type)));
+        fprintf(ofid,'view  -y\n');
+        fprintf(ofid,'zoom out\n');
+        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_-y.png',bname,my_type)));
+        fprintf(ofid,'view  z\n');
+        fprintf(ofid,'detach\n');
+        fprintf(ofid,'zoom out\n');
+        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_z.png',bname,my_type)));
+        fprintf(ofid,'view  -z\n');
+        fprintf(ofid,'zoom out\n');
+        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_-z.png',bname,my_type)));
+    end
+    fclose(ofid_cs);
+    fclose(ofid_dp);
+    fclose(ofid_if);
 end
 
 function my_map = cluster_color_map

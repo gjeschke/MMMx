@@ -1,8 +1,8 @@
-function backbone = get_backbone(entity,chain,conformer,range)
+function backbone = get_backbone(entity,chain,conformer,range,options)
 %
 % GET_BACKBONE Retrieve backbone coordinates for a chain (one conformer)
 %
-%   backbone = GET_BACKBONE(entity,chain,conformer,range)
+%   backbone = GET_BACKBONE(entity,chain,conformer,range,options)
 %   Provides coordinates and corresponding residue numbers for all CA and
 %   C4' atoms in one conformer of a chain, optionally, a residue range can
 %   be specified
@@ -14,6 +14,8 @@ function backbone = get_backbone(entity,chain,conformer,range)
 %           supply this argument
 % conformer conformer (model) number, defaults to 1
 % range     double(1,2), optional residue range, defaults to all residues
+% options   .full   flag, if true, N and C coordinates for amino acid
+%                   residues are also extracted
 %
 % OUTPUT
 % backbone      struct with fields, all fields are empty if the chain is
@@ -24,6 +26,9 @@ function backbone = get_backbone(entity,chain,conformer,range)
 %               .nt  (1,nnt) double, numbers of residues with a C4' atom
 %               .C4p (nnt,3) coordinate array for C4' atoms
 %               .nuc string with length ntt, nucleotide single-letter codes
+%               if options.full is true
+%               .N   (naa,3) coordinate array for N atoms
+%               .C   (naa,3) coordinate array for C atoms
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -31,6 +36,10 @@ function backbone = get_backbone(entity,chain,conformer,range)
 
 % load monomer definitions
 defs = load('monomers.mat');
+
+if ~exist('options','var') || isempty(options) || ~isfield(options,'full')
+    options.full = false;
+end
 
 
 % initialize empty output
@@ -55,6 +64,10 @@ end
 maxres = 10000; % maximum number of residues
 aa = zeros(1,maxres);
 CA = zeros(maxres,3);
+if options.full
+    N = zeros(maxres,3);
+    C = zeros(maxres,3);
+end
 res = blanks(maxres);
 aa_poi = 0; % counter for detected CA atoms
 nt = zeros(1,maxres);
@@ -78,6 +91,10 @@ for kr = 1:length(residues) % loop over all residues
                 else
                     res(aa_poi) = '?';
                 end
+                if options.full
+                    N(aa_poi,:) = entity.xyz(entity.(chain).(residue).N.tab_indices(conformer),:);
+                    C(aa_poi,:) = entity.xyz(entity.(chain).(residue).C.tab_indices(conformer),:);
+                end
             end
             if isfield(entity.(chain).(residue),'C4_') % is there a C4' atom?
                 nt_poi = nt_poi + 1;
@@ -100,3 +117,8 @@ backbone.res = res(1:aa_poi);
 backbone.nt = nt(1:nt_poi);
 backbone.C4p = C4p(1:nt_poi,:);
 backbone.nuc = nuc(1:nt_poi);
+
+if options.full
+    backbone.N = N(1:aa_poi,:);
+    backbone.C = C(1:aa_poi,:);
+end

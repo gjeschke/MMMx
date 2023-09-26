@@ -1,4 +1,4 @@
-function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,range)
+function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,range,options)
 %
 % GET_BACKBONES_ENSEMBLE Retrieve backbone coordinates for an ensemble
 %
@@ -16,6 +16,10 @@ function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,rang
 %           .pdb   PDB file, filename can contain wildcards, all files 
 %                  matching it are processed, 
 %           none   extension .pdb is appended
+% chain     chain identifier, defaults to all chains
+% range     double(1,2), optional residue range, defaults to all residues
+% options   .full   flag, if true, N and C coordinates for amino acid
+%                   residues are also extracted
 %
 % OUTPUT
 % backbones     struct with fields (chain) for all chains, each chain has
@@ -24,9 +28,12 @@ function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,rang
 %               .type 1 for peptide, 2 for nucleic acid, for mixed chains,
 %                     the type with more backbone atoms prevails
 %               .mono (1,nm) double, numbers of the residues
-%               .bb   (1,c) cell of (nm,3) coordinate array for backbone
-%                     atoms
+%               .bb   (1,c) cell of (nm,3) coordinate array for CA (peptide)
+%                     or C4' (nucleic acid) atoms
 %               .slc  sequence in single-letter code
+%               if options.full is true
+%               .N    (1,c) cell of (nm,3) coordinate array for N atoms
+%               .C    (1,c) cell of (nm,3) coordinate array for C atoms
 % pop           (1,C) population vector for C conformers
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
@@ -58,6 +65,10 @@ if ~exist('range','var') || isempty(range)
     range = [-1e01, 1e10];
 end
 
+if ~exist('options','var') || isempty(options) || ~isfield(options,'full')
+    options.full = false;
+end
+
 if isstruct(ensemble) % input is an entity
     pop = ensemble.populations;
     for c = 1:length(ensemble.populations) % loop over all conformers
@@ -69,7 +80,7 @@ if isstruct(ensemble) % input is an entity
                     continue
                 end
                 if isstrprop(chain(1),'upper') % chain fields start with a capital
-                    backbone = get_backbone(ensemble,chain,1,range);
+                    backbone = get_backbone(ensemble,chain,1,range,options);
                     if isempty(backbone.aa) && isempty(backbone.nt) % skip chains that are not a biopolymer
                         continue
                     end
@@ -79,6 +90,10 @@ if isstruct(ensemble) % input is an entity
                         backbones.(chain).mono = backbone.aa;
                         backbones.(chain).bb{1} = backbone.CA;
                         backbones.(chain).slc = backbone.res;
+                        if options.full
+                            backbones.(chain).N{1} = backbone.N;
+                            backbones.(chain).C{1} = backbone.C;
+                        end
                     else % its a nucleic acid
                         backbones.(chain).type = 2;
                         backbones.(chain).mono = backbone.nt;
@@ -94,7 +109,7 @@ if isstruct(ensemble) % input is an entity
                     continue
                 end
                 if isstrprop(chain(1),'upper') % chain fields start with a capital
-                    backbone = get_backbone(ensemble,chain,c,range);
+                    backbone = get_backbone(ensemble,chain,c,range,options);
                     switch backbones.(chain).type
                         case 1 % peptide
                             if length(backbones.(chain).mono) ~= length(backbone.aa)
@@ -111,6 +126,10 @@ if isstruct(ensemble) % input is an entity
                                 return
                             end
                             backbones.(chain).bb{c} = backbone.CA;
+                            if options.full
+                                backbones.(chain).N{c} = backbone.N;
+                                backbones.(chain).C{c} = backbone.C;
+                            end
                         case 2 % nucleic acid
                             if length(backbones.(chain).mono) ~= length(backbone.nt)
                                 exceptions = {MException('get_backbones_ensemble:chain_length_mismatch',...
@@ -190,6 +209,10 @@ else % file name is given
                 % add the new conformers
                 for c = 1:length(backbones2.(chain).bb)
                     backbones.(chain).bb{known_conformers+c} = backbones2.(chain).bb{c};
+                    if options.full
+                        backbones.(chain).N{known_conformers+c} = backbones2.(chain).N{c};
+                        backbones.(chain).C{known_conformers+c} = backbones2.(chain).C{c};
+                    end
                 end
             end
         end

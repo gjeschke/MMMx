@@ -72,6 +72,8 @@ function entity = domain_partitioning(entity,options)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2023: Gunnar Jeschke
 
+PAE2stddev = 1; % factor for converting PAE to standrad deviation 
+
 my_base = load('deer_kernel.mat','base','t','r');
 Pake_base.kernel = my_base.base-ones(size(my_base.base)); % kernel format for pcf2deer
 Pake_base.t = my_base.t;
@@ -432,8 +434,8 @@ if ~isempty(options.script)
                                     end
                                     site2 = ref2(kr2).site(poi+1:end);
                                     rmean = norm(coor1{1}-coor2{1});
-                                    sigr = max([entity.pae(res1,res2),entity.pae(res2,res1)])/2; % assuming CI95 = 2 sigma
-                                    if sigr <= 15
+                                    sigr = max([entity.pae(res1,res2),entity.pae(res2,res1)])*PAE2stddev; 
+                                    if sigr <= 30*PAE2stddev
                                         fprintf(fid,'      %s   %s   %4.1f   %4.1f %% ref %i.%i to %i.%i\n',site1,site2,rmean,sigr,nr1,kr1,nr2,kr2);
                                         sim_deer_file = sprintf('sim_deer_CA_CA_%s_%s.csv',site1,site2);
                                         [t,ff] = get_ff(rmean,sigr,Pake_base);
@@ -461,10 +463,10 @@ if ~isempty(options.script)
                     id_pae_lower = entity.pae(domains(d2,1):domains(d2,2),domains(d1,1):domains(d1,2))';
                     id_sigr = id_pae_upper;
                     id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
-                    id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                    id_sigr = id_sigr*PAE2stddev; 
                     min_err = min(min(id_sigr));
                     aux = 0;
-                    while min_err <= 15 && aux < 20
+                    while min_err <= 30*PAE2stddev && aux < 20
                         [colmin,rows] = min(id_sigr);
                         [min_err,col] = min(colmin);
                         row = rows(col);
@@ -532,10 +534,10 @@ if ~isempty(options.script)
                         id_pae_lower = entity.pae(domains(refd,1):domains(refd,2),res)';
                         id_sigr = id_pae_upper;
                         id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
-                        id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                        id_sigr = id_sigr*PAE2stddev; 
                         [min_err,refpoi] = min(id_sigr);
-                        if min_err <= 15
-                            if min_err/unrestrained <= 5
+                        if min_err <= 30*PAE2stddev
+                            if min_err/unrestrained <= 10*PAE2stddev
                                 coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',refpoi + domains(refd,1)-1));
                                 coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',res));
                                 rmean = norm(coor1{1}-coor2{1});
@@ -590,10 +592,10 @@ if ~isempty(options.script)
                         id_pae_lower = entity.pae(domains(refd,1):domains(refd,2),res)';
                         id_sigr = id_pae_upper;
                         id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
-                        id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                        id_sigr = id_sigr*PAE2stddev; 
                         [min_err,refpoi] = min(id_sigr);
-                        if min_err <= 15
-                            if min_err/unrestrained <= 5
+                        if min_err <= 30*PAE2stddev
+                            if min_err/unrestrained <= 10*PAE2stddev
                                 coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',refpoi + domains(refd,1)-1));
                                 coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',res));
                                 rmean = norm(coor1{1}-coor2{1});
@@ -644,10 +646,10 @@ if ~isempty(options.script)
                         id_pae_lower = entity.pae(domains(refd,1):domains(refd,2),res)';
                         id_sigr = id_pae_upper;
                         id_sigr(id_sigr < id_pae_lower) = id_pae_lower(id_sigr < id_pae_lower);
-                        id_sigr = id_sigr/2; % assuming tha PAE is a CI95
+                        id_sigr = id_sigr*PAE2stddev; 
                         [min_err,refpoi] = min(id_sigr);
-                        if min_err <= 15
-                            if min_err/unrestrained <= 5
+                        if min_err <= 30*PAE2stddev
+                            if min_err/unrestrained <= 10*PAE2stddev
                                 coor1 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',refpoi + domains(refd,1)-1));
                                 coor2 =  get_label(entity,'atom.CA','coor',sprintf('(A)%i',res));
                                 rmean = norm(coor1{1}-coor2{1});

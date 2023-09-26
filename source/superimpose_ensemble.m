@@ -1,4 +1,4 @@
-function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,template,central)
+function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,template,central,options)
 %
 % SUPERIMPOSE_ENSEMBLE Superimposes conformers in an ensemble
 %
@@ -37,6 +37,10 @@ function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,templat
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2020: Gunnar Jeschke
 
+if ~exist('options','var') || isempty(options)
+    options.atoms = 'all';
+end
+
 rmsd = zeros(length(entity.populations),1);
 
 if ~exist('selected','var') || isempty(selected)
@@ -50,7 +54,14 @@ else
     selection_template = selected;
 end
 
-% selection_template = strcat(selection_template,'.N,CA,C,O');
+switch options.atoms
+    case 'backbone'
+        selection_template = strcat(selection_template,'.N,CA,C,O');
+        selected = strcat(selected,'.N,CA,C,O');
+    case 'CA'
+        selection_template = strcat(selection_template,'.CA');
+        selected = strcat(selected,'.CA');
+end
 if ~exist('template','var') || isempty(template)
     [tcoor,~,~,exceptions] = get_coor(entity,['{1}' selected]);
 else

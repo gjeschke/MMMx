@@ -113,6 +113,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) >= 4
                 cmd.visualize = control.directives(d).options{4};
             end
+            cmd.graphics = control.directives(d).block;
             commands{cmd_poi} = cmd;
         case 'figures'
             cmd_poi = cmd_poi + 1;
@@ -362,6 +363,7 @@ for d = 1:length(control.directives)
         case 'superimpose'
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
+            cmd.options.atoms = 'CA';
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
@@ -816,6 +818,7 @@ for c = 1:cmd_poi
            options.fname1 = cmd.entity1;
            options.fname2 = cmd.entity2;
            options.superimposed = cmd.superimposed;
+           options.graphics = cmd.graphics;
            if save_figures
                options.figname = sprintf('transition_%s_%s.%s',cmd.entity1,cmd.entity2,figure_format);
            end
@@ -828,19 +831,39 @@ for c = 1:cmd_poi
            fprintf(logfid,'%i pure ensemble 2 clusters\n',sum(clusters.type == 2));
            fprintf(logfid,'%i mixed clusters\n',sum(clusters.type == 0));
            [sorted,sorting] = sort(clusters.type);
+           pop_dp = 0;
+           pop_cs_initial = 0;
+           pop_cs_final = 0;
+           pop_if = 0;
+           pop1 = entity1.populations;
+           pop2 = entity2.populations;
            for clust = 1:clusters.nc
+               index = sorting(clust);
+               mem1 = clusters.members{index,1};
+               c1 = length(mem1);
+               cpop1 = 0;
+               for kc1 = 1:c1
+                   cpop1 = cpop1 + pop1(mem1(kc1));
+               end
+               mem2 = clusters.members{index,2};
+               c2 = length(mem2);
+               cpop2 = 0;
+               for kc2 = 1:c2
+                   cpop2 = cpop2 + pop2(mem2(kc2));
+               end
                switch sorted(clust)
                    case 0
                        ctype = 'mixed';
+                       pop_cs_initial = pop_cs_initial + cpop1;
+                       pop_cs_final = pop_cs_final + cpop2;
                    case 1
                        ctype = 'pure ensemble 1';
+                       pop_dp = pop_dp + cpop1;
                    case 2
                        ctype = 'pure ensemble 2';
+                       pop_if = pop_if + cpop2;
                end
-               index = sorting(clust);
                fprintf(logfid,'\nCluster %i is of %s type with Rg = %4.1f %c and on similarity scale %5.3f\n',clust,ctype,clusters.Rg(index),char(197),clusters.scale(index));
-               c1 = length(clusters.members{index,1});
-               c2 = length(clusters.members{index,2});
                switch sorted(clust)
                    case 0
                        fprintf(logfid,'%i members, %i from ensemble 1, %i from ensemble 2\n',c1+c2,c1,c2);
@@ -850,6 +873,10 @@ for c = 1:cmd_poi
                        fprintf(logfid,'%i members from ensemble 2\n',21);
                end
            end
+           fprintf(logfid,'\nPopulation of initial state that is deselected is %5.1f\n',100*pop_dp);
+           fprintf(logfid,'Population of initial state that is retained is %5.1f\n',100*pop_cs_initial);
+           fprintf(logfid,'\nPopulation of final state from conformational selection is %5.1f\n',100*pop_cs_final);
+           fprintf(logfid,'Population of final state from induced fit is %5.1f\n',100*pop_if);
         case 'subsample'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;
@@ -1310,7 +1337,7 @@ for c = 1:cmd_poi
                     selected{2} = cmd.template_address;
                 end
             end
-            [c_entity,~,exceptions0] = superimpose_ensemble(c_entity,selected,t_entity,cmd.central);
+            [c_entity,~,exceptions0] = superimpose_ensemble(c_entity,selected,t_entity,cmd.central,cmd.options);
             for exci = 1:length(exceptions0)
                 if ~isempty(exceptions0{exci})
                     warnings = warnings +1;

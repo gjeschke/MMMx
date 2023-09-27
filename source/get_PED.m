@@ -65,3 +65,19 @@ if ~options.keep_file
     delete(fname);
 end
 
+
+query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s/ensembles/%s/weights',pedID,ensembleID);
+fname = sprintf('%s_%s_weights.dat',pedID,ensembleID);
+try
+    websave(fname,query);
+catch exception
+    exceptions{1} = exception;
+    return;
+end
+
+weights = load(fname);
+entity.populations = weights(:,2);
+
+if ~options.keep_file
+    delete(fname);
+end

@@ -149,6 +149,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#sort"><code class="docutils literal notranslate"><span class="pre">sort</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#subsample"><code class="docutils literal notranslate"><span class="pre">subsample</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#superimpose"><code class="docutils literal notranslate"><span class="pre">superimpose</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#transition"><code class="docutils literal notranslate"><span class="pre">transition</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#zenodo"><code class="docutils literal notranslate"><span class="pre">Zenodo</span></code></a></li>
 </ul>
 </li>
@@ -893,7 +894,7 @@
 </div>
 <div class="section" id="save">
 <h2><code class="docutils literal notranslate"><span class="pre">save</span></code><a class="headerlink" href="#save" title="Permalink to this headline">¶</a></h2>
-<p>Save ensemble to a single PDB file</p>
+<p>Save ensemble to a single PDB file and a tab-separated file with weights</p>
 <div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">save</span> <span class="s">output</span> <span class="s">ensemble_id</span>
 </pre></div>
 </div>
@@ -904,7 +905,9 @@
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
+<li><p>the two output files can be used for submission to the protein ensemble database (PED)</p></li>
 <li><p>weights (populations) are stored in a REMARK 400 field, MMMx can read them on reloading, but other software cannot</p></li>
+<li><p>weights are also stored in a tab-separated (.tsv) file with the same basis name</p></li>
 <li><p>in some contexts, saving to an archive of individual conformer files and a file list with weights is better, use keyword <code class="docutils literal notranslate"><span class="pre">archive</span></code> for that</p></li>
 </ul>
 </dd>
@@ -971,6 +974,45 @@
 <li><p>by default, superposition is to the first conformer of the input ensemble if no range is provided</p></li>
 <li><p>if a template and central are specified, superposition is to central conformer of a superensemble consisting of input and template</p></li>
 <li><p>the range argument ‘(*)’ selects the complete structure</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="transition">
+<h2><code class="docutils literal notranslate"><span class="pre">transition</span></code><a class="headerlink" href="#transition" title="Permalink to this headline">¶</a></h2>
+<p>Visualization of a state transition between two ensembles. This is a block key.</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">transition</span> <span class="s">initial.(chain)</span> <span class="s">final.(chain)</span> <span class="s">range</span> <span class="s">output</span>
+   <span class="n">subkey</span>
+   <span class="s">...</span>
+<span class="p">.</span><span class="n">transition</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">initial</span></code> - identifier for the initial-state ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">final</span></code> - identifier for the final-state ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">(chain)</span></code> - chain tag, as in <code class="docutils literal notranslate"><span class="pre">SRSF1_free.A</span></code>, for selecting chain A in ensemble SRSF1_free</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - range where conformers are superimpose, as in (A)121-195 for residues 121-195 of chain A</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - basis filename for output</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">subkey</span></code> - a subkey that specifies a visualization command from the following list</p></li>
+</ul>
+</dd>
+<dt>Available subkeys</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">show</span></code> - MMM <code class="docutils literal notranslate"><span class="pre">show</span></code> command, is applied per conformer, example <code class="docutils literal notranslate"><span class="pre">show</span> <span class="pre">(A)16-87</span> <span class="pre">ribbon</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">color</span></code> - MMM <code class="docutils literal notranslate"><span class="pre">color</span></code> command, is applied per conformer, example <code class="docutils literal notranslate"><span class="pre">color</span> <span class="pre">(A)16-87</span> <span class="pre">red</span></code>
+*   <code class="docutils literal notranslate"><span class="pre">(cmd)</span> <span class="pre">(address)</span> <span class="pre">(argument)</span></code> - any MMM command can be issued, <code class="docutils literal notranslate"><span class="pre">address</span></code> is a chain/range address and must be applicable per conformer</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>conformers of the initial-state ensemble are divided to deselected conformers and conformational selection</p></li>
+<li><p>conformers of the final-state ensemble are divided to conformational selection and induced fit</p></li>
+<li><p>assignments and populations per subset are reported in the logfile</p></li>
+<li><p>a visualization in abstract conformation space is automatically saved</p></li>
+<li><p>PDB files and a .mmm script file are stored for visualization</p></li>
+<li><p>the .mmm script file must be run separately in MMM</p></li>
+<li><p>population (weight) is transparency-encoded if any subkeys are used</p></li>
+<li><p>if the subkey block is empty, snake models (coil with diameter-encoded weight) are displayed in MMM</p></li>
+<li><p>if the subkey block is empty, coloring is by subset (deselected red, conformational selection gree, induced fit blue, superimposed range grey)</p></li>
 </ul>
 </dd>
 </dl>

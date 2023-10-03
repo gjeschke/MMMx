@@ -372,7 +372,7 @@ Remarks
 ``save``
 ---------------------------------
 
-Save ensemble to a single PDB file  
+Save ensemble to a single PDB file and a tab-separated file with weights  
 
 .. code-block:: matlab
 
@@ -382,7 +382,9 @@ Arguments
     *   ``output`` - name of the output file, extension '.pdb' is appended, if none
     *   ``ensemble_id`` - identifier of the ensemble to be save
 Remarks
+    *   the two output files can be used for submission to the protein ensemble database (PED)
     *   weights (populations) are stored in a REMARK 400 field, MMMx can read them on reloading, but other software cannot
+    *   weights are also stored in a tab-separated (.tsv) file with the same basis name	
     *   in some contexts, saving to an archive of individual conformer files and a file list with weights is better, use keyword ``archive`` for that 
   
 ``sort``
@@ -441,6 +443,40 @@ Remarks
     *   if a template and central are specified, superposition is to central conformer of a superensemble consisting of input and template
     *   the range argument '(*)' selects the complete structure
 	
+``transition``
+---------------------------------
+
+Visualization of a state transition between two ensembles. This is a block key. 
+
+.. code-block:: matlab
+
+    transition initial.(chain) final.(chain) range output
+       subkey
+       ...
+    .transition
+
+Arguments
+    *   ``initial`` - identifier for the initial-state ensemble
+    *   ``final`` - identifier for the final-state ensemble
+    *   ``(chain)`` - chain tag, as in ``SRSF1_free.A``, for selecting chain A in ensemble SRSF1_free
+    *   ``range`` - range where conformers are superimpose, as in (A)121-195 for residues 121-195 of chain A
+    *   ``output`` - basis filename for output
+    *   ``subkey`` - a subkey that specifies a visualization command from the following list
+Available subkeys
+    *   ``show`` - MMM ``show`` command, is applied per conformer, example ``show (A)16-87 ribbon``
+    *   ``color`` - MMM ``color`` command, is applied per conformer, example ``color (A)16-87 red``
+	*   ``(cmd) (address) (argument)`` - any MMM command can be issued, ``address`` is a chain/range address and must be applicable per conformer
+Remarks
+    *   conformers of the initial-state ensemble are divided to deselected conformers and conformational selection 
+    *   conformers of the final-state ensemble are divided to conformational selection and induced fit 
+    *   assignments and populations per subset are reported in the logfile 
+    *   a visualization in abstract conformation space is automatically saved
+    *   PDB files and a .mmm script file are stored for visualization  
+    *   the .mmm script file must be run separately in MMM
+    *   population (weight) is transparency-encoded if any subkeys are used	
+    *   if the subkey block is empty, snake models (coil with diameter-encoded weight) are displayed in MMM	
+    *   if the subkey block is empty, coloring is by subset (deselected red, conformational selection gree, induced fit blue, superimposed range grey)
+
 ``Zenodo``
 ---------------------------------
 

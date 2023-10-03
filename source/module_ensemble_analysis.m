@@ -928,7 +928,7 @@ for c = 1:cmd_poi
                 cluster_sizes = ones(1,length(ordering));
             else
                 if cmd.drms
-                    [pair_rmsd,pop,exceptions0] = pair_drms_matrix(c_entity);
+                    [pair_rmsd,pop,~,exceptions0] = pair_drms_matrix(c_entity);
                 elseif cmd.oriented
                     [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
                 else
@@ -1006,6 +1006,7 @@ for c = 1:cmd_poi
                 end
             end
             save_options.pop = true;
+            save_options.order = 1:length(c_entity.populations);
             exceptions0 = put_pdb(c_entity,cmd.outname,save_options);
             for exci = 1:length(exceptions0)
                 if ~isempty(exceptions0{exci})
@@ -1015,6 +1016,13 @@ for c = 1:cmd_poi
                 end
             end
             fprintf(logfid,'\nEnsemble %s saved to single PDB file %s\n',cmd.entity,cmd.outname);
+            [pname,basname] = fileparts(cmd.outname);
+            wname = fullfile(pname, sprintf('%s_weights.tsv',basname));
+            fid = fopen(wname,'wt');
+            for conf = 1:length(c_entity.populations)
+                fprintf(fid,'%i\t%8.6f\n',conf,c_entity.populations(conf));
+            end
+            fclose(fid);
         case 'archive'
             if strcmp(cmd.entity,'.')
                 c_entity = entity;

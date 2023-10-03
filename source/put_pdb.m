@@ -117,6 +117,10 @@ if ~isfield(options,'fid') || isempty(options.fid)
     options.fid = -1;
 end
 
+if ~isfield(options,'order')
+    options.order = [];
+end
+
 % apply coordinate offset
 [na,~] = size(entity.xyz);
 entity.xyz = entity.xyz + repmat(options.dxyz,na,1);
@@ -225,7 +229,7 @@ for kconf = 1:length(conformer_order)
     end
     % write MODEL line, if more than one conformer
     if length(conformer_order) > 1
-        if ~conformer_selected || length(entity.selected) > 1
+        if ~conformer_selected || length(entity.selected) > 1 || length(options.order) > 1
             save_conf = save_conf + 1;
             pdbline = sprintf('MODEL %8i',save_conf);
             fprintf(fid,'%s\n',pad(pdbline,80));
@@ -276,7 +280,7 @@ for kconf = 1:length(conformer_order)
                         atoms = fieldnames(entity.(chain).(residue));
                         for ka = 1:length(atoms) % expand over all atoms
                             atom = atoms{ka};
-                            if isstrprop(atom(1),'upper') && isfield(entity.(chain).(residue).(atom),'index');% these are atom fields
+                            if isstrprop(atom(1),'upper') && isfield(entity.(chain).(residue).(atom),'index') % these are atom fields
                                 indices(3) =  entity.(chain).(residue).(atom).index;
                                 atname = atom;
                                 if length(atname) > 2 && strcmp(atname(1:2),'Z_')
@@ -455,7 +459,7 @@ for kconf = 1:length(conformer_order)
     end
     % write ENDMDL line, if more than one conformer
     if length(conformer_order) > 1
-        if ~conformer_selected || length(entity.selected) > 1
+        if ~conformer_selected || length(entity.selected) > 1 || length(options.order) > 1
             fprintf(fid,'%s\n',pad('ENDMDL',80));
         end
     end

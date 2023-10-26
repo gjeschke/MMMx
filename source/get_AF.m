@@ -22,6 +22,8 @@ function [entity,exceptions] = get_AF(UniProtID,options)
 %              .uniprot         UniProt identifier
 %              .uniprotname     protein name in UniProt
 %              .sequence        amino acid sequence
+%              .pLDDT           predicted local-distance difference test,
+%                               a residue-wise confidence predictor
 %              .pae             AlphaFold predicted aligned error matrix
 % exceptions   error message if something went wrong, entity is empty for
 %              errors but not for warnings, for warnings, only the last one
@@ -69,3 +71,19 @@ if ~options.keep_file
     delete(fname);
 end
 
+% compile pLDDT information
+
+pLDDT = zeros(1,length(entity.sequence));
+chain = 'A';
+residues = fieldnames(entity.(chain));
+rpoi = 0;
+
+for kr = 1:length(residues) % expand over all residues
+    residue = residues{kr};
+    if strcmp(residue(1),'R') % these are residue fields
+        rpoi = rpoi + 1;
+        pLDDT(rpoi) = entity.(chain).(residue).CA.bfactor;
+    end
+end
+
+entity.pLDDT = pLDDT;

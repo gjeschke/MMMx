@@ -250,6 +250,7 @@ for d = 1:length(control.directives)
             cmd.options.csv = false;
             cmd.options.chain = '';
             cmd.options.range = [];
+            cmd.options.compactness_range = [];
             if length(control.directives(d).options) > 2 % chain and possibly range given
                 cmd.options.chain_mode = true;
                 [chain,range] = split_chain_range(control.directives(d).options{3});
@@ -272,6 +273,23 @@ for d = 1:length(control.directives)
                         cmd.options.pair_corr = true;
                     case 'compactness'
                         cmd.options.compactness = true;
+                        [~,args] = size(control.directives(d).block);
+                        if args >= 3
+                            range_min = str2double(control.directives(d).block{k,2});
+                            range_max = str2double(control.directives(d).block{k,3});
+                            if isnan(range_max) && ~isnan(range_min)
+                                range_max = range_min;
+                                range_min = -range_max;
+                            end
+                            if ~isnan(range_max) && ~isnan(range_min)
+                                cmd.options.compactness_range = [range_min,range_max];
+                            end
+                        elseif args == 2
+                            range_max = str2double(control.directives(d).block{k,3});
+                            if ~isnan(range_max)
+                                cmd.options.compactness_range = [-range_max,range_max];
+                            end
+                        end
                     case 'oriented'
                         cmd.options.superimpose = false;
                     case 'matlab'
@@ -1220,8 +1238,12 @@ for c = 1:cmd_poi
                             saveas(h,figname);
                         end
                         Rdev = correlations.(part).Rdev;
-                        extent = max([abs(min(min(Rdev))),max(max(Rdev))]);
-                        h = plot_compactness(Rdev,'Segment length deviation',1.05*[-extent,extent],offset);
+                        if ~isempty(cmd.options.compactness_range)
+                            compactness_range = cmd.options.compactness_range;
+                        else
+                            compactness_range = 1.05*max([abs(min(min(Rdev))),max(max(Rdev))])*[-1,1];
+                        end
+                        h = plot_compactness(Rdev,'Segment length deviation',compactness_range,offset);
                         if save_figures
                             figname = sprintf('segment_length_deviation_%s_%s.%s',basname,part,figure_format);
                             saveas(h,figname);

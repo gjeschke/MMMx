@@ -128,6 +128,30 @@ for kc = 1:length(chains)
                                 indices = zeros(2,C);
                                 indices(1,:) = entity.(chain).(residue).OE1.tab_indices;
                                 indices(2,:) = entity.(chain).(residue).OE2.tab_indices;
+                            case 'SEP'
+                                q = -2;
+                                indices = zeros(3,C);
+                                indices(1,:) = entity.(chain).(residue).OPA.tab_indices;
+                                indices(2,:) = entity.(chain).(residue).OPB.tab_indices;
+                                indices(3,:) = entity.(chain).(residue).OPC.tab_indices;
+                            case 'SPO'
+                                q = -2;
+                                indices = zeros(3,C);
+                                indices(1,:) = entity.(chain).(residue).OE1.tab_indices;
+                                indices(2,:) = entity.(chain).(residue).OE2.tab_indices;
+                                indices(3,:) = entity.(chain).(residue).OE3.tab_indices;
+                            case 'THP'
+                                q = -2;
+                                indices = zeros(3,C);
+                                indices(1,:) = entity.(chain).(residue).OPA.tab_indices;
+                                indices(2,:) = entity.(chain).(residue).OPB.tab_indices;
+                                indices(3,:) = entity.(chain).(residue).OPC.tab_indices;
+                            case 'TPO'
+                                q = -2;
+                                indices = zeros(3,C);
+                                indices(1,:) = entity.(chain).(residue).OE1.tab_indices;
+                                indices(2,:) = entity.(chain).(residue).OE2.tab_indices;
+                                indices(3,:) = entity.(chain).(residue).OE3.tab_indices;
                             case 'HIS'
                                 q = get_charge(6.04,pH);
                                 indices = zeros(2,C);

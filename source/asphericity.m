@@ -28,7 +28,7 @@ function entity = asphericity(entity,selection)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2023: Gunnar Jeschke
 
-chemistry = load('element_attributes.mat');
+% chemistry = load('element_attributes.mat');
 
 Rg_all = zeros(length(entity.populations),1);
 asph_all = Rg_all;
@@ -47,16 +47,16 @@ for c = 1:length(entity.populations)
         atom_indices = argout{1}.indices;
     end
     coor = entity.xyz(atom_indices,:);
-    if max(atom_indices) > length(entity.elements)
-        elements = entity.elements(atom_indices - (c-1)*length(entity.elements));
-    else
-        elements = entity.elements(atom_indices);
-    end
+%     if max(atom_indices) > length(entity.elements)
+%         elements = entity.elements(atom_indices - (c-1)*length(entity.elements));
+%     else
+%         elements = entity.elements(atom_indices);
+%     end
     % compute atom masses
-    masses = chemistry.pse.mass(elements).';
+    % masses = chemistry.pse.mass(elements).';
     % get the inertia tensor in the original frame
     centred = true;
-    inertia = get_inertia_tensor(coor,centred,masses);
+    inertia = get_inertia_tensor(coor,centred); % changed to gyration tensor
     I = eig(inertia);
     I1 = sum(I);
     I1_squared_mean = I1_squared_mean + entity.populations(c)*I1^2;

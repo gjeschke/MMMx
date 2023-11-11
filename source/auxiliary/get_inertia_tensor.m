@@ -1,7 +1,8 @@
 function inertia = get_inertia_tensor(xyz,cflag,masses)
 % function inertia = get_inertia_tensor(xyz,cflag,masses)
 %
-% inertia tensor of an object
+% inertia tensor of an object, if masses are missing or all the same, the
+% function computes the gyration tensor
 %
 % xyz       Cartesian coordinates of the mass points
 % cflag     optional flag that dermines if center coordinates are

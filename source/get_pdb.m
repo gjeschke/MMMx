@@ -24,6 +24,8 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 %                   false
 %           .conf   conformer, conformer number, defaults to 1
 %           .atoff  atom offset, atom offset for indexing, defaults to 0
+%           .fast   Boolean flag, refrain from element assignment, defaults
+%                   to false
 % entity    optional, if present, models from the PDB file are added as
 %           conformers to an existing entity, the caller is responsible for
 %           consistency of primary structure of the conformers
@@ -40,9 +42,9 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % this number is too small and is memory-intensive, if it is too large
-maxatoms = 1000000;
-maxwater = 100000;
-maxmodels = 100000;
+maxatoms = 5000000;
+maxwater = 1000000;
+maxmodels = 10000;
 % resdefs = load('monomers.mat');
 
 % initialize empty outputs
@@ -71,6 +73,9 @@ if ~isfield(options,'conf') || isempty(options.conf)
 end
 if ~isfield(options,'atoff') || isempty(options.atoff)
     options.atoff = 0;
+end
+if ~isfield(options,'fast') || isempty(options.fast)
+    options.fast = false;
 end
 
 % placeholder for downloaded file later to be deleted
@@ -236,7 +241,11 @@ while 1
         else
             element = get_element_by_atomname(atname0);
         end
-        elm_num = element_number(element);
+        if ~options.fast
+            elm_num = element_number(element);
+        else
+            elm_num = 0;
+        end
         resname = strtrim(tline(18:20));
         if options.stripH && elm_num == 1
             canonical = find_proton(resname,atname,min_atoms);

@@ -101,7 +101,7 @@ if ~isfield(options,'unfify') || isempty(options.unify)
 end
 
 if ~isfield(options,'minsize') || isempty(options.minsize)
-    options.minsize = 50;
+    options.minsize = 25;
 end
 
 if ~isfield(options,'minlink') || isempty(options.minlink)
@@ -152,9 +152,9 @@ if ~isfield(options,'termini') || isempty(options.termini)
     options.termini = true;
 end
 
-% pairdist = (entity.pae + entity.pae')/2;
-pairdist = entity.pae';
-pairdist(pairdist < entity.pae) = entity.pae(pairdist < entity.pae);
+pairdist = (entity.pae + entity.pae')/2;
+% pairdist = entity.pae';
+% pairdist(pairdist < entity.pae) = entity.pae(pairdist < entity.pae);
 
 h = figure; clf; hold on
 image(entity.pae,'CDataMapping','scaled');
@@ -216,6 +216,44 @@ else
         end
         dstart = freq(k);
     end
+end
+
+% refine domain boundaries by sliding window approach
+
+for dom = 1:dpoi
+    dstart = domains(dom,1);
+    dend = domains(dom,2);
+    ka = dstart - 10;
+    if ka < 1
+        ka = 1;
+    end
+    ke = dstart + 10;
+    if ke > n
+        ke = n;
+    end
+    determ = zeros(1,ke-ka+1);
+    for k = ka:ke
+        determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
+    end
+    [~,k] = min(abs(determ - options.threshold));
+    domains(dom,1) = ka+k-1;
+    ka = dend - 10;
+    if ka < 1
+        ka = 1;
+    end
+    ke = dend + 10;
+    if ke > n
+        ke = n;
+    end
+    determ = zeros(1,ke-ka+1);
+    for k = ka:ke
+        determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
+    end
+    [~,k] = min(abs(determ - options.threshold));
+    domains(dom,2) = ka+k-1;
+%     figure(333); clf;
+%     plot(determ);
+%     disp('Aber hallo!');
 end
 
 % unify domains separated by too short linkers, if requested
@@ -677,7 +715,9 @@ if ~isempty(options.script)
     fprintf(fid,'\n#report\n');
     fclose(fid);
     fprintf(fidef,'   .deer\n\n');
-    fprintf(fidef,'   addpdb %s*.pdb\n',modelfile);
+    if exist('modelfile','var')
+        fprintf(fidef,'   addpdb %s*.pdb\n',modelfile);
+    end
     fprintf(fidef,'.EnsembleFit\n');
     fprintf(fidef,'\n#report\n');
     fclose(fidef);

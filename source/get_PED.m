@@ -14,6 +14,8 @@ function [entity,exceptions] = get_PED(pedID,ensembleID,options)
 %               exist, if input is missing, all ensembles are downloaded
 % options       .keep_file  if true, the downloaded and extracted PDB file
 %                           is kept, defaults to false (file is deleted)
+%               .fast       if true, do not read elemnet information in PDB
+%                           file, defaults to false
 %
 % OUTPUT
 % entity       entity structure in MMMx:atomic representation 
@@ -38,6 +40,12 @@ entity = [];
 if ~exist('options','var') || isempty(options)
     options.keep_file = false;
 end
+if ~isfield(options,'keep_file') || isempty(options.keep_file)
+    options.keep_file = false;
+end
+if ~isfield(options,'fast') || isempty(options.fast)
+    options.fast = false;
+end
 
 query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s',pedID);
 try
@@ -47,7 +55,7 @@ catch exception
     return;
 end
 
-if ~exist('ensembleID','var')
+if ~exist('ensembleID','var') || isempty(ensembleID)
     eIDs = cell(1,length(PED_info.ensembles));
     for ens = 1:length(PED_info.ensembles)
         eIDs{ens} = PED_info.ensembles(ens).ensemble_id;
@@ -75,7 +83,7 @@ for ens = 1:length(eIDs)
     filenames = untar(tarname);
     delete(tarname);
     fname = filenames{1};
-    entity = get_pdb(fname);
+    entity = get_pdb(fname,options);
     entity.title = PED_info.description.title;
     entity.name = sprintf('E%s',pedID(end-2:end));
     entity.ensembleID = ensembleID;

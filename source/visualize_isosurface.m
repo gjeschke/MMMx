@@ -87,7 +87,7 @@ if ~isfield(options,'camupvec')
     options.camupvec = [0,0,1];
 end
 
-if ~isfield(options,'colorscheme')
+if ~isfield(options,'colorscheme') || isempty(options.colorscheme)
     if ~exist('property_file','var') || isempty(property_file)
         options.colorscheme = 'gainsboro';
     else
@@ -163,7 +163,7 @@ else
 end
 
 my_axes = gca;
-if isfield(options,'limits')
+if isfield(options,'limits') && ~isempty(options.limits)
     my_axes.CLim = options.limits;
 end
 view(my_axes,options.camvec);

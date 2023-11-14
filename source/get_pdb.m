@@ -306,6 +306,9 @@ while 1
         charge = 0;
         if length(tline) >= 60
             occupancy = str2double(tline(55:60));
+            if occupancy < 10*eps % catch wrong PDB format with zero occupancy
+                occupancy = 1;
+            end
         end
         if length(tline) >= 66
             Bfactor = str2double(tline(61:66));

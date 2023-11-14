@@ -840,7 +840,9 @@ for c = 1:cmd_poi
            if save_figures
                options.figname = sprintf('transition_%s_%s.%s',cmd.entity1,cmd.entity2,figure_format);
            end
+           assignment_name = sprintf('transition_%s_%s_assignment.mat',cmd.entity1,cmd.entity2);
            clusters = cluster_transition(entity1,entity2,options);
+           save(assignment_name,'clusters');
            fprintf(logfid,'\n--- Transition analysis ---\n\n');
            fprintf(logfid,'Enemble 1 (%s) has %i conformers.\n',cmd.entity1,clusters.C1);
            fprintf(logfid,'Enemble 2 (%s) has %i conformers.\n',cmd.entity2,clusters.C2);

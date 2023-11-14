@@ -179,14 +179,15 @@ for d = 1:length(control.directives)
         case 'isosurface'
             cmd_poi = cmd_poi + 1;
             cmd.density = control.directives(d).options{1};
+            cmd.options.colorscheme = '';
             if length(control.directives(d).options) > 1 % property file exists
                 cmd.property = control.directives(d).options{2};
+                cmd.options.colorscheme = 'electrostatic';
             else
                 cmd.property = ''; 
             end
             cmd.options.level = 0.999;
             cmd.options.camvec = [1,0,0];
-            cmd.options.colorscheme = 'electrostatic';
             cmd.options.opaqueness = 1;
             cmd.options.limits = [];
             cmd.options.camupvec = [0,1,0];

@@ -1,7 +1,5 @@
 function [classifier,domains,max_terminal] = classify_by_disorder(disorder,minterminal,mindomain,minlink)
 
-unify = 15;
-
 if ~exist('minterminal','var')
     minterminal = 10;
 end

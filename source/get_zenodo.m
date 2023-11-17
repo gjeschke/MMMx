@@ -58,8 +58,8 @@ query = '';
 k = 0;
 while k < length(zenodo_info.files)
     k = k + 1;
-    if strcmpi(zenodo_info.files(k).filename,fname)
-        query = zenodo_info.files(k).links.download;
+    if strcmpi(zenodo_info.files(k).key,fname)
+        query = zenodo_info.files(k).links.self;
         break
     end
 end

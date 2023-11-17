@@ -170,7 +170,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 2 % chain and possibly range given
                 cmd.address = control.directives(d).options{3};
             end
-            if length(control.directives(d).options) > 3 % seoarate chain and possibly range given for second ensemble
+            if length(control.directives(d).options) > 3 % separate chain and possibly range given for second ensemble
                 cmd.address2 = control.directives(d).options{4};
             else
                 cmd.address2 = cmd.address;
@@ -465,8 +465,8 @@ for c = 1:cmd_poi
             k = 0;
             while k < length(zenodo_info.files)
                 k = k + 1;
-                if strcmpi(zenodo_info.files(k).filename,fname)
-                    query = zenodo_info.files(k).links.download;
+                if strcmpi(zenodo_info.files(k).key,fname)
+                    query = zenodo_info.files(k).links.self;
                     break
                 end
             end            
@@ -579,7 +579,7 @@ for c = 1:cmd_poi
                 end
             end
             cluster_options.size = cmd.size;
-            [ensemble,info] = cluster_ensemble(entity,cluster_options);
+            [ensemble,info] = cluster_ensemble(c_entity,cluster_options);
             [C,~] = size(ensemble);
             fprintf(logfid,'\n--- Ensemble %s clustered to ensemble %s with %i conformers\n\n',cmd.entity,cmd.new_ensemble,C);
             fprintf(logfid,'Ensemble entropy reduced from %5.2f to %5.2f\n',info.entropies);
@@ -602,7 +602,7 @@ for c = 1:cmd_poi
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end
-            ensembles = store_ensemble(cmd.entity,c_entity,ensembles);            
+            ensembles = store_ensemble(cmd.new_ensemble,c_entity,ensembles);            
         case 'figures'
             if strcmpi(cmd.extension,'off')
                 save_figures = false;

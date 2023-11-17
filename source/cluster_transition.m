@@ -315,6 +315,29 @@ if sum(clusters.type) > 0
     scaled = scaled - min(scaled);
     scaled = scaled/max(scaled);
     
+    [~,csorting] = sort(scaled);
+    all_indices1 = zeros(1,clusters.C1);
+    poi1 = 0;
+    all_indices2 = zeros(1,clusters.C2);
+    poi2 = 0;
+    for kc = 1:length(csorting)
+        clust = csorting(kc);
+        indices1 = clusters.members{clust,1};
+        all_indices1(poi1+1:poi1+length(indices1)) = indices1;
+        poi1 = poi1+length(indices1);
+        indices2 = clusters.members{clust,2} + clusters.C1;
+        all_indices2(poi2+1:poi2+length(indices2)) = indices2;
+        poi2 = poi2+length(indices2);
+    end
+    dsorting = [all_indices1,all_indices2];
+    D = D(dsorting,dsorting);
+    h = plot_pair_drmsd(D,clusters.C1,clusters.C2);
+    [pname,basname,figure_format] = fileparts(options.figname);
+    basname = fullfile(pname,basname);
+    figname = sprintf('%s_sorted_drms%s',basname,figure_format);
+    saveas(h,figname);
+
+    
     clusters.scale = scaled;
     
     rescaled = scaled;
@@ -801,3 +824,20 @@ for i=1:n
     
 end
 
+function h = plot_pair_drmsd(D,C1,C2)
+
+h = figure; hold on
+
+plot([0,0],[1,C1],'Color',[0.75,0,0],'LineWidth',2);
+plot([0,0],[C1+1,C1+C2],'Color',[0,0,0.8],'LineWidth',2);
+plot([1,C1],[0,0],'Color',[0.75,0,0],'LineWidth',2);
+plot([C1+1,C1+C2],[0,0],'Color',[0,0,0.8],'LineWidth',2);
+image(D,'CDataMapping','scaled');
+curr_axis = gca;
+curr_axis.YDir = 'normal';
+colorbar;
+axis tight
+xlabel('Conformer number');
+ylabel('Conformer number');
+title('Sorted distance root mean square deviation');
+axis equal

@@ -588,7 +588,7 @@ for c = 1:cmd_poi
             fprintf(logfid,'Similarity of reduced ensemble to original ensemble is %6.4f\n',info.similarity);
             ensemble_name = strcat(cmd.new_ensemble,'.ens');
             ens_fid = fopen(ensemble_name,'wt');
-            fprintf(ens_fid,'%% Clustered ensemble %s by MMMx derived from ensemble %\n\n',cmd.new_ensemble,cmd.entity);
+            fprintf(ens_fid,'%% Clustered ensemble %s by MMMx derived from ensemble %s\n\n',cmd.new_ensemble,cmd.entity);
             for clust = 1:C
                 fprintf(logfid,'Cluster %i with population %6.4f is represented by conformer %i of original ensemble\n',clust,ensemble(clust,2),ensemble(clust,1));
                 oname = sprintf('%s_m%i.pdb',cmd.new_ensemble,clust);
@@ -602,7 +602,7 @@ for c = 1:cmd_poi
             if strcmp(cmd.entity,'.')
                 entity = c_entity;
             end
-            ensembles = store_ensemble(cmd.new_ensemble,c_entity,ensembles);            
+            ensembles = store_ensemble(cmd.new_ensemble,c_entity,ensembles); 
         case 'figures'
             if strcmpi(cmd.extension,'off')
                 save_figures = false;
@@ -1493,6 +1493,11 @@ while ~found && e < length(ensembles)
         ensemble_descriptor.entity = entity;
         ensembles{e} = ensemble_descriptor;
     end
+end
+if ~found
+    ensemble_descriptor.name = name;
+    ensemble_descriptor.entity = entity;
+    ensembles{length(ensembles)+1} = ensemble_descriptor;
 end
 
 function record_exception(exception,logfid)

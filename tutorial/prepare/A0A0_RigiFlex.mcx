@@ -1,0 +1,11 @@
+% RigiFlex script template for AlphaFold prediction A0A024R1R8 (A0A024R1R8_HUMAN)
+
+#log
+
+
+!flex % whole protein
+   save A0A024R1R8_full_length
+   sequence 1 64 MSSHEGGKKKALKQPKKQAKEMDEEEKAFKQKQKEEQKKLEVLKAKVVGKGPLATGGIKKSGKK
+.flex
+
+#report

@@ -1,0 +1,12 @@
+% MMMx Demo: Building a rigid-body template and script from an AlphaFold prediction 
+% (with optimum reference sites)
+
+# log
+
+!ExperimentDesign
+   RigiFlex P26599 % generate input files and an MMMx RigiFlex script for the AlphaFold prediction for UniProt ID P26599   
+.ExperimentDesign
+
+# report
+
+

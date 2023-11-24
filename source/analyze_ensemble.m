@@ -469,8 +469,8 @@ function [Comp,R0,nu,raxis,Rg_distr,Prox,R0_P,nu_P,all_k,all_Rg,all_R2,mean_R2,R
 % empty type analysis output
 type_proxi = [];
 
-R0 = 5.5; % starting value for effective segment length
-nu = 0.55; % starting value for Flory exponent
+R0 = 2; % starting value for effective segment length
+nu = 0.6; % starting value for Flory exponent
 increments_per_Angstroem = 10; % resolution
 
 C = length(backbone.bb);

@@ -1,0 +1,39 @@
+# log
+
+!ensembleanalysis
+
+   get_PED PED00020.e002 MVN2
+   
+   flexibility MVN2_flexibility MVN2
+   
+   order MVN2_order MVN2
+   
+   measures MVN2_measures MVN2
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+   
+   get_PED PED00020.e004 MVN4
+   
+   flexibility MVN4_flexibility MVN4
+   
+   order MVN4_order MVN4
+   
+   measures MVN4_measures MVN4
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+   
+.ensembleanalysis
+
+# report

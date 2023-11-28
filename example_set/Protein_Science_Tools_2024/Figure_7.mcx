@@ -1,0 +1,92 @@
+% MMMx script generating Figure 7 panels
+# log
+
+!EnsembleAnalysis
+
+   get_PED PED00160.e001 Sic1 % Sic1 native/unphosphorylated  
+   inertiaframe Sic1_native_inertia_frame Sic1 (A)1-92
+   density Sic1_native_density.mat Sic1 (A)1-92 1
+   property Sic1_native_electrostatic.mat Sic1 (A)1-92 1 electrostatic
+
+.EnsembleAnalysis
+
+!Visualize
+
+   isosurface Sic1_native_density.mat Sic1_native_electrostatic.mat
+      colorscheme electrostatic
+      camvec 1 0 0
+      camupvec 0 1 0
+      limits adapted
+      figname Sic1_native_density_electrostatic_x.png
+   .isosurface
+
+   isosurface Sic1_native_density.mat Sic1_native_electrostatic.mat
+      colorscheme electrostatic
+      camvec 0 0 -1
+      camupvec 0 1 0
+      limits adapted
+      figname Sic1_native_density_electrostatic_-z.png
+   .isosurface
+
+.Visualize
+
+!EnsembleAnalysis
+
+   get_PED PED00161.e001 Sic1 % Sic1 phosphorylated 2, 5, 33, 45, 69, 76, 80 
+   inertiaframe Sic1_phosphorylated_inertia_frame Sic1 (A)1-92
+   density Sic1_phosphorylated_density.mat Sic1 (A)1-92 1
+   property Sic1_phosphorylated_electrostatic.mat Sic1 (A)1-92 1 electrostatic
+
+.EnsembleAnalysis
+
+!Visualize
+
+   isosurface Sic1_phosphorylated_density.mat Sic1_phosphorylated_electrostatic.mat
+      colorscheme electrostatic
+      camvec 1 0 0
+      camupvec 0 1 0
+      limits adapted
+      figname Sic1_phosphorylated_density_electrostatic_x.png
+   .isosurface
+
+   isosurface Sic1_phosphorylated_density.mat Sic1_phosphorylated_electrostatic.mat
+      colorscheme electrostatic
+      camvec 0 0 -1
+      camupvec 0 1 0
+      limits adapted
+      figname Sic1_phosphorylated_density_electrostatic_-z.png
+   .isosurface
+
+.Visualize
+
+
+!EnsembleAnalysis
+
+   addpdb Sic1_SPK1_CDC4.pdb Sic1 % Sic1 complex with SPK1 and CDC4  
+   inertiaframe Sic1_SPK1_CDC4_inertia_frame Sic1 (A)1-92
+   density Sic1_SPK1_CDC4_density.mat Sic1 (A)1-92 1
+   property Sic1_SPK1_CDC4_electrostatic.mat Sic1 (A)1-92 1 electrostatic
+
+.EnsembleAnalysis
+
+!Visualize
+
+   isosurface Sic1_SPK1_CDC4_density.mat Sic1_SPK1_CDC4_electrostatic.mat
+      colorscheme electrostatic
+      camvec 1 0 0
+      camupvec 0 1 0
+      limits adapted
+      figname Sic1_SPK1_CDC4_density_electrostatic_x.png
+   .isosurface
+
+   isosurface Sic1_SPK1_CDC4_density.mat Sic1_SPK1_CDC4_electrostatic.mat
+      colorscheme electrostatic
+      camvec 0 0 -1
+      camupvec 0 1 0
+      limits adapted
+      figname Sic1_SPK1_CDC4_density_electrostatic_-z.png
+   .isosurface
+
+.Visualize
+
+# report

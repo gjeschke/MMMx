@@ -1,0 +1,10 @@
+# log
+
+!ensembleanalysis
+
+   get_PED PED00020.e002 MVN_2
+   get_PED PED00020.e004 MVN_4
+
+   transition MVN_2.A MVN_4.A 1-133 MVN_dissimilarity
+   
+.ensembleanalysis

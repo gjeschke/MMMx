@@ -1,0 +1,36 @@
+% MMMx script generating Figure panels S1c and S1d
+% this script runs rather long, because the NUS ensembles have large numbers of conformers
+# log
+
+!EnsembleAnalysis
+
+   get_PED PED00149.e001 NUS_denatured % NUS 1313-1390 denatured
+   
+   flexibility NUS_denatured_flexibility NUS_denatured
+   order NUS_denatured_order NUS_denatured
+
+   measures NUS_denatured_measures NUS_denatured
+     Rg
+     matlab
+     csv
+     oriented
+	 compactness
+   .measures
+
+   get_PED PED00150.e001 % NUS_native   
+
+   flexibility NUS_native_flexibility NUS_native
+   order NUS_native_order NUS_native
+
+   measures NUS_native_measures NUS_native
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures
+.EnsembleAnalysis
+
+# report

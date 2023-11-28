@@ -1,0 +1,18 @@
+# log
+
+!ensembleanalysis
+
+   get_PED PED00159.e001 Sic1 % Sic1 unphosphorylated
+   
+   measures Sic1_phosphorylated_159_measures Sic1 (A)1-92
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+.ensembleanalysis
+
+# report

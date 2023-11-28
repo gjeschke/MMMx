@@ -1,0 +1,18 @@
+# log
+
+!ensembleanalysis
+
+   get_Zenodo 8214049.FUS_unrestrained.zip FUS
+   
+   measures FUS_QGSY_measures FUS (A)4-168
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+.ensembleanalysis
+
+# report

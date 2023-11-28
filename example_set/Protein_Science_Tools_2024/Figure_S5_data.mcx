@@ -1,4 +1,4 @@
-% Table 3
+% Raw data for figure S5
 % Comparison of various ensembles for hnRNP A1
 % data is imported from Zenodo
 %
@@ -16,15 +16,15 @@
    get_Zenodo 6384003.hnRNP_A1_pre_from_unrestrained_ensemble.ens hnRNP_A1_PRE % construct PRE-only ensemble
    cluster hnRNP_A1_unrestrained hnRNP_A1_unrestrained_500 500 % cluster ensemble for computational efficiency
    
-   match hnRNP_A1_unrestrained_clustered hnRNP_A1_DEER_SAXS_PRE
-   match hnRNP_A1_unrestrained_clustered hnRNP_A1_DEER_SAXS
-   match hnRNP_A1_unrestrained_clustered hnRNP_A1_DEER
-   match hnRNP_A1_unrestrained_clustered hnRNP_A1_PRE
-   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_DEER_SAXS
-   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_DEER
-   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_PRE
-   match hnRNP_A1_DEER_SAXS hnRNP_A1_DEER
-   match hnRNP_A1_DEER_SAXS hnRNP_A1_PRE
-   match hnRNP_A1_DEER hnRNP_A1_PRE
+   match hnRNP_A1_unrestrained_500 hnRNP_A1_DEER_SAXS_PRE (A)187-320
+   match hnRNP_A1_unrestrained_500 hnRNP_A1_DEER_SAXS (A)187-320
+   match hnRNP_A1_unrestrained_500 hnRNP_A1_DEER (A)187-320
+   match hnRNP_A1_unrestrained_500 hnRNP_A1_PRE (A)187-320
+   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_DEER_SAXS (A)187-320
+   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_DEER (A)187-320
+   match hnRNP_A1_DEER_SAXS_PRE hnRNP_A1_PRE (A)187-320
+   match hnRNP_A1_DEER_SAXS hnRNP_A1_DEER (A)187-320
+   match hnRNP_A1_DEER_SAXS hnRNP_A1_PRE (A)187-320
+   match hnRNP_A1_DEER hnRNP_A1_PRE (A)187-320
 
 .ensembleanalysis

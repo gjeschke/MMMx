@@ -1,0 +1,24 @@
+% MMM must be opened in the same Matlab instance or the 'execute' line must be deleted
+%
+
+# log
+
+!EnsembleAnalysis
+   get_PED PED00020.e002 MVN_2
+   inertiaframe MVN_2_inertia_frame MVN_2
+.EnsembleAnalysis
+
+!visualize
+   addpdb MVN_2_inertia_frame_m*.pdb % MVN ensemble 2
+   script MVN_2_visualization
+   show (A)1-132 snake
+   graphics MVN_2_view_x.png png x
+   graphics MVN_2_view_y.png png y
+   graphics MVN_2_view_z.png png z
+   graphics MVN_2_view_-x.png png -x
+   graphics MVN_2_view_-y.png png -y
+   graphics MVN_2_view_-z.png png -z
+   execute % comment out or delete this line if you want to generate only the MMM visualization script
+.visualize
+
+# report

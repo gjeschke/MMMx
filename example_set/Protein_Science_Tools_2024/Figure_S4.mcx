@@ -1,0 +1,12 @@
+# log
+
+!ensembleanalysis
+
+   get_Zenodo 8214049.FUS_unrestrained.zip FUS
+   
+   flexibility FUS_flexibility FUS
+   order FUS_order FUS
+
+.ensembleanalysis
+
+# report

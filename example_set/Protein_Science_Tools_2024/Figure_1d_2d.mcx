@@ -1,0 +1,18 @@
+# log
+
+!ensembleanalysis
+
+   addpdb Sic1_SPK1_CDC4.pdb Sic1 % Sic1 phosphorylated
+   
+   measures Sic1_SPK1_CDC4_measures Sic1 (A)1-92
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+.ensembleanalysis
+
+# report

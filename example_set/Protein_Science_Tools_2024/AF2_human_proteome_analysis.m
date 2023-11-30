@@ -1,5 +1,7 @@
 function [results,PAE_distribution] = AF2_human_proteome_analysis(params,interactive)
 
+cap = 31.75; % cap of AlphaFold2 PAE
+
 if ~exist('interactive','var') || isempty(interactive)
     interactive = false;
 end
@@ -57,6 +59,7 @@ for nr = 1:nprot
     end
 
     pairdist = (val.predicted_aligned_error + val.predicted_aligned_error')/2;
+    pairdist0 = pairdist;
 
     [n,~] = size(pairdist);
 
@@ -122,90 +125,95 @@ for nr = 1:nprot
         fprintf(fid,'Minimum interdomain linker size: %i\n',minlink);
         fprintf(fid,'Minimum length of flexible terminus: %i\n',minterminal);
         fprintf(fid,'Folded domain threshold: %5.1f%c\n\n',threshold,char(197));
-
-        % classes of proteins
-        F = 0;
-        Ft = 0;
-        Fs = 0;
-        M = 0;
-        D = 0;
         
+        pairdist = pairdist0;
+
         A = pairdist < threshold;
 
         local = 5;
 
-        for k1 = 1:n-2*local
-            for k2 = k1-local:k1+local
-                if k2 >=1 && k2 <=n
-                    A(k1,k2) = 0;
-                    A(k2,k1) = 0;
+        extension = ones(1,n);
+        for k1 = 2:n-1
+            ext = 1;
+            k2 = k1+local;
+            while k2 < n
+                k2 = k2 + 1;
+                if A(k1,k2)
+                    ext = k2-k1;
+                else
+                    break
                 end
             end
+            extension(k1) = ext;
         end
 
-        % find diagonal blocks, based on F. Pedroche, M. Rebollo, C. Carrascosa and A. Palomares (2012)
-        % http://arxiv.org/abs/1206.5726
-        L = diag( sum(A,2) ) - A;
-        value = sum( triu(L) );
-        freq = find( value == 0 );
+        % moving average filter
+        b = ones(1,local)/local;
+        a = 1;
+        extension = filter(b,a,extension);
         
         dpoi = 0;
-        domains = zeros(length(freq),2);
-        dstart = 1;
-        if length(freq) ==1
-            mean_uncert = mean(mean(pairdist));
-            if mean_uncert <= threshold
-                dpoi = dpoi + 1;
-                domains(dpoi,1) = dstart;
-                domains(dpoi,2) = freq(1);
+        domains = zeros(ceil(n/mindomain),2);
+        while max(extension) >= mindomain
+            [ext,k] = max(extension);
+            dstart = k;
+            dend = k + round(ext);
+            if dend > n
+                dend = n;
             end
-        else
-            for k = 2:length(freq)
-                if freq(k)-dstart >= minsize
-                    mean_uncert = mean(mean(pairdist(dstart:freq(k),dstart:freq(k))));
-                    if mean_uncert <= threshold
-                        dpoi = dpoi + 1;
-                        domains(dpoi,1) = dstart;
-                        domains(dpoi,2) = freq(k);
+            mean_uncert0 = mean(mean(pairdist(dstart:dend,dstart:dend)));
+            for k1 = dstart:-1:1
+                mean_uncert = mean(pairdist(k1,k1:dend));
+                if mean_uncert <= threshold
+                    dstart = k1;
+                    mean_uncert0 = mean(mean(pairdist(dstart:dend,dstart:dend)));
+                else
+                    break;
+                end
+            end
+            if mean_uncert0 > threshold
+                for k1 = dstart:n
+                    mean_uncert = mean(mean(pairdist(k1:dend,k1:dend)));
+                    if mean_uncert < mean_uncert0
+                        mean_uncert0 = mean_uncert;
+                        dstart = k1;
+                    else
+                        break;
                     end
                 end
-                dstart = freq(k);
             end
-        end
-        
-        % refine domain boundaries by sliding window approach
-        
-        for dom = 1:dpoi
-            dstart = domains(dom,1);
-            dend = domains(dom,2);
-            ka = dstart - 10;
-            if ka < 1
-                ka = 1;
+            for k1 = dend:n
+                mean_uncert = mean(mean(pairdist(k1,dstart:k1)));
+                if mean_uncert <= threshold
+                    mean_uncert0 = mean_uncert;
+                    dend = k1;
+                else
+                    break;
+                end
             end
-            ke = dstart + 10;
-            if ke > n
-                ke = n;
+            if mean_uncert0 > threshold
+                for k1 = dend:-1:1
+                    mean_uncert = mean(mean(pairdist(dstart:k1,dstart:k1)));
+                    if mean_uncert < mean_uncert0
+                        mean_uncert0 = mean_uncert;
+                        dend = k1;
+                    else
+                        break;
+                    end
+                end
             end
-            determ = zeros(1,ke-ka+1);
-            for k = ka:ke
-                determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
+            extension(dstart:dend) = zeros(1,dend-dstart+1);
+            pairdist(dstart:dend,dstart:dend) = 1e12;
+            for k = 1:n
+                test = k + round(extension(k));
+                if test <= n && extension(test) > cap
+                    extension(k) = 1;
+                end
             end
-            [~,k] = min(abs(determ - threshold));
-            domains(dom,1) = ka+k-1;
-            ka = dend - 10;
-            if ka < 1
-                ka = 1;
+            if mean_uncert0 <= threshold
+                dpoi = dpoi +1;
+                domains(dpoi,:) = [dstart,dend];
             end
-            ke = dend + 10;
-            if ke > n
-                ke = n;
-            end
-            determ = zeros(1,ke-ka+1);
-            for k = ka:ke
-                determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
-            end
-            [~,k] = min(abs(determ - threshold));
-            domains(dom,2) = ka+k-1;
         end
         
         % unify domains separated by too short linkers, if requested
@@ -231,7 +239,13 @@ for nr = 1:nprot
         end
         if max(max(domains)) == 0
             dpoi = 0;
+        else
+            % sort domains
+            [~,indices] = sort(domains(1:dpoi,1));
+            domains = domains(indices,:);
         end
+
+        
         folded = 0;
         for k = 1:dpoi
             k1 = domains(k,1);
@@ -244,6 +258,9 @@ for nr = 1:nprot
                 plot([k1,k2],[k2,k2],'LineWidth',2,'Color',[0.8,0,0]);
             end
         end
+%         if interactive
+%             keyboard
+%         end
         
         max_flex_link = 0;
         overlap = 0;
@@ -266,16 +283,16 @@ for nr = 1:nprot
         
         % classify this protein
         if dpoi < 1
-            D = D + 1;
+            results.D(parset) = results.D(parset) + 1;
         else
             if dpoi > 1
-                M = M + 1;
+                results.Mf(parset) = results.Mf(parset) + 1;
             elseif max_terminal == 0
-                F = F + 1;
+                results.F(parset) = results.F(parset) + 1;
             elseif max_terminal < minterminal
-                Fs = Fs + 1;
+                results.F(parset) = results.F(parset) + 1;
             else
-                Ft = Ft + 1;
+                results.Sf(parset) = results.Sf(parset) + 1;
             end
         end
         
@@ -286,11 +303,6 @@ for nr = 1:nprot
             drawnow
         end
        
-        results.F(parset) = results.F(parset) + F + Fs;
-        results.Sf(parset) = results.Sf(parset) + Ft;
-        results.Mf(parset) = results.Mf(parset) + M;
-        results.D(parset) = results.D(parset) + D;
-
     end
     
 end
@@ -298,10 +310,13 @@ end
 fclose(fid);
 fclose(sfid);
 
-results.F = results.F/n_valid;
-results.Sf = results.Sf/n_valid;
-results.Mf = results.Mf/n_valid;
-results.D = results.D/n_valid;
+for parset = 1:length(params.minsize)
+    normalizer = sum(results.F(parset)+results.Sf(parset)+results.Mf(parset)+results.D(parset));
+    results.F(parset) = results.F(parset)/normalizer;
+    results.Sf(parset) = results.Sf(parset)/normalizer;
+    results.Mf(parset) = results.Mf(parset)/normalizer;
+    results.D(parset) = results.D(parset)/normalizer;
+end
 
 PAE_distribution.axis = long_PAE_axis;
 PAE_distribution.count = mean_long_PAE;

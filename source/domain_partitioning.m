@@ -52,10 +52,6 @@ function entity = domain_partitioning(entity,options)
 %              the input entity is augmented by
 %              .domains         (n,2) list of n folded domains specified by
 %                               residue ranges, can be empty
-%              .variability     (n,1) mean predicted aligned error (Å) 
-%                               within each folded domain
-%              .maxpae          (n,1) maxumum predicted aligned error (Å)
-%                               within each folded domain
 %              .linkers         list of m flexible linkers, each with
 %                               subfields
 %                               .range      (1,2) first, second residue
@@ -72,7 +68,11 @@ function entity = domain_partitioning(entity,options)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2023: Gunnar Jeschke
 
-PAE2stddev = 1; % factor for converting PAE to standrad deviation 
+% check whether image processing toolbox is available
+
+cap = 31.75; % cap of AlphaFold2 PAE
+
+PAE2stddev = 1; % factor for converting PAE to standard deviation 
 
 my_base = load('deer_kernel.mat','base','t','r');
 Pake_base.kernel = my_base.base-ones(size(my_base.base)); % kernel format for pcf2deer
@@ -93,7 +93,7 @@ elseif ~isempty(options.script)
 end
 
 if ~isfield(options,'threshold') || isempty(options.threshold)
-    options.threshold = 10;
+    options.threshold = cap/3;
 end
 
 if ~isfield(options,'unfify') || isempty(options.unify)
@@ -153,8 +153,6 @@ if ~isfield(options,'termini') || isempty(options.termini)
 end
 
 pairdist = (entity.pae + entity.pae')/2;
-% pairdist = entity.pae';
-% pairdist(pairdist < entity.pae) = entity.pae(pairdist < entity.pae);
 
 h = figure; clf; hold on
 image(entity.pae,'CDataMapping','scaled');
@@ -171,90 +169,179 @@ axis equal
 
 A = pairdist < options.threshold;
 
-for k1 = 1:n-2*options.local
-    for k2 = k1-options.local:k1+options.local
-        if k2 >=1 && k2 <=n
-            A(k1,k2) = 0;
-            A(k2,k1) = 0;
+extension = ones(1,n);
+for k1 = 2:n-1
+    ext = 1;
+    k2 = k1+options.local;
+    while k2 < n
+        k2 = k2 + 1;
+        if A(k1,k2)
+            ext = k2-k1;
+        else
+            break
         end
     end
+    extension(k1) = ext;
 end
+% moving average filter
+b = ones(1,options.local)/options.local;
+a = 1;
+extension = filter(b,a,extension);
 
-
-% find diagonal blocks, based on F. Pedroche, M. Rebollo, C. Carrascosa and A. Palomares (2012)
-% http://arxiv.org/abs/1206.5726
-L = diag( sum(A,2) ) - A;
-value = sum( triu(L) );
-freq = find( value == 0 );
-
-
-domains = zeros(length(freq),2);
-variability = zeros(length(freq),1);
-maxpae = zeros(length(freq),1);
 dpoi = 0;
-dstart = 1;
-if length(freq) ==1
-   mean_uncert = mean(mean(pairdist)); 
-   if mean_uncert <= options.threshold
-       dpoi = dpoi + 1;
-       variability(dpoi) = mean_uncert;
-       domains(dpoi,1) = dstart;
-       domains(dpoi,2) = freq(1);
-       maxpae(dpoi) =  max(max(pairdist(dstart:freq(1),dstart:freq(1))));
-   end
-else
-    for k = 2:length(freq)
-        if freq(k)-dstart >= options.minsize
-            mean_uncert = mean(mean(pairdist(dstart:freq(k),dstart:freq(k))));
-            if mean_uncert <= options.threshold
-                dpoi = dpoi + 1;
-                variability(dpoi) = mean_uncert;
-                domains(dpoi,1) = dstart;
-                domains(dpoi,2) = freq(k);
-                maxpae(dpoi) =  max(max(pairdist(dstart:freq(k),dstart:freq(k))));
+domains = zeros(ceil(n/options.minsize),2);
+while max(extension) >= options.minsize
+    [ext,k] = max(extension);
+    dstart = k;
+    dend = k + round(ext);
+    if dend > n
+        dend = n;
+    end
+    mean_uncert0 = mean(mean(pairdist(dstart:dend,dstart:dend)));
+    for k1 = dstart:-1:1
+        mean_uncert = mean(pairdist(k1,k1:dend));
+        if mean_uncert <= options.threshold
+            dstart = k1;
+            mean_uncert0 = mean(mean(pairdist(dstart:dend,dstart:dend)));
+        else
+            break;
+        end
+    end
+    if mean_uncert0 > options.threshold
+        for k1 = dstart:n
+            mean_uncert = mean(mean(pairdist(k1:dend,k1:dend)));
+            if mean_uncert < mean_uncert0
+                mean_uncert0 = mean_uncert;
+                dstart = k1;
+            else
+                break;
             end
         end
-        dstart = freq(k);
+    end
+    for k1 = dend:n
+        mean_uncert = mean(mean(pairdist(k1,dstart:k1)));
+        if mean_uncert <=options.threshold
+            mean_uncert0 = mean_uncert;
+            dend = k1;
+        else
+            break;
+        end
+    end
+    if mean_uncert0 > options.threshold
+        for k1 = dend:-1:1
+            mean_uncert = mean(mean(pairdist(dstart:k1,dstart:k1)));
+            if mean_uncert < mean_uncert0
+                mean_uncert0 = mean_uncert;
+                dend = k1;
+            else
+                break;
+            end
+        end
+    end
+    extension(dstart:dend) = zeros(1,dend-dstart+1);
+    pairdist(dstart:dend,dstart:dend) = 1e12;
+    for k = 1:n
+        test = k + round(extension(k));
+        if test <= n && extension(test) > cap
+            extension(k) = 1;
+        end
+    end
+    if mean_uncert0 <= options.threshold
+        dpoi = dpoi +1;
+        domains(dpoi,:) = [dstart,dend];
+%         plot([dstart,dstart],[dstart,dend],'LineWidth',2,'Color',[0.8,.5,0]);
+%         plot([dend,dend],[dstart,dend],'LineWidth',2,'Color',[0.8,0.5,0]);
+%         plot([dstart,dend],[dstart,dstart],'LineWidth',2,'Color',[0.8,0.5,0]);
+%         plot([dstart,dend],[dend,dend],'LineWidth',2,'Color',[0.8,0.5,0]);
     end
 end
 
-% refine domain boundaries by sliding window approach
 
-for dom = 1:dpoi
-    dstart = domains(dom,1);
-    dend = domains(dom,2);
-    ka = dstart - 10;
-    if ka < 1
-        ka = 1;
-    end
-    ke = dstart + 10;
-    if ke > n
-        ke = n;
-    end
-    determ = zeros(1,ke-ka+1);
-    for k = ka:ke
-        determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
-    end
-    [~,k] = min(abs(determ - options.threshold));
-    domains(dom,1) = ka+k-1;
-    ka = dend - 10;
-    if ka < 1
-        ka = 1;
-    end
-    ke = dend + 10;
-    if ke > n
-        ke = n;
-    end
-    determ = zeros(1,ke-ka+1);
-    for k = ka:ke
-        determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
-    end
-    [~,k] = min(abs(determ - options.threshold));
-    domains(dom,2) = ka+k-1;
-%     figure(333); clf;
-%     plot(determ);
-%     disp('Aber hallo!');
-end
+
+% for k1 = 1:n-2*options.local
+%     for k2 = k1-options.local:k1+options.local
+%         if k2 >=1 && k2 <=n
+%             A(k1,k2) = 0;
+%             A(k2,k1) = 0;
+%         end
+%     end
+% end
+% 
+% 
+% % find diagonal blocks, based on F. Pedroche, M. Rebollo, C. Carrascosa and A. Palomares (2012)
+% % http://arxiv.org/abs/1206.5726
+% L = diag( sum(A,2) ) - A;
+% value = sum( triu(L) );
+% freq = find( value == 0 );
+% 
+% 
+% domains = zeros(length(freq),2);
+% variability = zeros(length(freq),1);
+% maxpae = zeros(length(freq),1);
+% dpoi = 0;
+% dstart = 1;
+% if length(freq) ==1
+%    mean_uncert = mean(mean(pairdist)); 
+%    if mean_uncert <= options.threshold
+%        dpoi = dpoi + 1;
+%        variability(dpoi) = mean_uncert;
+%        domains(dpoi,1) = dstart;
+%        domains(dpoi,2) = freq(1);
+%        maxpae(dpoi) =  max(max(pairdist(dstart:freq(1),dstart:freq(1))));
+%    end
+% else
+%     for k = 2:length(freq)
+%         if freq(k)-dstart >= options.minsize
+%             mean_uncert = mean(mean(pairdist(dstart:freq(k),dstart:freq(k))));
+%             if mean_uncert <= options.threshold
+%                 dpoi = dpoi + 1;
+%                 variability(dpoi) = mean_uncert;
+%                 domains(dpoi,1) = dstart;
+%                 domains(dpoi,2) = freq(k);
+%                 maxpae(dpoi) =  max(max(pairdist(dstart:freq(k),dstart:freq(k))));
+%             end
+%         end
+%         dstart = freq(k);
+%     end
+% end
+% 
+% % refine domain boundaries by sliding window approach
+% 
+% for dom = 1:dpoi
+%     dstart = domains(dom,1);
+%     dend = domains(dom,2);
+%     ka = dstart - 10;
+%     if ka < 1
+%         ka = 1;
+%     end
+%     ke = dstart + 10;
+%     if ke > n
+%         ke = n;
+%     end
+%     determ = zeros(1,ke-ka+1);
+%     for k = ka:ke
+%         determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
+%     end
+%     [~,k] = min(abs(determ - options.threshold));
+%     domains(dom,1) = ka+k-1;
+%     ka = dend - 10;
+%     if ka < 1
+%         ka = 1;
+%     end
+%     ke = dend + 10;
+%     if ke > n
+%         ke = n;
+%     end
+%     determ = zeros(1,ke-ka+1);
+%     for k = ka:ke
+%         determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
+%     end
+%     [~,k] = min(abs(determ - options.threshold));
+%     domains(dom,2) = ka+k-1;
+% %     figure(333); clf;
+% %     plot(determ);
+% %     disp('Aber hallo!');
+% end
 
 % unify domains separated by too short linkers, if requested
 if options.minlink > 1
@@ -283,7 +370,13 @@ end
 
 if max(max(domains)) == 0
     dpoi = 0;
+else
+    % sort domains
+    [~,indices] = sort(domains(1:dpoi,1));
+    domains = domains(indices,:);
 end
+
+
 folded = 0;
 for k = 1:dpoi
     k1 = domains(k,1);
@@ -325,8 +418,6 @@ end
 
 
 entity.domains = domains(1:dpoi,:);
-entity.variability = variability(1:dpoi);
-entity.maxpae = maxpae(1:dpoi);
 
 if dpoi == 0
     lpoi = 1;

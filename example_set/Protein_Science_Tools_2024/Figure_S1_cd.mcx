@@ -17,7 +17,7 @@
 	 compactness
    .measures
 
-   get_PED PED00150.e001 % NUS_native   
+   get_PED PED00150.e001 NUS_native % NUS 1313-1390 native 
 
    flexibility NUS_native_flexibility NUS_native
    order NUS_native_order NUS_native

@@ -457,7 +457,7 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
             else
                 [ngcmd,~] = size(options.graphics);
                 for gcmd = 1:ngcmd
-                    fprintf(ofid,'%s [DISO]{%i}%s %s\n',options.graphics{gcmd,1},conformers(c),options.graphics{gcmd,2},options.graphics{gcmd,3});
+                    fprintf(ofid,'%s [DISO]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain1,options.graphics{gcmd,2},options.graphics{gcmd,3});
                 end
                 fprintf(ofid,'transparency [DISO]{%i} %5.3f\n',conformers(c),pop);
             end
@@ -471,7 +471,7 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
             else
                 [ngcmd,~] = size(options.graphics);
                 for gcmd = 1:ngcmd
-                    fprintf(ofid,'%s [ORDE]{%i}%s %s\n',options.graphics{gcmd,1},conformers(c),options.graphics{gcmd,2},options.graphics{gcmd,3});
+                    fprintf(ofid,'%s [ORDE]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain2,options.graphics{gcmd,2},options.graphics{gcmd,3});
                 end
                 fprintf(ofid,'transparency [ORDE]{%i} %5.3f\n',conformers(c),pop);
             end

@@ -459,7 +459,7 @@ Arguments
     *   ``initial`` - identifier for the initial-state ensemble
     *   ``final`` - identifier for the final-state ensemble
     *   ``(chain)`` - chain tag, as in ``SRSF1_free.A``, for selecting chain A in ensemble SRSF1_free
-    *   ``range`` - range where conformers are superimpose, as in (A)121-195 for residues 121-195 of chain A
+    *   ``range`` - range where conformers are superimpose, as in 121-195 for residues 121-195 of the selected chains, do not include a chain tag here
     *   ``output`` - basis filename for output
     *   ``subkey`` - a subkey that specifies a visualization command from the following list
 Available subkeys

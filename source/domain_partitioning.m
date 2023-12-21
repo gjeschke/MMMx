@@ -762,8 +762,6 @@ if ~isempty(options.script)
             fprintf(fid,'   save %s\n',modelfile);
             fprintf(fid,'   sequence %i %i %s\n',domains(dpoi,2)+1,n,entity.sequence(domains(dpoi,2)+1:n));
             fprintf(fid,'   n_anchor   (%s)%i\n',ctag,domains(dpoi,2));
-            fprintf(fid,'   sequence 1 %i %s\n',domains(1,1)-1,entity.sequence(1:domains(1,1)-1));
-            fprintf(fid,'   c_anchor   (A)%i\n',domains(1,1));
             % make distance distribution restraints, if requested
             if strcmpi(options.label,'atom.CA')
                 fprintf(fid,'\n   ddr atom.CA\n');

@@ -2,13 +2,14 @@ function properties = get_orca_properties(OrcaFileName)
 % get_orca_properties   Import a subset of ORCA properties into a struct
 % variable
 %
-%  properties = get_orca_properties(OrcaFileName)
-%  Sys = orca2easyspin(OrcaFileName,HyperfineCutoff)
+%  properties = get_orca_properties(OrcaFileName,ver)
 %
 %  Loads the most important parameters from an ORCA property text
 %  output file given in OrcaFileName and returns them as a Matlab
 %  structure
 %
+% OrcaFileName  full file name of the ORCA property file, including
+%               extension
 
 properties.energy = 0;
 
@@ -16,6 +17,7 @@ token{1} = 'SCF_Energy';
 token{2} = 'EPRNMR_GTensor';
 token{3} = 'EPRNMR_ATensor';
 token{4} = 'EPRNMR_QTensor';
+token{5} = 'EPRNMR_DTensor';
 
 rfid = fopen(OrcaFileName);
 if rfid == -1
@@ -38,6 +40,8 @@ while 1
                 properties = get_A_tensors(properties,rfid);
             case token{4}
                 properties = get_Q_tensors(properties,rfid);
+            case token{5}
+                properties = get_D_tensor(properties,rfid);
             otherwise
                 fprintf(1,'Token %s is skipped\n',ctoken);
         end
@@ -68,6 +72,8 @@ while ~key_found
 end
 
 function properties = get_g_tensor(properties,rfid)
+% there are different, inconsistent versions for this output, this function
+% tries to find which one it is
 
 key = 'Spin multiplicity:';
 key_found = false;
@@ -94,8 +100,22 @@ for k1 = 1:3
 end
 g_symm = (properties.g_tensor+properties.g_tensor')/2;
 [evecs,eval] = eig(g_symm);
-properties.g_values = diag(eval);
-properties.g_frame = evecs;
+fgetl(rfid);
+fgetl(rfid);
+tline = fgetl(rfid);
+args = split(tline);
+g_values = zeros(1,3);
+for k = 1:3
+    g_values(k) = str2double(args{2+k});
+end
+check = g_values - diag(eval);
+if max(abs(check)) > 1e-6
+    properties.g_values = g_values;
+    properties.g_frame = properties.g_tensor;
+else
+    properties.g_values = diag(eval);
+    properties.g_frame = evecs;
+end
 
 function properties = get_A_tensors(properties,rfid)
 
@@ -245,3 +265,30 @@ end
 properties.coordinates = coordinates(1:poi,:);
 properties.numbers = numbers(1:poi);
 properties.elements = elements(1:poi);
+
+function properties = get_D_tensor(properties,rfid)
+
+key = 'Spin multiplicity:';
+key_found = false;
+while ~key_found
+    tline = fgetl(rfid);
+    if ~ischar(tline) 
+        break 
+    end
+    poi = strfind(tline,key);
+    if ~isempty(poi)
+        key_found = true;
+        properties.spin = (str2double(tline(poi+length(key):end))-1)/2;
+    end
+end
+fgetl(rfid);
+fgetl(rfid);
+properties.D_tensor = zeros(3);
+for k1 = 1:3
+    tline = fgetl(rfid);
+    args = split(tline);
+    for k2 = 1:3
+        properties.D_tensor(k1,k2) = str2double(args{2+k2});
+    end
+end
+

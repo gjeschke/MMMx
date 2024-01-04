@@ -1,0 +1,17 @@
+% MMMx Demo: Demonstration of features of MMMx visualize module
+
+!EnsembleAnalysis
+   Zenodo 6384003.raw_superensemble_with_jackknife_ensembles.zip % import all files of the raw superensemble from Zenodo
+   get_Zenodo 6384003.hnRNP_A1_ddr_saxs_ensemble.ens hnRNP_A1_DEER_SAXS % construct DEER/SAXS ensemble
+   superimpose hnRNPA1_deer_saxs_superimposed hnRNP_A1_DEER_SAXS (A)1-182
+.EnsembleAnalysis
+
+!visualize
+   getens hnRNPA1_deer_saxs_superimposed
+   show (:) ribbon
+   show (A)183-321 snake  
+   color (A)1-182 0.75 0.75 0.75
+   graphics hnRNPA1_deer_saxs_snake.png png 0 0 1 0.707 0.707 0
+   execute
+.visualize
+

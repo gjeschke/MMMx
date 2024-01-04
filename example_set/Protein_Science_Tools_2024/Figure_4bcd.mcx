@@ -1,0 +1,20 @@
+# log
+
+!ensembleanalysis
+
+   get_PED PED00213.e001 hnRNPA1
+   flexibility hnRNPA1_flexibility hnRNPA1
+   order hnRNPA1_order hnRNPA1
+
+   measures hnRNPA1_measures hnRNPA1 (A)197-320
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+.ensembleanalysis
+
+# report

@@ -182,7 +182,7 @@ for c = 1:length(chains)
             plot(resnums(res),flexibilities(res),'.','MarkerSize',14,'Color',colors(restypes(res),:));
         end
         xlabel('Residue number');
-        ylabel('Ramachandran flexibility');
+        ylabel('Site-specific flexibility');
         title(sprintf('%s chain %s',entity.name, chain));
         axis([0,resnums(end)+1,0,1]);
         if ~isempty(figures)

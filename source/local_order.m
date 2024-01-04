@@ -139,7 +139,7 @@ for c = 1:length(chains)
         end
         order = order(1:order_poi);
         res_order = res_order(1:order_poi);
-        h = figure(c); clf; hold on;
+        h = figure; clf; hold on;
         ub = disordered.mean + 2*disordered.std;
         lb = disordered.mean - 2*disordered.std;
         liner = ones(size(res_order'));
@@ -147,7 +147,7 @@ for c = 1:length(chains)
         plot(res_order,disordered.mean*liner,'-','LineWidth',2,'Color',0.25*[1,1,1]);
         plot(res_order,order,'.','MarkerSize',14,'Color',[0,0,0.7]);
         xlabel('Residue number');
-        ylabel('Local order parameter');
+        ylabel('Site-specific order');
         mi = min(order) - 0.05;
         if mi > disordered.mean - 2*disordered.std-0.05
             mi = disordered.mean - 2*disordered.std-0.05;

@@ -69,7 +69,7 @@ for r1 = 1:R
         end
         mean_coor = mean(CAj);
         CAj = CAj - repmat(mean_coor,C,1);
-        AU(r1,r2) = sqrt(sum(pop'*CAj.^2));
+        AU(r2,r1) = sqrt(sum(pop'*CAj.^2));
     end
 end
 
@@ -77,7 +77,7 @@ end
 entity.au.(chain).resnums = resnums;
 entity.au.(chain).AU = AU;
 
-% AU(AU>31.75) = 31.75; % capping like in AlphaFold
+AU(AU>31.75) = 31.75; % capping like in AlphaFold
 
 figure; clf; hold on
 image(resnums,resnums,AU,'CDataMapping','scaled');

@@ -1,0 +1,21 @@
+# log
+
+!ensembleanalysis
+
+   get_Zenodo 7798970.PTBP1_EMCV_IRES_main_ensemble.zip PTBP1_EMCV_IRES % Integrative structure determination of PTBP1-viral IRES complex in solution
+
+   flexibility PTBP1_flexibility PTBP1_EMCV_IRES
+   order PTBP1_order PTBP1_EMCV_IRES
+
+   measures PTBP1_measures PTBP1_EMCV_IRES (A)58-531
+     Rg
+     width
+     correlation
+     matlab
+     csv
+     compactness 
+     oriented
+   .measures   
+.ensembleanalysis
+
+# report

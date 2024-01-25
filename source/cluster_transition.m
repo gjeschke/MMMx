@@ -91,45 +91,45 @@ populations = [entity1.populations;entity2.populations];
 [D,~,Rg] = pair_drms_matrix(entity1,options.chain1,[],entity2,options.chain2,[]);
 
 [C,~] = size(D);
-severity = zeros(1,3*C*(C-1)*(C-2));
-triples = zeros(3*C*(C-1)*(C-2),3);
-violations = 0;
-for c1 = 1:C-2
-    for c2 = c1+1:C-1
-        for c3 = c2+1:C
-            d12 = D(c1,c2);
-            d23 = D(c2,c3);
-            d13 = D(c1,c3);
-            if d12 > d13 + d23
-                violations = violations + 1;
-                severity(violations) = d12 - (d13+d23);
-                triples(violations,:) = [c1,c2,c3];
-            end
-            if d13 > d12 + d23
-                violations = violations + 1;
-                severity(violations) = d13 - (d12+d23);
-                triples(violations,:) = [c1,c2,c3];
-            end
-            if d23 > d12 + d13
-                violations = violations + 1;
-                severity(violations) = d23 - (d12+d13);
-                triples(violations,:) = [c1,c2,c3];
-            end
-        end
-    end
-end
+% severity = zeros(1,3*C*(C-1)*(C-2));
+% triples = zeros(3*C*(C-1)*(C-2),3);
+% violations = 0;
+% for c1 = 1:C-2
+%     for c2 = c1+1:C-1
+%         for c3 = c2+1:C
+%             d12 = D(c1,c2);
+%             d23 = D(c2,c3);
+%             d13 = D(c1,c3);
+%             if d12 > d13 + d23
+%                 violations = violations + 1;
+%                 severity(violations) = d12 - (d13+d23);
+%                 triples(violations,:) = [c1,c2,c3];
+%             end
+%             if d13 > d12 + d23
+%                 violations = violations + 1;
+%                 severity(violations) = d13 - (d12+d23);
+%                 triples(violations,:) = [c1,c2,c3];
+%             end
+%             if d23 > d12 + d13
+%                 violations = violations + 1;
+%                 severity(violations) = d23 - (d12+d13);
+%                 triples(violations,:) = [c1,c2,c3];
+%             end
+%         end
+%     end
+% end
+% 
+% severity = severity(1:violations);
+% triples = triples(1:violations,:);
+% [maxsev,index] = max(severity);
 
-severity = severity(1:violations);
-triples = triples(1:violations,:);
-[maxsev,index] = max(severity);
-
-c = triples(index,:);
-fprintf(1,'%i violations of the triangle inequality were found\n',violations);
-if violations > 0
-    fprintf(1,'Maximum severity is %4.1f %c\n',maxsev,char(197));
-    fprintf(1,'Maximum severity for triple (%i,%i,%i)\n',c);
-    fprintf(1,'The conformer distances are (%4.1f,%4.1f,%4.1f) %c\n',pdm(c(1),c(2)),pdm(c(1),c(3)),pdm(c(2),c(3)),char(197));
-end
+% c = triples(index,:);
+% fprintf(1,'%i violations of the triangle inequality were found\n',violations);
+% if violations > 0
+%     fprintf(1,'Maximum severity is %4.1f %c\n',maxsev,char(197));
+%     fprintf(1,'Maximum severity for triple (%i,%i,%i)\n',c);
+%     fprintf(1,'The conformer distances are (%4.1f,%4.1f,%4.1f) %c\n',pdm(c(1),c(2)),pdm(c(1),c(3)),pdm(c(2),c(3)),char(197));
+% end
 
 coor0 = dmat2coor(D);
 if isempty(coor0)
@@ -150,9 +150,9 @@ inertia = get_inertia_tensor(coor1,centred);
 [~,indices] = sort(diag(ID));
 % sort eigenvectors accordingly
 evecs = evec(:,indices);
-% determine the centre of gravity of the selected atoms
+% determine the centre of gravity of the conformer set
 xyzc = mean(coor1);
-% put orgin at centre of gravity of the selected atoms
+% put orgin at centre of gravity of the conformer set
 xyz = coor1 - repmat(xyzc,C,1);
 % transform into inertia frame
 xyz = xyz*evecs;
@@ -172,7 +172,7 @@ plot(xsorting,'.','Color',[0.75,0,0]);
 plot(ysorting,'.','Color',[0,0.6,0]);
 plot(zsorting,'.','Color',[0,0,0.8]);
 
-% invert coordinates so that lowes Rg terminus has lower z and y coordinates
+% invert coordinates so that lowest Rg terminus has lower x and y coordinates
 if invertx % the x coordinate must be inverted
     xyz(:,1) = -xyz(:,1);
     % this requires that either the y or the z coordinate is also inverted
@@ -193,16 +193,8 @@ end
 
 % compute linkage
 Z = linkage(D,'complete');
-valid = false;
-while ~valid
-    % cluster
-    assignment = cluster(Z,'maxclust',options.nc);
-    % assignment = cluster(Z,'cutoff',1,'Criterion','distance');    
-    valid = true;
-    if ~valid
-        options.nc = options.nc - 1;
-    end
-end
+% cluster
+assignment = cluster(Z,'maxclust',options.nc);
 clusters.nc = options.nc;
 clusters.members = cell(clusters.nc,2);
 clusters.type = zeros(clusters.nc,1);

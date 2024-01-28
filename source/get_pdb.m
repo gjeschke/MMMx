@@ -170,6 +170,16 @@ modres(1000).chain = '';
 modres(1000).residue = [];
 modified_residues = 0;
 offset = 0; % residue number offset to avoid negative residue numbers
+this_model = 1;
+model_counter = 0;
+this_atom = 0;
+clear_names(10000).chain = '';
+clear_names(10000).residue = '';
+clear_names(10000).atom = '';
+clear_names(10000).cid = 0;
+clear_names(10000).rid = 0;
+clear_names(10000).aid = 0;
+clear_names(10000).rotid = 0;
 
 while 1
     tline = fgetl(fid);
@@ -187,11 +197,19 @@ while 1
         modres(modified_residues).chain = tline(17); 
         modres(modified_residues).residue = str2double(tline(18:22)); 
     end
-    if length(tline) >= 7 && strcmpi(tline(1:5),'MODEL') && ~force_conformer
+    if length(tline) >= 5 && strcmpi(tline(1:5),'MODEL') && ~force_conformer
+        model_counter= model_counter + 1;
         if length(tline) < 14
             tline = pad(tline,14); % because PED does not check for correct format
         end
-        current_model = str2double(tline(7:14)) + model_offset;
+        model_number = str2double(tline(7:14));
+        if isnan(model_number)
+            this_model = model_counter;
+        else
+            this_model = model_number;
+        end
+        this_atom = 0;
+        current_model = this_model + model_offset;
         if current_model > models
             models = current_model;
         end
@@ -211,6 +229,17 @@ while 1
     % atom numbers and insertion codes are ignored
     if length(tline) >= 54 && (strcmpi(tline(1:4),'ATOM') || ...
             strcmpi(tline(1:6),'HETATM')) % atom loop
+        x = rd_coor(tline(31:38));
+        y = rd_coor(tline(39:46));
+        z = rd_coor(tline(47:54));
+%         x = str2num(tline(31:38)); 
+%         y = str2num(tline(39:46)); 
+%         z = str2num(tline(47:54));
+%         xyz = sscanf(tline(31:54),'%f',[1,3]);
+        atoms = atoms + 1;
+        xyz(atoms,:) = [x,y,z];
+        this_atom = this_atom + 1;
+        if this_model == 1
         chain = tline(22);
         if chain == ' '
             chain = 'Z';
@@ -253,7 +282,6 @@ while 1
                 continue
             end
         end
-        atoms = atoms + 1;
         altloc = tline(17);
         if ~contains(chains,chain)
             chains = strcat(chains,chain);
@@ -268,10 +296,6 @@ while 1
             offset = 1 - trial_resnum;
         end
         trial_resnum = trial_resnum + offset;
-%         if trial_resnum < curr_resnum
-%             preserve_residue_numbers = false;
-%             trial_resnum = curr_resnum + 1;
-%         end
         % the infamous insertion code
         if tline(27) ~= ' '
             if trial_resnum ~= curr_resnum
@@ -297,9 +321,6 @@ while 1
                 atnames = strcat(atnames,strcat(atname,':'));
             end
         end 
-        x = str2double(tline(31:38)); 
-        y = str2double(tline(39:46)); 
-        z = str2double(tline(47:54));
         % initialize all attributes that may not be present
         occupancy = 1;
         Bfactor = NaN;
@@ -322,7 +343,6 @@ while 1
         if trial_resnum > residues
             residues = trial_resnum;
         end
-        xyz(atoms,:) = [x,y,z];
         if isempty(element_number(element))
             element = 'C';
         end
@@ -349,6 +369,9 @@ while 1
             entity.(chainfield).(resfield).(atname).bfactor = Bfactor;
             entity.(chainfield).(resfield).(atname).selected = 0;
             entity.(chainfield).(resfield).(atname).selected_locations = 1;
+            clear_names(this_atom).chain = chainfield;
+            clear_names(this_atom).residue = resfield;
+            clear_names(this_atom).atom = atname;
             if ~isfield(entity.(chainfield).(resfield).(atname),'tab_indices')
                 entity.(chainfield).(resfield).(atname).tab_indices = atoms + options.atoff;
             else
@@ -363,13 +386,23 @@ while 1
             % entry into index array
             indexed_atoms = indexed_atoms + 1;
             index_array(atoms,:) = [chain_index,trial_resnum,atom_index,current_model,rotamer_index];
+            clear_names(this_atom).cid = chain_index;
+            clear_names(this_atom).rid = trial_resnum;
+            clear_names(this_atom).aid = atom_index;
+            clear_names(this_atom).rotid = rotamer_index;
+            clear_names(this_atom).element = elements(atoms);
         end
         % update current residue number
         curr_resnum = trial_resnum;
         old_resname = resname;
-%         if atoms == 992
-%             disp('Aber hallo!');
-%         end
+        else % not the first model
+            name = clear_names(this_atom);
+            entity.(name.chain).(name.residue).(name.atom).tab_indices = ...
+                    [entity.(name.chain).(name.residue).(name.atom).tab_indices atoms + options.atoff];
+            indexed_atoms = indexed_atoms + 1;
+            index_array(atoms,:) = [name.cid,name.rid,name.aid,current_model,name.rotid];
+            elements(atoms) = name.element;
+        end
     end % end atom loop
 end
 if conformers == 0
@@ -384,6 +417,7 @@ entity.occupancies = occupancies(1:atoms);
 entity.index_array = index_array(1:indexed_atoms,:);
 entity.water = water_indices(1:water_atoms);
 entity.water_selected = false;
+entity.clear_names = clear_names(1:this_atom);
 % add conformer populations
 if conformers == models || add_to_entity
     entity.populations = populations;
@@ -523,4 +557,18 @@ if isfield(min_atoms.minimal_atoms,resname)
     end
 else
     canonical = 1;
+end
+
+function num = rd_coor(cstring)
+
+values = cstring - '0';
+values = values(values >= 0);
+num = 0;
+digit = 0.001;
+for k = length(values):-1:1
+    num = num + values(k)*digit;
+    digit = 10*digit;
+end
+if sum(cstring == '-') > 0
+    num = -num;
 end

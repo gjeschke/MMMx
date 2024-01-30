@@ -1107,7 +1107,7 @@ for conf = 1:length(conformers1)
     xyz = entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:);
     xyz = affine_coor_set(xyz,transmat);
     entity1.xyz(entity1.index_array(:,4) == conformers1(conf),:) = xyz;
-    fprintf(logfid,'\nSuperposition of %i atoms in conformer %i with rmsd of %4.1f %s succeeded\n',corr_poi,conformers1(conf),rmsd,char(197));
+    fprintf(logfid,'\nSuperposition of %i atoms in conformer %i with rmsd of %5.2f %s succeeded\n',corr_poi,conformers1(conf),rmsd,char(197));
 end
 
 function [conf,chain,range] = split_conf_chain_range(address)

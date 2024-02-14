@@ -147,6 +147,7 @@ Label    Synonyms                         Class           Attachment       Rotam
 ``R3P``  ``r3p``                          nitroxide       3'-thiophosphate 512       1
 ``K1H``  ``HF-K1``                        nitroxide       unnatural aa     288       1
 ``HO4``  ``HO4451``                       nitroxide       unnatural aa     1024      1
+``HO5``  ``HO5223``                       nitroxide       unnatural aa     1024      1
 ``NC1``  ``cNox@Tyr``                     nitroxide       tyrosine         128       1
 ``NX1``  ``lNox@Tyr``                     nitroxide       tyrosine         256       1
 ``CNR``  ``CNC-NO``                       nitroxide       cofactor         144       1
@@ -157,6 +158,8 @@ Label    Synonyms                         Class           Attachment       Rotam
 ``M8D``  ``m8-dota-gd``                   gadolinium      cysteine         1944      1
 ``GPM``  ``gpymi-MTA``                    gadolinium      cysteine         432       1
 ``TMT``  ``tormyshev-trityl``             trityl          cysteine         3888      1
+``A55``  ``AlexaFluor555``, ``AF555``     chromophore     cysteine         1024      1
+``A64``  ``AlexaFluor647``, ``AF647``     chromophore     cysteine         1024      1
 ``HCU``  ``dHis-Cu``                      histidine       any amino acid   12        1
 =======  ===============================  ==============  ================ ========= ====================
 

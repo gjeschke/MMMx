@@ -53,6 +53,7 @@ synonyms{28} = 'R5T,R5-TP,';
 synonyms{29} = 'PPW,PPWL,ppw,wennemers-proline,';
 synonyms{30} = 'A55,AlexaFluor555,AF555,';
 synonyms{31} = 'A64,AlexaFluor647,AF647,';
+synonyms{32} = 'HO5,HO5223,';
 
 for k = 1:length(synonyms)
     if contains(upper(synonyms{k}),[',' upper(synonym) ','])...

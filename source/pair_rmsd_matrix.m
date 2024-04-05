@@ -1,4 +1,4 @@
-function [pair_rmsd,pop,exceptions] = pair_rmsd_matrix(entity,chain,range,entity2,chain2,range2)
+function [pair_rmsd,pop,exceptions,Rg] = pair_rmsd_matrix(entity,chain,range,entity2,chain2,range2)
 %
 % PAIR_RMSD_MATRIX Computes the matrix of conformer pair backbone root mean
 %                   square deviations upon optimal superposition
@@ -35,6 +35,7 @@ function [pair_rmsd,pop,exceptions] = pair_rmsd_matrix(entity,chain,range,entity
 % pop           (1,C) population vector for C conformers
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
+% Rg            (1,C) vector of the radii of gyration for C conformers 
 %
 % exceptions occur if chain length or residue identity is inconsistent
 % between conformers in any chain
@@ -46,6 +47,8 @@ function [pair_rmsd,pop,exceptions] = pair_rmsd_matrix(entity,chain,range,entity
 % Copyright(c) 2021: Gunnar Jeschke
 
 % default input
+
+Rg = [];
 
 if ~exist('chain','var')
     chain = '';
@@ -86,6 +89,7 @@ else
 end
 
 coor = cell(1,C);
+Rg = zeros(C,1);
 chains = fieldnames(backbones);
 
 % determine size of complete backbone atoms matrix
@@ -114,6 +118,7 @@ for conf = 1:C1
         coor0(atom_pointer+1:atom_pointer+n,:) = xyz;
         atom_pointer = atom_pointer + n;
     end
+    Rg(conf) = gyration_radius(coor0);
     coor{conf} = coor0;
 end
 
@@ -127,6 +132,7 @@ if compare
             coor0(atom_pointer+1:atom_pointer+n,:) = xyz;
             atom_pointer = atom_pointer + n;
         end
+        Rg(C1+conf) = gyration_radius(coor0);
         coor{C1+conf} = coor0;
     end
 end

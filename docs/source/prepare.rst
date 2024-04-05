@@ -117,6 +117,22 @@ Remarks
     *   parameter ``maxchains`` allows for skipping pseudo-chains that simulate only labels
     *   reside types CYSS and CYSM are converted to CYS, label atoms in CYSM are skipped
 
+``getens``
+---------------------------------
+
+Input of an ensemble by reading an MMMx ensemble list (.ens) 
+
+.. code-block:: matlab
+
+    getens file identifier
+
+Arguments
+    *   ``file`` - file name
+    *   ``identifier`` - module-internal entity identifier
+Remarks
+    *   all PDB files of conformers contained in the ensemble list must be on the Matlab path
+    *   populations (weights) of conformers are read
+
 ``getpdb``
 ---------------------------------
 
@@ -182,6 +198,25 @@ Remarks
     *   :ref:`third_party` `SCWRL4 <http://dunbrack.fccc.edu/SCWRL3.php/>`_ is required
     *   only amino acids, not nucleotides, can be mutated in this version of MMMx
 
+``oligomer``
+---------------------------------
+
+Build an oligomer from an oriented peptide chain ensemble
+
+.. code-block:: matlab
+
+    oligomer input N output address
+
+Arguments
+    *   ``input`` - module-internal entity identifier for input entity
+    *   ``N`` - optional multiplicity, defaults to N = 2 (dimer)
+    *   ``output`` - basis name for output files, the filenames are `output`-m-%i.pdb, where %i stands for the conformer number
+    *   ``address`` - optional address for chain and residue range, such as ``(A)128-611``, chain defaults to the first chain, and range to all residues	
+Remarks
+    *   the input entity must be oriented, with the C_N axis of the oligomer being the z axis
+    *   from an input entity with C conformers, all C^N possible conformer combinations are generated
+    *   an ensemble list `output`.ens with uniform populations (1/C^N) is written as well
+	
 ``remove``
 ---------------------------------
 

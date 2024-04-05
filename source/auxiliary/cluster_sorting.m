@@ -1,4 +1,4 @@
-function [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop,depth,ordering)
+function [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop,fuzziness] = cluster_sorting(pair_rmsd,pop,depth,ordering)
 % [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = 
 %              CLUSTER_SORTING(pair_rmsd,pop,ordering,options)
 %
@@ -23,6 +23,11 @@ function [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = clu
 %                       clusters
 % cluster_sizes         sizes of the clusters (number of conformers)
 % cluster_pop           population of the clusters
+% fuzziness             if this output is requested, quality of the
+%                       clustering is assessed by a fuzziness parameter,
+%                       normalized intra-cluster MSD over normalized
+%                       inter-cluster MSD, the lower this is, the better
+%                       the clustering
 % 
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -137,5 +142,27 @@ for k = 1:length(cluster_sizes)
     end
     block_pointer = block_pointer+ cluster_sizes(k);
 end
+
+if nargout > 5
+    n_intra = 0;
+    n_inter = 0;
+    intra = 0;
+    inter = 0;
+    for c1 = 1:C-1
+        for c2 = c1+1:C
+            if cluster_assignment(c1) == cluster_assignment(c2)
+                n_intra = n_intra + 1;
+                intra = intra + pair_rmsd(c1,c2)^2;
+            else
+                n_inter = n_inter + 1;
+                inter = inter + pair_rmsd(c1,c2)^2;
+            end
+        end
+    end
+    intra = intra/n_intra;
+    inter = inter/n_inter;
+    fuzziness = intra/inter; 
+end
+
 pair_rmsd = pair_rmsd(new_ordering,new_ordering);
 ordering = ordering(new_ordering);

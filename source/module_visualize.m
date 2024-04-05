@@ -126,6 +126,7 @@ for d = 1:length(control.directives)
             for arg = 2:length(control.directives(d).options)
                 cmd.scheme = sprintf('%s %s',cmd.scheme,control.directives(d).options{arg});
             end
+            cmd.scheme = strtrim(cmd.scheme);
             commands{cmd_poi} = cmd;
         case 'label'
             cmd_poi = cmd_poi + 1;
@@ -282,6 +283,7 @@ ofid = fopen(script,'wt');
 fprintf(ofid,'%% MMMx visualization script\n');
 fprintf(ofid,'new !\n');
 pop_encode_transparency = true;
+delayed_colors = '';
 for k = 1:length(all_pdb)
     tag = id2tag(k,all_tags);
     sadr = sprintf('[%s]{:}',tag);
@@ -309,7 +311,15 @@ for k = 1:length(all_pdb)
             case {'color'}
                 fprintf(ofid,'color %s %6.3f%6.3f%6.3f\n',strcat(sadr,cmd.address),cmd.rgb);
             case {'colorscheme'}
-                fprintf(ofid,'colorscheme %s %s\n',strcat(sadr,cmd.address),cmd.scheme);
+                switch cmd.scheme
+                    case 'sorting'
+                        mymap = turbo(length(pop));
+                        for conformer = 1:length(pop)
+                            fprintf(ofid,'color {%i} %6.3f%6.3f%6.3f\n',conformer,mymap(conformer,:));
+                        end
+                    otherwise % color schemes implemented by MMM
+                        fprintf(ofid,'colorscheme %s %s\n',strcat(sadr,cmd.address),cmd.scheme);
+                end
             case {'label'}
                 fprintf(ofid,'rotamers %s %s ambient\n',strcat(sadr,cmd.address),cmd.type);
                 fprintf(ofid,'label %s %s ambient\n',strcat(sadr,cmd.address),cmd.type);
@@ -458,6 +468,7 @@ end
 
 function show_snake(ofid,pop,sadr,address)
 % 
+
 fprintf(ofid,'show %s%s coil %6.3f\n',sadr,address,sqrt(pop));
 [chains,residues] = split_address(address);
 seg_length = residues(end) - residues(1) + 1;

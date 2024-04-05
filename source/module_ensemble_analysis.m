@@ -948,7 +948,7 @@ for c = 1:cmd_poi
                 cluster_sizes = ones(1,length(ordering));
             else
                 if cmd.drms
-                    [pair_rmsd,pop,~,exceptions0] = pair_drms_matrix(c_entity);
+                    [pair_rmsd,pop,Rg,exceptions0] = pair_drms_matrix(c_entity);
                 elseif cmd.oriented
                     [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
                 else
@@ -966,9 +966,13 @@ for c = 1:cmd_poi
                     return
                 end
                 if cmd.maxpop
-                    [pair_rmsd,ordering] = similarity_sorting(pair_rmsd,pop);
+                    [pair_rmsd,Rg,ordering] = similarity_sorting(pair_rmsd,Rg);
                     cluster_sizes = ones(1,length(ordering));
                     cluster_pop = pop(ordering);
+                    figure(777);
+                    plot(1:length(Rg),Rg,'.','MarkerSize',10);
+                    xlabel('Conformer number');
+                    ylabel(sprintf('Rg (%c)',char(197)));
                 else
                     [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
                     D = dunn_index(pair_rmsd,cluster_assignment);

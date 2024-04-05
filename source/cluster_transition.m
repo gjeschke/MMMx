@@ -91,45 +91,6 @@ populations = [entity1.populations;entity2.populations];
 [D,~,Rg] = pair_drms_matrix(entity1,options.chain1,[],entity2,options.chain2,[]);
 
 [C,~] = size(D);
-% severity = zeros(1,3*C*(C-1)*(C-2));
-% triples = zeros(3*C*(C-1)*(C-2),3);
-% violations = 0;
-% for c1 = 1:C-2
-%     for c2 = c1+1:C-1
-%         for c3 = c2+1:C
-%             d12 = D(c1,c2);
-%             d23 = D(c2,c3);
-%             d13 = D(c1,c3);
-%             if d12 > d13 + d23
-%                 violations = violations + 1;
-%                 severity(violations) = d12 - (d13+d23);
-%                 triples(violations,:) = [c1,c2,c3];
-%             end
-%             if d13 > d12 + d23
-%                 violations = violations + 1;
-%                 severity(violations) = d13 - (d12+d23);
-%                 triples(violations,:) = [c1,c2,c3];
-%             end
-%             if d23 > d12 + d13
-%                 violations = violations + 1;
-%                 severity(violations) = d23 - (d12+d13);
-%                 triples(violations,:) = [c1,c2,c3];
-%             end
-%         end
-%     end
-% end
-% 
-% severity = severity(1:violations);
-% triples = triples(1:violations,:);
-% [maxsev,index] = max(severity);
-
-% c = triples(index,:);
-% fprintf(1,'%i violations of the triangle inequality were found\n',violations);
-% if violations > 0
-%     fprintf(1,'Maximum severity is %4.1f %c\n',maxsev,char(197));
-%     fprintf(1,'Maximum severity for triple (%i,%i,%i)\n',c);
-%     fprintf(1,'The conformer distances are (%4.1f,%4.1f,%4.1f) %c\n',pdm(c(1),c(2)),pdm(c(1),c(3)),pdm(c(2),c(3)),char(197));
-% end
 
 coor0 = dmat2coor(D);
 if isempty(coor0)

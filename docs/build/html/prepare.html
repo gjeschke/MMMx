@@ -245,9 +245,11 @@
 <li class="toctree-l2"><a class="reference internal" href="#deselenate"><code class="docutils literal notranslate"><span class="pre">deselenate</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getalphafold"><code class="docutils literal notranslate"><span class="pre">getAlphaFold</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getcyana"><code class="docutils literal notranslate"><span class="pre">getcyana</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#getpdb"><code class="docutils literal notranslate"><span class="pre">getpdb</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#merge"><code class="docutils literal notranslate"><span class="pre">merge</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#mutate"><code class="docutils literal notranslate"><span class="pre">mutate</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="#oligomer"><code class="docutils literal notranslate"><span class="pre">oligomer</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#remove"><code class="docutils literal notranslate"><span class="pre">remove</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#renumber"><code class="docutils literal notranslate"><span class="pre">renumber</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="#repack"><code class="docutils literal notranslate"><span class="pre">repack</span></code></a></li>
@@ -598,6 +600,25 @@ and structure editing (<code class="docutils literal notranslate"><span class="p
 </dd>
 </dl>
 </div>
+<div class="section" id="getens">
+<h2><code class="docutils literal notranslate"><span class="pre">getens</span></code><a class="headerlink" href="#getens" title="Permalink to this headline">¶</a></h2>
+<p>Input of an ensemble by reading an MMMx ensemble list (.ens)</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">getens</span> <span class="s">file</span> <span class="s">identifier</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">file</span></code> - file name</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">identifier</span></code> - module-internal entity identifier</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>all PDB files of conformers contained in the ensemble list must be on the Matlab path</p></li>
+<li><p>populations (weights) of conformers are read</p></li>
+</ul>
+</dd>
+</dl>
+</div>
 <div class="section" id="getpdb">
 <h2><code class="docutils literal notranslate"><span class="pre">getpdb</span></code><a class="headerlink" href="#getpdb" title="Permalink to this headline">¶</a></h2>
 <p>Input of a raw ensemble (uniform populations) by reading a single PDB file.</p>
@@ -668,6 +689,28 @@ This is a block key, with each line corresponding to one part.</p>
 <dt>Remarks</dt><dd><ul class="simple">
 <li><p><a class="reference internal" href="third_party.html#third-party"><span class="std std-ref">Third-party software</span></a> <a class="reference external" href="http://dunbrack.fccc.edu/SCWRL3.php/">SCWRL4</a> is required</p></li>
 <li><p>only amino acids, not nucleotides, can be mutated in this version of MMMx</p></li>
+</ul>
+</dd>
+</dl>
+</div>
+<div class="section" id="oligomer">
+<h2><code class="docutils literal notranslate"><span class="pre">oligomer</span></code><a class="headerlink" href="#oligomer" title="Permalink to this headline">¶</a></h2>
+<p>Build an oligomer from an oriented peptide chain ensemble</p>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">oligomer</span> <span class="s">input</span> <span class="s">N</span> <span class="s">output</span> <span class="s">address</span>
+</pre></div>
+</div>
+<dl class="simple">
+<dt>Arguments</dt><dd><ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - module-internal entity identifier for input entity</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">N</span></code> - optional multiplicity, defaults to N = 2 (dimer)</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - basis name for output files, the filenames are <img class="math" src="_images/math/a5940bf21d551a3abe8e494d4fa469725308eda7.svg" alt="output"/>-m-%i.pdb, where %i stands for the conformer number</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">address</span></code> - optional address for chain and residue range, such as <code class="docutils literal notranslate"><span class="pre">(A)128-611</span></code>, chain defaults to the first chain, and range to all residues</p></li>
+</ul>
+</dd>
+<dt>Remarks</dt><dd><ul class="simple">
+<li><p>the input entity must be oriented, with the C_N axis of the oligomer being the z axis</p></li>
+<li><p>from an input entity with C conformers, all C^N possible conformer combinations are generated</p></li>
+<li><p>an ensemble list <img class="math" src="_images/math/a5940bf21d551a3abe8e494d4fa469725308eda7.svg" alt="output"/>.ens with uniform populations (1/C^N) is written as well</p></li>
 </ul>
 </dd>
 </dl>

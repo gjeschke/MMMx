@@ -1,4 +1,4 @@
-function [pair_rmsd,pop,exceptions] = pair_rmsd_matrix_oriented(entity,chain,range,entity2,chain2,range2)
+function [pair_rmsd,pop,exceptions,Rg] = pair_rmsd_matrix_oriented(entity,chain,range,entity2,chain2,range2)
 %
 % PAIR_RMSD_MATRIX_ORIENTED Computes the matrix of conformer pair backbone 
 %                           root mean square deviations of structures that
@@ -36,6 +36,7 @@ function [pair_rmsd,pop,exceptions] = pair_rmsd_matrix_oriented(entity,chain,ran
 % pop           (1,C) population vector for C conformers
 % exceptions    cell vector of MException objects if something went wrong, 
 %               defaults to one cell holding an empty array
+% Rg            (1,C) vector of the radii of gyration for C conformers 
 %
 % exceptions occur if chain length or residue identity is inconsistent
 % between conformers in any chain
@@ -87,6 +88,7 @@ else
 end
 
 coor = cell(1,C);
+Rg = zeros(C,1);
 chains = fieldnames(backbones);
 
 % determine size of complete backbone atoms matrix
@@ -116,6 +118,7 @@ for conf = 1:C1
         atom_pointer = atom_pointer + n;
     end
     coor{conf} = coor0;
+    Rg(conf) = gyration_radius(coor0);
 end
 
 if compare
@@ -129,6 +132,7 @@ if compare
             atom_pointer = atom_pointer + n;
         end
         coor{C1+conf} = coor0;
+        Rg(C1+conf) = gyration_radius(coor0);
     end
 end
 

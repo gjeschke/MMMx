@@ -93,7 +93,7 @@ else
     compare = false;
 end
 
-Rg = zeros(length(pop),1);
+Rg = zeros(C,1);
 
 coor = cell(1,C);
 chains = fieldnames(backbones);

@@ -285,7 +285,7 @@ end
 
 tic,
 
-while bask < trials && runtime <= 3600*max_time % && success < options.max_clust
+while bask < trials && runtime <= 3600*max_time && success < options.max_clust
     % initialize diagnostic variable vectors for one parallel block
     merr_vec = zeros(1,options.granule);
     eerr_vec = zeros(1,options.granule);

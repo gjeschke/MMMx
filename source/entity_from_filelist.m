@@ -35,7 +35,8 @@ if length(filenames) == 1 % single PDB, possibly with MMMx population informatio
     entity = get_pdb(filenames{1});
 else % multiple PDB files, assume uniform populations
     cnum = length(filenames);
-    [entity,exceptions] = get_pdb(filenames{1});
+    pdb_options.stripH = true;
+    [entity,exceptions] = get_pdb(filenames{1},pdb_options);
     if ~isempty(exceptions) && ~isempty(exceptions{1})
         exceptions{1} = MException('entity_from_filelist:file_does_not_exist',...
             'PDB file %s could not be opened',filenames{1});

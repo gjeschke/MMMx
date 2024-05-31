@@ -500,14 +500,14 @@ for c = 1:cmd_poi
             ensemble_poi = cmd.ensemble;
             ensemble_descriptor = ensembles{ensemble_poi};
             ensemble_name = ensemble_descriptor.name;
-            [~,~,ext] = fileparts(cmd.input);
+            [path,~,ext] = fileparts(cmd.input);
             if isempty(ext)
                 cmd.input = strcat(cmd.input,'.pdb');
             end
             added_files = dir(cmd.input); % find all files that match the pattern
             filenames = cell(1,length(added_files));
             for conf = 1:length(added_files)
-                filenames{conf} = added_files(conf).name;
+                filenames{conf} = fullfile(path,added_files(conf).name);
             end
             [entity,exceptions] = entity_from_filelist(filenames);
             if ~isempty(exceptions) && ~isempty(exceptions{1})

@@ -84,6 +84,12 @@ context = argouts{1}(:,1:4);
 % get standard frame coordinates
 address = sprintf('{%i}(%s)%s.%s',site.conformer,site.chain,site.residue(2:end),...
     rot_lib.std_frame_atoms{1});
+% for k = 1:length(address)
+%     if address(k) == ''''
+%         address(k) = '_';
+%     end
+% end
+        
 orig = get_atom(entity,'xyz',address);
 if isempty(orig)
     return

@@ -46,10 +46,4 @@ function [header,sequence] = get_fasta(inname,seqnum)
     end;
     fclose(rfile);
 
-    function myCleanup
-
-        if exist('rfile','var') && sum(rfile==fopen('all'))>0,
-            fclose(rfile);
-        end;
-    end
 end

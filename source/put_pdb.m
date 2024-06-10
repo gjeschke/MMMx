@@ -311,7 +311,7 @@ for kconf = 1:length(conformer_order)
                                     info.charge = [];
                                 end
                                 loc_str = entity.(chain).(residue).locations;
-                                if loc_str(1) == ' ' && length(loc_str) > 1
+                                if (loc_str(1) == ' ' || loc_str(1) == '.') && length(loc_str) > 1
                                     loc_str = loc_str(2:end);
                                 end
                                 for kl = 1:length(rot_indices) % expand over all rotamers/locations

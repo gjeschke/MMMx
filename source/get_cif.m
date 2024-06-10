@@ -103,6 +103,9 @@ for a = 1:length(info.atomsite)
         element = info.atomsite(a).typesymbol;
         resname = info.atomsite(a).labelcompid;
         altloc = info.atomsite(a).labelaltid;
+        if altloc == '.'
+            altloc = ' ';
+        end
         if isstrprop(chain,'lower')
             chainfield = strcat(upper(chain),'_');
         else

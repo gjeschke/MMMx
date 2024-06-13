@@ -24,6 +24,8 @@ function [argout,exceptions] = get_chain(entity,attribute,address)
 %                                       'RNA', 'HET',
 %                                       'peptide+', 'DNA+',
 %                                       'RNA+', 'water'
+%                          .sequence    single-letter       string
+%                          .resnums     residue numbers     double vector
 %              populations conformer populations            (C,1) double
 %
 % OUTPUT
@@ -78,28 +80,44 @@ for kc = 1:length(chains)
                     HET = false;
                     water = false;
                     residues = fieldnames(entity.(chain));
+                    resnums = zeros(length(residues),1);
+                    sequence = pad('?',length(residues));
+                    nres = 0;
                     for kr = 1:length(residues) % expand over all residues
                         residue = residues{kr};
                         if strcmp(residue(1),'R') % these are residue fields
+                            nres = nres + 1;
+                            resnums(nres) = str2double(residue(2:end));
                             rtag = entity.(chain).(residue).name;
-                            if contains(upper(d.monomers.aa_tags),rtag)
+                            res = tag2id(rtag,upper(d.monomers.aa_tags));
+                            if ~isempty(res)
                                 peptide = true;
+                                res = tag2id(rtag,upper(d.monomers.aa_tags));
+                                sequence(nres) = d.monomers.aa_slc(res);
                             elseif contains(upper(d.monomers.nt_tags),rtag)
                                 if rtag(1) == 'D'
                                     DNA = true;
+                                    rtag = [' ' rtag]; %#ok<AGROW>
                                 else
                                     RNA = true;
+                                    rtag = ['  ' rtag]; %#ok<AGROW>
                                 end
+                                res = tag2id(rtag,upper(d.monomers.nt_tags));
+                                sequence(nres) = d.monomers.nt_slc(res);
                             elseif contains(upper(d.monomers.nt_tags_CYANA),rtag)
                                 if rtag(1) == 'R' || rtag(1) == 'U'
                                     RNA = true;
                                 else
                                     DNA = true;
                                 end
+                                res = tag2id(rtag,upper(d.monomers.nt_tags_CYANA));
+                                sequence(nres) = d.monomers.nt_slc(res);
                             elseif strcmp(rtag,'HOH')
                                 water = true;
+                                sequence(nres) = '!';
                             else
                                 HET = true;
+                                sequence(nres) = '?';
                             end
                         end
                     end
@@ -123,6 +141,8 @@ for kc = 1:length(chains)
                         mytype = 'HET';
                     end
                     info.type = mytype;
+                    info.sequence = sequence(1:nres);
+                    info.resnums = resnums(1:nres);
                     argout{outputs} = info;
                 case 'populations'
                     argout{outputs} = entity.populations;

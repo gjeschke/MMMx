@@ -262,7 +262,11 @@ for kconf = 1:length(conformer_order)
                     residue = residues{kr};
                     if strcmp(residue(1),'R') % these are residue fields
                         indices(2) =  entity.(chain).(residue).index;
-                        info.resnum = str2double(residue(2:end)) + options.dresnum;
+                        dresnum = 0;
+                        if entity.(chain).index <= length(options.dresnum)
+                            dresnum = options.dresnum(entity.(chain).index);
+                        end
+                        info.resnum = str2double(residue(2:end)) + dresnum;
                         % fprintf(1,'(%s).%i\n',chain,info.resnum);
                         info.resname = entity.(chain).(residue).name;
                         info.atomtype = get_atom_type(entity.(chain).(residue).name,biomer);
@@ -311,7 +315,7 @@ for kconf = 1:length(conformer_order)
                                     info.charge = [];
                                 end
                                 loc_str = entity.(chain).(residue).locations;
-                                if loc_str(1) == ' ' && length(loc_str) > 1
+                                if (loc_str(1) == ' ' || loc_str(1) == '.') && length(loc_str) > 1
                                     loc_str = loc_str(2:end);
                                 end
                                 for kl = 1:length(rot_indices) % expand over all rotamers/locations

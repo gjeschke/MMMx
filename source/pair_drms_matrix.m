@@ -125,7 +125,7 @@ for conf = 1:C1
         atom_pointer = atom_pointer + n;
     end
     coor{conf} = coor0;
-    Rg(conf) = gyration_radius(xyz);
+    Rg(conf) = gyration_radius(coor0);
 end
 
 if compare

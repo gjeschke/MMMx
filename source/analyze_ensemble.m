@@ -76,6 +76,10 @@ function [measures,correlations] = analyze_ensemble(backbones,pop,options)
 %               .all_Rg     vector of the radii of gyration of all segments
 %               .all_R2     vector of mean square end-to-end distances of
 %                           all segments
+%               .uncertainty    uncertainty parameter (in Angstroem) from
+%                               pair correlation matrix
+%               .heterogeneity  disorder heterogeneity parameter (in 
+%                               Angstroem) from pair correlation matrix 
 %               depending on options, not all fields may be present
 % correlations  correlation matrices, empty if no input information
 %               struct with fields for all chains (chain mode) or a single
@@ -275,6 +279,20 @@ for kc = 1:length(chains)
         correlations.(chains{kc}).pair_corr = corr_isotropic;
         correlations.(chains{kc}).pair_axis = corr_axis;
         correlations.(chains{kc}).dmat = dmat;
+        [nres,~] = size(corr_isotropic);
+        pcorr = zeros(nres*(nres-1)/2,1);
+        het = zeros(nres-6,1);
+        poi = 0;
+        for r1 = 1:nres-6
+            het(r1) = corr_isotropic(r1,r1+6);
+            for r2 = r1+6:nres
+                poi = poi + 1;
+                pcorr(poi) = corr_isotropic(r1,r2);
+            end
+        end
+        pcorr = pcorr(1:poi);
+        measures.(chains{kc}).uncertainty = sqrt(mean(pcorr.^2));
+        measures.(chains{kc}).heterogeneity = sqrt(std(het.^2));
     end
     % compactness analysis
     if options.compactness
@@ -397,6 +415,7 @@ for c = 1:C
     coor = zeros(resnum,3);
     poi2 = 0;
     for kc = 1:nch
+        chain = chains{kc};
         coor(1+poi2:resnums(kc)+poi2,:) = backbones.(chain).bb{c};
         poi2 = poi2 + resnums(kc);
     end
@@ -491,7 +510,7 @@ coor = backbone.bb{1};
 Comp = zeros(N); % initalize compactness matrix
 Prox = zeros(N); % initialize proximity matrix
 fully_extended = zeros(N,3);
-fully_extended(:,1) = linspace(0,(N-1)*3.8,N)';
+fully_extended(:,1) = linspace(0,(N-1)*7,N)'; % this should also allow for RNA/DNA
 rmax = gyration_radius(fully_extended); % radius of gyration of the completely extended chain
 raxis = linspace(0,ceil(rmax),1+(increments_per_Angstroem*ceil(rmax))); % define distance axis
 Rg_distr = zeros(length(raxis),N); % radii of gyration distribution per segment length

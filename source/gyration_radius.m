@@ -7,7 +7,8 @@ function Rg = gyration_radius(coor)
 %
 %
 % INPUT
-% coor  (N,3) Cartesian coordinate array
+% coor  (N,~) Cartesian coordinate array, this also works in Euclidean
+%       hyperspace
 %
 % OUTPUT
 % Rg    radius of gyration

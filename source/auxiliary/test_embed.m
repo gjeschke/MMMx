@@ -1,4 +1,4 @@
-function [lower_dev,upper_dev]=test_embed(coor,lower_bounds,upper_bounds)
+function [lower_dev,upper_dev] = test_embed(coor,lower_bounds,upper_bounds)
 %[lower_dev,upper_dev]=test_embed(coor,lower_bounds,upper_bounds)
 %
 % Test for constraint violations of an embedded structure with coordinates

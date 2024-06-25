@@ -80,9 +80,9 @@ while violation0 > vtol
         for p=1:n
             cvec=zeros(1,3);
             for pp=1:n
-                cvec=cvec+ndev(p,pp)*(coor(p,:)-coor(pp,:));
+                cvec = cvec + ndev(p,pp)*(coor(p,:)-coor(pp,:));
             end
-            coor1(p,:)=coor(p,:)+lambda(k)*cvec;
+            coor1(p,:) = coor(p,:) + lambda(k)*cvec;
         end
         coor=coor1;
     end

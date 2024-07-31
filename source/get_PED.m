@@ -16,6 +16,9 @@ function [entity,exceptions] = get_PED(pedID,ensembleID,options)
 %                           is kept, defaults to false (file is deleted)
 %               .fast       if true, do not read elemnet information in PDB
 %                           file, defaults to false
+%               .max_models maximum number of models, otherwise entity is
+%                           skipped (empty entity is returned), defaults to
+%                           100000
 %
 % OUTPUT
 % entity       entity structure in MMMx:atomic representation 
@@ -46,6 +49,9 @@ end
 if ~isfield(options,'fast') || isempty(options.fast)
     options.fast = false;
 end
+if ~isfield(options,'max_models') || isempty(options.fast)
+    options.max_models = 100000;
+end
 
 query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s',pedID);
 try
@@ -68,6 +74,11 @@ entities = cell(1,length(eIDs));
 
 for ens = 1:length(eIDs)
     
+    C = PED_info.ensembles(ens).models;
+    if C > options.max_models
+        entities{ens} = [];
+        continue
+    end
     ensembleID = eIDs{ens};
     query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s/ensembles/%s/ensemble-pdb',pedID,ensembleID);
     fname = sprintf('%s_%s.tar.gz',pedID,ensembleID);

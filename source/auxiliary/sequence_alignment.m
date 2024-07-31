@@ -18,7 +18,7 @@ function alignment = sequence_alignment(seqs)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2021: Gunnar Jeschke
 
-% Initialuize empty output
+% Initialize empty output
 alignment = [];
 
 for k = 1:length(seqs) % replace unknown residue identifier to conform to common usage
@@ -223,10 +223,9 @@ while 1
                 alignment(id).db = 'Clustal';
                 alignment(id).name = char(tags(1));
                 alignment(id).sequence = '';
-            else
-                if id > idmax
-                    idmax = id;
-                end
+            end
+            if id > idmax
+                idmax = id;
             end
             alignment(id).sequence = [alignment(id).sequence char(tags(2))];
         end

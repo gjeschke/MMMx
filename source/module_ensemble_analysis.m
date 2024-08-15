@@ -579,7 +579,7 @@ for c = 1:cmd_poi
                 end
             end
             cluster_options.size = cmd.size;
-            [ensemble,info] = cluster_ensemble(c_entity,cluster_options);
+            [ensemble,info,assignment] = cluster_ensemble(c_entity,cluster_options);
             [C,~] = size(ensemble);
             fprintf(logfid,'\n--- Ensemble %s clustered to ensemble %s with %i conformers\n\n',cmd.entity,cmd.new_ensemble,C);
             fprintf(logfid,'Ensemble entropy reduced from %5.2f to %5.2f\n',info.entropies);

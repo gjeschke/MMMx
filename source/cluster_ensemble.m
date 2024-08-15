@@ -1,4 +1,4 @@
-function [ensemble,info] = cluster_ensemble(entity,options)
+function [ensemble,info,assignment] = cluster_ensemble(entity,options)
 %
 % CLUSTER_ENSEMBLE Reduce ensemble size by clustering
 %

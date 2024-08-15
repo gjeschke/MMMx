@@ -20,6 +20,8 @@ function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,rang
 % range     double(1,2), optional residue range, defaults to all residues
 % options   .full   flag, if true, N and C coordinates for amino acid
 %                   residues are also extracted
+%           .list   flag, if true, range argument is interpreted as a list 
+%                   of residues, defaults to false
 %
 % OUTPUT
 % backbones     struct with fields (chain) for all chains, each chain has
@@ -67,6 +69,10 @@ end
 
 if ~exist('options','var') || isempty(options) || ~isfield(options,'full')
     options.full = false;
+end
+
+if ~isfield(options,'list')
+    options.list = false;
 end
 
 if isstruct(ensemble) % input is an entity

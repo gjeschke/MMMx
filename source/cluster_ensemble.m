@@ -14,6 +14,11 @@ function [ensemble,info,assignment] = cluster_ensemble(entity,options)
 %               .size           size of the output ensemble, overwrites
 %                               .factor if present and not empty, no
 %                               default
+%               .chain          restricts analysis to a single chain,
+%                               defaults to all chains
+%               .range          restricts analysis to a residue range,
+%                               range is interpreted as a list of residues 
+%                               if its elements are negative 
 % OUTPUT
 % ensemble      [n,2] array, first column a conformer indices to the
 %               original ensemble, second column new populations

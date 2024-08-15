@@ -16,6 +16,8 @@ function backbone = get_backbone(entity,chain,conformer,range,options)
 % range     double(1,2), optional residue range, defaults to all residues
 % options   .full   flag, if true, N and C coordinates for amino acid
 %                   residues are also extracted
+%           .list   if true, range argument is interpreted as a list of residues
+%                   defaults to false
 %
 % OUTPUT
 % backbone      struct with fields, all fields are empty if the chain is
@@ -40,7 +42,9 @@ defs = load('monomers.mat');
 if ~exist('options','var') || isempty(options) || ~isfield(options,'full')
     options.full = false;
 end
-
+if ~isfield(options,'list')
+    options.list = false;
+end
 
 % initialize empty output
 backbone.aa = [];
@@ -80,7 +84,15 @@ for kr = 1:length(residues) % loop over all residues
     residue = residues{kr};
     if strcmp(residue(1),'R') % these are residue fields
         resnum = str2double(residue(2:end)); % residue number
-        if resnum >= range(1) && resnum <= range(2) % is the residue in the requested range
+		selected = false;
+		if options.list
+		    if min(abs(range-resnum)) == 0
+			    selected = true;
+		    end
+		elseif resnum >= range(1) && resnum <= range(2)
+		    selected = true;
+		end
+        if selected % is the residue in the requested range
             tlc = entity.(chain).(residue).name;
             if isfield(entity.(chain).(residue),'CA') % is there a CA atom?
                 aa_poi = aa_poi + 1;

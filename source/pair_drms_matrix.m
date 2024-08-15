@@ -23,7 +23,8 @@ function [pair_drms,pop,Rg,exceptions] = pair_drms_matrix(entity,chain,range,ent
 %                  matching it are processed, 
 %           none   extension .pdb is appended
 % chain     selected chain, optional
-% range     range of residues, by number integer(1,2), optional
+% range     range of residues, by number integer(1,2), optional, 
+%           negative integer values are interpreted as a list of residues
 %
 % The following inputs can be used for comparing two ensembles
 %
@@ -65,7 +66,13 @@ end
 % initialize empty output
 pair_drms = [];
 
-[backbones,pop,exceptions] = get_backbones_ensemble(entity,chain,range);
+options.full = false;
+options.list = false;
+if min(range) < 0
+    range = - range;
+	options.list = true;
+end
+[backbones,pop,exceptions] = get_backbones_ensemble(entity,chain,range,options);
 
 if ~isempty(exceptions{1})
     return
@@ -82,7 +89,13 @@ if exist('entity2','var') && ~isempty(entity2) % ensemble comparison
     if ~exist('range2','var')
         range2 = [];
     end    
-    [backbones2,pop2,exceptions] = get_backbones_ensemble(entity2,chain2,range2);    
+    options.full = false;
+    options.list = false;
+    if min(range2) < 0
+        range2 = -range2;
+	    options.list = true;
+    end
+    [backbones2,pop2,exceptions] = get_backbones_ensemble(entity2,chain2,range2,options);    
     if ~isempty(exceptions{1})
         return
     end

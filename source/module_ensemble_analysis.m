@@ -100,6 +100,10 @@ for d = 1:length(control.directives)
             cmd.entity = control.directives(d).options{1};
             cmd.new_ensemble = control.directives(d).options{2};
             cmd.size = str2double(control.directives(d).options{3});
+            cmd.address = '';
+            if length(control.directives(d).options) > 3 % chain and possibly range given
+                cmd.address = control.directives(d).options{4};
+            end            
             commands{cmd_poi} = cmd;
         case 'transition'
             cmd_poi = cmd_poi + 1;
@@ -579,9 +583,33 @@ for c = 1:cmd_poi
                 end
             end
             cluster_options.size = cmd.size;
+            if ~isempty(cmd.address)
+                [chain,range] = split_chain_range(cmd.address);
+                cluster_options.chain = chain;
+                cluster_options.range = range;
+            end
             [ensemble,info,assignment] = cluster_ensemble(c_entity,cluster_options);
+            original = 1:length(assignment);
             [C,~] = size(ensemble);
             fprintf(logfid,'\n--- Ensemble %s clustered to ensemble %s with %i conformers\n\n',cmd.entity,cmd.new_ensemble,C);
+            if ~isempty(cmd.address)
+                fprintf(logfid,'Clustering with respect to ');
+                if ~isempty(chain)
+                    fprintf(logfid,'chain %s and ',cluster_options.chain);
+                end
+                if ~isempty(range)
+                    if min(range) > 0
+                        fprintf(logfid,'residue range %i-%i',cluster_options.range);
+                    else
+                        fprintf(logfid,'residues %i,',-cluster_options.range(1));
+                        for res = 2:length(cluster_options.range)-1
+                            fprintf(logfid,'%i,',-cluster_options.range(res));
+                        end
+                        fprintf(logfid,'%i',-cluster_options.range(end));
+                    end
+                end
+                fprintf(logfid,'\n');
+            end
             fprintf(logfid,'Ensemble entropy reduced from %5.2f to %5.2f\n',info.entropies);
             fprintf(logfid,'Ensemble width changed from %4.1f to %4.1f %c\n',info.widths,char(197));
             fprintf(logfid,'Clustering resolution is %4.1f %c\n',info.resolution,char(197));
@@ -591,6 +619,12 @@ for c = 1:cmd_poi
             fprintf(ens_fid,'%% Clustered ensemble %s by MMMx derived from ensemble %s\n\n',cmd.new_ensemble,cmd.entity);
             for clust = 1:C
                 fprintf(logfid,'Cluster %i with population %6.4f is represented by conformer %i of original ensemble\n',clust,ensemble(clust,2),ensemble(clust,1));
+                members = original(assignment == clust);
+                fprintf(logfid,'  included conformers: ');
+                for m = 1:length(members)-1
+                    fprintf(logfid,'%i,',members(m));
+                end
+                fprintf(logfid,'%i\n',members(end));
                 oname = sprintf('%s_m%i.pdb',cmd.new_ensemble,clust);
                 clear save_options
                 save_options.order = ensemble(clust,1);
@@ -1528,15 +1562,23 @@ if strcmp(chain,'*')
     range = [1,1e6];
     return
 end
-residues = split(address,'-');
-if ~isempty(residues{1})
-    range(1) = str2double(residues{1});
-end
-if ~isempty(residues{2})
-    range(2) = str2double(residues{2});
-end
-if length(range) == 1
-    range(2) = range(1);
+if contains(address,',')
+    residues = split(address,',');
+    range = zeros(1,length(residues));
+    for res = 1:length(residues)
+        range(res) = -str2double(residues{res});
+    end
+else
+    residues = split(address,'-');
+    if ~isempty(residues{1})
+        range(1) = str2double(residues{1});
+    end
+    if ~isempty(residues{2})
+        range(2) = str2double(residues{2});
+    end
+    if length(range) == 1
+        range(2) = range(1);
+    end
 end
 
 

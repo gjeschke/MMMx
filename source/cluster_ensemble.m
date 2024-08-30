@@ -43,7 +43,16 @@ end
 pop = entity.populations;
 info.entropies = [-sum(pop.*log10(pop/sum(pop)))/sum(pop),0];
 
-dmat = pair_drms_matrix(entity);
+if isfield(options,'chain')
+    if isfield(options,'range')
+        dmat = pair_drms_matrix(entity,options.chain,options.range);
+    else
+        dmat = pair_drms_matrix(entity,options.chain);
+    end
+else
+    dmat = pair_drms_matrix(entity);
+end
+    
 var11 = kron(entity.populations,entity.populations').*dmat.^2;
 width1 = sqrt(sum(sum(var11)));
 info.widths = [width1,0];

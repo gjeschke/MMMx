@@ -405,8 +405,8 @@ for c = 1:cmd_poi
     cmd = commands{c};
     switch cmd.name
         case {'getpdb','getcyana','getalphafold','getens'}
-            entity_poi = cmd.entity;
-            entity_descriptor = entities{entity_poi};
+            entity_poi1 = cmd.entity;
+            entity_descriptor = entities{entity_poi1};
             entity_name = entity_descriptor.name;
             entity = entity_descriptor.entity;
             fprintf(logfid,'Current structure is now: %s\n',entity_name);

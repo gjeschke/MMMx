@@ -1236,7 +1236,7 @@ for c = 1:cmd_poi
                     if cmd.options.pair_corr
                         h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr);
                         if save_figures
-                            figname = sprintf('residue_pair_correlation_%s_%s.%s',basname,part,figure_format);
+                            figname = sprintf('residue_pair_CI95_%s_%s.%s',basname,part,figure_format);
                             saveas(h,figname);
                         end
                         h = plot_pair_corr(correlations.(part).pair_axis,correlations.(part).pair_corr,correlations.(part).dmat);
@@ -1625,8 +1625,8 @@ plot(1,1,'k.');
 plot(n1,n2,'k.');
 
 if ~exist('dmat','var') || isempty(dmat)
-    image(pair_corr,'CDataMapping','scaled');
-    title('Pair correlation');
+    image(2*pair_corr,'CDataMapping','scaled');
+    title('C\alpha-C\alpha distance 95% confidence interval');
 else
     image(pair_corr./dmat,'CDataMapping','scaled');
     title('Pair correlation (normalized)');

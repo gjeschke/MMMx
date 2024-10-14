@@ -117,7 +117,7 @@ if ~isfield(options,'minterm') || isempty(options.minterm)
 end
 
 if ~isfield(options,'figname')
-    options.figname = sprintf('%s_domains.pdf',entity.uniprot);
+    options.figname = sprintf('%s_domains.pdf',entity.uniprotname);
 end
 
 if ~isfield(options,'rmin') || isempty(options.rmin)

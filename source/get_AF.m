@@ -49,7 +49,7 @@ catch exception
     return;
 end
 
-fname = sprintf('AF_%s_v%i.pdb',UniProtID,AF_info.latestVersion);
+fname = sprintf('%s_v%i.pdb',AF_info.entryId,AF_info.latestVersion);
 try
     websave(fname,AF_info.pdbUrl);
 catch exception

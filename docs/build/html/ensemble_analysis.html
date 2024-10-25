@@ -538,7 +538,7 @@
 <div class="section" id="cluster">
 <h2><code class="docutils literal notranslate"><span class="pre">cluster</span></code><a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h2>
 <p>Reduce ensemble size by clustering.</p>
-<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cluster</span> <span class="s">input</span> <span class="s">output</span> <span class="s">size</span>
+<div class="highlight-matlab notranslate"><div class="highlight"><pre><span></span><span class="n">cluster</span> <span class="s">input</span> <span class="s">output</span> <span class="s">size</span> <span class="s">range</span>
 </pre></div>
 </div>
 <dl class="simple">
@@ -546,6 +546,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">input</span></code> - identifier of the input ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - identifier of the output (reduced) ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">size</span></code> - number of conformers in the reduced ensemble</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - chain and residue range , e.g. <img class="math" src="_images/math/7e6f65e4f52b89b686ac4faa2738b7d97b05b1f6.svg" alt="(A)187-320"/> or list of residues, e.g. (A)187,231,316</p></li>
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
@@ -994,7 +995,7 @@
 <li><p><code class="docutils literal notranslate"><span class="pre">initial</span></code> - identifier for the initial-state ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">final</span></code> - identifier for the final-state ensemble</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">(chain)</span></code> - chain tag, as in <code class="docutils literal notranslate"><span class="pre">SRSF1_free.A</span></code>, for selecting chain A in ensemble SRSF1_free</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - range where conformers are superimpose, as in 121-195 for residues 121-195 of the selected chains, do not include a chain tag here</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">range</span></code> - range where conformers are superimposed, as in 121-195 for residues 121-195 of the selected chains, do not include a chain tag here</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">output</span></code> - basis filename for output</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">subkey</span></code> - a subkey that specifies a visualization command from the following list</p></li>
 </ul>
@@ -1006,6 +1007,7 @@
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
+<li><p>the <code class="docutils literal notranslate"><span class="pre">range</span></code> argument can also be a list of residues, such as <code class="docutils literal notranslate"><span class="pre">16,107,148</span></code></p></li>
 <li><p>conformers of the initial-state ensemble are divided to deselected conformers and conformational selection</p></li>
 <li><p>conformers of the final-state ensemble are divided to conformational selection and induced fit</p></li>
 <li><p>assignments and populations per subset are reported in the logfile</p></li>

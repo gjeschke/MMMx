@@ -4,7 +4,12 @@ Pr0 = Pr0/sum(Pr0);
 dt = Pake_base.t(2)-Pake_base.t(1);
 dt0 = t0(2)-t0(1);
 stretch = (dt0/dt)^(1/3);
-distr = get_std_distr(r0/stretch,Pr0,Pake_base.r);
+try
+    distr = get_std_distr(r0/stretch,Pr0,Pake_base.r);
+catch
+    ff = [];
+    return
+end
 distr=0.01*distr/sum(distr);
 rsig = distr*Pake_base.kernel; % multiply G(r) vector with kernel matrix
 ff0 = exp(rsig); % eqn [10]

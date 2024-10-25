@@ -6,13 +6,15 @@ function fom = fit_multi_PRE(v,predictions,parameters,opt)
 % predictions   array [m,n], where m is the number experimental PREs and
 %               n-1 the number of ensemble members, n-1 = length(v)
 %               1st column    : experimental PRE data
-%               columns 2... n: predicte relaxation enhancements Gamma2
+%               columns 2... n: predicted relaxation enhancements Gamma2
 % parameters    parameters for blocks of data, array of struct with fields
 %               .td             total INEPT time [s]
 %               .R2dia          relaxation rate for diamagnetic sample,
 %                               [Hz]
 %               .range          first and last index of block into array
 %                               predictions
+%               .fit_rates      Boolean flag, true if rate Gamma is fitted
+%                               instead of PRE ratio
 % opt           information for plot/display
 %               .interactive    if true, interactive mode, defaults to false
 %               .plot_axes      axes object for plotting, no plotting if empty,
@@ -76,13 +78,18 @@ for kr = 1:length(parameters)
     n = n + 1 + range(2) - range(1);
     coeff = v/sum(v);
     Gamma2 = predictions(range(1):range(2),3:end)*coeff';
+    pre_experimental = predictions(range(1):range(2),1);
     if parameters(kr).fit_rates
         all_pre = Gamma2;
         all_pre(all_pre > parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
+        if opt.lograte
+            all_pre = log10(all_pre);
+            pre_experimental = log10(pre_experimental);
+        end
     else
         all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
     end
-    fom = fom + sum(((all_pre-predictions(range(1):range(2),1))./pre_std).^2);
+    fom = fom + sum(((all_pre-pre_experimental)./pre_std).^2);
 %     plot(range(1):range(2),predictions(range(1):range(2),1),'k.');
 %     plot(range(1):range(2),all_pre,'ro');
 end

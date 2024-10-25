@@ -84,6 +84,7 @@ opt.threshold = 0.01; % conformers wih population below this threshold are disca
 opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
+opt.lograte = true;
 opt.overlap_trials = 10000;
 
 fit_mean_distances = false;
@@ -130,6 +131,8 @@ for d = 1:length(control.directives)
             end
         case 'plot'
             plot_result = true;
+        case 'preratelinear'
+            opt.lograte = false;
         case {'initial'}
             initial_ensemble = control.directives(d).options{1};
         case 'zenodo'
@@ -627,6 +630,7 @@ for pre_poi = 1:length(restraints.pre)
         fit_task.pre(kft).residue = restraints.pre(pre_poi).residue{kr};
     end
 end
+nr_pre = kft;
 
 if ~isempty(restraints.sas)
     fit_task.sas(length(restraints.sas)).fits = [];
@@ -773,8 +777,11 @@ for c = 1:C
                     properties.deer(n_comp).label2 = label2;
                     properties.deer(n_comp).distr = distr;
                 end
-                if ~isempty(distr)
+                if ~isempty(distr) && sum(distr) > 1e-9
                     fit_task.deer(block_offset+kr).distr(c,:) = distr/sum(distr);
+                    if isempty(fit_task.r_axis) || isempty(distr) || sum(isnan(distr))
+                        keyboard
+                    end
                     sim_ff = form_factor_deer(fit_task.r_axis/10,distr,fit_task.deer(block_offset+kr).exp_time,Pake_base);
                     fit_task.deer(block_offset+kr).sim_ff(:,c) = sim_ff.';
                 else
@@ -817,10 +824,13 @@ for c = 1:C
         larmor = restraints.pre(pre_poi).larmor;
         pre_parameters(pre_poi).td = td;
         pre_parameters(pre_poi).R2dia = R2dia;
-        pre_parameters(pre_poi).fit_rates = restraints.pre(pre_poi).fit_rates;
+        pre_parameters(pre_poi).fit_rates = false;
         pre_parameters(pre_poi).max_Gamma2 = restraints.pre(pre_poi).max_Gamma2;
         for kr = 1:length(restraints.pre(pre_poi).residue)
             fit_task.pre(block_offset+kr).assignment = [pre_poi,kr];
+            fit_task.pre(block_offset+kr).td = td;
+            fit_task.pre(block_offset+kr).R2dia = R2dia;
+            fit_task.pre(block_offset+kr).fit_rates = restraints.pre(pre_poi).fit_rates;
             residue = restraints.pre(pre_poi).residue{kr};
             si = strfind(residue,'(');
             ei = strfind(residue,')');
@@ -846,7 +856,7 @@ for c = 1:C
                         site_list(kr).residue == pre_list(kcomp).residue
                     fit_task.pre(block_offset+kr).Gamma2(c) = pre_list(kcomp).Gamma2;
                     fit_task.pre(block_offset+kr).pre(c) = pre_list(kcomp).pre;
-                    if ~isnan(pre_list(kcomp).Gamma2)
+                    if ~isnan(pre_list(kcomp).Gamma2) && ~isnan(pre_list(kcomp).pre)
                         found = true;
                         break
                     end
@@ -963,6 +973,7 @@ end
 if isfield(fit_task,'pre')
     for kr = 1:length(fit_task.pre)
         fit_task.pre(kr).Gamma2 = fit_task.pre(kr).Gamma2(valid_conformers);
+        fit_task.pre(kr).pre = fit_task.pre(kr).pre(valid_conformers);
     end
 end
 if isfield(fit_task,'deer')
@@ -1016,6 +1027,7 @@ all_sas_predictions = all_sas_predictions(1:nr_sas);
 % predicted for all conformers into matrices for all restraints
 nr_pre = 0;
 all_pre_predictions = zeros(length(fit_task.pre_valid),C+2);
+all_pre = zeros(length(fit_task.pre_valid),C+2);
 for kr = 1:length(fit_task.pre_valid) % all restraints
     if fit_task.pre_valid(kr) % this is a valid restraint
         nr_pre = nr_pre + 1;
@@ -1028,6 +1040,20 @@ for kr = 1:length(fit_task.pre_valid) % all restraints
         end
         all_pre_predictions(nr_pre,1:2) = fit_task.pre(kr).exp_data;
         all_pre_predictions(nr_pre,3:C+2) = fit_task.pre(kr).Gamma2;
+        all_pre(nr_pre,1:2) = fit_task.pre(kr).exp_data;
+        if fit_task.pre(kr).fit_rates
+            R2dia = fit_task.pre(kr).R2dia;
+            td = fit_task.pre(kr).td;
+            fit_task.pre(kr).exp_data(1) =  R2dia*exp(-td*fit_task.pre(kr).exp_data(1))/(R2dia+td); 
+            ub = R2dia*exp(-td*(fit_task.pre(kr).exp_data(1)-fit_task.pre(kr).exp_data(2)))/(R2dia+td); 
+            lb = R2dia*exp(-td*(fit_task.pre(kr).exp_data(1)+fit_task.pre(kr).exp_data(2)))/(R2dia+td);
+            fit_task.pre(kr).exp_data(2) = (ub-lb)/2;
+            fit_task.pre(kr).fit_rates = false;
+        end
+        if all_pre(nr_pre,2) < 1e-2
+            all_pre(nr_pre,2) = 1e-2; % error of a PRE ratio is not smaller than 1%
+        end
+        all_pre(nr_pre,3:C+2) = fit_task.pre(kr).pre(1:C);
     end
 end
 all_pre_predictions = all_pre_predictions(1:nr_pre,:);
@@ -1037,6 +1063,7 @@ loss_of_merit = [];
 included = 1:C0; % indices for conformers of initial ensemble
 
 if nnllsq_fit
+    n_sets = 0;
     conformers = 1:C;
     nnllsq_options = optimset('TolFun',1e-4,'Display','final');
     for kr = 1:length(fit_task.deer_valid)
@@ -1044,7 +1071,9 @@ if nnllsq_fit
            exp_data = fit_task.deer(kr).exp_ff;
            kernel = fit_task.deer(kr).sim_ff;
            [~,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
+           fprintf(1,'DEER set %i residual norm is %5.2f for %i data points\n',kr,resnorm,length(exp_data));
            fit_task.deer(kr).resnorm = resnorm;
+           n_sets = n_sets + 1;
         end
     end
     for kr = 1:length(fit_task.sas_valid)
@@ -1053,7 +1082,18 @@ if nnllsq_fit
             kernel = fit_task.sas(kr).fits(:,4:end);
             [~,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
             fit_task.sas(kr).resnorm = resnorm;
+            fprintf(1,'SAS set %i residual norm is %5.2f for %i data points\n',kr,resnorm,length(exp_data));
+            n_sets = n_sets + 1;
         end
+    end
+    if nr_pre > 0 % there exist PRE restraints
+        exp_data = all_pre(:,1)./all_pre(:,2); % normalization to standard deviation
+        % exp_error = all_pre_predictions(:,2);
+        kernel = all_pre(:,3:end)./all_pre(:,2);
+        [~,resnorm] = lsqnonneg(kernel,exp_data,nnllsq_options);
+        fit_task.pre(1).resnorm = resnorm;
+        fprintf(1,'PRE residual norm is %5.2f for %i data points\n',resnorm,length(exp_data));
+        n_sets = n_sets + 1;
     end
     data_dim = 0;
     deer_set_lengths = zeros(length(fit_task.deer_valid),1);
@@ -1074,6 +1114,7 @@ if nnllsq_fit
     if sas_bckg
         n_coeff = n_coeff + 2*length(fit_task.sas_valid);
     end
+    data_dim = data_dim + nr_pre;
     kernel = zeros(data_dim,n_coeff);
     all_data = zeros(data_dim,1);
     data_pointer = 0;
@@ -1094,6 +1135,11 @@ if nnllsq_fit
             kernel(data_pointer+1:data_pointer+ndat,1:C) = fit_task.sas(kr).fits(:,4:end)/normalizer;
             data_pointer = data_pointer + ndat;
         end
+    end
+    if nr_pre > 0
+        normalizer = sqrt(fit_task.pre(1).resnorm);
+        all_data(data_pointer+1:data_pointer+nr_pre) = (all_pre(:,1)./all_pre(:,2))/normalizer;
+        kernel(data_pointer+1:data_pointer+nr_pre,1:C) = (all_pre(:,3:end)./all_pre(:,2))/normalizer;
     end
     data_pointer = 0;
     kernel_pointer = C;
@@ -1122,16 +1168,15 @@ if nnllsq_fit
             end
         end
     end
-    n_sets = length(fit_task.deer_valid) + length(fit_task.sas_valid);
     tic;
-    [popfit0,resnorm0] = lsqnonneg(kernel(:,1:C),all_data,nnllsq_options);
-    all_sim0 = kernel(:,1:C)*popfit0;
+    [~,resnorm0] = lsqnonneg(kernel(:,1:C),all_data,nnllsq_options);
+    % all_sim0 = kernel(:,1:C)*popfit0;
     [popfit,resnorm] = lsqnonneg(kernel,all_data,nnllsq_options);
-    all_sim = kernel*popfit;
+    fprintf(1,'Integrative residual norm is %5.2f for %i data points\n',resnorm,length(all_data));
+    % all_sim = kernel*popfit;
     runtime = toc;
     popfit = popfit(1:C);
-    sorted_populations = sort(popfit,'descend');
-    fit_task.ensemble_populations = popfit.'/sum(popfit);
+    % sorted_populations = sort(popfit,'descend');
     loss_of_merit = resnorm/n_sets - 1;
     fprintf(logfid,'\n--- Non-negative linear least-squares fit of populations ---\n\n');
     fprintf(logfid,'Run time: %6.1f s\n',runtime);
@@ -1139,46 +1184,46 @@ if nnllsq_fit
     fprintf(logfid,'Residual norm without background: %8.4f\n',resnorm0);
     fprintf(logfid,'Population sum: %6.4f\n',sum(popfit));
     fprintf(logfid,'Loss of merit: %5.3f\n',loss_of_merit);
-    data_pointer = 0;
-    popfit = popfit.'/sum(popfit);
+    % data_pointer = 0;
+    popfit = popfit/max(popfit);
     above_threshold = (popfit >= opt.threshold); % indicies of conformers above the population threshold
     included = conformers(above_threshold); % these conformers are kept
-    figure(1); clf; hold on;
-    plot(sorted_populations,'.','MarkerSize',12,'Color',[0.75,0.0,0.0]);
-    plot([length(included),length(included)],[0,max(sorted_populations)],'Color',[0.25,0.25,0.25]);
-    data = [(1:length(sorted_populations))' sorted_populations opt.threshold*ones(length(sorted_populations),1)];
-    description = {'conformer' 'population' 'threshold'}; 
-    put_csv('nnllsq_reduction.csv',data,description);
-    for kr = 1:length(fit_task.deer_valid)
-        if fit_task.deer_valid(kr)
-            ndat = length(fit_task.deer(kr).exp_ff);
-            normalizer = sqrt(fit_task.deer(kr).resnorm);
-            sim0 = all_sim0(data_pointer+1:data_pointer+ndat);
-            sim = all_sim(data_pointer+1:data_pointer+ndat);
-            figure(100+kr); clf; hold on;
-            plot(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_ff,'.','MarkerSize',10,'Color',[0.25,0.25,0.25]);
-            plot(fit_task.deer(kr).exp_time,normalizer*sim,'Color',[0,0.6,0],'LineWidth',2);
-            plot(fit_task.deer(kr).exp_time,normalizer*sim0,'Color',[0.75,0,0],'LineWidth',2);
-            data_pointer = data_pointer + ndat;
-       end
-    end
-    for kr = 1:length(fit_task.sas_valid)
-        if fit_task.sas_valid(kr)
-            ndat = length(fit_task.sas(kr).fits(:,2));
-            normalizer = sqrt(fit_task.sas(kr).resnorm);
-            sim0 = all_sim0(data_pointer+1:data_pointer+ndat);
-            sim = all_sim(data_pointer+1:data_pointer+ndat);
-            figure(200+kr); clf; hold on;
-            plot(fit_task.sas(kr).fits(:,1),fit_task.sas(kr).fits(:,2),'.','MarkerSize',10,'Color',[0.25,0.25,0.25]);
-            plot(fit_task.sas(kr).fits(:,1),normalizer*sim,'Color',[0,0.6,0],'LineWidth',2);
-            plot(fit_task.sas(kr).fits(:,1),normalizer*sim0,'Color',[0.75,0,0],'LineWidth',2);
-            data_pointer = data_pointer + ndat;
-        end
-    end
+%     figure(1); clf; hold on;
+%     plot(sorted_populations,'.','MarkerSize',12,'Color',[0.75,0.0,0.0]);
+%     plot([length(included),length(included)],[0,max(sorted_populations)],'Color',[0.25,0.25,0.25]);
+%     data = [(1:length(sorted_populations))' sorted_populations opt.threshold*ones(length(sorted_populations),1)];
+%     description = {'conformer' 'population' 'threshold'}; 
+%     put_csv('nnllsq_reduction.csv',data,description);
+%     for kr = 1:length(fit_task.deer_valid)
+%         if fit_task.deer_valid(kr)
+%             ndat = length(fit_task.deer(kr).exp_ff);
+%             normalizer = sqrt(fit_task.deer(kr).resnorm);
+%             sim0 = all_sim0(data_pointer+1:data_pointer+ndat);
+%             sim = all_sim(data_pointer+1:data_pointer+ndat);
+%             figure(100+kr); clf; hold on;
+%             plot(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_ff,'.','MarkerSize',10,'Color',[0.25,0.25,0.25]);
+%             plot(fit_task.deer(kr).exp_time,normalizer*sim,'Color',[0,0.6,0],'LineWidth',2);
+%             plot(fit_task.deer(kr).exp_time,normalizer*sim0,'Color',[0.75,0,0],'LineWidth',2);
+%             data_pointer = data_pointer + ndat;
+%        end
+%     end
+%     for kr = 1:length(fit_task.sas_valid)
+%         if fit_task.sas_valid(kr)
+%             ndat = length(fit_task.sas(kr).fits(:,2));
+%             normalizer = sqrt(fit_task.sas(kr).resnorm);
+%             sim0 = all_sim0(data_pointer+1:data_pointer+ndat);
+%             sim = all_sim(data_pointer+1:data_pointer+ndat);
+%             figure(200+kr); clf; hold on;
+%             plot(fit_task.sas(kr).fits(:,1),fit_task.sas(kr).fits(:,2),'.','MarkerSize',10,'Color',[0.25,0.25,0.25]);
+%             plot(fit_task.sas(kr).fits(:,1),normalizer*sim,'Color',[0,0.6,0],'LineWidth',2);
+%             plot(fit_task.sas(kr).fits(:,1),normalizer*sim0,'Color',[0.75,0,0],'LineWidth',2);
+%             data_pointer = data_pointer + ndat;
+%         end
+%     end
 
     fit_task.remaining_conformers = included; % store numbers of remaining conformers
     popfit(~above_threshold) = 0; % discard low-probability conformers
-    popfit = popfit/sum(popfit);
+    popfit = popfit'/sum(popfit);
     fit_task.ensemble_populations = popfit(above_threshold); % store corresponding populations
     fit_task.pop = popfit; % assign
     fprintf(1,'%i conformers remain included\n',length(fit_task.ensemble_populations));
@@ -1435,7 +1480,7 @@ elseif run_fit
             fprintf(logfid,'Mesh size is at %12.4g, maximum constraint violation at %12.4g.\n',fit_output.meshsize,fit_output.maxconstraint);
             
             coeff_pre = v/max(v); % populations normalized to their maximum
-            above_threshold_pre = (coeff_pre >= opt.threshold); % indicies of conformers above the population threshold
+            above_threshold_pre = (coeff_pre >= opt.threshold); % indices of conformers above the population threshold
             included_pre = conformers(above_threshold_pre); % these conformers are kept
             C0_pre = length(included_pre);
             fprintf(logfid,'Final PRE mean square deviation is: %6.3f with %i conformers\n\n',fom_pre,C0_pre);
@@ -1703,8 +1748,10 @@ save([outname '.mat'],'restraints','fit_task','exceptions');
 if save_csv
     dr = 1/(fit_task.r_axis(2) - fit_task.r_axis(1));
     overlap = 1;
+    ddr = false;
     for kr = 1:nr
         if fit_task.ddr_valid(kr)
+            ddr = true;
             overlap_G = [];
             overlap_E = [];
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
@@ -1781,7 +1828,9 @@ if save_csv
         end
     end
     overlap = overlap^(1/nr);
-    fprintf(logfid,'\nOverlap deficiency: %6.3f\n',1-overlap);
+    if ddr
+        fprintf(logfid,'\nOverlap deficiency: %6.3f\n',1-overlap);
+    end
     for kr = 1:nr_sas
         if fit_task.sas_valid(kr)
             datafile = restraints.sas(kr).data;
@@ -1824,7 +1873,7 @@ if save_csv
             end
             fclose(fid);
         end
-        fprintf(logfid,'\nPRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
+        % fprintf(logfid,'\nPRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
     end
 end
 
@@ -1956,11 +2005,15 @@ if plot_result
     end
     if nr_pre > 0
         kft = 0;
+        fom_pre = 0;
         for kr = 1:length(pre_parameters)
             h = figure; clf; hold on;
             range = pre_parameters(kr).range;
             plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
             kx = 0;
+            fom_pre_current = 0;
+            min_exp = 1e12;
+            min_fit = 1e12;
             max_exp = 0;
             max_fit = 0;
             for nr_pre = range(1):range(2)
@@ -1975,22 +2028,42 @@ if plot_result
                 if ~pre_parameters(kr).fit_rates && maxbar > 1
                     maxbar = 1;
                 end
-                plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
-                plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
-                plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+                if pre_parameters(kr).fit_rates && opt.lograte
+                    plot([kx,kx],log10([minbar,maxbar]),'Color',[0.5,0.5,0.5],'LineWidth',1);
+                    plot(kx,log10(fit_task.pre(kft).exp_data(1)),'k.','MarkerSize',14);
+                    plot(kx,log10(fit_task.pre(kft).fit_data),'o','Color',[0.7,0,0],'MarkerSize',8);
+                else
+                    plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
+                    plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
+                    plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+                    fom_pre = fom_pre + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
+                    fom_pre_current = fom_pre_current + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
+                end
                 if max_exp < fit_task.pre(kft).exp_data(1)
                     max_exp = fit_task.pre(kft).exp_data(1);
                 end
                 if max_fit < fit_task.pre(kft).fit_data
                     max_fit = fit_task.pre(kft).fit_data;
                 end
+                if min_exp > fit_task.pre(kft).exp_data(1)
+                    min_exp = fit_task.pre(kft).exp_data(1);
+                end
+                if min_fit > fit_task.pre(kft).fit_data
+                    min_fit = fit_task.pre(kft).fit_data;
+                end
             end
-            title(sprintf('PRE for labelling site %s',restraints.pre(kr).site));
+            fom_pre_current = fom_pre_current/kx;
+            title(sprintf('PRE for site %s with chi-squared %4.2f',restraints.pre(kr).site),fom_pre_current);
             xlabel('Residue');
             set(gca,'FontSize',14);
             if pre_parameters(kr).fit_rates
-                axis([1,kx,0,max([max_exp,max_fit])]);
-                ylabel('\Gamma_2 [s^{-1}]');
+                if opt.lograte
+                    ylabel('log_{10}(\Gamma_2/s^{-1})');
+                    axis([1,kx,log10(min([min_exp,min_fit])),log10*(max([max_exp,max_fit]))]);
+                else
+                    ylabel('\Gamma_2 [s^{-1}]');
+                    axis([1,kx,0,max([max_exp,max_fit])]);
+                end
             else
                 ylabel('I_{para}/I_{dia}');
                 axis([1,kx,0,1.05]);
@@ -2000,6 +2073,8 @@ if plot_result
                 save_figure(h,figure_title,figure_format);
             end
         end
+        fom_pre = fom_pre/kft;
+        fprintf(logfid,'PRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
         fprintf(1,'PRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
     end
     if nr_deer > 0

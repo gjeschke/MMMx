@@ -53,7 +53,7 @@ Arguments
     *   ``address`` - MMMx residue address, such as '(C)9' 
 Remarks
     *   the addressed nucleotide must exist in the input conformers and must be a native nucleotide
-    *   in pipelines with consecutive FlexT=RNA modules, address is affected by automatic chain identifier changes when chains are concatenated by linkers
+    *   in pipelines with consecutive FlexRNA modules, address is affected by automatic chain identifier changes when chains are concatenated by linkers
 
 ``anchor_5p``
 ---------------------------------
@@ -95,7 +95,7 @@ Remarks
     *   the file name is optional, full distributions can be used
     *   if a full distribution is provided, ``rmean`` and ``rstd`` can be skipped
     *   distance distribution restraints are always treated as full distribution, if only ``rmean`` and ``rstd`` are provided, the distance is computed
-	*   test of distance distribution restraints is done with full models and based on the overlap metric
+    *   test of distance distribution restraints is done with completed models and based on the overlap metric
  
 ``expand``
 ---------------------------------
@@ -175,3 +175,19 @@ Arguments
 Remarks
     *   by default, there is no skipping
     *   this can be used after a crash or job timeout
+
+``verbose``
+---------------------------------
+
+Sets verbose mode. 
+
+.. code-block:: matlab
+
+    verbose [trials]
+
+Arguments
+    *   ``trials`` - number of Monte carlo trials after which new verbose information is written to logfile and command window
+Remarks
+    *   by default, verbose is off
+    *   verbose without argument has a default of 200 trials
+    *   verbose writes time per generated model, an estimate of remaining computation time, and number of successful trials to the command window

@@ -1849,7 +1849,6 @@ if save_csv
         kft = 0;
         for kr = 1:length(pre_parameters)
             range = pre_parameters(kr).range;
-            plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
             kx = 0;
             data = zeros(range(2)-range(1)+1,4);
             coding = cell(1,range(2)-range(1)+1);
@@ -1874,6 +1873,22 @@ if save_csv
             fclose(fid);
         end
         % fprintf(logfid,'\nPRE %s deviation: %6.4f\n',pre_fit_type,fom_pre);
+    end
+    if nr_deer > 0
+        my_base = load('deer_kernel.mat','base','t','r');
+        Pake_base.kernel = my_base.base-ones(size(my_base.base)); % kernel format for pcf2deer
+        Pake_base.t = my_base.t;
+        Pake_base.r = my_base.r;
+        clear my_base
+        for kr = 1:nr_deer
+            deer_fit = fit_deer(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_deer,fit_task.r_axis,fit_task.deer(kr).fit_distr,Pake_base);
+            data = [fit_task.deer(kr).exp_time',fit_task.deer(kr).exp_deer',deer_fit'];
+            site1 = restraints.deer(fit_task.deer(kr).assignment(1)).site1{fit_task.deer(kr).assignment(2)};
+            site2 = restraints.deer(fit_task.deer(kr).assignment(1)).site2{fit_task.deer(kr).assignment(2)};
+            datname = sprintf('DEER_fit_%s_%s.csv',site1,site2);
+            description = {'time [microseconds]' 'experimental' 'fit'};
+            put_csv(datname,data,description);
+        end
     end
 end
 
@@ -1903,22 +1918,22 @@ if plot_result
                     distr_lb = fit_task.ddr(kr).exp_distr_lb;
                     fill([fit_task.r_axis, fliplr(fit_task.r_axis)],dr*[distr_ub, fliplr(distr_lb)],0.75*[1,1,1],'LineStyle','none');
                 end
-                plot(fit_task.r_axis,dr*fit_task.ddr(kr).exp_distr,'Color',[0.2,0.2,0.2]);
+                h1 = plot(fit_task.r_axis,dr*fit_task.ddr(kr).exp_distr,'Color',[0.2,0.2,0.2],'LineWidth',2);
             end
             for kpg = 1:length(plot_groups)
                 if ~isempty(plot_groups(kpg).rgb) && ~sum(isnan(plot_groups(kpg).conformers))
                     pop = fit_task.ensemble_populations(plot_groups(kpg).conformers);
                     all_distr_group = all_distr_ensemble(plot_groups(kpg).conformers,:);
                     group_distr = pop*all_distr_group;
-                    plot(fit_task.r_axis,dr*group_distr,'Color',plot_groups(kpg).rgb);
+                    plot(fit_task.r_axis,dr*group_distr,'Color',plot_groups(kpg).rgb,'LineWidth',2);
                 end
             end
             if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
                 maxamp = max(dr*fit_task.ddr(kr).sim_distr);
-                plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0]);
+                plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0],'LineWidth',2);
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
             end
-            plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0]);
+            h2 = plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0],'LineWidth',2);
             if isfield(fit_task.ddr(kr),'rax_exp')
                 axis([fit_task.ddr(kr).rax_exp(1),fit_task.ddr(kr).rax_exp(end),0,1.05*maxamp]);
             end
@@ -1941,6 +1956,7 @@ if plot_result
             xlabel('Distance (Angstroem)');
             ylabel('Probability density');
             set(gca,'FontSize',14);
+            legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
                 figure_title = sprintf('overlap_%s-%s',site1,site2);
                 save_figure(h,figure_title,figure_format);
@@ -1980,8 +1996,8 @@ if plot_result
             end
             h = figure; clf; hold on
             data = all_sas_predictions{kr};
-            plot(log(data(:,1)),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
-            plot(log(data(:,1)),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
+            h1 = plot(log(data(:,1)),real(log(data(:,2))),'.','MarkerSize',14,'Color',[0.2,0.2,0.2]);
+            h2 = plot(log(data(:,1)),real(log(fitted_curve)),'-','LineWidth',2.5,'Color',[0.7,0,0]);
             title(sprintf('%s: chi^2 = %6.3f',datafile,fit_task.sas(kr).chi2), 'Interpreter', 'none');
             xlabel(sprintf('log(q%s%s)',char(183),char(197)));
             ylabel('log(I(q))');
@@ -1997,6 +2013,7 @@ if plot_result
             xlabel(sprintf('q [%c^{-1}]',char(197)));
             ylabel('I_{exp}(q) - I_{sim}(q)');
             set(gca,'FontSize',14);
+            legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
                 figure_title = sprintf('SAS_log_fit_residual_%s',datafile);
                 save_figure(h,figure_title,figure_format);
@@ -2009,7 +2026,7 @@ if plot_result
         for kr = 1:length(pre_parameters)
             h = figure; clf; hold on;
             range = pre_parameters(kr).range;
-            plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
+            % plot([1,range(2)-range(1)+1],pre_parameters(kr).max_Gamma2*[1,1],'Color',[0,0.7,0]);
             kx = 0;
             fom_pre_current = 0;
             min_exp = 1e12;
@@ -2030,12 +2047,12 @@ if plot_result
                 end
                 if pre_parameters(kr).fit_rates && opt.lograte
                     plot([kx,kx],log10([minbar,maxbar]),'Color',[0.5,0.5,0.5],'LineWidth',1);
-                    plot(kx,log10(fit_task.pre(kft).exp_data(1)),'k.','MarkerSize',14);
-                    plot(kx,log10(fit_task.pre(kft).fit_data),'o','Color',[0.7,0,0],'MarkerSize',8);
+                    h1 = plot(kx,log10(fit_task.pre(kft).exp_data(1)),'k.','MarkerSize',14);
+                    h2 = plot(kx,log10(fit_task.pre(kft).fit_data),'o','Color',[0.7,0,0],'MarkerSize',8);
                 else
                     plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
-                    plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
-                    plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+                    h1 = plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
+                    h2 = plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
                     fom_pre = fom_pre + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
                     fom_pre_current = fom_pre_current + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
                 end
@@ -2068,6 +2085,7 @@ if plot_result
                 ylabel('I_{para}/I_{dia}');
                 axis([1,kx,0,1.05]);
             end
+            legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
                 figure_title = sprintf('PRE_fit_%s',restraints.pre(kr).site);
                 save_figure(h,figure_title,figure_format);
@@ -2085,12 +2103,21 @@ if plot_result
         clear my_base
         for kr = 1:nr_deer
             deer_fit = fit_deer(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_deer,fit_task.r_axis,fit_task.deer(kr).fit_distr,Pake_base);
-            figure; clf; hold on;
-            plot(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_deer);
-            plot(fit_task.deer(kr).exp_time,deer_fit);
+            h = figure; clf; hold on;
+            h1= plot(fit_task.deer(kr).exp_time,fit_task.deer(kr).exp_deer,'k.','MarkerSize',14);
+            h2 = plot(fit_task.deer(kr).exp_time,deer_fit,'-','LineWidth',2,'Color',[0.7,0,0]);
             site1 = restraints.deer(fit_task.deer(kr).assignment(1)).site1{fit_task.deer(kr).assignment(2)};
             site2 = restraints.deer(fit_task.deer(kr).assignment(1)).site2{fit_task.deer(kr).assignment(2)};
             title(sprintf('%s-%s Time-domain fit',site1,site2));
+            xlabel('time [\mus]');
+            ylabel('Normalized dipolar evolution function');
+            set(gca,'FontSize',14);
+            axis tight
+            legend([h1,h2],'experiment','backcalculated','Location','best');
+            if save_figures
+                figure_title = sprintf('DEER_time_domain_fit_%s_s',site1,site2);
+                save_figure(h,figure_title,figure_format);
+            end
         end
     end
 end

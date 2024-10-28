@@ -141,15 +141,6 @@ for d = 1:length(control.directives)
                 cmd.entity = '.'; % Local order analysis is performed for current entity
             end
             commands{cmd_poi} = cmd;
-        case 'hydrate'
-            cmd_poi = cmd_poi + 1;
-            cmd.fname = control.directives(d).options{1};
-            if length(control.directives(d).options) > 1 % a selected entity is analyzed
-                cmd.entity = control.directives(d).options{2};
-            else
-                cmd.entity = '.'; % Local order analysis is performed for current entity
-            end
-            commands{cmd_poi} = cmd;
         case 'compare'
             cmd_poi = cmd_poi + 1;
             cmd.entity1 = control.directives(d).options{1};
@@ -675,25 +666,6 @@ for c = 1:cmd_poi
                     return
                 end
             end
-            if save_figures
-                local_order(c_entity,cmd.fname,figure_format);
-            else
-                local_order(c_entity,cmd.fname);
-            end
-        case 'hydrate'
-            if strcmp(cmd.entity,'.')
-                c_entity = entity;
-            else
-                c_entity = retrieve_ensemble(cmd.entity,ensembles,logfid);
-                if isempty(c_entity)
-                    warnings = warnings +1;
-                    exceptions{warnings} = MException('module_ensembleanalysis:entity_unknown',...
-                        'Hydration analysis cannot be performed for entity %s, since entity is unknown',cmd.entity);
-                    record_exception(exceptions{warnings},logfid);
-                    return
-                end
-            end
-            c_entity = inertia_frame(c_entity,'');
             if save_figures
                 local_order(c_entity,cmd.fname,figure_format);
             else

@@ -120,7 +120,7 @@ Arguments
 Remarks
     *   keyword ``input`` is synonymous with ``getens``
 
-``hetpairlist``
+``hetpairlist``, ``hetpairlist!``
 ---------------------------------
 
 Find feasible site pairs from two site scan lists obtained for different labels (spectroscopically orthogonal labeling).

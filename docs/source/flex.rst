@@ -19,7 +19,7 @@ Remarks
     *   coverage is not rigorously defined, but only an empirical control parameter
     *   the larger coverage is, the broader is the ensemble	
     *   change default of coverage only if you have very good reasons
-    *   note that total maximum time can be as long as the product of `maxtime` abd the number of input conformers 
+    *   note that total maximum time can be up to the product of `maxtime` and the number of input conformers 
 
 The following keywords are supported:
 
@@ -45,7 +45,7 @@ Remarks
 ``acceptance``
 ---------------------------------
 
-Controls acceptance threshold. 
+Controls acceptance threshold in von-Neumann rejection sampling 
 
 .. code-block:: matlab
 
@@ -56,8 +56,8 @@ Arguments
     *   ``mode`` - acceptance mode, can be 'uniform' or 'individual', default is 'uniform'  
 Remarks
     *   this option requires that full distance distributions are used as restraints
-    *   with the acceptance key switches, a variant of von-Neumann rejection sampling is used
-    *   by default, Gaussian restraints are used even if full distributions are provided
+    *   if this key is present, a variant of von-Neumann rejection sampling is used
+    *   by default, Flex uses Gaussian-restraint sampling, even if full distributions are provided; the ``acceptance`` key must be present for von-Neumann rejection sampling
     *   the higher `threshold` is, the faster is model generaton, but the worse is agreement of the raw ensemble with distance distributions
     *   use higher `threshold` if model yield is too low for the downstream part of the pipeline 
 
@@ -372,7 +372,7 @@ Sets verbose mode.
     verbose [trials]
 
 Arguments
-    *   ``cycles`` - number of Monte carlo trials after which new verbose information is written to logfile
+    *   ``trials`` - number of Monte carlo trials after which new verbose information is written to logfile
 Remarks
     *   by default, verbose is off
     *   verbose without argument has a default of 200 trials

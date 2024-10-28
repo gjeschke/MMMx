@@ -6,9 +6,9 @@ Source-code version
 Requirements
 ---------------------------------
 
-The source-code version of MMMx runs under Matlab 2019b or later and requires the Matlab Oprimization, 
+The source-code version of MMMx runs under Matlab 2019b or later and requires the Matlab Optimization, 
 Global Optimization, Parallel Computing, and Statistics and Machine Learning toolboxes. Please use
-the :ref:`executable version<executable_installation>` if you do not have a license for this software.
+the :ref:`executable version<executable_installation>` if you do not have a license for this software, but note that the executbale version is only infrequently updated.
 
 For certain functionality, MMMx relies on :ref:`third-party software<third_party>`, such as `SCWRL4 <http://dunbrack.fccc.edu/SCWRL3.php/>`_,
 `ATSAS <https://www.embl-hamburg.de/biosaxs/software.html>`_, `MUSCLE <http://www.drive5.com/muscle/downloads.htm>`_,
@@ -20,8 +20,7 @@ but may require registration and a license agreement.
 Download
 ---------------------------------
 
-The latest stable version of the MMMx package is available as a ZIP file at `epr.ethz.ch <https://epr.ethz.ch/software.html>`_.
-The newest development version of the source code is available at `GitHub <https://github.com/gjeschke/MMMx>`_.  Unpack the ZIP file.
+The current version of the source code is available at `GitHub <https://github.com/gjeschke/MMMx>`_. Accessing it through GitHub Desktop is the most convenient way of keeping it updated. Otherwise, the package can also be downloaded via the <> Code button and the Downlaod ZIP menu item. Unpack the ZIP file.
 
 Matlab path
 ---------------------------------

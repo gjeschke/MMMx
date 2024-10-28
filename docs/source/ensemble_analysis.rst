@@ -119,7 +119,7 @@ Arguments
 Remarks
     *   output is as a '.csv' file, with the residue numbers in the first and second column and the Coulomb interaction in the third column
     *   in addition, a figure is output with a `hot` colormap, where black is no interaction and white the maximum interaction
-    *   the interaction is scaled by the Boltzmann constant, so that it corresponds to the temeparture where it matches thermal energy
+    *   the interaction is scaled by the Boltzmann constant, so that it corresponds to the temperature where it matches thermal energy
     *   specify parameter `Tmax` if you want to compare different residue pairs for the same ensemble
     *   a salt bridge at 0.150 M ionic strength is in the range of 350-400 K
 
@@ -152,7 +152,7 @@ Specify figure output format.
     figures format
 
 Arguments
-    *   ``format`` - one of the formats in which Matlab can save figures, e.g. 'pdf', default is 'pdf'
+    *   ``format`` - one of the formats in which Matlab can save figures, e.g. 'pdf','svg','png', 'jpg', default is 'pdf'
 Remarks
     *   figure saving is on by default in this module, use format 'off' to switch it off
 
@@ -298,11 +298,11 @@ Arguments
     *   ``subkey`` - a subkey that specifies a measure from the following list
 Available subkeys
     *   ``matlab`` - save output data to Matlab files
-	*   ``csv`` - save output data to comma-separated value files
+    *   ``csv`` - save output data to comma-separated value files
     *   ``oriented`` - assume that conformers are already oriented, default is false (conformers are superimposed)
     *   ``Rg`` - radius of gyration. including standard deviation (output to logfile)
     *   ``width`` - ensemble width and density in Angstroem (output to logfile), also computes pair r.m.s.d. matrix and central conformer
-    *   ``correlation`` - correlation matrix, output as figure and to files 'residue\_pair\_correlation_%s' with extensions '.csv'and '.mat'
+    *   ``correlation`` - correlation matrix, output as figure and to files 'residue\_pair\_correlation_%s' with extensions '.csv' and '.mat'
     *   ``sort`` - sort for computation of correlation matrix
     *   ``drms`` - uses distance root mean square deviation for correlation matrix and sorting
     *   ``compactness`` - compactness matrix    
@@ -477,9 +477,9 @@ Remarks
     *   the .mmm script file must be run separately in MMM
     *   population (weight) is transparency-encoded if any subkeys are used	
     *   if the subkey block is empty, snake models (coil with diameter-encoded weight) are displayed in MMM	
-    *   if the subkey block is empty, coloring is by subset (deselected red, conformational selection gree, induced fit blue, superimposed range grey)
+    *   if the subkey block is empty, coloring is by subset (deselected red, conformational selection green, induced fit blue, superimposed range grey)
 
-``Zenodo``
+``zenodo``
 ---------------------------------
 
 Download and possibly extract a file from Zenodo without importing an ensemble to MMMx 

@@ -56,7 +56,6 @@ nent = 1; % number of entities to be processed
 expand_rba = false;
 use_file_list = false;
 
-opt.parnum = 100; % number of trials performed in the parfor loop
 opt.disp_update = 200; % cycles between display updates in interactive mode
 opt.interactive = false;
 
@@ -78,7 +77,7 @@ for d = 1:length(control.directives)
             restraints.initial =  str2double(control.directives(d).options{1});
             restraints.final =  str2double(control.directives(d).options{2});
             restraints.sequence = control.directives(d).options{3};
-        case 'interactive'
+        case {'verbose','interactive'}
             opt.interactive = true;
             if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
                 opt.disp_update = str2double(control.directives(d).options{1});
@@ -94,8 +93,6 @@ for d = 1:length(control.directives)
             first_conformer = str2double(control.directives(d).options{1});
         case 'addpdb'
             added_conformers = control.directives(d).options{1};
-        case 'parallel'
-            opt.parnum = str2double(control.directives(d).options{1});
         case 'save'
             fname = control.directives(d).options{1};
             if length(control.directives(d).options) >= 2

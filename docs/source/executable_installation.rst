@@ -8,7 +8,7 @@ Requirements
 
 The executable version of MMMx runs under Windows. Please contact gjeschke@ethz.ch if you need a version for a different operating system.
 
-MMMx version 1.0 requires the free Matlab Runtime Component 2021a. The installer will offer to add it, if this component is
+MMMx version 1.0 requires the free Matlab Runtime Component 2021a or higher. The installer will offer to add it, if this component is
 not yet installed on your system.
 
 For certain functionality, MMMx relies on :ref:`third-party software<third_party>`, such as `SCWRL4 <http://dunbrack.fccc.edu/SCWRL3.php/>`_,
@@ -33,7 +33,7 @@ Windows path
 
 It is advisable to add the directory, where you installed MMMx, to the Windows path.
 Otherwise, you can run MMMx only from this directory. Likewise, the directories of all 
-required third-party software must be on the Matlab path.
+required third-party software must be on the Windows path.
 
 Getting started
 ---------------------------------

@@ -35,7 +35,7 @@ Remarks
     *   the algorithm minimizes free energy of bilayer insertion	    
     *   the :ref:`third_party` `MSMS <http://mgl.scripps.edu/people/sanner/html/msms_home.html>`_ is required   
     *   the bilayer normal is the new `z` axis	    
-    *   if the protein can be oriemted by symmetry, beter use ``symmetry`` first and orientation mode ``oriented``	    
+    *   if the protein can be oriemted by symmetry, better use ``symmetry`` first and orientation mode ``oriented``	    
     *   the result is not automatically saved, use ``save`` if necessary
 	
 ``center``
@@ -115,7 +115,7 @@ Remarks
     *   information on pseudo-residues is removed
     *   standard PDB residue names are set for nucleic acids
     *   parameter ``maxchains`` allows for skipping pseudo-chains that simulate only labels
-    *   reside types CYSS and CYSM are converted to CYS, label atoms in CYSM are skipped
+    *   residue types CYSS and CYSM are converted to CYS, label atoms in CYSM are skipped
 
 ``getens``
 ---------------------------------
@@ -171,7 +171,7 @@ Arguments
     *   ``ID_n`` identifier of the entity from which the last part is taken
     *   ``address_n`` address of the residues from which the last part is taken
 Remarks
-    *   do *not* use an exsiting entity identifier
+    *   do *not* use an existing entity identifier
     *   the entity with the given identifier is created, but not automatically saved
     *   use the ``save`` command, if necessary
 

@@ -81,14 +81,14 @@ for d = 1:length(control.directives)
             put_pdb(entity,fname);
             all_pdb(1).name = fname;
             pop = 1;
-        case {'get_ped'}
+        case {'get_ped','getped'}
             args = split(control.directives(d).options{1},'.');
             entity = get_PED(args{1},args{2});
             fname = sprintf('MMMx_visualize_%s.pdb',control.directives(d).options{1});
             put_pdb(entity,fname);
             all_pdb(1).name = fname;
             pop = 1;
-        case {'get_zenodo'}
+        case {'get_zenodo','getzenodo'}
             args = split(control.directives(d).options{1},'.');
             fname = args{2};
             svname = sprintf('MMMx_visualize_%s.pdb',fname);

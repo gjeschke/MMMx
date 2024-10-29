@@ -58,7 +58,7 @@ Maximum run time in hours.
 Arguments
     *   ``t`` - approximate maximum run time allowed for Rigi
 Remarks
-    *   computation can take somewhat longer, because runtime ist tested only execution of full parallel blocks (10,000 trials)
+    *   computation can take somewhat longer, because runtime ist tested only after execution of full parallel blocks (10,000 trials)
     *   if Rigi is interrupted by timeout, sampling is not exhaustive
     *   for production runs, reduce maxtrials until you can complete the exhaustive sampling in a reasonable time
     *   default is 48 h
@@ -78,7 +78,7 @@ Remarks
     *   this must be specified, start with 10,000 if you are not sure and see how long it takes
     *   actual number of trials is a product of integer digital resolutions for all core restraints and may be smaller
     *   the larger ``T``, the better the resolution of the exhaustive search
-    *   computation time is linear in actual number of trials
+    *   computation time is linear in actual number of parallel blocks (ceiling of number of trials divide by 10000)
 	
 ``models``
 ---------------------------------
@@ -93,9 +93,10 @@ Arguments
     *   ``M`` - maximum number of models that are returned
 Remarks
     *   if exhaustive sampling yields less models, this setting has no effect
-    *   if exhaustive sampling yields more models, the solutions are hierarchically cluster to ``M`` models
+    *   if exhaustive sampling yields more models, the solutions are hierarchically clustered to ``M`` models
     *   use this, if Rigi returns too many models for further processing
     *   the default is 20,000
+    *   depending on memory size, clustering of a large number of models may fail, set ``maxtrials`` so that no more than 50000 trials are successful 
 
 ``nlink``
 ---------------------------------
@@ -115,7 +116,7 @@ Arguments
     *   ``length`` maximum length in Angstroem, up to 6*nucleotides
 Remarks
     *   the anchor nucleotides must exist in rigid bodies
-    *   slightly shorter lengths, e.g. 16 instead of 18 for two missing nucleotides, improve success rate of FlexRNA
+    *   slightly shorter lengths, e.g. 16 instead of 18 for two missing nucleotides, improve success rate of FlexRNA, but may miss solutions with strongly extended RNA
 	
 ``parallel``
 ---------------------------------
@@ -149,7 +150,7 @@ Arguments
     *   ``length`` maximum length in Angstroem, up to 3.8*residues
 Remarks
     *   the anchor residues must exist in rigid bodies
-    *   slightly shorter lengths improve success rate of Flex
+    *   slightly shorter lengths improve success rate of Flex, but risk missing conformers with strongly extended peptide linkers
 
 ``probability``
 ---------------------------------
@@ -231,7 +232,8 @@ Specifies name for saving the output in MMMx:rigid_body format.
 Arguments
     *   ``fname`` - file name for output, extension ``.mat`` is appended if none
 Remarks
-    *   if not present, output is automatically save to ``MMMx_rigi.mat``   
+    *   if not present, output is automatically saved to ``MMMx_rigi.mat``  
+    *   this is particularly convenient if you want to run Flex afterwards with several different restraint sets 	
 
 ``savepdb``
 ---------------------------------
@@ -284,8 +286,8 @@ Specifies the percentage of crosslink restraints that must be fulfilled for an R
 Arguments
     *   ``p`` - number between 0 and 100, defaults to 30%
 Remarks
-    *   there is few experience what is appropriate for flexible systems   	
-    *   directive has no effect, if no crosslinks are specified   	
+    *   there is little experience what is appropriate for flexible systems   	
+    *   the key has no effect if no crosslinks are specified   	
 
 ``xlink``
 ---------------------------------
@@ -308,3 +310,4 @@ Remarks
     *   use 'xlink_percentage' to set this percentage
     *   this feature is not well tested
     *   it is hard to predict which percentage of crosslinks should be fulfilled in any given arrangement
+    *   it may be better to use cross-link restraints for validation of the final ensemble model

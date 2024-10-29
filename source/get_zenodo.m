@@ -33,7 +33,7 @@ function [entity,exceptions] = get_zenodo(ZenodoID,fname,options)
 % - If an archive contains several PDB files, they are taken as conformers
 % - An archive may additionally contain an MMMx ensemble (.ens) file. In
 %   this case, the ensemble is constructed according to this file
-% - A gzipped input file may contain only a single tar archive
+% - A gzipped input file must contain only a single tar archive
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2023: Gunnar Jeschke

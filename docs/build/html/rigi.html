@@ -295,6 +295,8 @@
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#figures"><code class="docutils literal notranslate"><span class="pre">figures</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#getalphafold"><code class="docutils literal notranslate"><span class="pre">getAlphaFold</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#getped"><code class="docutils literal notranslate"><span class="pre">getPED</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#getzenodo"><code class="docutils literal notranslate"><span class="pre">getZenodo</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#graphics"><code class="docutils literal notranslate"><span class="pre">graphics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#isosurface"><code class="docutils literal notranslate"><span class="pre">isosurface</span></code></a></li>
@@ -533,7 +535,7 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>computation can take somewhat longer, because runtime ist tested only execution of full parallel blocks (10,000 trials)</p></li>
+<li><p>computation can take somewhat longer, because runtime ist tested only after execution of full parallel blocks (10,000 trials)</p></li>
 <li><p>if Rigi is interrupted by timeout, sampling is not exhaustive</p></li>
 <li><p>for production runs, reduce maxtrials until you can complete the exhaustive sampling in a reasonable time</p></li>
 <li><p>default is 48 h</p></li>
@@ -556,7 +558,7 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 <li><p>this must be specified, start with 10,000 if you are not sure and see how long it takes</p></li>
 <li><p>actual number of trials is a product of integer digital resolutions for all core restraints and may be smaller</p></li>
 <li><p>the larger <code class="docutils literal notranslate"><span class="pre">T</span></code>, the better the resolution of the exhaustive search</p></li>
-<li><p>computation time is linear in actual number of trials</p></li>
+<li><p>computation time is linear in actual number of parallel blocks (ceiling of number of trials divide by 10000)</p></li>
 </ul>
 </dd>
 </dl>
@@ -574,9 +576,10 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
 <li><p>if exhaustive sampling yields less models, this setting has no effect</p></li>
-<li><p>if exhaustive sampling yields more models, the solutions are hierarchically cluster to <code class="docutils literal notranslate"><span class="pre">M</span></code> models</p></li>
+<li><p>if exhaustive sampling yields more models, the solutions are hierarchically clustered to <code class="docutils literal notranslate"><span class="pre">M</span></code> models</p></li>
 <li><p>use this, if Rigi returns too many models for further processing</p></li>
 <li><p>the default is 20,000</p></li>
+<li><p>depending on memory size, clustering of a large number of models may fail, set <code class="docutils literal notranslate"><span class="pre">maxtrials</span></code> so that no more than 50000 trials are successful</p></li>
 </ul>
 </dd>
 </dl>
@@ -599,7 +602,7 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
 <li><p>the anchor nucleotides must exist in rigid bodies</p></li>
-<li><p>slightly shorter lengths, e.g. 16 instead of 18 for two missing nucleotides, improve success rate of FlexRNA</p></li>
+<li><p>slightly shorter lengths, e.g. 16 instead of 18 for two missing nucleotides, improve success rate of FlexRNA, but may miss solutions with strongly extended RNA</p></li>
 </ul>
 </dd>
 </dl>
@@ -639,7 +642,7 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
 <li><p>the anchor residues must exist in rigid bodies</p></li>
-<li><p>slightly shorter lengths improve success rate of Flex</p></li>
+<li><p>slightly shorter lengths improve success rate of Flex, but risk missing conformers with strongly extended peptide linkers</p></li>
 </ul>
 </dd>
 </dl>
@@ -736,7 +739,8 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>if not present, output is automatically save to <code class="docutils literal notranslate"><span class="pre">MMMx_rigi.mat</span></code></p></li>
+<li><p>if not present, output is automatically saved to <code class="docutils literal notranslate"><span class="pre">MMMx_rigi.mat</span></code></p></li>
+<li><p>this is particularly convenient if you want to run Flex afterwards with several different restraint sets</p></li>
 </ul>
 </dd>
 </dl>
@@ -802,8 +806,8 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>there is few experience what is appropriate for flexible systems</p></li>
-<li><p>directive has no effect, if no crosslinks are specified</p></li>
+<li><p>there is little experience what is appropriate for flexible systems</p></li>
+<li><p>the key has no effect if no crosslinks are specified</p></li>
 </ul>
 </dd>
 </dl>
@@ -829,6 +833,7 @@ from the AlphaFold Protein Structure Database by UniProt identifier with the <co
 <li><p>use ‘xlink_percentage’ to set this percentage</p></li>
 <li><p>this feature is not well tested</p></li>
 <li><p>it is hard to predict which percentage of crosslinks should be fulfilled in any given arrangement</p></li>
+<li><p>it may be better to use cross-link restraints for validation of the final ensemble model</p></li>
 </ul>
 </dd>
 </dl>

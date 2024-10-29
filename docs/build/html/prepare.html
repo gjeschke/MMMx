@@ -295,6 +295,8 @@
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#figures"><code class="docutils literal notranslate"><span class="pre">figures</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#getalphafold"><code class="docutils literal notranslate"><span class="pre">getAlphaFold</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#getens"><code class="docutils literal notranslate"><span class="pre">getens</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#getped"><code class="docutils literal notranslate"><span class="pre">getPED</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="visualize.html#getzenodo"><code class="docutils literal notranslate"><span class="pre">getZenodo</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#graphics"><code class="docutils literal notranslate"><span class="pre">graphics</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#import"><code class="docutils literal notranslate"><span class="pre">import</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="visualize.html#isosurface"><code class="docutils literal notranslate"><span class="pre">isosurface</span></code></a></li>
@@ -505,7 +507,7 @@ and structure editing (<code class="docutils literal notranslate"><span class="p
 <li><p>the algorithm minimizes free energy of bilayer insertion</p></li>
 <li><p>the <a class="reference internal" href="third_party.html#third-party"><span class="std std-ref">Third-party software</span></a> <a class="reference external" href="http://mgl.scripps.edu/people/sanner/html/msms_home.html">MSMS</a> is required</p></li>
 <li><p>the bilayer normal is the new <img class="math" src="_images/math/7fe7ff035922a574720d31bf8b3ef6079b1981c0.svg" alt="z"/> axis</p></li>
-<li><p>if the protein can be oriemted by symmetry, beter use <code class="docutils literal notranslate"><span class="pre">symmetry</span></code> first and orientation mode <code class="docutils literal notranslate"><span class="pre">oriented</span></code></p></li>
+<li><p>if the protein can be oriemted by symmetry, better use <code class="docutils literal notranslate"><span class="pre">symmetry</span></code> first and orientation mode <code class="docutils literal notranslate"><span class="pre">oriented</span></code></p></li>
 <li><p>the result is not automatically saved, use <code class="docutils literal notranslate"><span class="pre">save</span></code> if necessary</p></li>
 </ul>
 </dd>
@@ -600,7 +602,7 @@ and structure editing (<code class="docutils literal notranslate"><span class="p
 <li><p>information on pseudo-residues is removed</p></li>
 <li><p>standard PDB residue names are set for nucleic acids</p></li>
 <li><p>parameter <code class="docutils literal notranslate"><span class="pre">maxchains</span></code> allows for skipping pseudo-chains that simulate only labels</p></li>
-<li><p>reside types CYSS and CYSM are converted to CYS, label atoms in CYSM are skipped</p></li>
+<li><p>residue types CYSS and CYSM are converted to CYS, label atoms in CYSM are skipped</p></li>
 </ul>
 </dd>
 </dl>
@@ -665,7 +667,7 @@ This is a block key, with each line corresponding to one part.</p>
 </ul>
 </dd>
 <dt>Remarks</dt><dd><ul class="simple">
-<li><p>do <em>not</em> use an exsiting entity identifier</p></li>
+<li><p>do <em>not</em> use an existing entity identifier</p></li>
 <li><p>the entity with the given identifier is created, but not automatically saved</p></li>
 <li><p>use the <code class="docutils literal notranslate"><span class="pre">save</span></code> command, if necessary</p></li>
 </ul>

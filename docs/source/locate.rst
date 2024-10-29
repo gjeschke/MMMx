@@ -30,7 +30,7 @@ Arguments
 Remarks
     *   the most probable location defines the cube center
     *   the largest relative probability density at a cube border is reported in the logfile
-    *   if there is high relative probability density with the default values, the location is very poorly restrained
+    *   if there is high relative probability density at the cube edges with the default values, the location is very poorly restrained
 
 ``getAlphaFold``
 ---------------------------------
@@ -44,7 +44,7 @@ Input of a template by reading an AlphaFold prediction from the database.
 Arguments
     *   ``UniProtID`` - UniProt identifier of the AlphaFold prediction
 Remarks
-    *   note that not all proteins in UniProt have an AlphaFold prediction in the database
+    *   note that not all proteins in UniProt may have an AlphaFold prediction in the database
 	
 ``getpdb``
 ---------------------------------

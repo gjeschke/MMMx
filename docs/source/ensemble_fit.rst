@@ -358,7 +358,7 @@ Remarks
 ``preratelinear``
 ---------------------------------
 
-This keyword implements legacy behavior of fitting PRE rates linearly. Use it only for replicating old fits. New default behavior of converting to PRE ratios for NNLLSQ fits or fitting the logarithm of the rate in other fits is more sensible. 
+This keyword implements legacy behavior of fitting PRE rates linearly. Use it only for replicating old fits. New default behavior is fitting the logarithm of the rate. 
 
 
 ``rmean``
@@ -395,7 +395,7 @@ Remarks
 ``save``
 ---------------------------------
 
-Specifies small-angle x-ray scattering restraints 
+Specifies a file name for saving the fitted ensemble
 
 .. code-block:: matlab
 
@@ -409,7 +409,7 @@ Remarks
 ``saxs``
 ---------------------------------
 
-Specifies basis name for saving output conformers 
+Specifies small-angle x-ray scattering restraints 
 
 .. code-block:: matlab
 

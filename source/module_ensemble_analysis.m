@@ -376,7 +376,7 @@ for d = 1:length(control.directives)
         case 'superimpose'
             cmd_poi = cmd_poi + 1;
             cmd.outname = control.directives(d).options{1};
-            cmd.options.atoms = 'CA';
+            cmd.options.atoms = 'CA'; % do not use 'all', this creates problems with varying protonatioon of sidegroups
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else

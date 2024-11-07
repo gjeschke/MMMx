@@ -1,27 +1,74 @@
 function [coor,coor_3D,measures] = abstract_conformer_space(entities,addresses)
+% ABSTRACT_CONFORMER_SPACE  Determines the abstract conformer space and its 
+%                           3D approximation for a set of ensemble structures
+%
+%    [coor,coor_3D,measures] = abstract_conformer_space(entities,addresses)
+% 
+% INPUT
+% entities      cell(1,E) of E ensemble entities
+% addresses     cell{1,E) cell of address strings that specify the same
+%               polymer chain section in the individual entities, optional,
+%               if missing, the whole entity is processed
+%
+% OUTPUT
+% coor          double (C,n) coordinates for C conformers in n-dimensional
+%               abstract conformer space (ACS), as determined by classical
+%               multidimensional scaling, C is the total number of
+%               conformers in all entities
+% coor_3D       double(C,3) coordinates for C conformers in an approximate
+%               3D ACS
+% measures      diagnostic measures on the embedding and 3D approximation,
+%               struct with fields
+%               .assignment     assignment of conformers to the entities
+%               .populations    populations of conformers
+%               .Rg             radius of gyration for combined ensemble
+%               .all_Rg         radii of gyration for individual conformers
+%               .Rg_acs         radius of gyration in n-D ACS
+%               .disorder       disorder measure Rg_acs/Rg
+%               .dimension      dimension of ACS
+%               .extension      extension [Å] in nD ACS, n-th root of the
+%                               hypervolume of the convec hull
+%               .error_nD       rmsd [Å] of the dRMSD matrix for nD embedding
+%               .errors_3D      rmsd errors [Å] of the dRMSD of the
+%                               conformers to all other conformers
+%               .error_3D       rmsd [Å] of the dRMSD matrix for 3D embedding
+%               .convergence    convergence of error_3D in iterative
+%                               refinement
+%
+% This file is a part of MMMx. License is MIT (see LICENSE.md). 
+% (c) G. Jeschke, 2023-2024
+
+if ~exist('addresses','var')
+    addresses = {};
+end
 
 [D,pop,all_Rg,assignment] = drms_matrix(entities,addresses);
 Rg = sqrt(sum(pop.*all_Rg.^2)); 
 
 measures.assignment = assignment;
 measures.all_Rg = all_Rg;
-measures.populations = pop;
+measures.populations = pop';
 
 coor = cmdscale(D);
+[C,n] = size(coor); % determine number of conformers and dimensionality
+
 Rg_acs = gyration_radius(coor);
 
-[C,p] = size(coor);
-
 D_check = squareform(pdist(coor));
-dev = 2*sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
+dev = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
 
 measures.Rg = Rg;
 measures.Rg_acs = Rg_acs;
 measures.disorder = Rg_acs/Rg;
-measures.dimension = p;
+measures.dimension = n;
 measures.error_nD = dev;
+[coor_3D,rmsd,all_rmsd] = refined_3D_embedding(D,all_Rg,pop');
 
-[coor_3D,rmsd,all_rmsd] = refined_3D_embedding(D,all_Rg);
+[~, vol] = convhulln(coor_3D); % compute the n-dimensional convex hull
+measures.extension = vol^(1/3); % extension in nD ACS 
+
+D_approx = squareform(pdist(coor_3D));
+measures.errors_3D = sqrt(sum(triu(D_approx-D).^2/(C-1)));
 
 measures.convergence = all_rmsd;
 measures.error_3D = rmsd;
@@ -60,7 +107,7 @@ function [pair_drms,pop,Rg,assignment] = drms_matrix(entities,addresses)
 
 % default input
 
-if ~exist('addresses','var')
+if ~exist('addresses','var') || isempty(addresses)
     addresses = cell(1,length(entities));
     for ent = 1:length(entities)
         addresses{ent} = '';

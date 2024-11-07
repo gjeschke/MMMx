@@ -5,6 +5,24 @@ EnsembleAnalysis
 
 This module analyzes ensembles in terms of intermediate order. In this module, ensembles have internal variable names (identifiers).
 
+``acs``
+---------------------------------
+
+Abstract conformer space analysis 
+
+.. code-block:: matlab
+
+    acs id1 [id2 [id3...]]
+
+Arguments
+    *   ``id1`` - identifier of the first ensemble
+    *   ``id2`` - optional identifier of a second ensemble
+    *   ``id3`` - optional identifier of a third ensemble
+Remarks
+    *   you can specify as many ensembles as you need 
+    *   all ensembles must correspond to the same polymer
+    *   the conformers of all ensembles are embedded into the same space
+
 ``addpdb``
 ---------------------------------
 

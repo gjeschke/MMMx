@@ -19,6 +19,8 @@ function fom = fit_multi_restraints(v,predictions,normalize,opt)
 %       .update_nr      number of iterations between plot updates, defaults
 %                       to 1000
 %       .old_size       old ensemble size, defaults to zero
+%       .lograte        fit logarithm of PRE rate if true, this is the
+%                       default
 %
 % predictions:
 % ddr
@@ -66,6 +68,7 @@ if ~exist('opt','var') || isempty(opt)
     opt.update_nr = 1000;
     opt.interactive = false;
     opt.old_size = 0;
+    opt.lograte = true;
 end
 
 if ~isfield(opt,'plot_axes')
@@ -82,6 +85,10 @@ end
 
 if ~isfield(opt,'old_size')
     opt.old_size = 0;
+end
+
+if ~isfield(opt,'lograte')
+    opt.lograte = true;
 end
 
 persistent call_count
@@ -106,7 +113,6 @@ if ~isnan(normalize.ddr)
     n_sets = n_sets + 1;
 end
 if ~isnan(normalize.pre)
-    fitopt.lograte = opt.lograte;
     fom_pre = fit_multi_PRE(v(1:end-length(predictions.sas)),predictions.pre.predictions,predictions.pre.parameters,fitopt);
     fom = fom + fom_pre/normalize.pre;
     n_sets = n_sets + 1;

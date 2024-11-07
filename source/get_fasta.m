@@ -11,12 +11,7 @@ function [header,sequence] = get_fasta(inname,seqnum)
 %
 % (c) G. Jeschke, 2007
 
-    if exist('onCleanup','class')==8, % this is done only for Matlab version 
-                                      % 2008a and later, where onCleanup exists
-        c = onCleanup(@myCleanup);
-    end;
-
-    if nargin<2, seqnum=1; end;
+    if nargin<2, seqnum=1; end
 
     rfile=fopen(inname,'r');
     cseq=0;
@@ -25,25 +20,25 @@ function [header,sequence] = get_fasta(inname,seqnum)
 
     nl=0;
     h=0;
-    while h~=-1,
+    while h~=-1
        line=fgetl(rfile); nl=nl+1;
        h=line;
-       if h~=-1,
-           if char(line(1))=='>',
+       if h~=-1
+           if char(line(1))=='>'
                header=line;
                cseq=cseq+1; % current sequence number
-               if cseq==seqnum; header=line; end;
-           elseif char(line(1)) ~= ';' && cseq==seqnum, % neglect comments
+               if cseq==seqnum; header=line; end
+           elseif char(line(1)) ~= ';' && cseq==seqnum % neglect comments
                sequence=strcat(sequence,line); % append line to sequence
-           end;
-       end;
-       if cseq>seqnum, break; end; % if we are already past the wanted sequence, stop
-    end;
-    if length(sequence)<2,
+           end
+       end
+       if cseq>seqnum, break; end % if we are already past the wanted sequence, stop
+    end
+    if length(sequence)<2
         sequence='';
     else
         sequence=sequence(2:length(sequence));
-    end;
+    end
     fclose(rfile);
 
 end

@@ -23,7 +23,7 @@ function fom = fit_multi_PRE(v,predictions,parameters,opt)
 %                               to 1000
 %               .old_size       old ensemble size, defaults to zero
 %
-% G. Jeschke, 2019-2020
+% G. Jeschke, 2019-2024
 
 if ~exist('opt','var') || isempty(opt)
     opt.plot_axes = [];
@@ -82,10 +82,6 @@ for kr = 1:length(parameters)
     if parameters(kr).fit_rates
         all_pre = Gamma2;
         all_pre(all_pre > parameters(kr).max_Gamma2) = parameters(kr).max_Gamma2;
-        if opt.lograte
-            all_pre = log10(all_pre);
-            pre_experimental = log10(pre_experimental);
-        end
     else
         all_pre = R2dia*exp(-td*Gamma2)./(Gamma2+R2dia);
     end
@@ -97,11 +93,6 @@ fom = fom/n;
 
 if isfield(opt,'interactive') && opt.interactive
     if mod(call_count,opt.update_nr) == 0
-%         figure(777); clf;
-%         hold on;
-%         plot(predictions(range(1):range(2),1),'k.');
-%         plot(all_pre,'ro');
-%         figure(1);
         axis(opt.plot_axes);
         cla; hold on;
         plot(1:opt.old_size,v(1:opt.old_size),'o','Color',[0.6,0,0]);

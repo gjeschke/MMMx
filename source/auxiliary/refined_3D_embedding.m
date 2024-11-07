@@ -1,4 +1,4 @@
-function [coor,rmsd,all_rmsd] = refined_3D_embedding(D,Rg)
+function [coor,rmsd,all_rmsd] = refined_3D_embedding(D,Rg,populations)
 % [coor,rmsd,all_rmsd] = refined_3D_embedding(D,Rg)
 %
 % Embeds a distance matrix D in 3D space
@@ -13,7 +13,7 @@ function [coor,rmsd,all_rmsd] = refined_3D_embedding(D,Rg)
 coor = cmdscale(D,3);
 D_check = squareform(pdist(coor));
 violation = sum(sum(triu(D_check-D).^2));
-rmsd = 2*sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
+rmsd = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
 
 iter=round(violation);
 if iter<1000
@@ -43,7 +43,7 @@ for k=1:iter
         coor1(p,:) = coor(p,:) + lambda(k)*cvec;
     end
     D_check = squareform(pdist(coor1));
-    all_rmsd(k) = 2*sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
+    all_rmsd(k) = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
     if all_rmsd(k) < rmsd
         rmsd = all_rmsd(k);
         coor = coor1;
@@ -54,7 +54,7 @@ for k=1:iter
 end
 
 centred = true;
-inertia = get_inertia_tensor(coor,centred);
+inertia = get_inertia_tensor(coor,centred,populations);
 % diagonalize the inertia tensor
 [evec,ID] = eig(inertia);
 % sort eigenvalues in ascending order

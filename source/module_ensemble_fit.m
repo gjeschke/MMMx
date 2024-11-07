@@ -84,7 +84,6 @@ opt.threshold = 0.01; % conformers wih population below this threshold are disca
 opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
-opt.lograte = true;
 opt.overlap_trials = 10000;
 
 fit_mean_distances = false;
@@ -131,8 +130,6 @@ for d = 1:length(control.directives)
             end
         case 'plot'
             plot_result = true;
-        case 'preratelinear'
-            opt.lograte = false;
         case {'initial'}
             initial_ensemble = control.directives(d).options{1};
         case 'zenodo'
@@ -824,8 +821,8 @@ for c = 1:C
         larmor = restraints.pre(pre_poi).larmor;
         pre_parameters(pre_poi).td = td;
         pre_parameters(pre_poi).R2dia = R2dia;
-        pre_parameters(pre_poi).fit_rates = false;
         pre_parameters(pre_poi).max_Gamma2 = restraints.pre(pre_poi).max_Gamma2;
+        pre_parameters(pre_poi).fit_rates = restraints.pre(pre_poi).fit_rates;
         for kr = 1:length(restraints.pre(pre_poi).residue)
             fit_task.pre(block_offset+kr).assignment = [pre_poi,kr];
             fit_task.pre(block_offset+kr).td = td;
@@ -1041,15 +1038,6 @@ for kr = 1:length(fit_task.pre_valid) % all restraints
         all_pre_predictions(nr_pre,1:2) = fit_task.pre(kr).exp_data;
         all_pre_predictions(nr_pre,3:C+2) = fit_task.pre(kr).Gamma2;
         all_pre(nr_pre,1:2) = fit_task.pre(kr).exp_data;
-        if fit_task.pre(kr).fit_rates
-            R2dia = fit_task.pre(kr).R2dia;
-            td = fit_task.pre(kr).td;
-            fit_task.pre(kr).exp_data(1) =  R2dia*exp(-td*fit_task.pre(kr).exp_data(1))/(R2dia+td); 
-            ub = R2dia*exp(-td*(fit_task.pre(kr).exp_data(1)-fit_task.pre(kr).exp_data(2)))/(R2dia+td); 
-            lb = R2dia*exp(-td*(fit_task.pre(kr).exp_data(1)+fit_task.pre(kr).exp_data(2)))/(R2dia+td);
-            fit_task.pre(kr).exp_data(2) = (ub-lb)/2;
-            fit_task.pre(kr).fit_rates = false;
-        end
         if all_pre(nr_pre,2) < 1e-2
             all_pre(nr_pre,2) = 1e-2; % error of a PRE ratio is not smaller than 1%
         end
@@ -1176,7 +1164,7 @@ if nnllsq_fit
     % all_sim = kernel*popfit;
     runtime = toc;
     popfit = popfit(1:C);
-    % sorted_populations = sort(popfit,'descend');
+    sorted_populations = sort(popfit,'descend');
     loss_of_merit = resnorm/n_sets - 1;
     fprintf(logfid,'\n--- Non-negative linear least-squares fit of populations ---\n\n');
     fprintf(logfid,'Run time: %6.1f s\n',runtime);
@@ -1188,12 +1176,12 @@ if nnllsq_fit
     popfit = popfit/max(popfit);
     above_threshold = (popfit >= opt.threshold); % indicies of conformers above the population threshold
     included = conformers(above_threshold); % these conformers are kept
-%     figure(1); clf; hold on;
-%     plot(sorted_populations,'.','MarkerSize',12,'Color',[0.75,0.0,0.0]);
-%     plot([length(included),length(included)],[0,max(sorted_populations)],'Color',[0.25,0.25,0.25]);
-%     data = [(1:length(sorted_populations))' sorted_populations opt.threshold*ones(length(sorted_populations),1)];
-%     description = {'conformer' 'population' 'threshold'}; 
-%     put_csv('nnllsq_reduction.csv',data,description);
+    figure; clf; hold on;
+    plot(sorted_populations,'.','MarkerSize',12,'Color',[0.75,0.0,0.0]);
+    plot([length(included),length(included)],[0,max(sorted_populations)],'Color',[0.25,0.25,0.25]);
+    data = [(1:length(sorted_populations))' sorted_populations opt.threshold*ones(length(sorted_populations),1)];
+    description = {'conformer' 'population' 'threshold'}; 
+    put_csv('nnllsq_reduction.csv',data,description);
 %     for kr = 1:length(fit_task.deer_valid)
 %         if fit_task.deer_valid(kr)
 %             ndat = length(fit_task.deer(kr).exp_ff);
@@ -1207,6 +1195,9 @@ if nnllsq_fit
 %             data_pointer = data_pointer + ndat;
 %        end
 %     end
+    title('Sorted populations');
+    xlabel('Conformer number');
+    ylabel('Population');
 %     for kr = 1:length(fit_task.sas_valid)
 %         if fit_task.sas_valid(kr)
 %             ndat = length(fit_task.sas(kr).fits(:,2));
@@ -2045,17 +2036,11 @@ if plot_result
                 if ~pre_parameters(kr).fit_rates && maxbar > 1
                     maxbar = 1;
                 end
-                if pre_parameters(kr).fit_rates && opt.lograte
-                    plot([kx,kx],log10([minbar,maxbar]),'Color',[0.5,0.5,0.5],'LineWidth',1);
-                    h1 = plot(kx,log10(fit_task.pre(kft).exp_data(1)),'k.','MarkerSize',14);
-                    h2 = plot(kx,log10(fit_task.pre(kft).fit_data),'o','Color',[0.7,0,0],'MarkerSize',8);
-                else
-                    plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
-                    h1 = plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
-                    h2 = plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
-                    fom_pre = fom_pre + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
-                    fom_pre_current = fom_pre_current + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
-                end
+                fom_pre_current = fom_pre_current + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
+                fom_pre = fom_pre + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
+                plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
+                h1 = plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
+                h2 = plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
                 if max_exp < fit_task.pre(kft).exp_data(1)
                     max_exp = fit_task.pre(kft).exp_data(1);
                 end
@@ -2074,13 +2059,8 @@ if plot_result
             xlabel('Residue');
             set(gca,'FontSize',14);
             if pre_parameters(kr).fit_rates
-                if opt.lograte
-                    ylabel('log_{10}(\Gamma_2/s^{-1})');
-                    axis([1,kx,log10(min([min_exp,min_fit])),log10*(max([max_exp,max_fit]))]);
-                else
-                    ylabel('\Gamma_2 [s^{-1}]');
-                    axis([1,kx,0,max([max_exp,max_fit])]);
-                end
+                ylabel('Gamma_2 [s^{-1}]');
+                axis([1,kx,min([min_exp,min_fit]),max([max_exp,max_fit])]);
             else
                 ylabel('I_{para}/I_{dia}');
                 axis([1,kx,0,1.05]);

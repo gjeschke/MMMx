@@ -79,6 +79,25 @@ for d = 1:length(control.directives)
     clear cmd
     cmd.name = lower(control.directives(d).name);
     switch lower(control.directives(d).name)
+        case 'acs' % abstract conformer space
+            cmd_poi = cmd_poi + 1;
+            arg1 = split(control.directives(d).options{1},'.');
+            cmd.entities{1} = arg1{1};
+            if length(arg1) > 1
+                cmd.addresses{1} = arg1{2};
+            else
+                cmd.addresses{1} = '';
+            end
+            for k = 2:length(control.directives(d).options)
+                argk =split(control.directives(d).options{k},'.');
+                cmd.entities{k} = argk{1};
+                if length(argk) > 1
+                    cmd.addresses{k} = argk{2};
+                else
+                    cmd.addresses{k} = '';
+                end
+            end
+            commands{cmd_poi} = cmd;
         case {'addpdb','getens','input','get_ped','get_zenodo','get_mmmx'}
             cmd_poi = cmd_poi + 1;
             ensemble_poi = ensemble_poi + 1;
@@ -442,6 +461,33 @@ fprintf(logfid,'\n%i commands will be executed on %i ensembles\n\n',cmd_poi,ense
 for c = 1:cmd_poi
     cmd = commands{c};
     switch cmd.name
+        case 'acs'
+            entities = cell(1,length(cmd.entities));
+            entity_names = '';
+            for ent = 1:length(cmd.entities)
+                entities{ent} = retrieve_ensemble(cmd.entities{ent},ensembles,logfid);
+                entity_names = strcat(entity_names,cmd.entities{ent});
+                entity_names = strcat(entity_names,'_');
+            end
+            entity_names = entity_names(1:end-1);
+            [coor,coor_3D,measures] = abstract_conformer_space(entities,cmd.addresses);
+            datname = sprintf('acs_%s.csv',entity_names);
+            writematrix(coor,datname);
+            datname = sprintf('acs_3D_%s.csv',entity_names);
+            writematrix(coor_3D,datname);
+            fprintf(logfid,'--- Abstract conformer analysis for %s',cmd.entities{1});
+            for ent = 2:length(cmd.entities)
+                fprintf(logfid,', %s',cmd.entities{ent});
+            end
+            fprintf(logfid,' ---\n\n');
+            fprintf(logfid,'Real space radius of gyration: %5.1f %c\n',measures.Rg,char(197));
+            fprintf(logfid,'Abstract conformer space radius of gyration: %5.1f %c\n',measures.Rg_acs,char(197));
+            fprintf(logfid,'Ensemble disorder: %6.4f\n',measures.disorder);
+            fprintf(logfid,'Ensemble extension: %5.1f %c\n',measures.extension,char(197));
+            fprintf(logfid,'ACS dimension is %i for %i conformers\n',measures.dimension,length(measures.populations));
+            fprintf(logfid,'ACS embedding error is %6.4f %c\n',measures.error_nD,char(197));
+            fprintf(logfid,'ACS 3D embedding error is %5.1f %c\n',measures.error_3D,char(197));
+            visualize_acs(coor_3D,measures.errors_3D,measures.assignment,measures.populations,entity_names);
         case 'zenodo'
             args = split(cmd.input,'.');
             fname = args{2};

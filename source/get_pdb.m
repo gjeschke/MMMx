@@ -225,20 +225,24 @@ while 1
             end
         end
     end   
-    % ATOM record must contain at least 54 characters (up to coordinates)
+    % ATOM record must contain at least 54 characters (up to coordinates) 
     % atom numbers and insertion codes are ignored
     if length(tline) >= 54 && (strcmpi(tline(1:4),'ATOM') || ...
             strcmpi(tline(1:6),'HETATM')) % atom loop
         x = rd_coor(tline(31:38));
         y = rd_coor(tline(39:46));
         z = rd_coor(tline(47:54));
-        
+%         x = str2num(tline(31:38)); 
+%         y = str2num(tline(39:46)); 
+%         z = str2num(tline(47:54));
+%         xyz = sscanf(tline(31:54),'%f',[1,3]);
+        atoms = atoms + 1;
+        xyz(atoms,:) = [x,y,z];
+        this_atom = this_atom + 1;
+        if this_model == 1
         chain = tline(22);
         if chain == ' '
             chain = 'Z';
-        end
-        if double(chain) < 65
-            chain = char(chain + 28); % catch numbers used as chain names
         end
         if ~strcmp(chain,curr_chain)
             curr_chain = chain;
@@ -247,6 +251,9 @@ while 1
         end
         atname0 = tline(13:16);
         atname = strtrim(upper(tline(13:16)));
+        if isstrprop(atname(1),'digit') % wrong hydrogen tag format of MolProbity
+            atname=[deblank(atname(2:end)) atname(1)]; % fix it to proper format
+        end
         for kk = 1:length(atname)
             if atname(kk) == ''''
                 atname(kk) = '_';
@@ -255,9 +262,6 @@ while 1
                 atname(kk) = '_';
             end
             if atname(kk) == '*'
-                atname(kk) = '_';
-            end
-            if atname(kk) == ','
                 atname(kk) = '_';
             end
         end
@@ -281,137 +285,126 @@ while 1
                 continue
             end
         end
-        atoms = atoms + 1;
-        this_atom = this_atom + 1;
-        xyz(atoms,:) = [x,y,z];
-        if this_model == 1
-            altloc = tline(17);
-            if ~contains(chains,chain)
-                chains = strcat(chains,chain);
-            end
-            if isstrprop(chain,'lower')
-                chainfield = strcat(upper(chain),'_');
-            else
-                chainfield = chain;
-            end
-            trial_resnum = str2double(tline(23:26)) + offset;
-            while trial_resnum < 1
-                offset = offset + 1;
-                trial_resnum = trial_resnum + 1;
-            end
-            % the infamous insertion code
-            if tline(27) ~= ' '
-                if trial_resnum ~= curr_resnum
-                    trial_resnum = curr_resnum + 1;
-                    offset = offset + 1;
-                end
-                preserve_residue_numbers = false;
-            end
+        altloc = tline(17);
+        if ~contains(chains,chain)
+            chains = strcat(chains,chain);
+        end
+        if isstrprop(chain,'lower')
+            chainfield = strcat(upper(chain),'_');
+        else
+            chainfield = chain;
+        end
+        trial_resnum = str2double(tline(23:26));
+        if trial_resnum < 1 && offset ==0
+            offset = 1 - trial_resnum;
+        end
+        trial_resnum = trial_resnum + offset;
+        % the infamous insertion code
+        if tline(27) ~= ' '
             if trial_resnum ~= curr_resnum
-                if curr_resnum > 0 && ~strcmpi(old_resname,'HOH')
-                    entity.(chainfield).(resfield).locations = altlocs;
-                end
-                altlocs = altloc;
-                if altlocs ~= ' '
-                    altlocs = [' ' altlocs]; %#ok<AGROW>
-                end
-                atnames = [':' atname,':'];
-            else
-                if ~contains(altlocs,altloc)
-                    altlocs = [altlocs altloc]; %#ok<AGROW>
-                end
-                if ~contains(atnames,[':' atname ':'])
-                    atnames = strcat(atnames,strcat(atname,':'));
-                end
+                trial_resnum = curr_resnum + 1;
+                offset = offset + 1;
             end
-            % initialize all attributes that may not be present
-            occupancy = 1;
-            Bfactor = NaN;
-            charge = 0;
-            if length(tline) >= 60
-                occupancy = str2double(tline(55:60));
-                if occupancy < 10*eps % catch wrong PDB format with zero occupancy
-                    occupancy = 1;
-                end
-            end
-            if length(tline) >= 66
-                Bfactor = str2double(tline(61:66));
-            end
-            if length(tline) >= 80
-                charge = str2double(tline(79:80));
-                if isnan(charge)
-                    charge = 0;
-                end
-            end
-            if trial_resnum > residues
-                residues = trial_resnum;
-            end
-            if isempty(element_number(element))
-                element = 'C';
-            end
-            [elements(atoms),element] = element_number(element);
-            occupancies(atoms) = round(100*occupancy);
-            if strcmpi(resname,'HOH') % special treatment for water
-                water_atoms = water_atoms + 1;
-                water_indices(water_atoms) = atoms;
-                this_atom = this_atom - 1;
-            else % atoms other than water
-                resfield = sprintf('R%i',trial_resnum);
-                % update topology information
-                chain_index = strfind(chains,chain);
-                entity.(chainfield).index = chain_index;
-                entity.(chainfield).selected = false;
-                entity.(chainfield).(resfield).index = trial_resnum;
-                entity.(chainfield).(resfield).selected = 0;
-                % first rotamer is selected by default
-                entity.(chainfield).(resfield).selected_rotamers = 1;
-                entity.(chainfield).(resfield).name = resname;
+            preserve_residue_numbers = false;
+        end
+        if trial_resnum ~= curr_resnum
+            if curr_resnum > 0 && ~strcmpi(old_resname,'HOH')
                 entity.(chainfield).(resfield).locations = altlocs;
-                entity.(chainfield).(resfield).populations = 1; % single rotamer
-                entity.(chainfield).(resfield).(atname).element = element;
-                entity.(chainfield).(resfield).(atname).charge = charge;
-                entity.(chainfield).(resfield).(atname).bfactor = Bfactor;
-                entity.(chainfield).(resfield).(atname).selected = 0;
-                entity.(chainfield).(resfield).(atname).selected_locations = 1;
-                clear_names(this_atom).chain = chainfield;
-                clear_names(this_atom).residue = resfield;
-                clear_names(this_atom).atom = atname;
-                if ~isfield(entity.(chainfield).(resfield).(atname),'tab_indices')
-                    entity.(chainfield).(resfield).(atname).tab_indices = atoms + options.atoff;
-                else
-                    entity.(chainfield).(resfield).(atname).tab_indices = ...
-                        [entity.(chainfield).(resfield).(atname).tab_indices atoms + options.atoff];
-                end
-                % determine missing rotamer indices
-                rotamer_index = strfind(altlocs,altloc);
-                atom_index = strfind(atnames,[':' atname ':']);
-                atom_index = 1 + sum(find(atnames == ':') < atom_index(1));
-                entity.(chainfield).(resfield).(atname).index = atom_index;
-                % entry into index array
-                indexed_atoms = indexed_atoms + 1;
-                index_array(atoms,:) = [chain_index,trial_resnum,atom_index,current_model,rotamer_index];
-                clear_names(this_atom).cid = chain_index;
-                clear_names(this_atom).rid = trial_resnum;
-                clear_names(this_atom).aid = atom_index;
-                clear_names(this_atom).rotid = rotamer_index;
-                clear_names(this_atom).element = elements(atoms);
             end
-            % update current residue number
-            curr_resnum = trial_resnum;
-            old_resname = resname;
+            altlocs = altloc;
+            if altlocs ~= ' '
+                altlocs = [' ' altlocs]; %#ok<AGROW>
+            end
+            atnames = [':' atname,':'];
+        else
+            if ~contains(altlocs,altloc)
+                altlocs = [altlocs altloc]; %#ok<AGROW>
+            end
+            if ~contains(atnames,[':' atname ':'])
+                atnames = strcat(atnames,strcat(atname,':'));
+            end
+        end 
+        % initialize all attributes that may not be present
+        occupancy = 1;
+        Bfactor = NaN;
+        charge = 0;
+        if length(tline) >= 60
+            occupancy = str2double(tline(55:60));
+            if occupancy < 10*eps % catch wrong PDB format with zero occupancy
+                occupancy = 1;
+            end
+        end
+        if length(tline) >= 66
+            Bfactor = str2double(tline(61:66));
+        end
+        if length(tline) >= 80
+            charge = str2double(tline(79:80));
+            if isnan(charge)
+                charge = 0;
+            end
+        end
+        if trial_resnum > residues
+            residues = trial_resnum;
+        end
+        if isempty(element_number(element))
+            element = 'C';
+        end
+        [elements(atoms),element] = element_number(element);
+        occupancies(atoms) = round(100*occupancy);
+        if strcmpi(resname,'HOH') % special treatment for water
+            water_atoms = water_atoms + 1;
+            water_indices(water_atoms) = atoms;
+        else % atoms other than water
+            resfield = sprintf('R%i',trial_resnum);
+            % update topology information
+            chain_index = strfind(chains,chain);
+            entity.(chainfield).index = chain_index;
+            entity.(chainfield).selected = false;
+            entity.(chainfield).(resfield).index = trial_resnum;
+            entity.(chainfield).(resfield).selected = 0; 
+            % first rotamer is selected by default
+            entity.(chainfield).(resfield).selected_rotamers = 1;
+            entity.(chainfield).(resfield).name = resname;
+            entity.(chainfield).(resfield).locations = altlocs;
+            entity.(chainfield).(resfield).populations = 1; % single rotamer
+            entity.(chainfield).(resfield).(atname).element = element;
+            entity.(chainfield).(resfield).(atname).charge = charge;
+            entity.(chainfield).(resfield).(atname).bfactor = Bfactor;
+            entity.(chainfield).(resfield).(atname).selected = 0;
+            entity.(chainfield).(resfield).(atname).selected_locations = 1;
+            clear_names(this_atom).chain = chainfield;
+            clear_names(this_atom).residue = resfield;
+            clear_names(this_atom).atom = atname;
+            if ~isfield(entity.(chainfield).(resfield).(atname),'tab_indices')
+                entity.(chainfield).(resfield).(atname).tab_indices = atoms + options.atoff;
+            else
+                entity.(chainfield).(resfield).(atname).tab_indices = ...
+                    [entity.(chainfield).(resfield).(atname).tab_indices atoms + options.atoff];
+            end
+            % determine missing rotamer indices
+            rotamer_index = strfind(altlocs,altloc);
+            atom_index = strfind(atnames,[':' atname ':']);
+            atom_index = 1 + sum(find(atnames == ':') < atom_index(1));
+            entity.(chainfield).(resfield).(atname).index = atom_index;
+            % entry into index array
+            indexed_atoms = indexed_atoms + 1;
+            index_array(atoms,:) = [chain_index,trial_resnum,atom_index,current_model,rotamer_index];
+            clear_names(this_atom).cid = chain_index;
+            clear_names(this_atom).rid = trial_resnum;
+            clear_names(this_atom).aid = atom_index;
+            clear_names(this_atom).rotid = rotamer_index;
+            clear_names(this_atom).element = elements(atoms);
+        end
+        % update current residue number
+        curr_resnum = trial_resnum;
+        old_resname = resname;
         else % not the first model
-            if this_atom > length(clear_names) % inconsisten PDB file
-                entity = [];
-                return;
-            end
             name = clear_names(this_atom);
-            if ~isempty(name.chain)
-                entity.(name.chain).(name.residue).(name.atom).tab_indices = ...
+            entity.(name.chain).(name.residue).(name.atom).tab_indices = ...
                     [entity.(name.chain).(name.residue).(name.atom).tab_indices atoms + options.atoff];
-                indexed_atoms = indexed_atoms + 1;
-                index_array(atoms,:) = [name.cid,name.rid,name.aid,current_model,name.rotid];
-                elements(atoms) = name.element;
-            end
+            indexed_atoms = indexed_atoms + 1;
+            index_array(atoms,:) = [name.cid,name.rid,name.aid,current_model,name.rotid];
+            elements(atoms) = name.element;
         end
     end % end atom loop
 end
@@ -428,7 +421,6 @@ entity.index_array = index_array(1:indexed_atoms,:);
 entity.water = water_indices(1:water_atoms);
 entity.water_selected = false;
 entity.clear_names = clear_names(1:this_atom);
-entity.chains = chains;
 % add conformer populations
 if conformers == models || add_to_entity
     entity.populations = populations;

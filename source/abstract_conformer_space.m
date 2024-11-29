@@ -1,4 +1,4 @@
-function [coor,coor_3D,measures] = abstract_conformer_space(entities,addresses)
+function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses)
 % ABSTRACT_CONFORMER_SPACE  Determines the abstract conformer space and its 
 %                           3D approximation for a set of ensemble structures
 %
@@ -34,6 +34,7 @@ function [coor,coor_3D,measures] = abstract_conformer_space(entities,addresses)
 %               .error_3D       rmsd [Å] of the dRMSD matrix for 3D embedding
 %               .convergence    convergence of error_3D in iterative
 %                               refinement
+% D             dRMSD matrix between the conformers
 %
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % (c) G. Jeschke, 2023-2024
@@ -62,7 +63,7 @@ measures.Rg_acs = Rg_acs;
 measures.disorder = Rg_acs/Rg;
 measures.dimension = n;
 measures.error_nD = dev;
-[coor_3D,rmsd,all_rmsd] = refined_3D_embedding(D,all_Rg,pop');
+[coor_3D,rmsd,all_rmsd] = refined_3D_embedding(D,all_Rg,pop'); % change to mdscale(D,3,'Weights',kron(pop',pop)); and subsequent transformation to inertia frame
 
 [~, vol] = convhulln(coor_3D); % compute the n-dimensional convex hull
 measures.extension = vol^(1/3); % extension in nD ACS 

@@ -1,57 +1,15 @@
-function [coor,rmsd,all_rmsd] = refined_3D_embedding(D,Rg,populations)
+function [coor,rmsd] = refined_3D_embedding(D,Rg,populations)
 % [coor,rmsd,all_rmsd] = refined_3D_embedding(D,Rg)
 %
-% Embeds a distance matrix D in 3D space
-% initial embedding is by classical multidimensional scaling
-% the coordinates are iteratively improved in order to minimize distance
-% rmsd
+% Embeds a distance matrix D in 3D space by non-classical multi-dimensional
+% scaling
 %
 % (c) G.Jeschke, 2024
 
 [~,C] = size(D);
 
-coor = cmdscale(D,3);
-D_check = squareform(pdist(coor));
-violation = sum(sum(triu(D_check-D).^2));
-rmsd = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
-
-iter=round(violation);
-if iter<1000
-    iter=1000;
-end
-if iter>50000
-    iter=50000;
-end
-
-lambda = linspace(1/iter,1,iter);
-
-all_rmsd = zeros(1,length(lambda));
-
-for k=1:iter
-    ndmat = D + (D==0);
-    D_check = squareform(pdist(coor));
-    ndev = (D-D_check)./ndmat;
-    if sum(sum(isnan(ndev)))
-        break
-    end
-    coor1 = coor;
-    for p = 1:C
-        cvec=zeros(1,3);
-        for pp=1:C
-            cvec = cvec + ndev(p,pp)*(coor(p,:)-coor(pp,:));
-        end
-        coor1(p,:) = coor(p,:) + lambda(k)*cvec;
-    end
-    D_check = squareform(pdist(coor1));
-    all_rmsd(k) = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
-    if all_rmsd(k) < rmsd
-        rmsd = all_rmsd(k);
-        coor = coor1;
-    else
-        all_rmsd = all_rmsd(1:k);
-        break
-    end
-end
+[coor,stress] = mdscale(D,3,'Weights',kron(populations,populations'));
+rmsd = sqrt(stress);
 
 centred = true;
 inertia = get_inertia_tensor(coor,centred,populations);

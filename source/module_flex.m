@@ -1251,7 +1251,7 @@ for kent = first_conformer:nent
         
     while 1
         sc = parallel.pool.Constant(RandStream('threefry4x64_20','Seed','shuffle'));
-        parfor kp = 1:opt.parnum % ### parfor
+        for kp = 1:opt.parnum % ### parfor
             stream = sc.Value;        % Extract the stream from the Constant
             stream.Substream = kp;
             if reverse

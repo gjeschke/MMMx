@@ -86,7 +86,7 @@ while 1
     fprintf(ofid,'%s\n',tline);
 end
 % fprintf(ofid,'SelectRes %i-%i\n',res(1),res(2));
-fprintf(ofid,'SavePDB 2,%s_opt.pdb,Format=PDB,Transform=Yes\n',bname);
+fprintf(ofid,'SavePDB 2,%s_opt.pdb,Format=PDB,Transform=Yes,UseCIF=No\n',bname);
 fprintf(ofid,'Exit\n');
 fclose(ifid);
 fclose(ofid);

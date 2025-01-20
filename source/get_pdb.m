@@ -401,11 +401,15 @@ while 1
             old_resname = resname;
         else % not the first model
             name = clear_names(this_atom);
-            entity.(name.chain).(name.residue).(name.atom).tab_indices = ...
-                [entity.(name.chain).(name.residue).(name.atom).tab_indices atoms + options.atoff];
-            indexed_atoms = indexed_atoms + 1;
-            index_array(atoms,:) = [name.cid,name.rid,name.aid,current_model,name.rotid];
-            elements(atoms) = name.element;
+            if isempty(name.chain)
+                atoms = atoms - 1; % this was a stripped proton
+            else
+                entity.(name.chain).(name.residue).(name.atom).tab_indices = ...
+                    [entity.(name.chain).(name.residue).(name.atom).tab_indices atoms + options.atoff];
+                indexed_atoms = indexed_atoms + 1;
+                index_array(atoms,:) = [name.cid,name.rid,name.aid,current_model,name.rotid];
+                elements(atoms) = name.element;
+            end
         end
     end % end atom loop
 end
@@ -425,7 +429,11 @@ entity.occupancies = occupancies(1:atoms);
 entity.index_array = index_array(1:indexed_atoms,:);
 entity.water = water_indices(1:water_atoms);
 entity.water_selected = false;
-entity.clear_names = clear_names(1:this_atom);
+if length(clear_names) > this_atom
+    entity.clear_names = clear_names(1:this_atom);
+else
+    entity.clear_names = clear_names;
+end
 % add conformer populations
 if conformers == models || add_to_entity
     entity.populations = populations;

@@ -113,7 +113,7 @@ if ~isnan(normalize.ddr)
     n_sets = n_sets + 1;
 end
 if ~isnan(normalize.pre)
-    fom_pre = fit_multi_PRE(v(1:end-length(predictions.sas)),predictions.pre.predictions,predictions.pre.parameters,fitopt);
+    fom_pre = fit_multi_PRE(v(1:end-length(predictions.sas)),predictions.pre.predictions,predictions.pre.parameters,opt);
     fom = fom + fom_pre/normalize.pre;
     n_sets = n_sets + 1;
 end

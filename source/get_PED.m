@@ -14,7 +14,7 @@ function [entity,exceptions] = get_PED(pedID,ensembleID,options)
 %               exist, if input is missing, all ensembles are downloaded
 % options       .keep_file  if true, the downloaded and extracted PDB file
 %                           is kept, defaults to false (file is deleted)
-%               .fast       if true, do not read elemnet information in PDB
+%               .fast       if true, do not read element information in PDB
 %                           file, defaults to false
 %               .max_models maximum number of models, otherwise entity is
 %                           skipped (empty entity is returned), defaults to

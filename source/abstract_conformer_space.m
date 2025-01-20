@@ -32,8 +32,8 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 %               .errors_3D      rmsd errors [Å] of the dRMSD of the
 %                               conformers to all other conformers
 %               .error_3D       rmsd [Å] of the dRMSD matrix for 3D embedding
-%               .convergence    convergence of error_3D in iterative
-%                               refinement
+%               .convergence    convergence of ensemble measures with
+%                               ensemble size
 % D             dRMSD matrix between the conformers
 %
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -52,8 +52,13 @@ measures.populations = pop';
 
 coor = cmdscale(D);
 [C,n] = size(coor); % determine number of conformers and dimensionality
+measures.convergence = get_convergence(D);
 
 Rg_acs = gyration_radius(coor);
+figure(1); clf; hold on;
+plot(1:C,measures.convergence.rmean,'k.','MarkerSize',12);
+plot(1:C,measures.convergence.stdr,'b.','MarkerSize',12);
+plot(1:C,measures.convergence.maxmin,'r.','MarkerSize',12);
 
 D_check = squareform(pdist(coor));
 dev = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
@@ -63,7 +68,7 @@ measures.Rg_acs = Rg_acs;
 measures.disorder = Rg_acs/Rg;
 measures.dimension = n;
 measures.error_nD = dev;
-[coor_3D,rmsd,all_rmsd] = refined_3D_embedding(D,all_Rg,pop'); % change to mdscale(D,3,'Weights',kron(pop',pop)); and subsequent transformation to inertia frame
+coor_3D = refined_3D_embedding(D,all_Rg,pop'); 
 
 [~, vol] = convhulln(coor_3D); % compute the n-dimensional convex hull
 measures.extension = vol^(1/3); % extension in nD ACS 
@@ -71,8 +76,6 @@ measures.extension = vol^(1/3); % extension in nD ACS
 D_approx = squareform(pdist(coor_3D));
 measures.errors_3D = sqrt(sum(triu(D_approx-D).^2/(C-1)));
 
-measures.convergence = all_rmsd;
-measures.error_3D = rmsd;
 
 function [pair_drms,pop,Rg,assignment] = drms_matrix(entities,addresses)
 %
@@ -210,3 +213,25 @@ end
 if length(range) == 1
     range(2) = range(1);
 end
+
+function convergence = get_convergence(D)
+
+[C,~] = size(D);
+convergence.maxmin = nan(1,C);
+convergence.rmean = nan(1,C);
+convergence.stdr = nan(1,C);
+
+if C < 5
+    return
+end
+
+for c = 5:C
+    D0 = D(1:c,1:c); 
+    convergence.rmean(c) = sum(sum(triu(D0)))/(c*(c-1));
+    D1 = D0 - convergence.rmean(c)*ones(c);
+    convergence.stdr(c) = sqrt(sum(sum(triu(D1).^2))/(c*(c-1)));
+    D0 = D0 + 1e20*eye(c);
+    convergence.maxmin(c) = max(min(D0));
+end
+
+

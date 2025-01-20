@@ -62,6 +62,10 @@ for k = 1:length(fit)
     fom = fom * overlap;
 end
 
+if fom < 0
+    fom = 0;
+end
+
 fom = 1 - fom^(1/length(fit));
 
 if isfield(opt,'interactive') && opt.interactive

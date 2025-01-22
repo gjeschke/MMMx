@@ -53,7 +53,9 @@ function [entity,exceptions,failed] = module_prepare(control,logfid,entity)
 
 % initialize empty output
 exceptions = {[]};
-entity = [];
+if ~exist('entity','var')
+    entity = [];
+end
 warnings = 0;
 failed = false;
 
@@ -585,7 +587,7 @@ for c = 1:cmd_poi
                 entity_name = cmd.entity;
             end
             clear save_options
-            if cmd.selection ~= '*'
+            if ~strcmp(cmd.selection,'*')
                 save_options.selected = true;
                 c_entity = select(c_entity,cmd.selection,true);
             end

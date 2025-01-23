@@ -16,7 +16,8 @@ function clusters = cluster_transition(entity1,entity2,options)
 %               conformers and must have the same primary structure as
 %               entity 1
 % options       options, struct
-%               .nc             number of clusters, defaults to 9
+%               .nc             number of clusters, defaults to total
+%                               number of conformers over 12
 %               .visualize      name of visualization script, if empty, no
 %                               visualization script is written
 %               .superimposed   range of superimposed residues, needed only
@@ -27,9 +28,9 @@ function clusters = cluster_transition(entity1,entity2,options)
 %               .chain2         chain selection for entity 2, defaults to
 %                               empty string (all chains)
 %               .fname1         basis name for PDB file of ensemble 1, used
-%                               only if a visualization script is written
+%                               also as basis name for the data output file
 %               .fname2         basis name for PDB file of ensemble 2, used
-%                               only if a visualization script is written
+%                               also as basis name for the data output file
 %               .figname        if present and not empty, the similarity
 %                               scaling figure is saved under rhis name
 % OUTPUT
@@ -62,9 +63,29 @@ function clusters = cluster_transition(entity1,entity2,options)
 clusters.C1 = length(entity1.populations);
 clusters.C2 = length(entity2.populations);
 
+datname = sprintf('transition_%s_%s.csv',options.fname1,options.fname2);
+description{1,1} = 'Conformer';
+description{2,1} = '%i';
+description{1,2} = 'Population';
+description{2,2} = '%i';
+description{1,3} = 'x';
+description{2,3} = '%5.1f';
+description{1,4} = 'y';
+description{2,4} = '%5.1f';
+description{1,5} = 'z';
+description{2,5} = '%5.1f';
+description{1,6} = 'Uncertainty';
+description{2,6} = '%5.1f';
+description{1,7} = 'State';
+description{2,7} = '%i';
+description{1,8} = 'Cluster';
+description{2,8} = '%i';
+description{1,9} = 'Cluster type';
+description{2,9} = '%i';
+
 if ~exist('options','var') || isempty(options) || ~isfield(options,'nc')
-    % options.nc = min([round(clusters.C1/10),round(clusters.C2/10)]);
-    options.nc = 9;
+    options.nc = round((clusters.C1+clusters.C2)/12);
+    % options.nc = 12;
 end
 
 if ~isfield(options,'superimposed')
@@ -92,76 +113,42 @@ populations = [entity1.populations;entity2.populations];
 
 [C,~] = size(D);
 
-coor0 = dmat2coor(D);
-if isempty(coor0)
-    fprintf(1,'DRMSD matrix could not be embedded into 3D space\n');
-else
-    [coor1,grace,all_violations] = adaptive_embedding_refiner(coor0,D,1);
-    fprintf(1,'Embedding was refined with maximum violation %4.2f %c\n',grace,char(197));
-    figure(333); clf; hold on;
-    plot(all_violations(all_violations > 0),'.','MarkerSize',10,'Color',[0.75,0,0]);
+output_data = zeros(C,9);
+output_data(:,1) = 1:C;
+output_data(:,2) = populations;
+output_data(1:clusters.C1,7) = 1; 
+output_data(clusters.C1+1:clusters.C1+clusters.C2,7) = 2; 
+
+xyz = refined_3D_embedding(D,Rg,populations);
+output_data(:,3:5) = xyz; 
+
+D_check = squareform(pdist(xyz));
+graces = tinv(0.975,C-1)*sqrt(sum((D_check-D).^2/(C-1)));
+output_data(:,6) = graces;
+
+fitoptions = statset('MaxIter',1000);
+try
+    GMModel = fitgmdist(xyz,options.nc,'Options',fitoptions);
+    assignment = cluster(GMModel, xyz);
+catch
+    fprintf(1,'Gaussian mixture distribution fit failed. Reverting to hierarchical clustering.\n');
+    % compute linkage
+    Z = linkage(D,'complete');
+    % cluster
+    assignment = cluster(Z,'maxclust',options.nc);
 end
+output_data(:,8) = assignment;
 
-% get the inertia tensor in the original frame
-centred = true;
-inertia = get_inertia_tensor(coor1,centred);
-% diagonalize the inertia tensor
-[evec,ID] = eig(inertia);
-% sort eigenvalues in ascending order
-[~,indices] = sort(diag(ID));
-% sort eigenvectors accordingly
-evecs = evec(:,indices);
-% determine the centre of gravity of the conformer set
-xyzc = mean(coor1);
-% put orgin at centre of gravity of the conformer set
-xyz = coor1 - repmat(xyzc,C,1);
-% transform into inertia frame
-xyz = xyz*evecs;
-
-[Rg_sorted,Rg_sorting] = sort(Rg);
-xsorting = xyz(Rg_sorting,1);
-invertx = sum((1:C)'.*xsorting) < 0;
-ysorting = xyz(Rg_sorting,2);
-inverty = sum((1:C)'.*ysorting) < 0;
-zsorting = xyz(Rg_sorting,3);
-
-figure(111); clf; hold on
-plot(Rg_sorted,'k.');
-
-figure(222); clf; hold on;
-plot(xsorting,'.','Color',[0.75,0,0]);
-plot(ysorting,'.','Color',[0,0.6,0]);
-plot(zsorting,'.','Color',[0,0,0.8]);
-
-% invert coordinates so that lowest Rg terminus has lower x and y coordinates
-if invertx % the x coordinate must be inverted
-    xyz(:,1) = -xyz(:,1);
-    % this requires that either the y or the z coordinate is also inverted
-    % (keep chirality)
-    if inverty % in this case, the y coordinate should be inverted
-        xyz(:,2) = -xyz(:,2);
-    else % otherwise, the z coordinate is inverted
-        xyz(:,3) = -xyz(:,3);
-    end
-else % the x coordinate was not inverted
-    % if the y coordinate must be inverted, the z coordinate must be
-    % inverted, too, to keep the frame right-handed
-    if inverty % in this case, the x coordinate should be inverted
-        xyz(:,2) = -xyz(:,2);
-        xyz(:,3) = -xyz(:,3);
-    end
-end
-
-% compute linkage
-Z = linkage(D,'complete');
-% cluster
-assignment = cluster(Z,'maxclust',options.nc);
 clusters.nc = options.nc;
 clusters.members = cell(clusters.nc,2);
 clusters.type = zeros(clusters.nc,1);
 clusters.Rg = zeros(clusters.nc,1);
 
 h = figure; clf; hold on;
+initial_col = [0.2369    0.4437    0.9996];
+final_col = [0.9608    0.8902    0.1532];
+mixed_col = [0.5 0.5 0.5];
+tint = 0.15;
 % assign clusters, cluster types 1, 2 and 0 (mixed)
 conformers = 1:length(assignment);
 for clust = 1:clusters.nc
@@ -172,8 +159,8 @@ for clust = 1:clusters.nc
         clusters.members{clust,1} = members;
         clusters.members{clust,2} = [];
         for m = 1:length(members)
-            col = [0.75,0,0];
-            conformer_sphere(xyz(members(m),:),grace,col);
+            pop = populations(members(m))/max(populations);
+            conformer_sphere(xyz(members(m),:),graces(members(m)),initial_col,pop);
         end
     end
     if min(members) > clusters.C1 % pure ensemble 2 cluster
@@ -181,20 +168,21 @@ for clust = 1:clusters.nc
         clusters.members{clust,1} = [];
         clusters.members{clust,2} = members - clusters.C1;
         for m = 1:length(members)
-            col = [0,0,0.75];
-            conformer_sphere(xyz(members(m),:),grace,col);
+            pop = populations(members(m))/max(populations);
+            conformer_sphere(xyz(members(m),:),graces(members(m)),final_col,pop);
         end
     end
     if clusters.type(clust) == 0 % mixed cluster
         clusters.members{clust,1} = members(members <= clusters.C1);
         clusters.members{clust,2} = members(members > clusters.C1) - clusters.C1;
         for m = 1:length(members)
+            pop = populations(members(m))/max(populations);
             if members(m) <= clusters.C1
-                col = [0.42,0.56,0.14];
+                col = mixed_col+tint*initial_col;
             else
-                col = [0.18,0.55,0.34];
+                col = mixed_col+tint*final_col;
             end
-            conformer_sphere(xyz(members(m),:),grace,col);
+            conformer_sphere(xyz(members(m),:),graces(members(m)),col,pop);
         end
     end
 end
@@ -229,6 +217,13 @@ if isfield(options,'figname') && ~isempty(options.figname)
 end
 h.Position = pos0;
 
+
+for c = 1:C
+    assigned = output_data(c,8);
+    output_data(c,9) = clusters.type(assigned);
+end
+
+put_csv(datname,output_data,description);
 
 clusters.similarities = ones(clusters.nc);
 for cl1 = 1:clusters.nc-1
@@ -326,7 +321,8 @@ else
     rescaled = scaled;
 end
 
-colors = cluster_color_map;
+% colors = cluster_color_map;
+colors = [initial_col;mixed_col;final_col];
 clusters.colorscale = rescaled;
 
 
@@ -336,19 +332,20 @@ for clust = 1:clusters.nc
     switch clusters.type(clust)
         case 0
             marker = 'o';
+            col = colors(2,:);
         case 1
             marker = 'v';
+            col = colors(1,:);
         case 2
             marker = '^' ;
+            col = colors(3,:);
     end
-    color_index = 1 + round(100*rescaled(clust));
-    col = colors(color_index,:);
     plot(scaled(clust),rescaled(clust),marker,'MarkerSize',10,'Color',col,'MarkerFaceColor',col);
 end
 
 set(gca,'FontSize',14);
-xlabel('original similarity scale');
-ylabel('rescaled values for color code');
+xlabel('Original similarity scale');
+ylabel('Rescaled scale');
 
 if isfield(options,'figname') && ~isempty(options.figname)
     saveas(h,options.figname);
@@ -369,124 +366,83 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
     put_pdb(entity1,options.fname1);
     put_pdb(entity2,options.fname2);
     [pname,bname] = fileparts(options.visualize);
-    visualize_cs = fullfile(pname,sprintf('%s_conformational_selection.mmm',bname));
-    ofid_cs = fopen(visualize_cs,'wt');
-    visualize_dp = fullfile(pname,sprintf('%s_depopulated.mmm',bname));
-    ofid_dp = fopen(visualize_dp,'wt');
-    visualize_if = fullfile(pname,sprintf('%s_induced_fit.mmm',bname));
-    ofid_if = fopen(visualize_if,'wt');
-    fprintf(ofid_cs,'%% MMMx transition visualization script for conformational selection\n');
-    fprintf(ofid_cs,'new !\n');
-    fprintf(ofid_cs,'pdbload %s\n',options.fname1);
-    fprintf(ofid_cs,'pdbload %s\n',options.fname2);
-    fprintf(ofid_dp,'%% MMMx transition visualization script for depopulated conformers\n');
-    fprintf(ofid_dp,'new !\n');
-    fprintf(ofid_dp,'pdbload %s\n',options.fname1);
-    fprintf(ofid_dp,'pdbload %s\n',options.fname2);
-    fprintf(ofid_if,'%% MMMx transition visualization script for induced fit\n');
-    fprintf(ofid_if,'new !\n');
-    fprintf(ofid_if,'pdbload %s\n',options.fname1);
-    fprintf(ofid_if,'pdbload %s\n',options.fname2);
+    visualize_assignment = fullfile(pname,sprintf('%s_assignment.mmm',bname));
+    ofid_assign = fopen(visualize_assignment,'wt');
+    fprintf(ofid_assign,'%% MMMx transition visualization script with color by assignment\n');
+    fprintf(ofid_assign,'new !\n');
+    fprintf(ofid_assign,'pdbload %s\n',options.fname1);
+    fprintf(ofid_assign,'pdbload %s\n',options.fname2);
     for clust = 1:clusters.nc
-        switch clusters.type(clust)
-            case 0
-                ofid = ofid_cs;
-                col = [0,0.6,0];
-            case 1
-                ofid = ofid_dp;
-                col = [0.75,0,0];
-            case 2
-                ofid = ofid_if;
-                col = [0,0,0.75];
-        end
-%         color_index = 1 + round(100*rescaled(clust));
-%         col = colors(color_index,:);
         conformers = clusters.members{clust,1};
         for c = 1:length(conformers)
+            switch clusters.type(clust)
+                case 0
+                    col = mixed_col+tint*initial_col;
+                case 1
+                    col = initial_col;
+                case 2
+                    col = final_col;
+            end
             pop = entity1.populations(conformers(c))/max(entity1.populations);
             if isempty(options.graphics)
-                fprintf(ofid,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
-                fprintf(ofid,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+                fprintf(ofid_assign,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
+                fprintf(ofid_assign,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
             else
                 [ngcmd,~] = size(options.graphics);
                 for gcmd = 1:ngcmd
-                    fprintf(ofid,'%s [DISO]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain1,options.graphics{gcmd,2},options.graphics{gcmd,3});
+                    fprintf(ofid_assign,'%s [DISO]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain1,options.graphics{gcmd,2},options.graphics{gcmd,3});
                 end
-                fprintf(ofid,'transparency [DISO]{%i} %5.3f\n',conformers(c),pop);
+                fprintf(ofid_assign,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+                fprintf(ofid_assign,'transparency [DISO]{%i} %5.3f\n',conformers(c),pop);
             end
         end
         conformers = clusters.members{clust,2};
         for c = 1:length(conformers)
+            switch clusters.type(clust)
+                case 0
+                    col = mixed_col + tint*final_col;
+                case 1
+                    col = initial_col;
+                case 2
+                    col = final_col;
+            end
             pop = entity2.populations(conformers(c))/max(entity2.populations);
             if isempty(options.graphics)
-                fprintf(ofid,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
-                fprintf(ofid,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+                fprintf(ofid_assign,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
+                fprintf(ofid_assign,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
             else
                 [ngcmd,~] = size(options.graphics);
                 for gcmd = 1:ngcmd
-                    fprintf(ofid,'%s [ORDE]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain2,options.graphics{gcmd,2},options.graphics{gcmd,3});
+                    fprintf(ofid_assign,'%s [ORDE]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain2,options.graphics{gcmd,2},options.graphics{gcmd,3});
                 end
-                fprintf(ofid,'transparency [ORDE]{%i} %5.3f\n',conformers(c),pop);
+                fprintf(ofid_assign,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
+                fprintf(ofid_assign,'transparency [ORDE]{%i} %5.3f\n',conformers(c),pop);
             end
         end
     end
-    if isempty(options.graphics)
-        fprintf(ofid_cs,'color [DISO]{:}%s darkgrey\n',options.superimposed);
-        fprintf(ofid_cs,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
-        fprintf(ofid_dp,'color [DISO]{:}%s darkgrey\n',options.superimposed);
-        fprintf(ofid_dp,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
-        fprintf(ofid_if,'color [DISO]{:}%s darkgrey\n',options.superimposed);
-        fprintf(ofid_if,'color [ORDE]{:}%s darkgrey\n',options.superimposed);
-    end
-    types = {'conformational_selection' 'depopulated' 'induced_fit'};
-    ofids = [ofid_cs,ofid_dp,ofid_if];
-    for tp = 1:3
-        ofid = ofids(tp);
-        my_type = types{tp};
-        fprintf(ofid,'view  x\n');
-        fprintf(ofid,'detach\n');
-        fprintf(ofid,'zoom out\n');
-        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_x.png',bname,my_type)));
-        fprintf(ofid,'view  y\n');
-        fprintf(ofid,'zoom out\n');
-        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_y.png',bname,my_type)));
-        fprintf(ofid,'view  -x\n');
-        fprintf(ofid,'detach\n');
-        fprintf(ofid,'zoom out\n');
-        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_-x.png',bname,my_type)));
-        fprintf(ofid,'view  -y\n');
-        fprintf(ofid,'zoom out\n');
-        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_-y.png',bname,my_type)));
-        fprintf(ofid,'view  z\n');
-        fprintf(ofid,'detach\n');
-        fprintf(ofid,'zoom out\n');
-        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_z.png',bname,my_type)));
-        fprintf(ofid,'view  -z\n');
-        fprintf(ofid,'zoom out\n');
-        fprintf(ofid,'copy %s png\n',fullfile(pname,sprintf('%s_%s_view_-z.png',bname,my_type)));
-    end
-    fclose(ofid_cs);
-    fclose(ofid_dp);
-    fclose(ofid_if);
+    fprintf(ofid_assign,'view  x\n');
+    fprintf(ofid_assign,'detach\n');
+    fprintf(ofid_assign,'zoom out\n');
+    fprintf(ofid_assign,'copy %s png\n',fullfile(pname,sprintf('%s_view_x.png',bname)));
+    fprintf(ofid_assign,'view  y\n');
+    fprintf(ofid_assign,'zoom out\n');
+    fprintf(ofid_assign,'copy %s png\n',fullfile(pname,sprintf('%s_view_y.png',bname)));
+    fprintf(ofid_assign,'view  -x\n');
+    fprintf(ofid_assign,'detach\n');
+    fprintf(ofid_assign,'zoom out\n');
+    fprintf(ofid_assign,'copy %s png\n',fullfile(pname,sprintf('%s_view_-x.png',bname)));
+    fprintf(ofid_assign,'view  -y\n');
+    fprintf(ofid_assign,'zoom out\n');
+    fprintf(ofid_assign,'copy %s png\n',fullfile(pname,sprintf('%s_view_-y.png',bname)));
+    fprintf(ofid_assign,'view  z\n');
+    fprintf(ofid_assign,'detach\n');
+    fprintf(ofid_assign,'zoom out\n');
+    fprintf(ofid_assign,'copy %s png\n',fullfile(pname,sprintf('%s_view_z.png',bname)));
+    fprintf(ofid_assign,'view  -z\n');
+    fprintf(ofid_assign,'zoom out\n');
+    fprintf(ofid_assign,'copy %s png\n',fullfile(pname,sprintf('%s_view_-z.png',bname)));
+    fclose(ofid_assign);
 end
-
-function my_map = cluster_color_map
-
-my_map = zeros(101,3);
-arg = linspace(0,1,101);
-arg = arg';
-red_avg = 0;
-sig_red = 0.35;
-amp_red = 0.75;
-green_avg = 0.5;
-sig_green = 0.3;
-amp_green = 0.7;
-blue_avg = 1;
-sig_blue = 0.35;
-amp_blue = 0.75;
-my_map(:,1) = amp_red*exp(-(arg-red_avg).^2/(sqrt(2)*sig_red^2)); 
-my_map(:,2) = amp_green*exp(-(arg-green_avg).^2/(sqrt(2)*sig_green^2)); 
-my_map(:,3) = amp_blue*exp(-(arg-blue_avg).^2/(sqrt(2)*sig_blue^2)); 
 
 function similarity = get_similarity(D,populations,indices1,indices2)
 
@@ -500,11 +456,11 @@ width1 = sqrt(sum(sum(var11)));
 width2 = sqrt(sum(sum(var22)));
 similarity = sqrt((width1*width2)/sum(sum(var12)));
 
-function conformer_sphere(coor,grace,col)
+function conformer_sphere(coor,grace,col,pop)
 [x,y,z,t] = point2trisphere(coor,grace/2,2);
 obj = trisurf(t,x,y,z);
 set(obj, 'FaceColor', col, 'EdgeColor', 'none','FaceLighting','gouraud','Clipping','off');
-set(obj, 'CDataMapping','direct','AlphaDataMapping','none');
+set(obj, 'CDataMapping','direct','AlphaDataMapping','none','FaceAlpha',pop);
 
 function [x,y,z,t] = point2trisphere(coor,radius,n)
 % Creates a triangulated sphere centered at coordinates coor with radius r

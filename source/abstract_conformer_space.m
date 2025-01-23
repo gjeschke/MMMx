@@ -1,14 +1,19 @@
-function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses)
+function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses,options)
 % ABSTRACT_CONFORMER_SPACE  Determines the abstract conformer space and its 
 %                           3D approximation for a set of ensemble structures
 %
-%    [coor,coor_3D,measures] = abstract_conformer_space(entities,addresses)
+%    [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses,options)
 % 
 % INPUT
 % entities      cell(1,E) of E ensemble entities
 % addresses     cell{1,E) cell of address strings that specify the same
 %               polymer chain section in the individual entities, optional,
 %               if missing, the whole entity is processed
+% options       .convergence    Boolean flag that requests convergence
+%                               analysis, defaults to true
+%               .fname          name of a CSV file for output, defaults to
+%                               acs.csv, an empty .fname suppresses file
+%                               output
 %
 % OUTPUT
 % coor          double (C,n) coordinates for C conformers in n-dimensional
@@ -32,8 +37,8 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 %               .errors_3D      rmsd errors [Å] of the dRMSD of the
 %                               conformers to all other conformers
 %               .error_3D       rmsd [Å] of the dRMSD matrix for 3D embedding
-%               .convergence    convergence of error_3D in iterative
-%                               refinement
+%               .convergence    convergence of ensemble measures with
+%                               ensemble size
 % D             dRMSD matrix between the conformers
 %
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -42,6 +47,32 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 if ~exist('addresses','var')
     addresses = {};
 end
+
+if ~exist('options','var') || ~isfield(options,'convergence') || isempty(options.convergence)
+    options.convergence = true;
+end
+
+if ~isfield(options,'fname')
+    options.fname = 'acs.csv';
+end
+
+if ~isempty(options.fname) && ~contains(options.fname,'.')
+    options.fname = strcat(options.fname,'.csv');
+end
+
+description{1,1} = 'Conformer';
+description{2,1} = '%i';
+description{1,2} = 'Population';
+description{2,2} = '%i';
+description{1,3} = 'x';
+description{2,3} = '%5.1f';
+description{1,4} = 'y';
+description{2,4} = '%5.1f';
+description{1,5} = 'z';
+description{2,5} = '%5.1f';
+description{1,6} = 'Uncertainty';
+description{2,6} = '%5.1f';
+
 
 [D,pop,all_Rg,assignment] = drms_matrix(entities,addresses);
 Rg = sqrt(sum(pop.*all_Rg.^2)); 
@@ -55,6 +86,14 @@ coor = cmdscale(D);
 
 Rg_acs = gyration_radius(coor);
 
+if options.convergence
+    measures.convergence = get_convergence(D);
+    figure; clf; hold on;
+    plot(1:C,measures.convergence.rmean,'k.','MarkerSize',12);
+    plot(1:C,measures.convergence.stdr,'b.','MarkerSize',12);
+    plot(1:C,measures.convergence.maxmin,'r.','MarkerSize',12);
+end
+
 D_check = squareform(pdist(coor));
 dev = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
 
@@ -63,7 +102,18 @@ measures.Rg_acs = Rg_acs;
 measures.disorder = Rg_acs/Rg;
 measures.dimension = n;
 measures.error_nD = dev;
-[coor_3D,rmsd,all_rmsd] = refined_3D_embedding(D,all_Rg,pop'); % change to mdscale(D,3,'Weights',kron(pop',pop)); and subsequent transformation to inertia frame
+coor_3D = refined_3D_embedding(D,all_Rg,pop'); 
+
+if ~isempty(options.fname)
+    output_data = zeros(C,6);
+    output_data(:,1) = 1:C;
+    output_data(:,2) = pop;
+    output_data(:,3:5) = coor_3D;
+    D_check = squareform(pdist(coor_3D));
+    graces = tinv(0.975,C-1)*sqrt(sum((D_check-D).^2/(C-1)));
+    output_data(:,6) = graces;
+    put_csv(options.fname,output_data,description);
+end
 
 [~, vol] = convhulln(coor_3D); % compute the n-dimensional convex hull
 measures.extension = vol^(1/3); % extension in nD ACS 
@@ -71,8 +121,6 @@ measures.extension = vol^(1/3); % extension in nD ACS
 D_approx = squareform(pdist(coor_3D));
 measures.errors_3D = sqrt(sum(triu(D_approx-D).^2/(C-1)));
 
-measures.convergence = all_rmsd;
-measures.error_3D = rmsd;
 
 function [pair_drms,pop,Rg,assignment] = drms_matrix(entities,addresses)
 %
@@ -210,3 +258,25 @@ end
 if length(range) == 1
     range(2) = range(1);
 end
+
+function convergence = get_convergence(D)
+
+[C,~] = size(D);
+convergence.maxmin = nan(1,C);
+convergence.rmean = nan(1,C);
+convergence.stdr = nan(1,C);
+
+if C < 5
+    return
+end
+
+for c = 5:C
+    D0 = D(1:c,1:c); 
+    convergence.rmean(c) = sum(sum(triu(D0)))/(c*(c-1));
+    D1 = D0 - convergence.rmean(c)*ones(c);
+    convergence.stdr(c) = sqrt(sum(sum(triu(D1).^2))/(c*(c-1)));
+    D0 = D0 + 1e20*eye(c);
+    convergence.maxmin(c) = max(min(D0));
+end
+
+

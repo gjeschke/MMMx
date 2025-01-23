@@ -79,6 +79,7 @@ while ischar(tline)
         tline = fgetl(fid);
         continue
     end
+%     fprintf(1,'%s\n',tline);
     % remove trailing blanks
     tline = deblank(tline);
     % convert 
@@ -137,6 +138,7 @@ while ischar(tline)
             end
             % go up one level
             level = level - 1;
+%             fprintf(1,'Gone down one level to %i\n',level)
             % remove module name if required
             if length(arg1) == 1
                 argument_pointer = argument_pointer + 1;
@@ -165,6 +167,7 @@ while ischar(tline)
             %             end
             if new_indent > indent && level < 2
                 level = level + 1;
+%                 fprintf(1,'Gone up one level at indent %i to %i\n',new_indent,level);
             end
             switch level
                 case 1

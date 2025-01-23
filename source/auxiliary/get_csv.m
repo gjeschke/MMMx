@@ -67,7 +67,7 @@ while 1
     nl = nl + 1;
     rows = rows + 1;
     args = split(tline,',');
-    fprintf(1,'Line %i has %i arguments\n',nl,length(args));
+    % fprintf(1,'Line %i has %i arguments\n',nl,length(args));
     types = cell(1,length(args));
     for k = 1:length(args)
         types{k} = 'cellstr';

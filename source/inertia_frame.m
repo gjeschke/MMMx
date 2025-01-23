@@ -39,12 +39,13 @@ for c = 1:length(entity.populations)
         overwrite = true;
         entity = select(entity,address,overwrite);
         [atom_indices] = get_selection(entity);
+        coor = entity.xyz(atom_indices,:);
+        elements = entity.elements(atom_indices);
     else
-        argout = get_conformer(entity,'coor',c);
-        atom_indices = argout{1}.indices;
+        atom_indices = [];
+        coor = entity.xyz;
+        elements = entity.elements;
     end
-    coor = entity.xyz(atom_indices,:);
-    elements = entity.elements(atom_indices);
     % compute atom masses
     masses = chemistry.pse.mass(elements).';
     % get the inertia tensor in the original frame
@@ -62,11 +63,11 @@ for c = 1:length(entity.populations)
     % determine indices of all atoms of this conformer, if there was a
     % selection
     if ~exist('selection','var') || isempty(selection)
-        argout = get_conformer(entity,'coor',c);
-        atom_indices = argout{1}.indices;
+        xyz = entity.xyz;
+    else
+        xyz = entity.xyz(atom_indices,:);
     end
     % make the transformation
-    xyz = entity.xyz(atom_indices,:);
     [n,~] = size(xyz); % number of atoms
     % put orgin at centre of gravity of the selected atoms
     xyz = xyz - repmat(xyzc,n,1);
@@ -90,7 +91,11 @@ for c = 1:length(entity.populations)
             xyz(:,2) = -xyz(:,2);
         end
     end
-    entity.xyz(atom_indices,:) = xyz;
+    if isempty(atom_indices)
+        entity.xyz = xyz;
+    else
+        entity.xyz(atom_indices,:) = xyz;
+    end
 end
 
 

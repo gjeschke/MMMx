@@ -896,8 +896,9 @@ for c = 1:cmd_poi
            clusters = cluster_transition(entity1,entity2,options);
            save(assignment_name,'clusters');
            fprintf(logfid,'\n--- Transition analysis ---\n\n');
-           fprintf(logfid,'Enemble 1 (%s) has %i conformers.\n',cmd.entity1,clusters.C1);
-           fprintf(logfid,'Enemble 2 (%s) has %i conformers.\n',cmd.entity2,clusters.C2);
+           fprintf(logfid,'Ensemble 1 (%s) has %i conformers.\n',cmd.entity1,clusters.C1);
+           fprintf(logfid,'Ensemble 2 (%s) has %i conformers.\n',cmd.entity2,clusters.C2);
+           fprintf(logfid,'Similarity of the two ensembles is %5.3f.\n',clusters.similarity);
            fprintf(logfid,'%i clusters were generated\n',clusters.nc);
            fprintf(logfid,'%i pure ensemble 1 clusters\n',sum(clusters.type == 1));
            fprintf(logfid,'%i pure ensemble 2 clusters\n',sum(clusters.type == 2));

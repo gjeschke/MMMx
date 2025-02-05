@@ -506,6 +506,9 @@ if ~isempty(atom_index) && atom_index > 0 && atom_index <= m
     atnum = atnum + 1;
     xyz = entity.xyz(atom_index,:);
     occ = double(entity.occupancies(atom_index))/100;
+    if occ == 0
+        occ = 1;
+    end
     if isempty(info.charge)
         chg = ' ';
     elseif info.charge > 0

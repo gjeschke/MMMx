@@ -152,51 +152,44 @@ Z = linkage(D,'complete');
 assignment = cluster(Z,'maxclust',options.nc);
 
 coor = cmdscale(D);
-rng(1,'philox');
-Y = tsne(coor,'Algorithm','exact','Distance','euclidean');
+
 colors = turbo(4);
 colors = 0.75*colors(2:3,:);
-fh = figure;
-gscatter(Y(:,1),Y(:,2),output_data(:,7),colors);
-title('t-SNE analysis by state')
-xlabel('x [a.u.]');
-ylabel('y [a.u.]');
-set(gca,'FontSize',14);
+
+[~,score,~,~,explained] = pca(coor);
+
+fh = figure; hold on;
+for c = 1:C
+    plot(score(c,1),score(c,2),'.','MarkerSize',14,'Color',colors(output_data(c,7),:));
+end
+axis equal
+xlabel('x [Å]');
+ylabel('y [Å]');
+title(sprintf('PCA 2 analysis (%4.1f%% of variance)',sum(explained(1:2))));
+set(gca,'FontSize',12);
 [pname,bname,ext] = fileparts(options.figname);
 if ~strcmpi(ext,'.tif') && ~strcmpi(ext,'.bmp') && ~strcmpi(ext,'.fig')
     ext = '.pdf';
 end
 if isfield(options,'figname') && ~isempty(options.figname)
-    saveas(fh,fullfile(pname,sprintf('%s_tsne_state_x%s',bname,ext)));
+    saveas(fh,fullfile(pname,sprintf('%s_PCA2%s',bname,ext)));
 end
 
-[~,score,~,~,explained] = pca(coor);
-figure; hold on;
+fh = figure; hold on;
 for c = 1:C
     plot3(score(c,1),score(c,2),score(c,3),'.','MarkerSize',14,'Color',colors(output_data(c,7),:));
 end
 axis equal
-xlabel('PC1');
-ylabel('PC2');
-zlabel('PC3');
+xlabel('x [Å]');
+ylabel('y [Å]');
+zlabel('z [Å]');
+title(sprintf('PCA 3 analysis (%4.1f%% of variance)',sum(explained(1:3))));
 set(gca,'FontSize',12);
-fprintf(1,'%4.1f%% of variance is explained by the first three principal components\n',sum(explained(1:3)));
 view(30,30);
-
-colors = turbo(max(assignment));
-fh = figure;
-gscatter(Y(:,1),Y(:,2),assignment,colors);
-title('t-SNE analysis by cluster')
-xlabel('x [a.u.]');
-ylabel('y [a.u.]');
-set(gca,'FontSize',14);
-[pname,bname,ext] = fileparts(options.figname);
-if ~strcmpi(ext,'.tif') && ~strcmpi(ext,'.bmp') && ~strcmpi(ext,'.fig')
-    ext = '.pdf';
-end
 if isfield(options,'figname') && ~isempty(options.figname)
-    saveas(fh,fullfile(pname,sprintf('%s_tsne_cluster_assignment_x%s',bname,ext)));
+    saveas(fh,fullfile(pname,sprintf('%s_PCA3%s',bname,ext)));
 end
+
 output_data(:,8) = assignment;
 
 clusters.nc = options.nc;

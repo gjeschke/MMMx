@@ -134,33 +134,52 @@ coor = cmdscale(D);
 [C,n] = size(coor); % determine number of conformers and dimensionality
 
 
-rng(1,'philox');
-Y = tsne(coor,'Algorithm','exact','Distance','euclidean');
-figure;
+colors = turbo(C);
+
+[~,score,~,~,explained] = pca(coor);
+
 if ~isempty(options.subensembles) && options.subensembles > 1
     % compute linkage
     Z = linkage(D,'complete');
     % cluster
     indices = cluster(Z,'maxclust',options.subensembles);
     measures.subensembles = indices;
-    colors = turbo(options.subensembles+2);
-    colors = 0.75*colors(2:end-1,:);
-    gscatter(Y(:,1),Y(:,2),indices,colors);
+    colors0 = turbo(options.subensembles+2);
+    colors0 = 0.75*colors0(2:end-1,:);
+    for c = 1:C
+        colors(c,:) = colors0(indices(c),:);
+    end
 else
     measures.subensembles = [];
     if isempty(indices)
         indices = ones(1,C);
-        colors = [0,0.5,0.5];
+        colors = repmat([0,0.5,0.5],C,1);
     else
         colors = turbo(C);
     end
 end
-gscatter(Y(:,1),Y(:,2),indices,colors);
-title('t-SNE analysis')
-xlabel('x [a.u.]');
-ylabel('y [a.u.]');
-set(gca,'FontSize',14);
-legend off
+
+figure; hold on;
+for c = 1:C
+    plot(score(c,1),score(c,2),'.','MarkerSize',14,'Color',colors(c,:));
+end
+axis equal
+xlabel('x [Å]');
+ylabel('y [Å]');
+title(sprintf('PCA 2 analysis (%4.1f%% of variance)',sum(explained(1:2))));
+set(gca,'FontSize',12);
+
+figure; hold on;
+for c = 1:C
+    plot3(score(c,1),score(c,2),score(c,3),'.','MarkerSize',14,'Color',colors(c,:));
+end
+axis equal
+xlabel('x [Å]');
+ylabel('y [Å]');
+zlabel('z [Å]');
+title(sprintf('PCA 3 analysis (%4.1f%% of variance)',sum(explained(1:3))));
+set(gca,'FontSize',12);
+view(30,30);
 
 if ~isempty(options.visualization)
     vname = options.visualization;

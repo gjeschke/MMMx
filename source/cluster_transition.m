@@ -320,7 +320,7 @@ if sum(clusters.type) > 0
     D2 = pair_drms_matrix(entity2,options.chain2);
     [~,indices2] = acs_sorting(D2);
 
-    dsorting = [indices1,indices2];
+    dsorting = [indices1,indices2+clusters.C1];
     D = D(dsorting,dsorting);
     h = plot_pair_drmsd(D,clusters.C1,clusters.C2);
     [pname,basname,figure_format] = fileparts(options.figname);

@@ -1,4 +1,4 @@
-function flexibility_analysis(entity,fname,figures)
+function outdata = flexibility_analysis(entity,fname,figures)
 %
 % FLEXIBILITY_ANALYSIS Analyze Ramachandran angle distributions in
 %                      ensemble, for RNA, pseudo-torsion angles are analyzed 
@@ -16,16 +16,21 @@ function flexibility_analysis(entity,fname,figures)
 % INPUT
 % entity    entity in MMMx:atomic format 
 % fname     basis file name for output, extension is disregared and
-%           replaced with .csv, data is save as comma-separated value file,
+%           replaced with .csv, data is saved as comma-separated value file,
 %           one file for each chain <fname>_<cid>.csv, where <cid> is the
 %           chain identifier
-% figures   specifies figure format for saving as anb extension, if empty 
+% figures   specifies figure format for saving as an extension, if empty 
 %           or missing, figures are not saved, options are:
 %           fig (Matlab figure), jpg, png, eps, pdf, bmp, emf, pbm, pcx,
 %           pgm, ppm, svg, tif
 %           recommended: 'pdf' or 'svg' for use with professional software
 %                        'emf' for use with Microsoft Word
 %
+% OUPUT
+% outdata   cell(1,chains) of matrices (residues,3) with residue numbers in
+%           column 1, site flexibility in column 2, and residue type in
+%           column 3, residue types are: 1 for non-special residues, 2 for
+%           Gly, 3 for Pro, and 4 for Thr
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2021: Gunnar Jeschke
@@ -68,10 +73,13 @@ else
 end
 
 chains = fieldnames(entity);
+outdata = cell(1,length(chains));
+chain_count = 0;
 pop = entity.populations/sum(entity.populations); % you can never normalize too often
 for c = 1:length(chains)
     if isstrprop(chains{c},'upper') % this is a chain field
         chain = chains{c};
+        chain_count = chain_count + 1;
         residues = fieldnames(entity.(chain));
         flexibilities = zeros(length(residues),1);
         resnums = zeros(length(residues),1);
@@ -174,6 +182,7 @@ for c = 1:length(chains)
         end
         resnums = resnums(1:respoi);
         flexibilities = flexibilities(1:respoi);
+        restypes = restypes(1:respoi);
         h = figure; clf; hold on;
         colors = [0.25,0.25,0.25;0.7,0,0;0,0.5,0;0,0,0.7];
         for res = 1:length(resnums)
@@ -189,10 +198,13 @@ for c = 1:length(chains)
             figname = sprintf('%s_chain_%s.%s',figname0,chain,figures);
             saveas(h,figname);
         end
+        outmat = [resnums flexibilities restypes];
+        outdata{chain_count} = outmat;
         if ~isempty(fname)
-            outmat = [resnums flexibilities];
             datname = sprintf('%s_chain_%s.csv',fname,chain);
             writematrix(outmat,datname)
         end
     end
 end
+
+outdata = outdata(1:chain_count);

@@ -21,6 +21,8 @@ function fom = fit_multi_restraints(v,predictions,normalize,opt)
 %       .old_size       old ensemble size, defaults to zero
 %       .lograte        fit logarithm of PRE rate if true, this is the
 %                       default
+%       .emd            fit distance distributions by minization of earth
+%                       mover's distance
 %
 % predictions:
 % ddr
@@ -107,7 +109,7 @@ if ~isnan(normalize.ddr)
     if isfield(opt,'rmean') && opt.rmean
         fom_ddr = fit_multi_rmean(v(1:end-length(predictions.sas)),predictions.ddr);
     else
-        fom_ddr = fit_multi_ddr(v(1:end-length(predictions.sas)),predictions.ddr);
+        fom_ddr = fit_multi_ddr(v(1:end-length(predictions.sas)),predictions.ddr,opt);
     end
     fom = fom + fom_ddr/normalize.ddr;
     n_sets = n_sets + 1;

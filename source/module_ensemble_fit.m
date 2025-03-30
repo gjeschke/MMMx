@@ -85,6 +85,7 @@ opt.interactive = false; % no interactive plotting during fits
 opt.blocksize = 100;
 opt.skip_restraints = false;
 opt.overlap_trials = 10000;
+opt.emd = false;
 
 fit_mean_distances = false;
 
@@ -115,6 +116,8 @@ for d = 1:length(control.directives)
     switch lower(control.directives(d).name)
         case 'nofit'
             run_fit = false;
+        case 'emd'
+            opt.emd = true;
         case 'nnllsq'
             nnllsq_fit = true;
             if ~isempty(control.directives(d).options) && ~isempty(control.directives(d).options{1})
@@ -1506,7 +1509,7 @@ elseif run_fit
             v = v(1:end-length(curr_sas_predictions));
             
             if ~isnan(fom.ddr)
-                fom_ddr = sim_multi_ddr(v,curr_ddr_predictions);
+                fom_ddr = sim_multi_ddr(v,curr_ddr_predictions,opt);
             end
             
             if ~isnan(fom.pre)
@@ -1721,6 +1724,7 @@ if nr_pre > 0
         end
     end
     fom_pre = fom_pre/kft;
+    fprintf(1,'\n PRE chi^2: %6.3f\n',fom_pre);
 end
 
 if isempty(loss_of_merit) % for non-integrative fits, there is no loss of merit
@@ -1740,11 +1744,14 @@ if save_csv
     dr = 1/(fit_task.r_axis(2) - fit_task.r_axis(1));
     overlap = 1;
     ddr = false;
+    emd_number = 0;
+    emd_sum = 0;
     for kr = 1:nr
         if fit_task.ddr_valid(kr)
             ddr = true;
             overlap_G = [];
             overlap_E = [];
+            emd = [];
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
             data = fit_task.r_axis.';
             column_string = 'r';            
@@ -1752,6 +1759,16 @@ if save_csv
             exp_rstd = '(exp. na)';
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
+                % Normalize the vectors to probabilities (if necessary)
+                P = fit_task.ddr(kr).fit_distr / sum(fit_task.ddr(kr).fit_distr);
+                Q = fit_task.ddr(kr).exp_distr / sum(fit_task.ddr(kr).exp_distr);
+                % Compute cumulative distributions
+                cum_P = cumsum(P);
+                cum_Q = cumsum(Q);
+                % Calculate EMD as the sum of absolute differences
+                emd = dr*sum(abs(cum_P - cum_Q));
+                emd_number = emd_number + 1;
+                emd_sum = emd_sum + emd;
                 all_overlap = zeros(1,opt.overlap_trials);
                 for trial = 1:opt.overlap_trials
                     mixer = rand(size(fit_task.ddr(kr).exp_distr));
@@ -1801,15 +1818,18 @@ if save_csv
             end
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
-            fprintf(logfid,'%s-%s',site1,site2);
+            fprintf(logfid,'%s-%s\n',site1,site2);
             if ~isempty(overlap_E)
-                fprintf(logfid,' (distribution): overlap = %6.3f +/- %6.3f',overlap_E,CI95_overlap);
+                fprintf(logfid,' (distribution): overlap = %6.3f +/- %6.3f\n',overlap_E,CI95_overlap);
             elseif ~isempty(overlap_G)
-                fprintf(logfid,' (Gaussian restraint): overlap = %6.3f',overlap_G);
+                fprintf(logfid,' (Gaussian restraint): overlap = %6.3f\n',overlap_G);
             else
                 fprintf(logfid,' is unspecified.');
             end
-            fprintf(logfid,' mean = %5.1f A %s, SD = %5.1f A %s',rmean,exp_rmean,rstd,exp_rstd);
+            if ~isempty(emd)
+                fprintf(logfid,' earth mover''s distance = %6.3f\n',emd);
+            end
+            fprintf(logfid,' mean = %5.1f A %s, SD = %5.1f A %s\n',rmean,exp_rmean,rstd,exp_rstd);
             % save the data
             fprintf(logfid,' CSV columns: %s\n',column_string);
             datname = sprintf('ddr_fit_%s_%s.csv',site1,site2);
@@ -1821,6 +1841,10 @@ if save_csv
     overlap = overlap^(1/nr);
     if ddr
         fprintf(logfid,'\nOverlap deficiency: %6.3f\n',1-overlap);
+    end
+    if emd_number
+        fprintf(logfid,'\nMean earth mover''s distance: %6.3f\n',emd_sum/emd_number);
+        fprintf(1,'\nMean earth mover''s distance: %6.3f\n',emd_sum/emd_number);
     end
     for kr = 1:nr_sas
         if fit_task.sas_valid(kr)
@@ -1891,9 +1915,18 @@ if plot_result
             h = figure; clf; hold on
             overlap_G = [];
             overlap_E = [];
+            emd = [];
             all_distr_ensemble = fit_task.ddr(kr).distr(fit_task.remaining_conformers,:);
             if ~isempty(fit_task.ddr(kr).exp_distr)
                 overlap_E = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).exp_distr]));
+                % Normalize the vectors to probabilities (if necessary)
+                P = fit_task.ddr(kr).fit_distr / sum(fit_task.ddr(kr).fit_distr);
+                Q = fit_task.ddr(kr).exp_distr / sum(fit_task.ddr(kr).exp_distr);
+                % Compute cumulative distributions
+                cum_P = cumsum(P);
+                cum_Q = cumsum(Q);
+                % Calculate EMD as the sum of absolute differences
+                emd = dr*sum(abs(cum_P - cum_Q));
                 all_overlap = zeros(1,opt.overlap_trials);
                 for trial = 1:opt.overlap_trials
                     mixer = rand(size(fit_task.ddr(kr).exp_distr));
@@ -1936,17 +1969,23 @@ if plot_result
             site1 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site1{fit_task.ddr(kr).assignment(2)};
             site2 = restraints.ddr(fit_task.ddr(kr).assignment(1)).site2{fit_task.ddr(kr).assignment(2)};
             title_str = sprintf('%s-%s Overlap:',site1,site2);
-            if ~isempty(overlap_E)
-                title_str = sprintf('%s %6.3f +/- %6.3f',title_str,overlap_E,CI95_overlap);
-            elseif ~isempty(overlap_G)
-                title_str = sprintf('%s (Gauss) %6.3f',title_str,overlap_G);
+            if opt.emd
+                if ~isempty(emd)
+                    title_str = sprintf('%s EMD %6.2f %c',title_str,emd,char(197));
+                end
             else
-                title_str = sprintf('%s unknown',title_string);
+                if ~isempty(overlap_E)
+                    title_str = sprintf('%s %6.3f +/- %6.3f',title_str,overlap_E,CI95_overlap);
+                elseif ~isempty(overlap_G)
+                    title_str = sprintf('%s (Gauss) %6.3f',title_str,overlap_G);
+                else
+                    title_str = sprintf('%s unknown',title_string);
+                end
             end
             title(title_str);
             xlabel('Distance (Angstroem)');
             ylabel('Probability density');
-            set(gca,'FontSize',14);
+            set(gca,'FontSize',12);
             legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
                 figure_title = sprintf('overlap_%s-%s',site1,site2);
@@ -2036,22 +2075,24 @@ if plot_result
                 if ~pre_parameters(kr).fit_rates && maxbar > 1
                     maxbar = 1;
                 end
+                exp_data = fit_task.pre(kft).exp_data(1);
+                fit_data = fit_task.pre(kft).fit_data;
                 fom_pre_current = fom_pre_current + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
                 fom_pre = fom_pre + ((fit_task.pre(kft).exp_data(1)-fit_task.pre(kft).fit_data)/pre_std)^2;
                 plot([kx,kx],[minbar,maxbar],'Color',[0.5,0.5,0.5],'LineWidth',1);
-                h1 = plot(kx,fit_task.pre(kft).exp_data(1),'k.','MarkerSize',14);
-                h2 = plot(kx,fit_task.pre(kft).fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
-                if max_exp < fit_task.pre(kft).exp_data(1)
-                    max_exp = fit_task.pre(kft).exp_data(1);
+                h1 = plot(kx,exp_data,'k.','MarkerSize',14);
+                h2 = plot(kx,fit_data,'o','Color',[0.7,0,0],'MarkerSize',8);
+                if max_exp < exp_data
+                    max_exp = exp_data;
                 end
-                if max_fit < fit_task.pre(kft).fit_data
-                    max_fit = fit_task.pre(kft).fit_data;
+                if max_fit < fit_data
+                    max_fit = fit_data;
                 end
-                if min_exp > fit_task.pre(kft).exp_data(1)
-                    min_exp = fit_task.pre(kft).exp_data(1);
+                if min_exp > exp_data
+                    min_exp = exp_data;
                 end
-                if min_fit > fit_task.pre(kft).fit_data
-                    min_fit = fit_task.pre(kft).fit_data;
+                if min_fit > fit_data
+                    min_fit = fit_data;
                 end
             end
             fom_pre_current = fom_pre_current/kx;
@@ -2059,7 +2100,7 @@ if plot_result
             xlabel('Residue');
             set(gca,'FontSize',14);
             if pre_parameters(kr).fit_rates
-                ylabel('Gamma_2 [s^{-1}]');
+                ylabel('\Gamma_2 [s^{-1}]');
                 axis([1,kx,min([min_exp,min_fit]),max([max_exp,max_fit])]);
             else
                 ylabel('I_{para}/I_{dia}');
@@ -2117,11 +2158,16 @@ chi2 = sum(((curve-sc*sim)./errors).^2)/(m-1);
 % sc = sum(curve.*sim)/sum(sim.*sim);
 % chi2 = sum(((curve-sc*sim)./errors).^2)/(length(curve)-1);
 
-function fom = sim_multi_ddr(v,fit)
+function fom = sim_multi_ddr(v,fit,opt)
 
-fom = 1;
+if opt.emd
+    fom = 0;
+else
+    fom = 1;
+end
 for k = 1:length(fit)
     data = fit{k};
+    dr = data(2,1) - data(1,1);
     restraint = data(:,2);
     [~,n] = size(data);
     basis = data(:,3:n);
@@ -2129,11 +2175,23 @@ for k = 1:length(fit)
     sim = basis*coeff';
     sim = sim/sum(sim);
     restraint = restraint/sum(restraint);
-    overlap = sum(min([restraint';sim']));
-    fom = fom * overlap;
+    if opt.emd
+        % Compute cumulative distributions
+        cum_P = cumsum(sim);
+        cum_Q = cumsum(restraint);
+        % Calculate EMD as the sum of absolute differences
+        emd = dr*sum(abs(cum_P - cum_Q));
+        fom = fom + emd;
+    else
+        overlap = sum(min([restraint';sim']));
+        fom = fom * overlap;
+    end
 end
-
-fom = 1 - fom^(1/length(fit));
+if opt.emd
+    fom = fom/length(fit);
+else
+    fom = 1 - fom^(1/length(fit));
+end
 
 function fom = sim_multi_sas(v,fit)
 
@@ -2210,3 +2268,5 @@ for k = 1:length(delimited)-1
     end
 end
 numbers = numbers(1:rpoi);
+
+

@@ -42,6 +42,10 @@ for c = 1:length(entity.populations)
     else
         argout = get_conformer(entity,'coor',c);
         atom_indices = argout{1}.indices;
+        if isempty(atom_indices) && length(entity.populations) == 1
+            [na,~] = size(entity.xyz);
+            atom_indices = 1:na;
+        end
     end
     coor = entity.xyz(atom_indices,:);
     elements = entity.elements(atom_indices);
@@ -64,6 +68,10 @@ for c = 1:length(entity.populations)
     if ~exist('selection','var') || isempty(selection)
         argout = get_conformer(entity,'coor',c);
         atom_indices = argout{1}.indices;
+        if isempty(atom_indices) && length(entity.populations) == 1
+            [na,~] = size(entity.xyz);
+            atom_indices = 1:na;
+        end
     end
     % make the transformation
     xyz = entity.xyz(atom_indices,:);

@@ -1,4 +1,4 @@
-function [elDDT,all_lDDT,lEAU] = lDDT(entity,rentity,options)
+function [elDDT,all_lDDT,lEAU,lCI95] = lDDT(entity,rentity,options)
 %
 % LDDT Compute local distance difference test (lDDT) for an ensemble
 %               structure with respect to a reference structure
@@ -56,6 +56,12 @@ if exist('options','var')
         mk_eau = false;
         lEAU = [];
     end
+    if isfield(options,'CI95') && ~isempty(options.CI95)
+        mk_CI95 = true;
+    else
+        mk_CI95 = false;
+        lCI95 = [];
+    end
 end
 
 if R0 < 4 % include at least direct neighbors to avoid division by zero
@@ -83,6 +89,9 @@ ref_D = coor2dmat(coor);
 all_lDDT = zeros(length(entity.populations),residues);
 if mk_eau
     lEAU = zeros(1,length(residues));
+end
+if mk_CI95
+    lCI95 = zeros(1,length(residues));
 end
 
 % determine the lDDT vectors for all conformers
@@ -119,6 +128,9 @@ for c = 1:length(entity.populations)
         clDDT(res) = mean(fractions);
         if mk_eau
             lEAU(res) = mean(options.eau(res,indices)); %#ok<AGROW> 
+        end
+        if mk_CI95
+            lCI95(res) = mean(options.CI95(res,indices)); %#ok<AGROW> 
         end
     end 
     all_lDDT(c,:) = clDDT;

@@ -121,6 +121,16 @@ if ~isfield(options,'order')
     options.order = [];
 end
 
+if ~isfield(options,'stripH') || isempty(options.stripH)
+    options.stripH = false;
+end
+
+
+if ~isfield(options,'stripOXT') || isempty(options.stripOXT)
+    options.stripOXT = false;
+end
+
+
 % apply coordinate offset
 [na,~] = size(entity.xyz);
 entity.xyz = entity.xyz + repmat(options.dxyz,na,1);
@@ -287,6 +297,9 @@ for kconf = 1:length(conformer_order)
                             if isstrprop(atom(1),'upper') && isfield(entity.(chain).(residue).(atom),'index') % these are atom fields
                                 indices(3) =  entity.(chain).(residue).(atom).index;
                                 atname = atom;
+                                if options.stripH && atname(1) == 'H'
+                                    continue
+                                end
                                 if length(atname) > 2 && strcmp(atname(1:2),'Z_')
                                     atname = atname(3:end);
                                 end
@@ -363,6 +376,12 @@ for kconf = 1:length(conformer_order)
                                 if isstrprop(atom(1),'upper') % these are atom fields
                                     indices(3) =  entity.(chain).(residue).(atom).index;
                                     atname = atom;
+                                    if options.stripH && atname(1) == 'H'
+                                        continue
+                                    end
+                                    if options.stripOXT && strcmpi(atname,'OXT')
+                                        continue
+                                    end
                                     if atname(end) == '_'
                                         atname(end) = '''';
                                     end
@@ -412,6 +431,9 @@ for kconf = 1:length(conformer_order)
                                     indices(3) =  entity.(chain).(residue).(atom).index;
                                     if entity.(chain).(residue).(atom).selected
                                         atname = atom;
+                                        if options.stripH && atname(1) == 'H'
+                                            continue
+                                        end
                                         if atname(end) == '_'
                                             atname(end) = '''';
                                         end

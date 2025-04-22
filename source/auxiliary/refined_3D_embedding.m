@@ -14,19 +14,26 @@ end
 
 errcode = 0;
 
-try
-    [coor,stress] = mdscale(D,3,'Weights',kron(weights,weights'));
-    rmsd = sqrt(stress);
-catch
-    errcode = 1;
+if C <= 1000
     try
-        [coor,rmsd] = iterative_embedding(D);
+        [coor,stress] = mdscale(D,3,'Weights',kron(weights,weights'));
+        rmsd = sqrt(stress);
     catch
-        errcode = 2;
-        coor = cmdscale(D,3);
-        D_check = squareform(pdist(coor));
-        rmsd = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
+        errcode = 1;
+        try
+            [coor,rmsd] = iterative_embedding(D);
+        catch
+            errcode = 2;
+            coor = cmdscale(D,3);
+            D_check = squareform(pdist(coor));
+            rmsd = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
+        end
     end
+else
+    errcode = 2;
+    coor = cmdscale(D,3);
+    D_check = squareform(pdist(coor));
+    rmsd = sqrt(2*sum(sum(triu(D_check-D).^2))/(C*(C-1)));
 end
 
 centred = true;

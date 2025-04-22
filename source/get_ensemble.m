@@ -30,10 +30,17 @@ function [entity,exceptions] = get_ensemble(fname,name)
 
 % initialize empty outputs
 entity = [];
+my_dir = pwd;
 
 [all_files,pop,exceptions] = rd_ensemble_definition(fname);
 
+[fpath,~] = fileparts(fname);
+if ~isempty(fpath)
+    cd(fpath);
+end
+
 if isempty(pop)
+    cd(my_dir);
     return
 end
 
@@ -44,6 +51,7 @@ end
 [entity,exceptions] = entity_from_filelist(filenames);
 
 if ~isempty(exceptions) && ~isempty(exceptions{1})
+    cd(my_dir);
     return
 end
 
@@ -54,3 +62,5 @@ if exist('name','var')
 elseif isempty(entity.name)
     entity.name = 'MMMx';
 end
+
+cd(my_dir);

@@ -397,6 +397,9 @@ for d = 1:length(control.directives)
             for kr = 1:nr
                 restraints.pre(pre_poi).residue{kr} = control.directives(d).block{kr,1};
                 restraints.pre(pre_poi).data(kr,1) = str2double(control.directives(d).block{kr,2});
+                if restraints.pre(pre_poi).data(kr,1) >= 170
+                    error('Too large PRE rate at site %s residue %s. Exiting',restraints.pre(pre_poi).site,restraints.pre(pre_poi).residue{kr});
+                end
                 if args > 2
                     restraints.pre(pre_poi).data(kr,2) = str2double(control.directives(d).block{kr,3});
                 else
@@ -1737,8 +1740,22 @@ fit_task.loss_of_merit = loss_of_merit;
 
 % save fit task and restraints
 
-save([outname '.mat'],'restraints','fit_task','exceptions');
+convergence.ddr = [];
+convergence.sas = [];
+convergence.pre = [];
+if exist('all_fom_ddr','var') && ~isempty(all_fom_ddr)
+    convergence.ddr = all_fom_ddr;
+end
+if exist('all_chi2_sas','var') && ~isempty(all_chi2_sas)
+    convergence.sas = all_chi2_sas;
+end
+if exist('all_rmsd_pre','var') && ~isempty(all_rmsd_pre)
+    convergence.pre = all_rmsd_pre;
+end
+save([outname '.mat'],'restraints','fit_task','exceptions','convergence');
 
+[fpath,bname,~] = fileparts(outname);
+bname = sprintf('%s%c%s',fpath,filesep,bname);
 % save fit results into CSV files if requested
 if save_csv
     dr = 1/(fit_task.r_axis(2) - fit_task.r_axis(1));
@@ -1766,7 +1783,7 @@ if save_csv
                 cum_P = cumsum(P);
                 cum_Q = cumsum(Q);
                 % Calculate EMD as the sum of absolute differences
-                emd = dr*sum(abs(cum_P - cum_Q));
+                emd = sum(abs(cum_P - cum_Q))/dr;
                 emd_number = emd_number + 1;
                 emd_sum = emd_sum + emd;
                 all_overlap = zeros(1,opt.overlap_trials);
@@ -1832,7 +1849,7 @@ if save_csv
             fprintf(logfid,' mean = %5.1f A %s, SD = %5.1f A %s\n',rmean,exp_rmean,rstd,exp_rstd);
             % save the data
             fprintf(logfid,' CSV columns: %s\n',column_string);
-            datname = sprintf('ddr_fit_%s_%s.csv',site1,site2);
+            datname = sprintf('%s_ddr_fit_%s_%s.csv',bname,site1,site2);
             description = split(column_string,',');
             put_csv(datname,data,description');
 %            writematrix(data,datname);
@@ -1854,7 +1871,7 @@ if save_csv
             data(:,4) = fitted_curve;
             data = data(:,1:4);
             % save the data
-            datname = sprintf('sas_fit_%s.csv',datafile);
+            datname = sprintf('%s_sas_fit_%s.csv',bname,datafile);
             description = {'q' 'experimental' 'error' 'fit'};
             put_csv(datname,data,description);
 %            writematrix(data,datname);
@@ -1870,19 +1887,19 @@ if save_csv
             for nr_pre = range(1):range(2)
                 kft = kft + 1;
                 kx = kx + 1;
-                coding{kft} = fit_task.pre(kft).residue;
-                data(kft,1) = nr_pre;
-                data(kft,2:3) = fit_task.pre(kft).exp_data(1:2);
-                data(kft,4) = fit_task.pre(kft).fit_data;
+                coding{kx} = fit_task.pre(kft).residue;
+                data(kx,1) = nr_pre;
+                data(kx,2:3) = fit_task.pre(kft).exp_data(1:2);
+                data(kx,4) = fit_task.pre(kft).fit_data;
             end
-            data = data(1:kft,:);
-            datname = sprintf('PRE_fit_%s.csv',restraints.pre(kr).site);
+            data = data(1:kx,:);
+            datname = sprintf('%s_PRE_fit_%s.csv',bname,restraints.pre(kr).site);
             description = {'residue' 'experimental' 'error' 'fit'};
             put_csv(datname,data,description);
             % writematrix(data,datname);
-            codename = sprintf('PRE_residues_%s.csv',restraints.pre(kr).site);
+            codename = sprintf('%s_PRE_residues_%s.csv',bname,restraints.pre(kr).site);
             fid = fopen(codename,'wt');
-            for nr_pre = 1:kft
+            for nr_pre = 1:kx
                 fprintf(fid,'%i,%s\n',nr_pre,coding{nr_pre});
             end
             fclose(fid);
@@ -1900,7 +1917,7 @@ if save_csv
             data = [fit_task.deer(kr).exp_time',fit_task.deer(kr).exp_deer',deer_fit'];
             site1 = restraints.deer(fit_task.deer(kr).assignment(1)).site1{fit_task.deer(kr).assignment(2)};
             site2 = restraints.deer(fit_task.deer(kr).assignment(1)).site2{fit_task.deer(kr).assignment(2)};
-            datname = sprintf('DEER_fit_%s_%s.csv',site1,site2);
+            datname = sprintf('%s_DEER_fit_%s_%s.csv',bname,site1,site2);
             description = {'time [microseconds]' 'experimental' 'fit'};
             put_csv(datname,data,description);
         end
@@ -1988,7 +2005,7 @@ if plot_result
             set(gca,'FontSize',12);
             legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
-                figure_title = sprintf('overlap_%s-%s',site1,site2);
+                figure_title = sprintf('%s_overlap_%s-%s',bname,site1,site2);
                 save_figure(h,figure_title,figure_format);
             end
         end
@@ -2033,7 +2050,7 @@ if plot_result
             ylabel('log(I(q))');
             set(gca,'FontSize',14);
             if save_figures
-                figure_title = sprintf('SAS_log_log_fit_%s',datafile);
+                figure_title = sprintf('%s_SAS_log_log_fit_%s',banem,datafile);
                 save_figure(h,figure_title,figure_format);
             end
             h = figure; clf; hold on
@@ -2045,7 +2062,7 @@ if plot_result
             set(gca,'FontSize',14);
             legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
-                figure_title = sprintf('SAS_log_fit_residual_%s',datafile);
+                figure_title = sprintf('%s_SAS_log_fit_residual_%s',bname,datafile);
                 save_figure(h,figure_title,figure_format);
             end
         end
@@ -2108,7 +2125,7 @@ if plot_result
             end
             legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
-                figure_title = sprintf('PRE_fit_%s',restraints.pre(kr).site);
+                figure_title = sprintf('%s_PRE_fit_%s',bname,restraints.pre(kr).site);
                 save_figure(h,figure_title,figure_format);
             end
         end
@@ -2136,7 +2153,7 @@ if plot_result
             axis tight
             legend([h1,h2],'experiment','backcalculated','Location','best');
             if save_figures
-                figure_title = sprintf('DEER_time_domain_fit_%s_s',site1,site2);
+                figure_title = sprintf('%s_DEER_time_domain_fit_%s_%s',bname,site1,site2);
                 save_figure(h,figure_title,figure_format);
             end
         end

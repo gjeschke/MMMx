@@ -28,6 +28,8 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 %               .subensembles   integer, requests clustering to that number
 %                               of subsensembles, defaults to empty (no
 %                               clustering)
+%               .colors         colors assigned to the entities, defaults
+%                               to colors from the turbo color scale
 %
 % OUTPUT
 % coor          double (C,n) coordinates for C conformers in n-dimensional
@@ -60,6 +62,8 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 %                               requested
 %               .resolution     resolution in ACS [Å], root mean square of
 %                               neareast-neighbor distance
+%               .S              similarity matrix, for set of input
+%                               ensembles
 %               .subensembles   assignment of the conformers to
 %                               subensembles, empty if no clustering was
 %                               requested
@@ -100,6 +104,11 @@ if ~isfield(options,'graphics') || isempty(options.graphics)
     options.graphics = 'snake';
 end
 
+if ~isfield(options,'colors') || isempty(options.colors)
+    colors = turbo(length(entities)+2);
+    options.colors = colors(2:end-1,:);
+end
+
 description{1,1} = 'Conformer';
 description{1,2} = 'Weight';
 description{1,3} = 'x';
@@ -114,13 +123,28 @@ description{1,9} = 'Cluster type';
 [D,pop,all_Rg,assignment] = drms_matrix(entities,addresses);
 Rg = sqrt(sum(pop.*all_Rg.^2)); 
 
+populations = cell(length(entities),1);
+for ens = 1:length(entities)
+    entity = entities{ens};
+    populations{ens} = entity.populations;
+end
+
+measures.S = similarity_matrix(D,populations);
+
 [C,~] = size(D);
 conformer_order = 1:C;
 if options.sorting
     [D,indices] = acs_sorting(D);
+    if all_Rg(indices(1)) > all_Rg(indices(end))
+        indices = fliplr(indices);
+    end
     conformer_order = indices;
     pop = pop(indices);
-    plot_sorted_distance_matrix(D);
+	if max(assignment) > 1
+		plot_sorted_distance_matrix(D,assignment(conformer_order),options.colors);
+	else
+		plot_sorted_distance_matrix(D);
+	end
 else
     indices = [];
 end
@@ -153,7 +177,10 @@ else
     measures.subensembles = [];
     if isempty(indices)
         indices = ones(1,C);
-        colors = repmat([0,0.5,0.5],C,1);
+        colors = zeros(C,3);
+        for c = 1:C
+            colors(c,:) = options.colors(assignment(c),:);
+        end
     else
         colors = turbo(C);
     end
@@ -186,7 +213,11 @@ if ~isempty(options.visualization)
     if ~contains(vname,'.')
         vname = strcat(vname,'.mmm');
     end
-    mk_visualization_script(vname,entities,assignment,indices,options.graphics);
+    if options.sorting
+        mk_visualization_script(vname,entities,assignment,indices,options.graphics);
+    else
+        mk_visualization_script(vname,entities,assignment,assignment,options.graphics,options.colors);
+    end
 end
 
 D0 = D + 1e20*eye(C);
@@ -394,14 +425,16 @@ if length(range) == 1
     range(2) = range(1);
 end
 
-function convergence = get_convergence(D,weights)
+function convergence = get_convergence(D,weights,sorting)
 
 
 [C,~] = size(D);
 
-% randomize sequence of conformers
-sorting = rand(1,C);
-[~,sorting] = sort(sorting);
+if ~exist('sorting','var') || isempty(sorting)
+    % randomize sequence of conformers
+    sorting = rand(1,C);
+    [~,sorting] = sort(sorting);
+end
 D = D(sorting,sorting);
 weights = weights(sorting);
 
@@ -433,7 +466,7 @@ for c = 5:C
     convergence.maxmin(c) = max(min(D0));
 end
 
-function mk_visualization_script(fname,entities,assignment,indices,graphics)
+function mk_visualization_script(fname,entities,assignment,indices,graphics,colors)
 
 if isempty(indices)
     indices = 1:length(assignment);
@@ -460,7 +493,10 @@ for ke = 1:length(entities)
     poi = poi + length(entity.populations);
 end
 nc = nc(1:poi);
-cmap = turbo(max(indices)+2);
+if ~exist('colors','var') || isempty(colors)
+    colors = turbo(max(indices)+2);
+    colors = colors(2:end-1,:);
+end
 for kc = 1:length(indices)
     if clustered
         c = kc;
@@ -473,7 +509,7 @@ for kc = 1:length(indices)
     entity = entities{ke};
     pop = entity.populations(n);
     maxpop = max(entity.populations);
-    col = cmap(indices(kc)+1,:);
+    col = colors(indices(kc),:);
     switch graphics
         case 'snake'
             fprintf(fid,'show [%s]{%i} coil %6.3f\n',entity.name,n,sqrt(pop/maxpop));
@@ -486,12 +522,9 @@ for kc = 1:length(indices)
 end
 fclose(fid);
 
-function plot_sorted_distance_matrix(D)
+function plot_sorted_distance_matrix(D,assignment,colors)
 
-figure;
-[n1,n2] = size(D);
-plot(1,1,'k.');
-plot(n1,n2,'k.');
+figure; hold on;
 
 image(D,'CDataMapping','scaled');
 
@@ -503,4 +536,19 @@ axis tight
 xlabel('Conformer');
 ylabel('Conformer');
 axis equal
+
+if exist('assignment','var') && ~isempty(assignment)
+    if ~exist('colors','var') || isempty(colors)
+ 	   colors = turbo(max(assignment)+2);
+       colors = colors(2:end-1,:);
+    end
+    msize = round(1000/length(assignment));
+    if msize < 8
+        msize = 8;
+    end
+    for c = 1:length(assignment)
+ 	   plot(c,-round(msize/20),'.','MarkerSize',msize,'Color',colors(assignment(c),:));
+ 	   plot(-round(msize/20),c,'.','MarkerSize',msize,'Color',colors(assignment(c),:));
+    end
+end
 

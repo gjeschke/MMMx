@@ -124,8 +124,6 @@ width1 = sqrt(sum(sum(var11)));
 width2 = sqrt(sum(sum(var22)));
 clusters.similarity = sqrt((width1*width2)/sum(sum(var12)));
 
-[~,indices] = acs_sorting(D);
-
 [C,~] = size(D);
 
 output_data = zeros(C,9);
@@ -133,11 +131,6 @@ output_data(:,1) = 1:C;
 output_data(:,2) = populations;
 output_data(1:clusters.C1,7) = 1; 
 output_data(clusters.C1+1:clusters.C1+clusters.C2,7) = 2; 
-
-sorting = output_data(indices,7);
-
-figure; clf; hold on;
-plot(1:C,sorting);
 
 xyz = refined_3D_embedding(D,Rg,populations);
 output_data(:,3:5) = xyz; 

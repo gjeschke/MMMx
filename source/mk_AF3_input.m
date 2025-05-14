@@ -15,6 +15,9 @@ function name = mk_AF3_input(UniProtID,nseeds,options)
 %               .copies     number of protomers in a multimer, default: 1
 %               .RNA        an RNA sequence
 %               .RNA_copies number of copies of the RNA, defaults to 1
+%               .ligands    struct with a list of ligands with fields
+%                           .ID     identifier, suchs as 'ATP'
+%                           .copies number of copies
 %               .sequence   sequence in single-letter format, used only if
 %                           UniProtID is empty
 %               .name       
@@ -68,11 +71,30 @@ end
 sequence{1} = seq;
 type{1} = 'proteinChain'; % can also be rnaSequence
 copies{1} = options.copies;
+bas = 1;
 
 if isfield(options,'RNA') && ~isempty(options.RNA)
     sequence{2} = options.RNA;
     type{2} = 'rnaSequence';
     copies{2} = options.RNA_copies;
+    bas = bas + 1;
+end
+
+if isfield(options,'ligands') && ~isempty(options.ligands)
+    for k = 1:length(options.ligands)
+        sequence{bas+k} = options.ligands(k).ID; %#ok<AGROW> 
+        type{bas+k} = 'ligand'; %#ok<AGROW> 
+        copies{bas+k} = options.ligands(k).copies; %#ok<AGROW> 
+    end
+    bas = bas + length(options.ligands);
+end
+
+if isfield(options,'ions') && ~isempty(options.ions)
+    for k = 1:length(options.ions)
+        sequence{bas+k} = options.ions(k).ID; %#ok<AGROW> 
+        type{bas+k} = 'ion'; %#ok<AGROW> 
+        copies{bas+k} = options.ions(k).copies; %#ok<AGROW> 
+    end
 end
 
 for s = 1:nseeds
@@ -87,8 +109,15 @@ for s = 1:nseeds
     for seq = 1:length(sequence)
         fprintf(fid,'   {\n');
         fprintf(fid,'    "%s": {\n',type{seq});
-        fprintf(fid,'    "sequence":\n');
-        fprintf(fid,'    "%s",\n',sequence{seq});
+        switch type{seq}
+            case {'proteinChain','rnaSequence'}
+                fprintf(fid,'    "sequence":\n');
+                fprintf(fid,'    "%s",\n',sequence{seq});
+            case {'ligand'}
+                fprintf(fid,'    "ligand": "%s",\n',sequence{seq});
+            case {'ion'}
+                fprintf(fid,'    "ion": "%s",\n',sequence{seq});
+        end
         fprintf(fid,'    "count": %i\n',copies{seq});
         fprintf(fid,'   }\n');
         fprintf(fid,'  }');
@@ -97,7 +126,9 @@ for s = 1:nseeds
         end
         fprintf(fid,'\n');
     end
-    fprintf(fid,' ]\n');
+    fprintf(fid,' ],\n');
+    fprintf(fid,'"dialect": "alphafoldserver",\n');
+    fprintf(fid,'"version": 1\n');
     fprintf(fid,'}\n');
     fprintf(fid,']\n');
     fclose(fid);

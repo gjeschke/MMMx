@@ -1263,11 +1263,17 @@ for c = 1:cmd_poi
                             figname = sprintf('residue_pair_correlation_normalized_%s_%s.%s',basname,part,figure_format);
                             saveas(h,figname);
                         end
+                        h = plot_minmat(correlations.(part).pair_axis,correlations.(part).minmat);
+                        if save_figures
+                            figname = sprintf('minimum_distances_%s_%s.%s',basname,part,figure_format);
+                            saveas(h,figname);
+                        end
                         if cmd.options.matlab
                             pair_corr = correlations.(part).pair_corr;
                             dmat = correlations.(part).dmat;
+                            minmat = correlations.(part).minmat;
                             datname = sprintf('residue_pair_correlation_%s_%s.mat',basname,part);
-                            save(datname,'pair_corr','dmat');
+                            save(datname,'pair_corr','dmat','minmat');
                         end
                         if cmd.options.csv
                             pair_corr = correlations.(part).pair_corr;
@@ -1276,6 +1282,8 @@ for c = 1:cmd_poi
                             writematrix(pair_corr,datname);
                             datname = sprintf('distance_matrix_%s_%s.csv',basname,part);
                             writematrix(dmat,datname);
+                            datname = sprintf('minimum_distances_%s_%s.csv',basname,part);
+                            writematrix(minmat,datname);
                         end
                     end
                     if cmd.options.compactness
@@ -1674,6 +1682,43 @@ end
 YTickLabel = YTickLabel(1:poi);
 curr_axis.YTickLabel = YTickLabel;
 colorbar;
+axis tight
+xlabel('Residue number');
+ylabel('Residue number');
+axis equal
+
+function h = plot_minmat(pair_axis,minmat)
+
+h = figure;
+
+[n1,n2] = size(minmat);
+image(minmat,'CDataMapping','scaled');
+title('Minimum C\alpha-C\alpha distances in ensemble');
+
+curr_axis = gca;
+curr_axis.YDir = 'normal';
+step =floor(n1/5);
+curr_axis.XTick = 1:step:n2;
+curr_axis.YTick = 1:step:n1;
+XTickLabel = cell(1,10);
+poi = 0;
+for k = 1:step:n2
+    poi = poi + 1;
+    XTickLabel{poi} = pair_axis{k};
+end
+XTickLabel = XTickLabel(1:poi);
+curr_axis.XTickLabel = XTickLabel;
+
+YTickLabel = cell(1,10);
+poi = 0;
+for k = 1:step:n2
+    poi = poi + 1;
+    YTickLabel{poi} = pair_axis{k};
+end
+YTickLabel = YTickLabel(1:poi);
+curr_axis.YTickLabel = YTickLabel;
+c = colorbar;
+c.Label.String = 'Minimum distance [Å]';
 axis tight
 xlabel('Residue number');
 ylabel('Residue number');

@@ -1755,7 +1755,9 @@ end
 save([outname '.mat'],'restraints','fit_task','exceptions','convergence');
 
 [fpath,bname,~] = fileparts(outname);
-bname = sprintf('%s%c%s',fpath,filesep,bname);
+if ~isempty(fpath)
+    bname = sprintf('%s%c%s',fpath,filesep,bname);
+end
 % save fit results into CSV files if requested
 if save_csv
     dr = 1/(fit_task.r_axis(2) - fit_task.r_axis(1));
@@ -1806,6 +1808,22 @@ if save_csv
                 expdistr = expdistr/sum(expdistr);
                 rmean = sum(fit_task.r_axis.*expdistr);
                 rstd = sqrt(sum(expdistr.*(fit_task.r_axis-rmean).^2));
+                exp_rmean = sprintf('(exp. %5.1f A)',rmean);
+                exp_rstd = sprintf('(exp. %5.1f A)',rstd);
+            elseif ~isempty(fit_task.ddr(kr).sim_distr)
+                overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
+                % Normalize the vectors to probabilities (if necessary)
+                P = fit_task.ddr(kr).fit_distr / sum(fit_task.ddr(kr).fit_distr);
+                Q = fit_task.ddr(kr).sim_distr / sum(fit_task.ddr(kr).sim_distr);
+                % Compute cumulative distributions
+                cum_P = cumsum(P);
+                cum_Q = cumsum(Q);
+                % Calculate EMD as the sum of absolute differences
+                emd = sum(abs(cum_P - cum_Q))/dr;
+                emd_number = emd_number + 1;
+                emd_sum = emd_sum + emd;
+                rmean = sum(fit_task.r_axis.*Q);
+                rstd = sqrt(sum(Q.*(fit_task.r_axis-rmean).^2));
                 exp_rmean = sprintf('(exp. %5.1f A)',rmean);
                 exp_rstd = sprintf('(exp. %5.1f A)',rstd);
             end
@@ -1943,7 +1961,7 @@ if plot_result
                 cum_P = cumsum(P);
                 cum_Q = cumsum(Q);
                 % Calculate EMD as the sum of absolute differences
-                emd = dr*sum(abs(cum_P - cum_Q));
+                emd = sum(abs(cum_P - cum_Q))/dr;
                 all_overlap = zeros(1,opt.overlap_trials);
                 for trial = 1:opt.overlap_trials
                     mixer = rand(size(fit_task.ddr(kr).exp_distr));
@@ -1971,8 +1989,16 @@ if plot_result
             end
             if ~isempty(fit_task.ddr(kr).sim_distr) && isempty(fit_task.ddr(kr).exp_distr)
                 maxamp = max(dr*fit_task.ddr(kr).sim_distr);
-                plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0],'LineWidth',2);
+                h1 = plot(fit_task.r_axis,dr*fit_task.ddr(kr).sim_distr,'Color',[0,0.6,0],'LineWidth',2);
                 overlap_G = sum(min([fit_task.ddr(kr).fit_distr;fit_task.ddr(kr).sim_distr]));
+                % Normalize the vectors to probabilities (if necessary)
+                P = fit_task.ddr(kr).fit_distr / sum(fit_task.ddr(kr).fit_distr);
+                Q = fit_task.ddr(kr).sim_distr / sum(fit_task.ddr(kr).sim_distr);
+                % Compute cumulative distributions
+                cum_P = cumsum(P);
+                cum_Q = cumsum(Q);
+                % Calculate EMD as the sum of absolute differences
+                emd = sum(abs(cum_P - cum_Q))/dr;
             end
             h2 = plot(fit_task.r_axis,dr*fit_task.ddr(kr).fit_distr,'Color',[0.6,0,0],'LineWidth',2);
             if isfield(fit_task.ddr(kr),'rax_exp')

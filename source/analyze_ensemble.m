@@ -89,8 +89,9 @@ function [measures,correlations] = analyze_ensemble(backbones,pop,options)
 %               .pair_corr  double (N,N) pair correlation matrix 
 %                           (standard deviation of pair distance)
 %               .dmat       double (N,N) mean distance matrix
-%               .compact    double(N,N) compactness matrix
-%               .proximity  double(N,N) proximity matrix
+%               .minmat     double (N,N) matrix of minimum distances
+%               .compact    double (N,N) compactness matrix
+%               .proximity  double (N,N) proximity matrix
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -275,10 +276,11 @@ for kc = 1:length(chains)
     end
     % pair correlations
     if options.pair_corr
-        [corr_isotropic,corr_axis,dmat] = get_correlations(backbones,pop);
+        [corr_isotropic,corr_axis,dmat,minmat] = get_correlations(backbones,pop);
         correlations.(chains{kc}).pair_corr = corr_isotropic;
         correlations.(chains{kc}).pair_axis = corr_axis;
         correlations.(chains{kc}).dmat = dmat;
+        correlations.(chains{kc}).minmat = minmat;
         [nres,~] = size(corr_isotropic);
         pcorr = zeros(nres*(nres-1)/2,1);
         het = zeros(nres-6,1);
@@ -383,7 +385,7 @@ for c = 1:C
 end
 density = sqrt(mean(msq));
 
-function [corr_isotropic,corr_axis,dmat] = get_correlations(backbones,pop)
+function [corr_isotropic,corr_axis,dmat,minmat] = get_correlations(backbones,pop)
 
 chains = fieldnames(backbones);
 nch = length(chains);
@@ -397,6 +399,7 @@ end
 resnum = sum(resnums);
 corr_isotropic = zeros(resnum);
 dmat = zeros(resnum);
+minmat = zeros(resnum);
 corr_axis = cell(1,resnum);
 poi1 = 0;
 dmats = cell(1,C);
@@ -433,6 +436,8 @@ for r1 = 1:resnum
             rvec(c) = dmats{c}(r1,r2);
         end
         rmean = mean(rvec);
+        minmat(r1,r2) = min(rvec);
+        minmat(r2,r1) = minmat(r1,r2);
         rvec = rvec - rmean;
         corr_isotropic(r1,r2) = sqrt(sum(pop.*rvec.^2));
         corr_isotropic(r2,r1) = corr_isotropic(r1,r2);

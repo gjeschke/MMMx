@@ -137,6 +137,8 @@ if options.sorting
     [D,indices] = acs_sorting(D);
     if all_Rg(indices(1)) > all_Rg(indices(end))
         indices = fliplr(indices);
+        D = rot90(D,2);
+    else
     end
     conformer_order = indices;
     pop = pop(indices);
@@ -214,7 +216,15 @@ if ~isempty(options.visualization)
         vname = strcat(vname,'.mmm');
     end
     if options.sorting
-        mk_visualization_script(vname,entities,assignment,indices,options.graphics);
+        if isempty(options.subensembles)
+            mk_visualization_script(vname,entities,assignment,indices,options.graphics);
+        else
+            subensembles = zeros(1,length(measures.sorting));
+            for c = 1:length(measures.sorting)
+                subensembles(measures.sorting(c)) = measures.subensembles(c);
+            end
+            mk_visualization_script(vname,entities,assignment,subensembles,options.graphics);
+        end
     else
         mk_visualization_script(vname,entities,assignment,assignment,options.graphics,options.colors);
     end
@@ -509,6 +519,7 @@ for kc = 1:length(indices)
     entity = entities{ke};
     pop = entity.populations(n);
     maxpop = max(entity.populations);
+    maxdiff = max(maxpop-entity.populations); 
     col = colors(indices(kc),:);
     switch graphics
         case 'snake'
@@ -517,7 +528,9 @@ for kc = 1:length(indices)
         case 'ribbon'
             fprintf(fid,'show [%s]{%i} ribbon\n',entity.name,n);
             fprintf(fid,'color [%s]{%i} %6.3f %6.3f %6.3f\n',entity.name,n,col);
-            fprintf(fid,'transparency [%s]{%i} %6.3f\n',entity.name,n,sqrt(pop/maxpop));
+            if maxdiff > 0.001
+                fprintf(fid,'transparency [%s]{%i} %6.3f\n',entity.name,n,sqrt(pop/maxpop));
+            end
     end
 end
 fclose(fid);

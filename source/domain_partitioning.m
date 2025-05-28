@@ -1,20 +1,32 @@
-function entity = domain_partitioning(entity,options)
+function entity = domain_partitioning(entity,options,eau)
 %
-% DOMAIN_PARTITIONING   Partitions an AlphaFold entity into folded domains
+% DOMAIN_PARTITIONING   Partitions an ensemble entity into folded domains
 %                       and flexible linkers
 %
 %   entity = domain_partitioning(entity)
-%   Augments the entity, writes a rigid-body PDB file, and the frame of a
-%   RigiFlex modelling script
+%   Augments the entity, writes a rigid-body PDB file, and (optionally) 
+%   the frame of a RigiFlex modelling script
 %
-%   entity = domain_partitioning(entity,options)
+%   entity = domain_partitioning(entity,options,eau)
 %   Allows for control of partitioning and of output
 %
+%   WARNING:    this is currently implemented only for entities consisting
+%               of a single protein chain
+%
 % INPUT
-% entity        MMMx:atomic entity, must contain a predicted aligned error
-%               matrix in field .pae, as AlphaFold models do; the current
-%               version supports only single-chain entities
-% options       .rbfile     name of output rigid-body file, defaults to
+% entity        MMMx:atomic entity; the current version supports only
+%               single-chain entities
+% options       .eau        flag. if true, an ensemble aligned uncertainty 
+%                           matrix is generated and domain partitioning is 
+%                           performed on this EAU matrix
+%                           defaults to false if the entity contains an
+%                           AlphaFold PAE matrix
+%                           defaults to true, if an EAU matrix is provided
+%                           as an argument, this overrides the AF default
+%                           defaults to true, if the entity does not
+%                           contain a PAE matrix and has several
+%                           conformers
+%               .rbfile     name of output rigid-body file, defaults to
 %                           <entity.name>_rigid_bodies.pdb, if present but
 %                           empty, the rigid-body file is not written
 %               .script     name of output RigiFlex script, defaults to
@@ -46,6 +58,7 @@ function entity = domain_partitioning(entity,options)
 %               .label      spin label, defaults to 'mtsl'
 %               .termini    generate flex blocks for terminal sections,
 %                           defaults to true
+% eau           ensemble aligned uncertainty matrix
 %
 % OUTPUT
 % entity       entity structure in MMMx:atomic representation 
@@ -66,9 +79,7 @@ function entity = domain_partitioning(entity,options)
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
-% Copyright(c) 2023: Gunnar Jeschke
-
-% check whether image processing toolbox is available
+% Copyright(c) 2023-2025: Gunnar Jeschke
 
 cap = 31.75; % cap of AlphaFold2 PAE
 
@@ -152,17 +163,52 @@ if ~isfield(options,'termini') || isempty(options.termini)
     options.termini = true;
 end
 
-pairdist = (entity.pae + entity.pae')/2;
+if ~isfield(options,'eau')
+    if isfield(entity,'pae')
+        options.eau = false;
+    elseif length(entity.populations) > 1
+        options.eau = true;
+    end
+    if exist('eau','var')
+        options.eau = true;
+    end
+end
 
 h = figure; clf; hold on
-image(entity.pae,'CDataMapping','scaled');
+
+if options.eau
+    if ~isfield(entity,'eau')
+        if exist('eau','var')
+            entity.eau = eau;
+        else
+            entity = ensemble_aligned_uncertainty(entity);
+        end
+    end
+    pairdist = (entity.eau + entity.eau')/2;
+    atype = 'EAU';
+    image(entity.eau,'CDataMapping','scaled');
+else
+    pairdist = (entity.pae + entity.pae')/2;
+    atype = 'PAE';
+    image(entity.pae,'CDataMapping','scaled');
+end
+
+% analyze the first chain
+chains = fieldnames(entity);
+for c = 1:length(chains)
+    chain = chains{c};
+    if isstrprop(chain(1),'upper')
+        break
+    end
+end
+
 curr_axis = gca;
 set(curr_axis,'YDir','normal');
 colorbar;
 axis tight
 xlabel('Residue number');
 ylabel('Residue number');
-title(sprintf('PAE and domains for %s',entity.uniprotname),'Interpreter','none');
+title(sprintf('%s and domains for %s',atype,entity.name),'Interpreter','none');
 axis equal
 
 [n,~] = size(pairdist);
@@ -249,99 +295,8 @@ while max(extension) >= options.minsize
     if mean_uncert0 <= options.threshold
         dpoi = dpoi +1;
         domains(dpoi,:) = [dstart,dend];
-%         plot([dstart,dstart],[dstart,dend],'LineWidth',2,'Color',[0.8,.5,0]);
-%         plot([dend,dend],[dstart,dend],'LineWidth',2,'Color',[0.8,0.5,0]);
-%         plot([dstart,dend],[dstart,dstart],'LineWidth',2,'Color',[0.8,0.5,0]);
-%         plot([dstart,dend],[dend,dend],'LineWidth',2,'Color',[0.8,0.5,0]);
     end
 end
-
-
-
-% for k1 = 1:n-2*options.local
-%     for k2 = k1-options.local:k1+options.local
-%         if k2 >=1 && k2 <=n
-%             A(k1,k2) = 0;
-%             A(k2,k1) = 0;
-%         end
-%     end
-% end
-% 
-% 
-% % find diagonal blocks, based on F. Pedroche, M. Rebollo, C. Carrascosa and A. Palomares (2012)
-% % http://arxiv.org/abs/1206.5726
-% L = diag( sum(A,2) ) - A;
-% value = sum( triu(L) );
-% freq = find( value == 0 );
-% 
-% 
-% domains = zeros(length(freq),2);
-% variability = zeros(length(freq),1);
-% maxpae = zeros(length(freq),1);
-% dpoi = 0;
-% dstart = 1;
-% if length(freq) ==1
-%    mean_uncert = mean(mean(pairdist)); 
-%    if mean_uncert <= options.threshold
-%        dpoi = dpoi + 1;
-%        variability(dpoi) = mean_uncert;
-%        domains(dpoi,1) = dstart;
-%        domains(dpoi,2) = freq(1);
-%        maxpae(dpoi) =  max(max(pairdist(dstart:freq(1),dstart:freq(1))));
-%    end
-% else
-%     for k = 2:length(freq)
-%         if freq(k)-dstart >= options.minsize
-%             mean_uncert = mean(mean(pairdist(dstart:freq(k),dstart:freq(k))));
-%             if mean_uncert <= options.threshold
-%                 dpoi = dpoi + 1;
-%                 variability(dpoi) = mean_uncert;
-%                 domains(dpoi,1) = dstart;
-%                 domains(dpoi,2) = freq(k);
-%                 maxpae(dpoi) =  max(max(pairdist(dstart:freq(k),dstart:freq(k))));
-%             end
-%         end
-%         dstart = freq(k);
-%     end
-% end
-% 
-% % refine domain boundaries by sliding window approach
-% 
-% for dom = 1:dpoi
-%     dstart = domains(dom,1);
-%     dend = domains(dom,2);
-%     ka = dstart - 10;
-%     if ka < 1
-%         ka = 1;
-%     end
-%     ke = dstart + 10;
-%     if ke > n
-%         ke = n;
-%     end
-%     determ = zeros(1,ke-ka+1);
-%     for k = ka:ke
-%         determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
-%     end
-%     [~,k] = min(abs(determ - options.threshold));
-%     domains(dom,1) = ka+k-1;
-%     ka = dend - 10;
-%     if ka < 1
-%         ka = 1;
-%     end
-%     ke = dend + 10;
-%     if ke > n
-%         ke = n;
-%     end
-%     determ = zeros(1,ke-ka+1);
-%     for k = ka:ke
-%         determ(k-ka+1) = (mean(pairdist(k,dstart:dend))+mean(pairdist(dstart:dend,k)))/2;
-%     end
-%     [~,k] = min(abs(determ - options.threshold));
-%     domains(dom,2) = ka+k-1;
-% %     figure(333); clf;
-% %     plot(determ);
-% %     disp('Aber hallo!');
-% end
 
 % unify domains separated by too short linkers, if requested
 if options.minlink > 1
@@ -351,9 +306,6 @@ if options.minlink > 1
             test = max(max(pairdist(domains(k-1,1):domains(k,2),domains(k-1,1):domains(k,2))));
             if test <= options.unify
                 domains(cdpoi,2) = domains(k,2);
-                mean_uncert = mean(mean(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
-                variability(cdpoi) = mean_uncert;
-                maxpae(cdpoi) = max(max(pairdist(domains(cdpoi,1):domains(cdpoi,2),domains(cdpoi,1):domains(cdpoi,2))));
             elseif domains(k,1) - domains(k-1,2) < 3
                 domains(k,1) = domains(k,1) + 1;
                 domains(k-1,2) = domains(k-1,2) - 1;
@@ -409,7 +361,7 @@ else
         entity.class = 'RigiFlex';
     elseif max_terminal == 0
         entity.class = 'folded';
-    elseif max_terminal < options.minterminal
+    elseif max_terminal < options.minterm
         entity.class = 'short flexible terminus';
     else
         entity.class = 'long flexible terminus';
@@ -419,10 +371,14 @@ end
 
 entity.domains = domains(1:dpoi,:);
 
+if ~isfield(entity.(chain),'sequence')
+    entity = add_sequence_information(entity,chain);
+end
+
 if dpoi == 0
     lpoi = 1;
     linkers(1).range = [1,n];
-    linkers(1).sequence = entity.sequence;
+    linkers(1).sequence = entity.(chain).sequence;
     domains = [];
 else
     linkers(dpoi+1).range = [];
@@ -431,17 +387,17 @@ else
     if domains(1,1) > 1
         lpoi = lpoi + 1;
         linkers(lpoi).range = [1,domains(1,1)-1];
-        linkers(lpoi).sequence = entity.sequence(1:domains(1,1)-1);
+        linkers(lpoi).sequence = entity.(chain).sequence(1:domains(1,1)-1);
     end
     for k = 2:dpoi
         lpoi = lpoi + 1;
         linkers(lpoi).range = [domains(k-1,2)+1,domains(k,1)-1];
-        linkers(lpoi).sequence = entity.sequence(domains(k-1,2)+1:domains(k,1)-1);
+        linkers(lpoi).sequence = entity.(chain).sequence(domains(k-1,2)+1:domains(k,1)-1);
     end
     if domains(dpoi,2) < n
         lpoi = lpoi + 1;
         linkers(lpoi).range = [domains(dpoi,2)+1,n];
-        linkers(lpoi).sequence = entity.sequence(domains(dpoi,2)+1:n);
+        linkers(lpoi).sequence = entity.(chain).sequence(domains(dpoi,2)+1:n);
     end
 end
 entity.linkers = linkers(1:lpoi);

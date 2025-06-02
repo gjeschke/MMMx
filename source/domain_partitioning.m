@@ -37,6 +37,10 @@ function entity = domain_partitioning(entity,options,eau)
 %               .unify      maximum predicted aligned error for unifying
 %                           domains connected by short linkers, defaults to
 %                           15 Angstroem
+%               .interact   threshold for ratio between mean PAE/EAU over 
+%                           two domains compared to mean PAE/EAU of the
+%                           individual domains for combining them because
+%                           of strong interaction
 %               .minsize    minimum domain size, defaults to 50 residues
 %               .minlink    minimum linker length, defaults to 3 residues
 %               .minterm    minimum terminal section length, used only for
@@ -174,6 +178,10 @@ if ~isfield(options,'eau')
     end
 end
 
+if ~isfield(options,'interact') || isempty(options.interact)
+    options.interact = 1;
+end
+
 h = figure; clf; hold on
 
 if options.eau
@@ -214,6 +222,7 @@ axis equal
 [n,~] = size(pairdist);
 
 A = pairdist < options.threshold;
+pairdist0 = pairdist;
 
 extension = ones(1,n);
 for k1 = 2:n-1
@@ -298,6 +307,7 @@ while max(extension) >= options.minsize
     end
 end
 
+pairdist = pairdist0;
 % unify domains separated by too short linkers, if requested
 if options.minlink > 1
     cdpoi = 1;
@@ -313,6 +323,27 @@ if options.minlink > 1
             else
                 cdpoi = cdpoi + 1;
             end
+        else
+            cdpoi = cdpoi + 1;
+        end
+    end
+    dpoi = cdpoi;
+end
+
+% unify domains that are strongly interacting
+
+combine = true;
+while combine
+    combine = false;
+    cdpoi = 1;
+    for k = 2:dpoi
+        mpae1 = mean(pairdist(domains(k-1,1):domains(k-1,2),domains(k-1,1):domains(k-1,2)),"all");
+        mpae2 = mean(pairdist(domains(k,1):domains(k,2),domains(k,1):domains(k,2)),"all");
+        mpaec = mean(pairdist(domains(k-1,1):domains(k,2),domains(k-1,1):domains(k,2)),"all");
+        defn = (mpae1+mpae2)/(2*mpaec);
+        if defn > options.interact
+            combine = true;
+            domains(cdpoi,2) = domains(k,2);
         else
             cdpoi = cdpoi + 1;
         end

@@ -1,0 +1,17 @@
+# log
+!ensembleanalysis
+   figures pdf
+   addpdb p53_TAZ1.pdb p53_TAZ1
+   inertiaframe p53_TAZ1_IF p53_TAZ1
+   getens p53_TAZ1_IF.ens p53_TAZ1_IF
+   superimpose p53_TAZ1_si p53_TAZ1_IF
+   addpdb p53_TAZ2.pdb p53_TAZ2
+   inertiaframe p53_TAZ2_IF p53_TAZ2
+   getens p53_TAZ2_IF.ens p53_TAZ2_IF
+   superimpose p53_TAZ2_si p53_TAZ2_IF
+   getens p53_TAZ1_si.ens p53_TAZ1_si
+   getens p53_TAZ2_si.ens p53_TAZ2_si
+   transition p53_TAZ1_si.A p53_TAZ2_si.A 2-61 transition_p53_TAZ1_TAZ2
+.ensembleanalysis
+
+# report

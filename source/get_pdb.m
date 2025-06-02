@@ -42,7 +42,7 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % this number is too small and is memory-intensive, if it is too large
-maxatoms = 5000000;
+maxatoms = 10000000;
 maxwater = 1000000;
 maxmodels = 10000;
 % resdefs = load('monomers.mat');
@@ -114,6 +114,14 @@ if isempty(ext)
     else
         ident = strcat(ident,'.pdb');
     end
+end
+
+fileInfo = dir(ident);
+fileSize = fileInfo.bytes;
+if fileSize > 50000000
+    verbose = true;
+else
+    verbose = false;
 end
 
 % open the PDB file
@@ -207,6 +215,9 @@ while 1
             this_model = model_counter;
         else
             this_model = model_number;
+        end
+        if verbose && mod(this_model,100) == 0
+            fprintf(1,'Reading model %i (already read %i atoms)\n',this_model,atoms);
         end
         this_atom = 0;
         current_model = this_model + model_offset;

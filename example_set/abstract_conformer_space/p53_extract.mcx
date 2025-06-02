@@ -1,0 +1,19 @@
+# log
+
+!prepare
+    getpdb 5hou p53_TAZ1
+    save p53_only_TAZ1 p53_TAZ1 1P53 {*}(A)1002-1061
+    getpdb 5hpd p53_TAZ2
+    save p53_only_TAZ2 p53_TAZ2 2P53 {*}(A)3002-3061
+.prepare
+
+!prepare
+    getpdb p53_only_TAZ1.pdb p53_only_TAZ1
+    renumber (A) -1000 p53_only_TAZ1
+    save p53_TAZ1 p53_only_TAZ1 1P53 {*}(A)2-61
+    getpdb p53_only_TAZ2.pdb p53_only_TAZ2
+    renumber (A) -3000 p53_only_TAZ2
+    save p53_TAZ2 p53_only_TAZ2 2P53 {*}(A)2-61
+.prepare
+
+# report

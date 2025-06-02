@@ -24,6 +24,8 @@ function [entity,rmsd,exceptions] = superimpose_ensemble(entity,selected,templat
 % central   flag that requests superposition onto the central structure
 %           if a template is provided, superposition is onto the common
 %           central structure, defaults to false
+% options   structure with fields
+%           .atoms  atoms to superimpose, can be 'all', 'backbone' or 'CA'
 %
 % OUTPUT
 % entity       entity after superposition, only coordinates have changed

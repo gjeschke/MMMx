@@ -1,4 +1,4 @@
-function Rg = gyration_radius(coor)
+function Rg = gyration_radius(coor,weights)
 %
 % GYRATION_RADIUS Compute radius of gyration for a coordinate array
 %
@@ -7,18 +7,29 @@ function Rg = gyration_radius(coor)
 %
 %
 % INPUT
-% coor  (N,~) Cartesian coordinate array, this also works in Euclidean
-%       hyperspace
+% coor      (N,~) Cartesian coordinate array, this also works in Euclidean
+%           hyperspace
+% weights   vector (N,1) of weights, optional, defaults to uniform weights
 %
 % OUTPUT
 % Rg    radius of gyration
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
-% Copyright(c) 2020: Gunnar Jeschke
+% Copyright(c) 2020-2025: Gunnar Jeschke
 
 [N,~] = size(coor); % number of atoms
-rc = mean(coor); % center coordinate
+
+if ~exist('weights','var') || isempty(weights)
+    weights = ones(1,N);
+end
+weights = weights/sum(weights);
+[n,m] = size(weights);
+if n > m
+    weights = weights';
+end
+
+rc = weights*coor; % center coordinate
 rel_coor = coor - repmat(rc,N,1);
-Rg = sqrt(sum(sum(rel_coor.^2))/N);
+Rg = sqrt(sum(weights.*sum(rel_coor'.^2)));
 

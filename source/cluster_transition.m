@@ -1,4 +1,4 @@
-function clusters = cluster_transition(entity1,entity2,options)
+function [clusters,D] = cluster_transition(entity1,entity2,options)
 %
 % CLUSTER_TRANSITION Characterize and visualize transition between ensemble
 %                       structures via clustering of conformers
@@ -42,6 +42,7 @@ function clusters = cluster_transition(entity1,entity2,options)
 %                               belonging to ensemble 1 and to ensemble 2
 %               .type           cluster type, 1 for pure ensemble 1, 2 for
 %                               pure ensemble 2, 0 for mixed
+%               .similarity     similarity of the two input ensembles
 %               .similarities   double matrix (nc,nc) of similarity
 %                               measures
 %               .subsimilar     double vector (nc,1) of similarities
@@ -55,6 +56,7 @@ function clusters = cluster_transition(entity1,entity2,options)
 %                               color scale, ensemble 1 between 0 and 0.2,
 %                               mixed ensemble between 0.4 and 0.6,
 %                               ensemble 2 between 0.8 and 1
+% D     	    dRMSD matrix for the conformers of both ensembles
 %
 
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
@@ -108,8 +110,19 @@ if ~isfield(options,'graphics') || isempty(options.graphics) || isempty(options.
     options.graphics = {};
 end
 
-populations = [entity1.populations;entity2.populations];
+populations = [entity1.populations/sum(entity1.populations);entity2.populations/sum(entity2.populations)];
 [D,~,Rg] = pair_drms_matrix(entity1,options.chain1,[],entity2,options.chain2,[]);
+
+m1 = length(entity1.populations);
+matches = D(1:m1,m1+1:end);
+selfmatch1 = D(1:m1,1:m1);
+selfmatch2 = D(m1+1:end,m1+1:end);
+var11 = kron(entity1.populations,entity1.populations').*selfmatch1.^2;
+var22 = kron(entity2.populations,entity2.populations').*selfmatch2.^2;
+var12 = kron(entity1.populations,entity2.populations').*matches.^2;
+width1 = sqrt(sum(sum(var11)));
+width2 = sqrt(sum(sum(var22)));
+clusters.similarity = sqrt((width1*width2)/sum(sum(var12)));
 
 [C,~] = size(D);
 
@@ -126,17 +139,50 @@ D_check = squareform(pdist(xyz));
 graces = tinv(0.975,C-1)*sqrt(sum((D_check-D).^2/(C-1)));
 output_data(:,6) = graces;
 
-fitoptions = statset('MaxIter',1000);
-try
-    GMModel = fitgmdist(xyz,options.nc,'Options',fitoptions);
-    assignment = cluster(GMModel, xyz);
-catch
-    fprintf(1,'Gaussian mixture distribution fit failed. Reverting to hierarchical clustering.\n');
-    % compute linkage
-    Z = linkage(D,'complete');
-    % cluster
-    assignment = cluster(Z,'maxclust',options.nc);
+% compute linkage
+Z = linkage(D,'complete');
+% cluster
+assignment = cluster(Z,'maxclust',options.nc);
+
+coor = cmdscale(D);
+
+colors = turbo(4);
+colors = 0.75*colors(2:3,:);
+
+[~,score,~,~,explained] = pca(coor);
+
+fh = figure; hold on;
+for c = 1:C
+    plot(score(c,1),score(c,2),'.','MarkerSize',14,'Color',colors(output_data(c,7),:));
 end
+axis equal
+xlabel('x [Å]');
+ylabel('y [Å]');
+title(sprintf('PCA 2 analysis (%4.1f%% of variance)',sum(explained(1:2))));
+set(gca,'FontSize',12);
+[pname,bname,ext] = fileparts(options.figname);
+if ~strcmpi(ext,'.tif') && ~strcmpi(ext,'.bmp') && ~strcmpi(ext,'.fig')
+    ext = '.pdf';
+end
+if isfield(options,'figname') && ~isempty(options.figname)
+    saveas(fh,fullfile(pname,sprintf('%s_PCA2%s',bname,ext)));
+end
+
+fh = figure; hold on;
+for c = 1:C
+    plot3(score(c,1),score(c,2),score(c,3),'.','MarkerSize',14,'Color',colors(output_data(c,7),:));
+end
+axis equal
+xlabel('x [Å]');
+ylabel('y [Å]');
+zlabel('z [Å]');
+title(sprintf('PCA 3 analysis (%4.1f%% of variance)',sum(explained(1:3))));
+set(gca,'FontSize',12);
+view(30,30);
+if isfield(options,'figname') && ~isempty(options.figname)
+    saveas(fh,fullfile(pname,sprintf('%s_PCA3%s',bname,ext)));
+end
+
 output_data(:,8) = assignment;
 
 clusters.nc = options.nc;
@@ -148,7 +194,7 @@ h = figure; clf; hold on;
 initial_col = [0.2369    0.4437    0.9996];
 final_col = [0.9608    0.8902    0.1532];
 mixed_col = [0.5 0.5 0.5];
-tint = 0.15;
+tint = 0.5;
 % assign clusters, cluster types 1, 2 and 0 (mixed)
 conformers = 1:length(assignment);
 for clust = 1:clusters.nc
@@ -217,7 +263,6 @@ if isfield(options,'figname') && ~isempty(options.figname)
 end
 h.Position = pos0;
 
-
 for c = 1:C
     assigned = output_data(c,8);
     output_data(c,9) = clusters.type(assigned);
@@ -263,21 +308,12 @@ if sum(clusters.type) > 0
     scaled = scaled - min(scaled);
     scaled = scaled/max(scaled);
     
-    [~,csorting] = sort(scaled);
-    all_indices1 = zeros(1,clusters.C1);
-    poi1 = 0;
-    all_indices2 = zeros(1,clusters.C2);
-    poi2 = 0;
-    for kc = 1:length(csorting)
-        clust = csorting(kc);
-        indices1 = clusters.members{clust,1};
-        all_indices1(poi1+1:poi1+length(indices1)) = indices1;
-        poi1 = poi1+length(indices1);
-        indices2 = clusters.members{clust,2} + clusters.C1;
-        all_indices2(poi2+1:poi2+length(indices2)) = indices2;
-        poi2 = poi2+length(indices2);
-    end
-    dsorting = [all_indices1,all_indices2];
+    D1 = pair_drms_matrix(entity1,options.chain1);
+    [~,indices1] = acs_sorting(D1);
+    D2 = pair_drms_matrix(entity2,options.chain2);
+    [~,indices2] = acs_sorting(D2);
+
+    dsorting = [indices1,indices2+clusters.C1];
     D = D(dsorting,dsorting);
     h = plot_pair_drmsd(D,clusters.C1,clusters.C2);
     [pname,basname,figure_format] = fileparts(options.figname);
@@ -383,9 +419,10 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
                 case 2
                     col = final_col;
             end
-            pop = entity1.populations(conformers(c))/max(entity1.populations);
+            maxpop = max(entity1.populations);
+            pop = entity1.populations(conformers(c));
             if isempty(options.graphics)
-                fprintf(ofid_assign,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
+                fprintf(ofid_assign,'show [DISO]{%i} coil %6.3f\n',conformers(c),sqrt(pop/maxpop));
                 fprintf(ofid_assign,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
             else
                 [ngcmd,~] = size(options.graphics);
@@ -393,7 +430,7 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
                     fprintf(ofid_assign,'%s [DISO]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain1,options.graphics{gcmd,2},options.graphics{gcmd,3});
                 end
                 fprintf(ofid_assign,'color [DISO]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
-                fprintf(ofid_assign,'transparency [DISO]{%i} %5.3f\n',conformers(c),pop);
+                fprintf(ofid_assign,'transparency [DISO]{%i} %5.3f\n',conformers(c),sqrt(pop));
             end
         end
         conformers = clusters.members{clust,2};
@@ -406,9 +443,10 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
                 case 2
                     col = final_col;
             end
-            pop = entity2.populations(conformers(c))/max(entity2.populations);
+            maxpop = max(entity2.populations);
+            pop = entity2.populations(conformers(c));
             if isempty(options.graphics)
-                fprintf(ofid_assign,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop));
+                fprintf(ofid_assign,'show [ORDE]{%i} coil %6.3f\n',conformers(c),sqrt(pop/maxpop));
                 fprintf(ofid_assign,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
             else
                 [ngcmd,~] = size(options.graphics);
@@ -416,7 +454,7 @@ if isfield(options,'visualize') && ~isempty(options.visualize)
                     fprintf(ofid_assign,'%s [ORDE]{%i}(%s)%s %s\n',options.graphics{gcmd,1},conformers(c),options.chain2,options.graphics{gcmd,2},options.graphics{gcmd,3});
                 end
                 fprintf(ofid_assign,'color [ORDE]{%i} %6.3f %6.3f %6.3f\n',conformers(c),col);
-                fprintf(ofid_assign,'transparency [ORDE]{%i} %5.3f\n',conformers(c),pop);
+                fprintf(ofid_assign,'transparency [ORDE]{%i} %5.3f\n',conformers(c),sqrt(pop));
             end
         end
     end

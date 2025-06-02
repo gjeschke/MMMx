@@ -1,0 +1,164 @@
+function [D,indices,h] = acs_sorting(D,Rg)
+%
+% ACS_SORTING Sorts conformers by distance in abstract conformer space
+%               starting from the most compact conformer and ending with
+%               the most extended one
+%
+%   [D,indices] = acs_sorting(D,Rg)
+%
+% INPUT
+% D             dRMSD matrix
+% Rg            vector of individual radii of gyration of teh conformers
+%
+% OUTPUT
+% D             sorted dRMSD matrix
+% indices       sorted indices for the original dRMSD matrix
+%
+
+% This file is a part of MMMx. License is MIT (see LICENSE.md). 
+% Copyright(c) 2025: Gunnar Jeschke
+
+[C,~] = size(D); % number of conformers
+
+weights = zeros(C);
+for c1 = 1:C-1
+    for c2 = c1+1:C
+        weights(c1,c2) = abs(c1-c2);
+        weights(c2,c1) = weights(c1,c2);
+    end
+end
+weights = weights.^2;
+
+diff = 1/sum(sum(weights.*D));
+
+tic
+indices = 1:C;
+maxpass = 100;
+pass = 0;
+all_diff = zeros(1,maxpass*C*(C-1)/2);
+poi = 0;
+changed = true;
+while pass < maxpass && changed
+    pass = pass +1;
+    changed = false;
+    for c1 = 1:C-1
+        for c2 = c1+1:C
+            poi = poi + 1;
+            indices2 = indices;
+            indices2(c1) = indices(c2);
+            indices2(c2) = indices(c1);
+            D2 = D(indices2,indices2);
+            dtest = 1/sum(sum(weights.*D2));
+            all_diff(poi) = dtest;
+            if dtest < diff
+                diff = dtest;
+                indices = indices2;
+                changed = true;
+            end
+        end
+    end
+end
+% toc,
+% fprintf(1,'Sorting took %i passes\n',pass);
+
+figure; clf; hold on;
+plot(all_diff(1:poi));
+
+% [~,indices] = sort(Rg); % initial indices are in ascending order of Rg
+
+% % we keep the end points and proceed by adding, from both ends, the
+% % conformer that is closest to the already assigned conformers
+% 
+% mask = ones(1,C); % mask of unassigned conformers
+% mask(indices(1)) = 0;
+% mask(indices(end)) = 0;
+
+% assigned = 1;
+% while sum(mask) > 0 % as long as there still is an unassigned conformer
+%     % from the low-Rg end
+%     best = 1e99;
+%     closest = 0;
+%     for c = 1:C
+%         if mask(c)
+%             dsq = 0;
+%             for a = 1:assigned
+%                 dsq = dsq + D(indices(a),c)^2;
+%             end
+%             meandist = sqrt(dsq/assigned);
+%             if meandist < best
+%                 best = meandist;
+%                 closest = c;
+%             end
+%         end
+%     end
+%     indices(assigned+1) = closest;
+%     mask(closest) = 0;
+%     % from the high-Rg end
+%     best = 1e99;
+%     closest = 0;
+%     for c = 1:C
+%         if mask(c)
+%             dsq = 0;
+%             for a = 1:assigned
+%                 dsq = dsq + D(indices(C-a+1),c)^2;
+%             end
+%             meandist = sqrt(dsq/assigned);
+%             if meandist < best
+%                 best = meandist;
+%                 closest = c;
+%             end
+%         end
+%     end
+%     indices(C-assigned) = closest;
+%     mask(closest) = 0;
+%     assigned = assigned + 1;
+% end
+% 
+
+% we keep the end points and proceed by adding, from the low-Rg end the
+% conformer that is closest to the already assigned conformers
+
+% mask = ones(1,C); % mask of unassigned conformers
+% mask(indices(1)) = 0;
+% 
+% assigned = 1;
+% while sum(mask) > 0 % as long as there still is an unassigned conformer
+%     best = 1e99;
+%     closest = 0;
+%     for c = 1:C
+%         if mask(c)
+%             dsq = 0;
+%             for a = 1:assigned
+%                 dsq = dsq + D(indices(a),c)^2;
+%             end
+%             meandist = sqrt(dsq/assigned);
+%             if meandist < best
+%                 best = meandist;
+%                 closest = c;
+%             end
+%         end
+%     end
+%     assigned = assigned + 1;
+%     indices(assigned) = closest;
+%     mask(closest) = 0;
+% end
+
+D = D(indices,indices);
+
+h = plot_pair_drmsd(D);
+
+% Diagnostics, display new D
+
+function h = plot_pair_drmsd(D)
+
+h = figure; hold on
+
+image(D,'CDataMapping','scaled');
+curr_axis = gca;
+curr_axis.YDir = 'normal';
+colorbar;
+axis tight
+xlabel('Conformer number');
+ylabel('Conformer number');
+title('Sorted distance root mean square deviation');
+axis equal

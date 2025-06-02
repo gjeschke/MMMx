@@ -684,7 +684,7 @@ tag = sprintf('%s;%s-%s;%s',site1,label1,site2,label2);
 filename = sprintf('%s_%s_%s-%s_%s.csv',fname,site1,label1,site2,label2);
 figfilename = sprintf('%s_%s_%s-%s_%s.%s',figname,site1,label1,site2,label2,figures);
 [r_axis,distribution,entity] = distance_distribution(entity,site1,label1,site2,label2,options);
-if ~isempty(r_axis) && ~isempty(distribution) 
+if ~isempty(r_axis) && ~isempty(distribution) && max(distribution) > 0
     distribution = distribution/sum(distribution);
     distribution = distribution/(r_axis(2)-r_axis(1));
     r_cut = r_axis(distribution > 0.002*max(distribution));

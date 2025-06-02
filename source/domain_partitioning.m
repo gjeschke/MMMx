@@ -340,8 +340,8 @@ while combine
         mpae1 = mean(pairdist(domains(k-1,1):domains(k-1,2),domains(k-1,1):domains(k-1,2)),"all");
         mpae2 = mean(pairdist(domains(k,1):domains(k,2),domains(k,1):domains(k,2)),"all");
         mpaec = mean(pairdist(domains(k-1,1):domains(k,2),domains(k-1,1):domains(k,2)),"all");
-        defn = (mpae1+mpae2)/(2*mpaec);
-        if defn > options.interact
+        defn = 2*mpaec/(mpae1+mpae2);
+        if defn <= options.interact
             combine = true;
             domains(cdpoi,2) = domains(k,2);
         else

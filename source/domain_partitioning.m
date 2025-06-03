@@ -273,13 +273,41 @@ while max(extension) >= options.minsize
             end
         end
     end
-    for k1 = dend:n
-        mean_uncert = mean(mean(pairdist(k1,dstart:k1)));
-        if mean_uncert <=options.threshold
-            mean_uncert0 = mean_uncert;
-            dend = k1;
-        else
-            break;
+    % for k1 = dend:n
+    %     mean_uncert = mean(mean(pairdist(k1,dstart:k1)));
+    %     if mean_uncert <=options.threshold
+    %         mean_uncert0 = mean_uncert;
+    %         dend = k1;
+    %     else
+    %         break;
+    %     end
+    % end
+    span = dstart - 1;
+    if n - dend > span
+        span = n - dend;
+    end
+    dstart0 = dstart;
+    dend0 = dend;
+    for k = 1:span
+        extended = false;
+        if dend+k <= n
+            mean_uncert = mean(mean(pairdist(dend0+k,dstart:dend0+k)));
+            if mean_uncert <= options.threshold
+                mean_uncert0 = mean_uncert;
+                dend = dend0 + k;
+                extended = true;
+            end
+        end
+        if dstart-k >= 1
+            mean_uncert = mean(mean(pairdist(dstart0-k,dstart0-k:dend)));
+            if mean_uncert <= options.threshold
+                mean_uncert0 = mean_uncert;
+                dstart = dstart0 - k;
+                extended = true;
+            end
+        end
+        if ~extended
+            break
         end
     end
     if mean_uncert0 > options.threshold
@@ -295,17 +323,21 @@ while max(extension) >= options.minsize
     end
     extension(dstart:dend) = zeros(1,dend-dstart+1);
     pairdist(dstart:dend,dstart:dend) = 1e12;
-    for k = 1:n
-        test = k + round(extension(k));
-        if test <= n && extension(test) > cap
-            extension(k) = 1;
-        end
-    end
-    if mean_uncert0 <= options.threshold
+    % for k = 1:n
+    %     test = k + round(extension(k));
+    %     if test <= n && extension(test) > cap
+    %         extension(k) = 1;
+    %     end
+    % end
+    if mean_uncert0 <= options.threshold && dend - dstart >= options.minsize 
         dpoi = dpoi +1;
         domains(dpoi,:) = [dstart,dend];
     end
 end
+
+% sort domains
+[~,indices] = sort(domains(1:dpoi,1));
+domains = domains(indices,:);
 
 pairdist = pairdist0;
 % unify domains separated by too short linkers, if requested

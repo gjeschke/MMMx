@@ -51,7 +51,7 @@ if ~isfield(options,'minsize') || isempty(options.minsize)
 end
 
 if ~isfield(options,'minlink') || isempty(options.minlink)
-    options.minsize = 3;
+    options.minlink = 3;
 end
 
 if ~isfield(options,'interact') || isempty(options.interact)

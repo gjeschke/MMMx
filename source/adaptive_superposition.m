@@ -79,7 +79,10 @@ deau = zeros(1,ndom);
 sortings = cell(1,ndom);
 all_rmsd = zeros(1,ndom);
 all_diff = zeros(1,ndom);
+C = length(entity.populations);
 if ndom > 0
+    merits = zeros(1,ndom);
+    assignments = zeros(ndom,C);
     for dom = 1:ndom
         ceau = entity.eau(entity.domains(dom,1):entity.domains(dom,2),entity.domains(dom,1):entity.domains(dom,2));
         deau(dom) = mean(ceau,'all')';
@@ -130,6 +133,10 @@ if ndom > 0
         sortings{dom} = indices; 
         figure; hold on;
         image(D(indices,indices),'CDataMapping','scaled');
+        [assignment,merit] = ensemble_partionining(D(indices,indices));
+        merits(dom) = merit;
+        assignments(dom,:) = assignment;
+        fprintf(1,'Merit of partitioning into %i ensembles: %6.4f\n',max(assignment),merit);
         curr_axis = gca;
         curr_axis.YDir = 'normal';
         c = colorbar;
@@ -140,9 +147,14 @@ if ndom > 0
         axis equal
         title(sprintf('Superposition on domain %i',dom));
     end
-    [mindiff,bdom] = min(all_diff);
-    fprintf(1,'Best domain for superposition is %i at %12.6g Å\n',bdom,mindiff);
-
+    if max(merits) <= 1
+        [mindiff,bdom] = min(all_diff);
+        fprintf(1,'Best domain for superposition is %i at %12.6g Å\n',bdom,mindiff);
+    else
+        [merit,bdom] = max(merits);
+        assignment = assignments(bdom,:);
+        fprintf(1,'Best domain for superposition is %i at subsensemble merit %6.4f with %i subensembles\n',bdom,merit,max(assignment));
+    end
     selected = sprintf('(%s)%i-%i',entity.eau_chain,...
         entity.eau_resnum(entity.domains(bdom,1)),...
         entity.eau_resnum(entity.domains(bdom,2)));
@@ -189,6 +201,7 @@ else % no folded domain detected
     end
     figure; hold on;
     image(D(indices,indices),'CDataMapping','scaled');
+    [assignment,merit] = ensemble_partionining(D(indices,indices));
     curr_axis = gca;
     curr_axis.YDir = 'normal';
     c = colorbar;
@@ -198,7 +211,9 @@ else % no folded domain detected
     ylabel('Conformer');
     axis equal
     title('dRMSD sorting');
+    fprintf(1,'Found %i subensembles with merit %6.4f\n',max(assignment),merit);
 end
+entity.subensembles = assignment;
 
 if isfield(options,'ensemble') && ~isempty(options.ensemble)
     if ~contains(options.ensemble,'.')
@@ -216,3 +231,45 @@ if isfield(options,'ensemble') && ~isempty(options.ensemble)
 end
 fclose(ens_fid);
 
+function [indices,merit] = ensemble_partionining(D)
+
+Z = linkage(D,'complete');
+
+[n,~] = size(D);
+all_indices = zeros(5,n);
+all_merits = zeros(1,5);
+
+for s = 2:5
+    indices = cluster(Z,'maxclust',s);
+    own = 0;
+    other = 0;
+    valid = true;
+    for k = 1:s
+        se_size = sum(indices==k);
+        if se_size < 5
+            valid = false;
+        end
+        own = own + sqrt(mean(D(indices==k,indices==k).^2,"all"));
+    end
+    own = own/s;
+    for k1 = 1:s-1
+        for k2 = k1+1:s
+            other = other + sqrt(mean(D(indices==k1,indices==k2).^2,"all"));
+        end
+    end
+    other = 2*other/(s*(s-1));
+    if valid
+        merit = other/own;
+    else
+        merit = 0;
+    end
+    all_indices(s,:) = indices;
+    all_merits(s) = merit;
+end
+[merit,best] = max(all_merits);
+if merit < 1
+    merit = 0;
+    indices = ones(1,n);
+else
+    indices = all_indices(best,:);
+end

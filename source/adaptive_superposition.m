@@ -22,6 +22,8 @@ function entity = adaptive_superposition(entity,options,eau)
 %           .ensemble   optional name for ensemble file list of
 %                       superimposed ensemble, if missing or empty, no
 %                       ensemble file is written
+%           .minconf    minimum number of conformers in a subensemble,
+%                       defaults to 3
 % eau       ensemble aligned uncertainty matrix, optional, is computed when
 %           missing, can also be provided as field of entity, if the
 %           argument is present, it overwrites eau information in entity
@@ -56,6 +58,10 @@ end
 
 if ~isfield(options,'interact') || isempty(options.interact)
     options.interact = 5/3;
+end
+
+if ~isfield(options,'minconf')  || isempty(options.minconf)
+    options.minconf = 3;
 end
 
 if exist('eau','var')
@@ -133,7 +139,7 @@ if ndom > 0
         sortings{dom} = indices; 
         figure; hold on;
         image(D(indices,indices),'CDataMapping','scaled');
-        [assignment,merit] = ensemble_partionining(D(indices,indices));
+        [assignment,merit] = ensemble_partionining(D(indices,indices),options);
         merits(dom) = merit;
         assignments(dom,:) = assignment;
         fprintf(1,'Merit of partitioning into %i ensembles: %6.4f\n',max(assignment),merit);
@@ -201,7 +207,7 @@ else % no folded domain detected
     end
     figure; hold on;
     image(D(indices,indices),'CDataMapping','scaled');
-    [assignment,merit] = ensemble_partionining(D(indices,indices));
+    [assignment,merit] = ensemble_partionining(D(indices,indices),options);
     curr_axis = gca;
     curr_axis.YDir = 'normal';
     c = colorbar;
@@ -231,7 +237,11 @@ if isfield(options,'ensemble') && ~isempty(options.ensemble)
 end
 fclose(ens_fid);
 
-function [indices,merit] = ensemble_partionining(D)
+function [indices,merit] = ensemble_partionining(D,options)
+
+if ~exist('options','var') || ~isfield(options,'minconf')
+    options.minconf = 3;
+end
 
 Z = linkage(D,'complete');
 
@@ -246,7 +256,7 @@ for s = 2:5
     valid = true;
     for k = 1:s
         se_size = sum(indices==k);
-        if se_size < 5
+        if se_size < options.minconf
             valid = false;
         end
         own = own + sqrt(mean(D(indices==k,indices==k).^2,"all"));

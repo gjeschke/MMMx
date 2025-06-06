@@ -138,7 +138,6 @@ if options.sorting
     if all_Rg(indices(1)) > all_Rg(indices(end))
         indices = fliplr(indices);
         D = rot90(D,2);
-    else
     end
     conformer_order = indices;
     pop = pop(indices);

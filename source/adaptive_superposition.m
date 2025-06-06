@@ -66,9 +66,13 @@ if ~isfield(entity,'eau')
     entity = ensemble_aligned_uncertainty(entity);
 end
 
-[R,~] = size(entity.eau);
-entity.eau_resnum = 1:R;
-entity.eau_chain = 'A';
+if ~isfield(entity,'eau_resnums')
+    [R,~] = size(entity.eau);
+    entity.eau_resnums = 1:R;
+end
+if ~isfield(entity,'eau_chain')
+    entity.eau_chain = 'A';
+end
 
 entity = domain_partitioning(entity,options);
 
@@ -88,12 +92,12 @@ if ndom > 0
         deau(dom) = mean(ceau,'all')';
         fprintf(1,'Mean EAU for domain %i is %5.2f Å\n',dom,deau(dom));
         selected = sprintf('(%s)%i-%i',entity.eau_chain,...
-            entity.eau_resnum(entity.domains(dom,1)),...
-            entity.eau_resnum(entity.domains(dom,2)));
+            entity.eau_resnums(entity.domains(dom,1)),...
+            entity.eau_resnums(entity.domains(dom,2)));
         [centity,rmsd] = superimpose_ensemble(entity,selected);
         all_rmsd(dom) = sqrt(sum(rmsd.^2/length(rmsd)));
         fprintf(1,'Superposition rmsd for domain %i is %5.2f Å\n',dom,all_rmsd(dom));
-        D = pair_rmsd_matrix_oriented(centity,entity.eau_chain);
+        [D,~,~,all_Rg] = pair_rmsd_matrix_oriented(centity,entity.eau_chain);
         [C,~] = size(D);
         weights = zeros(C);
         for c1 = 1:C-1
@@ -127,7 +131,10 @@ if ndom > 0
                     end
                 end
             end
-        end        
+        end
+        if all_Rg(indices(1)) > all_Rg(indices(end))
+            indices = fliplr(indices);
+        end
         fprintf(1,'Sorting quality for superposition upon domain %i is %12.6g\n',dom,diff);
         all_diff(dom) = diff;
         sortings{dom} = indices; 
@@ -156,13 +163,13 @@ if ndom > 0
         fprintf(1,'Best domain for superposition is %i at subsensemble merit %6.4f with %i subensembles\n',bdom,merit,max(assignment));
     end
     selected = sprintf('(%s)%i-%i',entity.eau_chain,...
-        entity.eau_resnum(entity.domains(bdom,1)),...
-        entity.eau_resnum(entity.domains(bdom,2)));
+        entity.eau_resnums(entity.domains(bdom,1)),...
+        entity.eau_resnums(entity.domains(bdom,2)));
     centity = superimpose_ensemble(entity,selected);
     indices = sortings{bdom};
 else % no folded domain detected
     centity = entity;
-    D = pair_drms_matrix(centity,entity.eau_chain);
+    [D,~,all_Rg] = pair_drms_matrix(centity,entity.eau_chain);
     [C,~] = size(D);
     weights = zeros(C);
     for c1 = 1:C-1
@@ -198,6 +205,9 @@ else % no folded domain detected
                 end
             end
         end
+    end
+    if all_Rg(indices(1)) > all_Rg(indices(end))
+        indices = fliplr(indices);
     end
     figure; hold on;
     image(D(indices,indices),'CDataMapping','scaled');

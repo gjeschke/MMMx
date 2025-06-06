@@ -66,6 +66,6 @@ for refres = resnums
     end
 end
 
-entity.eau = eau;
+entity.eau = eau(resnums,resnums);
 entity.eau_resnums = resnums;
 entity.eau_chain = chain;

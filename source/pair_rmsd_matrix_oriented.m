@@ -4,7 +4,7 @@ function [pair_rmsd,pop,exceptions,Rg] = pair_rmsd_matrix_oriented(entity,chain,
 %                           root mean square deviations of structures that
 %                           are already oriented
 %
-%   [pair_rmsd,exceptions] = PAIR_RMSD_MATRIX_ORIENTED(entity,chain,range)
+%   [pair_rmsd,pop,exceptions,Rg] = PAIR_RMSD_MATRIX_ORIENTED(entity,chain,range)
 %   For an entity with C conformes, the C x C matrix of backbone pair rmsds
 %   is computed
 %   computation can be confined to a chain or to a residue range within the

@@ -194,7 +194,7 @@ if options.eau
     end
     pairdist = (entity.eau + entity.eau')/2;
     atype = 'EAU';
-    image(entity.eau,'CDataMapping','scaled');
+    image(entity.eau_resnums,entity.eau_resnums,entity.eau,'CDataMapping','scaled');
 else
     pairdist = (entity.pae + entity.pae')/2;
     atype = 'PAE';
@@ -394,8 +394,8 @@ end
 
 folded = 0;
 for k = 1:dpoi
-    k1 = domains(k,1);
-    k2 = domains(k,2);
+    k1 = entity.eau_resnums(domains(k,1));
+    k2 = entity.eau_resnums(domains(k,2));
     folded = folded + k2 - k1 + 1;
     % fprintf(1,'Folded domain: (%i,%i)\n',k1,k2);
     plot([k1,k1],[k1,k2],'LineWidth',2,'Color',[0.8,0,0]);
@@ -430,7 +430,6 @@ else
         entity.class = 'long flexible terminus';
     end
 end
-
 
 entity.domains = domains(1:dpoi,:);
 

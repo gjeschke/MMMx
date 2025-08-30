@@ -1,5 +1,5 @@
 function write_xyz(fname,ecoor,comment)
-% function write_xyz(fname,ecoor)
+% function write_xyz(fname,ecoor,comment)
 %
 % (c) G. Jeschke, 2008
 %
@@ -7,7 +7,7 @@ function write_xyz(fname,ecoor,comment)
 pse=' HHeLiBe B C N O FNeNaMgAlSi P SClAr KCaScTi VCrMnFeCoNiCuZnGaGeAsSeBrKrRbSr YZrNbMoTcRuRhPdAgCdInSnSbTe IXeCsBaLaCePrNdPmSmEuGdTbDyHoErTmYbLuHfTa WReOsIrPtAuHgTlPbBiPoAtRnFrRaAcThPaUNpPuAmCmBkCfEsFmMdNoLr';
 
 
-header=sprintf('Rotamer library template file for %s',comment);
+header=sprintf('Coordinates for %s',comment);
 
 outname=strcat(fname,'.xyz');
 [m,~]=size(ecoor);

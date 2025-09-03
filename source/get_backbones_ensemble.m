@@ -67,11 +67,11 @@ end
 if ~exist('range','var') || isempty(range)
     if isempty(selected_chain)
         ranges = cell(1,1);
-        ranges{1} = [-1e01, 1e10];
+        ranges{1} = [1, 1e10];
     else
         ranges = cell(length(selected_chain),1);
         for k = 1:length(selected_chain)
-            ranges{k} = [-1e01, 1e10];
+            ranges{k} = [1, 1e10];
         end
     end
 else

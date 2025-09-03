@@ -16,12 +16,13 @@ function [backbones,pop,exceptions] = get_backbones_ensemble(ensemble,chain,rang
 %           .pdb   PDB file, filename can contain wildcards, all files 
 %                  matching it are processed, 
 %           none   extension .pdb is appended
-% chain     chain identifier, defaults to all chains
-% range     double(1,2), optional residue range, defaults to all residues
+% chain     chain identifier, defaults to all chains, can be a string for
+%           several chains
+% range     cell vectôr of residue ranges, either double(1,2), or vector of
+%           negative residue numbers,
+%           if empty or missing, it defaults to all residues
 % options   .full   flag, if true, N and C coordinates for amino acid
 %                   residues are also extracted
-%           .list   flag, if true, range argument is interpreted as a list 
-%                   of residues, defaults to false
 %
 % OUTPUT
 % backbones     struct with fields (chain) for all chains, each chain has
@@ -64,15 +65,21 @@ else
     selected_chain = chain;
 end
 if ~exist('range','var') || isempty(range)
-    range = [-1e01, 1e10];
+    if isempty(selected_chain)
+        ranges = cell(1,1);
+        ranges{1} = [-1e01, 1e10];
+    else
+        ranges = cell(length(selected_chain),1);
+        for k = 1:length(selected_chain)
+            ranges{k} = [-1e01, 1e10];
+        end
+    end
+else
+    ranges = range;
 end
 
 if ~exist('options','var') || isempty(options) || ~isfield(options,'full')
     options.full = false;
-end
-
-if ~isfield(options,'list')
-    options.list = false;
 end
 
 if isstruct(ensemble) % input is an entity
@@ -82,8 +89,12 @@ if isstruct(ensemble) % input is an entity
             chains = fieldnames(ensemble);
             for kc = 1:length(chains)
                 chain = chains{kc};
-                if ~all_chains && ~strcmp(chain,selected_chain)
-                    continue
+                if ~all_chains 
+                    index = strfind(selected_chain,chain);
+                    if isempty(index)
+                        continue
+                    end
+                    range = ranges{index};
                 end
                 if isstrprop(chain(1),'upper') % chain fields start with a capital
                     backbone = get_backbone(ensemble,chain,1,range,options);
@@ -111,8 +122,12 @@ if isstruct(ensemble) % input is an entity
         else % not the first conformer
             for kc = 1:length(chains)
                 chain = chains{kc};
-                if ~all_chains && ~strcmp(chain,selected_chain)
-                    continue
+                if ~all_chains 
+                    index = strfind(selected_chain,chain);
+                    if isempty(index)
+                        continue
+                    end
+                    range = ranges{index};
                 end
                 if isstrprop(chain(1),'upper') % chain fields start with a capital
                     backbone = get_backbone(ensemble,chain,c,range,options);

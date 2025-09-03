@@ -211,6 +211,8 @@ for d = 1:length(control.directives)
             cmd.drms = true;
             cmd.maxpop = false;
             cmd.population = false;
+            cmd.legacy = false;
+            cmd.address = '';
             if length(control.directives(d).options) > 1 % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{2};
             else
@@ -219,6 +221,14 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 2 % further directive
                 if strcmpi(control.directives(d).options{3},'drms')
                     cmd.drms = true;
+                end
+                if strcmpi(control.directives(d).options{3},'legacy')
+                    cmd.legacy = true;
+                end
+                if strcmpi(control.directives(d).options{3},'legacy_oriented')
+                    cmd.legacy = true;
+                    cmd.oriented = true;
+                    cmd.drms = false;
                 end
                 if strcmpi(control.directives(d).options{3},'similarity')
                     cmd.drms = true;
@@ -233,6 +243,9 @@ for d = 1:length(control.directives)
                     cmd.drms = false;
                     cmd.population = true;
                 end
+            end
+            if length(control.directives(d).options) > 3 % further directive
+                cmd.address = control.directives(d).options{4};
             end
             commands{cmd_poi} = cmd;
         case {'save','archive','put_mmmx'}
@@ -526,7 +539,7 @@ for c = 1:cmd_poi
                 case '.gz'
                     filenames = gunzip(fname);
                     fprintf(logfid,'Archive %s was unzipped.\n',fname);
-                    if length(filenames) == 1
+                    if isscalar(filenames)
                         [~,~,ext2] = fileparts(filenames{1});
                         if strcmpi(ext2,'.tar')
                             untar(filenames{1});
@@ -551,6 +564,7 @@ for c = 1:cmd_poi
                 filenames{conf} = fullfile(path,added_files(conf).name);
             end
             [entity,exceptions] = entity_from_filelist(filenames);
+            entity.filelist = filenames;
             if ~isempty(exceptions) && ~isempty(exceptions{1})
                 return
             end
@@ -995,17 +1009,23 @@ for c = 1:cmd_poi
                     return
                 end
             end
+            if isempty(cmd.address)
+                chains = '';
+                range = [];
+            else
+                [chains,ranges] = split_address(cmd.address);
+            end
             if cmd.population
                 pop = c_entity.populations;
                 [cluster_pop,ordering] = sort(pop,'descend');
                 cluster_sizes = ones(1,length(ordering));
             else
                 if cmd.drms
-                    [pair_rmsd,pop,Rg,exceptions0] = pair_drms_matrix(c_entity);
+                    [pair_rmsd,pop,Rg,exceptions0] = pair_drms_matrix(c_entity,chains,ranges);
                 elseif cmd.oriented
-                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity);
+                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity,chains,ranges);
                 else
-                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity);
+                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity,chains,ranges);
                 end
                 if ~isempty(exceptions0{1})
                     for k = 1:exceptions0
@@ -1026,10 +1046,15 @@ for c = 1:cmd_poi
                     plot(1:length(Rg),Rg,'.','MarkerSize',10);
                     xlabel('Conformer number');
                     ylabel(sprintf('Rg (%c)',char(197)));
-                else
+                elseif cmd.legacy
                     [pair_rmsd,ordering,cluster_assignment,cluster_sizes,cluster_pop] = cluster_sorting(pair_rmsd,pop);
                     D = dunn_index(pair_rmsd,cluster_assignment);
                     fprintf(logfid,'\nCluster assignment has a Dunn index of %5.3f\n',D);
+                else
+                    [pair_rmsd,ordering,passes] = acs_sorting(pair_rmsd);
+                    fprintf(logfid,'\nSorting took %i passes\n',passes);
+                    cluster_sizes = ones(1,length(ordering));
+                    cluster_pop = pop(ordering);
                 end
             end
             [pname,fname,~] = fileparts(cmd.outname);
@@ -1039,11 +1064,17 @@ for c = 1:cmd_poi
             fprintf(ens_fid,'%% Sorted ensemble %s by MMMx\n',basname);
             poi = 0;
             for clust = 1:length(cluster_pop)
-                fprintf(logfid,'\nCluster %i with population %6.4f comprises the following %i conformers:\n',clust,cluster_pop(clust),cluster_sizes(clust));
+                if length(cluster_pop) < length(pop)
+                    fprintf(logfid,'\nCluster %i with population %6.4f comprises the following %i conformers:\n',clust,cluster_pop(clust),cluster_sizes(clust));
+                end
                 for conf = 1:cluster_sizes(clust)
                     poi = poi + 1;
                     oname = sprintf('%s_m%i.pdb',basname,poi);
-                    fprintf(logfid,'%s (conformer %i in the input ensemble)\n',oname,ordering(poi));
+                    if ~isfield(c_entity,'filelist') || isempty(c_entity.filelist) || length(c_entity.filelist) < length(pop)
+                        fprintf(logfid,'%s (conformer %i in the input ensemble)\n',oname,ordering(poi));
+                    else
+                        fprintf(logfid,'%s (conformer %s in the input ensemble)\n',oname,c_entity.filelist{ordering(poi)});
+                    end
                     clear save_options
                     save_options.order = ordering(poi);
                     exceptions = put_pdb(c_entity,oname,save_options);
@@ -1058,7 +1089,7 @@ for c = 1:cmd_poi
                     saveas(h,figname);
                 end
             elseif ~cmd.population
-                h = plot_pair_rmsd(pair_rmsd);
+                h = plot_pair_rmsd(pair_rmsd,~cmd.oriented,false);
                 if save_figures
                     figname = sprintf('pair_rmsd_sorting_%s.%s',basname,figure_format);
                     saveas(h,figname);
@@ -1569,6 +1600,26 @@ function record_exception(exception,logfid)
 
 fprintf(logfid,'### ensembleanalysis exception: %s ###\n',exception.message);
 
+function [chains,ranges] = split_address(address)
+
+if contains(address,';')
+    poi = strfind(address,';');
+    chains = char(32*ones(1,length(poi)+1));
+    ranges = cell(length(poi)+1,1);
+    for k = 1:length(poi)
+        [chain,range] = split_chain_range(address(1:poi(k)-1));
+        chains(k) = chain;
+        ranges{k} = range;
+    end
+    [chain,range] = split_chain_range(address(poi(end)+1:end));
+    chains(end) = chain;
+    ranges{length(poi)+1} = range;
+else
+    [chains,range] = split_chain_range(address);
+    ranges{1} = range;
+end
+
+
 function [chain,range] = split_chain_range(address)
 
 chain = '';
@@ -1603,7 +1654,7 @@ else
     if ~isempty(residues{2})
         range(2) = str2double(residues{2});
     end
-    if length(range) == 1
+    if isscalar(range)
         range(2) = range(1);
     end
 end

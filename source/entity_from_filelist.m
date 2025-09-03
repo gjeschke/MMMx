@@ -31,7 +31,7 @@ function [entity,exceptions] = entity_from_filelist(filenames,name)
 % initialize empty outputs
 exceptions{1} = [];
 
-if length(filenames) == 1 % single PDB, possibly with MMMx population information
+if isscalar(filenames) % single PDB, possibly with MMMx population information
     entity = get_pdb(filenames{1});
 else % multiple PDB files, assume uniform populations
     cnum = length(filenames);

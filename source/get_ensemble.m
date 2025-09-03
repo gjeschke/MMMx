@@ -49,6 +49,7 @@ for conf = 1:length(all_files)
     filenames{conf} = all_files(conf).name;
 end
 [entity,exceptions] = entity_from_filelist(filenames);
+entity.filelist = filenames;
 
 if ~isempty(exceptions) && ~isempty(exceptions{1})
     cd(my_dir);

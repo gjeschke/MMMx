@@ -67,11 +67,6 @@ end
 pair_drms = [];
 
 options.full = false;
-options.list = false;
-if min(range) < 0
-    range = - range;
-	options.list = true;
-end
 [backbones,pop,exceptions] = get_backbones_ensemble(entity,chain,range,options);
 
 if ~isempty(exceptions{1})

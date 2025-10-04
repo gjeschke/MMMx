@@ -57,7 +57,7 @@ if ~exist('conformer','var') || isempty(conformer)
 end
 
 if ~exist('range','var') || isempty(range)
-    range = [-1e10,1e10];
+    range = [1,1e10];
 end
 
 maxres = 10000; % maximum number of residues

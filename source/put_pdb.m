@@ -50,6 +50,8 @@ function [exceptions,fid] = put_pdb(entity,fname,options)
 %           .dresnum   residue number offset, defaults to zero
 %           .fid       if present and not -1, output is appended to the
 %                      file with identifier fid
+%           .first     if true, output only coordinates for first location
+%                      to avoid inconsistencies
 %           
 %
 % OUTPUT
@@ -129,6 +131,11 @@ end
 if ~isfield(options,'stripOXT') || isempty(options.stripOXT)
     options.stripOXT = false;
 end
+
+if ~isfield(options,'first') || isempty(options.first)
+    options.first = false;
+end
+
 
 
 % apply coordinate offset
@@ -368,6 +375,9 @@ for kconf = 1:length(conformer_order)
                         % rotamers overrule locations
                         if length(entity.(chain).(residue).populations) > 1
                             rot_indices = 1:length(entity.(chain).(residue).populations);
+                        end
+                        if options.first
+                            rot_indices = 1;
                         end
                         atoms = fieldnames(entity.(chain).(residue));
                         if entity.(chain).(residue).selected % residue was selected

@@ -107,6 +107,7 @@ for d = 1:length(control.directives)
             if length(control.directives(d).options) > 1 % acceptance mode
                 acceptance_mode = control.directives(d).options{2};
             end
+            rejection_sampling = true;
         case 'update'
             f_update = str2double(control.directives(d).options{1});
         case 'sequence'
@@ -318,7 +319,7 @@ for d = 1:length(control.directives)
                 end
                 if args > 3
                     arg4 = control.directives(d).block{kr,4};
-                    if ~iempty(arg4) && arg4(1) == '@'
+                    if ~isempty(arg4) && arg4(1) == '@'
                         restraints.oligomer(oligomer_poi).file{kr} = arg4(2:end);
                         rejection_sampling = true;
                     end

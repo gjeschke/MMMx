@@ -53,10 +53,15 @@ else
     opt.max_time = 1;
 end
 
+opt.path = ''; % if path to Yasara is not provided, it will be searched for on the Matlab path
+
+opt.script = 'minimization_server.mcr';
+
 fname = 'MMMx_yasara';
 inname = '';
 initial_ensemble = '';
 output_name = false;
+opt.remote = false; % indicates remote computing, where Macro script path is given explicitly
 
 % read restraints
 for d = 1:length(control.directives)
@@ -70,6 +75,8 @@ for d = 1:length(control.directives)
         case {'getens','ensemble'}
             initial_ensemble = control.directives(d).options{1};
             fprintf(logfid,'Ensemble %s will be optimized\n',initial_ensemble);
+        case 'path'
+            opt.path = control.directives(d).options{1};
         case 'repack'
             repack = true;
         case 'save'
@@ -78,6 +85,9 @@ for d = 1:length(control.directives)
             [pathname,filename,~] = fileparts(fname);
             fname = fullfile(pathname,filename);
             output_name = true;
+        case 'script'
+            opt.script = control.directives(d).options{1};
+            opt.remote = true;
         case 'console'
             opt.console = true;
         otherwise

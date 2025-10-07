@@ -12,6 +12,7 @@ function exceptions = optimize_by_yasara(logfile,fname,options)
 % options   structure with options specified by fields
 %           .console    flag, if true, Yasara is run in console mode
 %           .fname      if specified, output file name
+%           .path       path name to Yasara, use on Linux
 %
 %
 % Output:
@@ -34,7 +35,11 @@ if ~isfield(options,'max_time') || isempty(options.max_time)
 end
 
 % find Yasara executable
-yasara = which_third_party_module('yasara');
+if ~isfield(options,'path') || isempty(options.path)
+    yasara = which_third_party_module('yasara');
+else
+    yasara = options.path;
+end
 if isempty(yasara)
     fprintf(logfile,'ERROR: Yasara is not on path. Skipping optimization');
     return
@@ -73,9 +78,9 @@ cd(yasara_path); % change to Yasara directory
 % read the Yasara optimization template control file and adapt it to
 % current file name
 ctrl_file = sprintf('%s.mcr',bname);
-iname = 'minimization_server.mcr';
-if ~isdeployed
-    iname = which('minimization_server.mcr');
+iname = options.script;
+if ~isdeployed && ~options.remote
+    iname = which(iname);
 end
 ifid = fopen(iname,'r');
 ofid = fopen(ctrl_file,'wt');

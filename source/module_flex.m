@@ -1307,7 +1307,7 @@ for kent = first_conformer:nent
             % initialize new sampling distributions
             output_restrain = p_restrain{kp};
             for res = 1:length(restrain)
-                % checke whether there are beacon restraints
+                % check whether there are beacon restraints
                 if isfield(restrain(res),'r_beacon')
                     % loop over all beacon restraints of this residue
                     for kr = 1:length(restrain(res).r_beacon)
@@ -1406,6 +1406,7 @@ for kent = first_conformer:nent
                     end
                 else
                     m_entity = get_pdb(pmodel);
+                    entity = add_OXT(entity,'A');
                     fname_valid = sprintf('%s_i%i_m%i',savename,kent,success);
                     if n_anchored || c_anchored
                         entity1 = entity;

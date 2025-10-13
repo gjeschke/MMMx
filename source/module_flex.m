@@ -1413,7 +1413,7 @@ for kent = first_conformer:nent
                     end
                 else
                     m_entity = get_pdb(pmodel);
-                    entity = add_OXT(entity,'A');
+                    m_entity = add_OXT(m_entity,'A');
                     fname_valid = sprintf('%s_i%i_m%i',savename,kent,success);
                     if n_anchored || c_anchored
                         entity1 = entity;

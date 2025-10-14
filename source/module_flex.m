@@ -1413,7 +1413,6 @@ for kent = first_conformer:nent
                     end
                 else
                     m_entity = get_pdb(pmodel);
-                    m_entity = add_OXT(m_entity,'A');
                     fname_valid = sprintf('%s_i%i_m%i',savename,kent,success);
                     if n_anchored || c_anchored
                         entity1 = entity;
@@ -1435,6 +1434,7 @@ for kent = first_conformer:nent
                             end
                             entity1 = rmfield(entity1,C_anchor_chain);
                         end
+                        entity1 = add_OXT(entity1,'A');
                         put_pdb(entity1,fname_valid,save_options);
                     else
                         put_pdb(m_entity,fname_valid,save_options);

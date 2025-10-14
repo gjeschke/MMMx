@@ -55,8 +55,8 @@ if maxresnum > 0 % entity is changed only if the chain has at least one residue
         A = [x;y;z];
         % transformation matrix into that local frame
         A = A';
-        ctau = cos(pi/3);
-        stau = sin(pi/3);
+        ctau = cos(pi);
+        stau = sin(pi);
         A2 = [-cfi,-sfi,0;sfi*ctau,-cfi*ctau,-stau;sfi*stau,-cfi*stau,ctau];
         A = A*A2;
         OXT = C + A*bvec'; % coordinates of OXT

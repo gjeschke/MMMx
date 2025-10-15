@@ -75,7 +75,7 @@ if ~exist('range','var') || isempty(range)
         end
     end
 else
-    ranges = range;
+    ranges{1} = range;
 end
 
 if ~exist('options','var') || isempty(options) || ~isfield(options,'full')

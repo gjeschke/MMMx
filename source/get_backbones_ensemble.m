@@ -65,6 +65,7 @@ else
     selected_chain = chain;
 end
 if ~exist('range','var') || isempty(range)
+    range = [1,1e10];
     if isempty(selected_chain)
         ranges = cell(1,1);
         ranges{1} = [1, 1e10];

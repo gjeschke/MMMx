@@ -829,7 +829,7 @@ for c = 1:cmd_poi
                ens2 = sprintf(ens2,'%s %i-%i',range2);
            end
            fprintf(logfid,'\nEnsembles %s and %s have a mean variability deviation of %4.1f %c at ensemble widths of %4.1f and %4.1f %c\n',ens1,ens2,diff,char(197),width1,width2,char(197));
-           fprintf(logfid,'The similarity measure is %5.3f\n\n',similarity);
+           fprintf(logfid,'The similarity measure is %6.4f\n\n',similarity);
            fprintf(logfid,'\n--- Matching conformers in %s by conformers in %s ---\n\n',cmd.entity1,cmd.entity2);
            if m1 <= m2
                mismatches = zeros(m1,1);
@@ -1014,6 +1014,7 @@ for c = 1:cmd_poi
                 range = [];
             else
                 [chains,ranges] = split_address(cmd.address);
+                range = ranges{1};
             end
             if cmd.population
                 pop = c_entity.populations;
@@ -1021,11 +1022,11 @@ for c = 1:cmd_poi
                 cluster_sizes = ones(1,length(ordering));
             else
                 if cmd.drms
-                    [pair_rmsd,pop,Rg,exceptions0] = pair_drms_matrix(c_entity,chains,ranges);
+                    [pair_rmsd,pop,Rg,exceptions0] = pair_drms_matrix(c_entity,chains,range);
                 elseif cmd.oriented
-                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity,chains,ranges);
+                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix_oriented(c_entity,chains,range);
                 else
-                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity,chains,ranges);
+                    [pair_rmsd,pop,exceptions0] = pair_rmsd_matrix(c_entity,chains,range);
                 end
                 if ~isempty(exceptions0{1})
                     for k = 1:exceptions0

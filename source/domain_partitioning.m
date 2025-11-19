@@ -383,7 +383,7 @@ while combine
     dpoi = cdpoi;
 end
 
-if max(max(domains)) == 0
+if isempty(domains) || max(max(domains)) == 0
     dpoi = 0;
 else
     % sort domains
@@ -394,8 +394,13 @@ end
 
 folded = 0;
 for k = 1:dpoi
-    k1 = entity.eau_resnums(domains(k,1));
-    k2 = entity.eau_resnums(domains(k,2));
+    if options.eau
+        k1 = entity.eau_resnums(domains(k,1));
+        k2 = entity.eau_resnums(domains(k,2));
+    else
+        k1 = domains(k,1);
+        k2 = domains(k,2);
+    end
     folded = folded + k2 - k1 + 1;
     % fprintf(1,'Folded domain: (%i,%i)\n',k1,k2);
     plot([k1,k1],[k1,k2],'LineWidth',2,'Color',[0.8,0,0]);

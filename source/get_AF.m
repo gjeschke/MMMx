@@ -66,14 +66,22 @@ catch exception
     return;
 end
 
-fname = sprintf('%s_v%i.pdb',AF_info.entryId,AF_info.latestVersion);
-try
-    websave(fname,AF_info.pdbUrl);
-catch exception
-    exceptions{1} = exception;
-    return;
+if iscell(AF_info)
+    AF_info = AF_info{1};
+else
+    AF_info = AF_info(1);
 end
-entity = get_pdb(fname);
+
+fname = sprintf('%s_v%i.pdb',AF_info.entryId,AF_info.latestVersion);
+if options.structure
+    try
+        websave(fname,AF_info.pdbUrl);
+    catch exception
+        exceptions{1} = exception;
+        return;
+    end
+    entity = get_pdb(fname);
+end
 entity.name = AF_info.uniprotAccession(1:4);
 entity.uniprot = AF_info.uniprotAccession;
 entity.uniprotname = AF_info.uniprotId;
@@ -91,7 +99,7 @@ if options.pLDDT
     entity.pLDDT = pLDDT.confidenceScore;
 end
 
-if ~options.keep_file
+if ~options.keep_file && exist(fname,'file')
     delete(fname);
 end
 

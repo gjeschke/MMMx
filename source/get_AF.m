@@ -11,6 +11,10 @@ function [entity,exceptions] = get_AF(UniProtID,options)
 %               available for this UniProt entry
 % options       .keep_file  if true, the downloaded PDB file is kept,
 %                           defaults to false (file is deleted)
+%               .structure  if true, PDB is read for 3D coordinates,
+%                           defaults to true
+%               .pLDDT      if true, pLDDT is read, defaults to true
+%               .pae        if true, pae is read, defaults to true
 %
 % OUTPUT
 % entity       entity structure in MMMx:atomic representation 
@@ -37,9 +41,22 @@ function [entity,exceptions] = get_AF(UniProtID,options)
 exceptions{1} = [];
 entity = [];
 
-if ~exist('options','var') || isempty(options)
+if ~exist('options','var') || isempty(options) || ~isfield(options,'keep_file')
     options.keep_file = false;
 end
+
+if ~isfield(options,'structure')
+    options.structure = true;
+end
+
+if ~isfield(options,'pLDDT')
+    options.pLDDT = true;
+end
+
+if ~isfield(options,'pae')
+    options.pae = true;
+end
+
 
 query = sprintf('https://alphafold.ebi.ac.uk/api/prediction/%s',UniProtID);
 try
@@ -62,10 +79,17 @@ entity.uniprot = AF_info.uniprotAccession;
 entity.uniprotname = AF_info.uniprotId;
 entity.sequence = AF_info.uniprotSequence;
 entity.origin = sprintf('AlphaFold v%i',AF_info.latestVersion);
+entity.organism = AF_info.organismScientificName;
 
 wroptions = weboptions('ContentType','json');
-pae = webread(AF_info.paeDocUrl,wroptions);
-entity.pae = pae.predicted_aligned_error;
+if options.pae
+    pae = webread(AF_info.paeDocUrl,wroptions);
+    entity.pae = pae.predicted_aligned_error;
+end
+if options.pLDDT
+    pLDDT = webread(AF_info.plddtDocUrl,wroptions);
+    entity.pLDDT = pLDDT.confidenceScore;
+end
 
 if ~options.keep_file
     delete(fname);
@@ -73,17 +97,17 @@ end
 
 % compile pLDDT information
 
-pLDDT = zeros(1,length(entity.sequence));
-chain = 'A';
-residues = fieldnames(entity.(chain));
-rpoi = 0;
-
-for kr = 1:length(residues) % expand over all residues
-    residue = residues{kr};
-    if strcmp(residue(1),'R') % these are residue fields
-        rpoi = rpoi + 1;
-        pLDDT(rpoi) = entity.(chain).(residue).CA.bfactor;
-    end
-end
-
-entity.pLDDT = pLDDT;
+% pLDDT = zeros(1,length(entity.sequence));
+% chain = 'A';
+% residues = fieldnames(entity.(chain));
+% rpoi = 0;
+% 
+% for kr = 1:length(residues) % expand over all residues
+%     residue = residues{kr};
+%     if strcmp(residue(1),'R') % these are residue fields
+%         rpoi = rpoi + 1;
+%         pLDDT(rpoi) = entity.(chain).(residue).CA.bfactor;
+%     end
+% end
+% 
+% entity.pLDDT = pLDDT;

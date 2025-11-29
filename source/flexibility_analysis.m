@@ -38,7 +38,7 @@ function outdata = flexibility_analysis(entity,fname,figures)
 % maximum number of atoms for array pre-allocation, function gets slow, if
 % this number is too small and is memory-intensive, if it is too large
 
-% Flexibility parameters fro residue types from analysis of unrestrained 
+% Flexibility parameters for residue types from analysis of unrestrained 
 % FUS NTD
 flexpar(2).mean = 0.7158; % GLY
 flexpar(2).std = 0.0226;

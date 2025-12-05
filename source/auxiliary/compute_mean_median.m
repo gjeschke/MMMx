@@ -6,6 +6,10 @@ function [mean_val, median_val] = compute_mean_median(x, px, level)
 % px: vector of probability density values
 % level: level for 'median' value, defaults to 0.5
 
+if ~exist('level','var') || isempty(level)
+    level = 0.5;
+end
+
 px = px/sum(px);
 
 mean_val = sum(x .* px);

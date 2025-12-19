@@ -47,6 +47,7 @@ end
 
 dospath = which_third_party_module('muscle');
 if isempty(dospath) % return with empty alignment if MUSCLE is missing
+    alignment = [];
     return
 end
 
@@ -60,6 +61,7 @@ elseif isunix
     [s,~] = unix(comd);
 end
 if s ~= 0 % return with empty output, if MUSCLE failed
+    alignment = [];
     return
 end
 

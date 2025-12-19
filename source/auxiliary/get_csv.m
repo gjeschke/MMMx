@@ -64,6 +64,14 @@ rows = 0;
 while 1
     tline = fgetl(fid);
     if ~ischar(tline), break, end
+    tline = strtrim(tline);
+    if tline(1) == '#'
+        continue
+    end
+    comment = strfind(tline,'#');
+    if ~isempty(comment)
+        tline = tline(1:comment-1);
+    end
     nl = nl + 1;
     rows = rows + 1;
     args = split(tline,',');
@@ -83,7 +91,7 @@ while 1
     if nl == 2
         if strcmpi(input_type,'units')
             data.Properties.VariableUnits = args';
-            description = [description;args'];
+            description = [description;args']; %#ok<AGROW> 
             rows = rows - 1;
         end
     end

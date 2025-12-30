@@ -111,7 +111,7 @@ if ~isfield(options,'threshold') || isempty(options.threshold)
     options.threshold = cap/3;
 end
 
-if ~isfield(options,'unfify') || isempty(options.unify)
+if ~isfield(options,'unify') || isempty(options.unify)
     options.unify = 15;
 end
 

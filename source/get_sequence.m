@@ -18,12 +18,14 @@ function [sequence,header] = get_sequence(UniProtID)
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % Copyright(c) 2024: Gunnar Jeschke
 
+
 query = sprintf('http://www.ebi.ac.uk/Tools/dbfetch/dbfetch/uniprot/%s/fasta',UniProtID);
 try
     websave('fasta.seq',query);
+    [header,sequence] = get_fasta('fasta.seq');
+    delete('fasta.seq');
 catch
     sequence = '';
+    header = '';
     return;
 end
-[header,sequence] = get_fasta('fasta.seq');
-delete('fasta.seq');

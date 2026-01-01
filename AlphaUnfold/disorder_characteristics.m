@@ -7,6 +7,8 @@ function characteristics = disorder_characteristics(UPID_file,options)
 % UPID_file     file with UniProt identifiers for the whole proteome
 % options       run options, struct with fields
 %               .threads    number of parallel threads, defaults to 50
+%               .path       path to AF3 predictions, defaults to current
+%                           directory
 %
 % Output:
 % characteristics   disorder characteristics, struct with fields
@@ -25,6 +27,10 @@ function characteristics = disorder_characteristics(UPID_file,options)
 
 if ~exist('options','var') || ~isfield(options,'threads')
     options.threads = 50;
+end
+
+if ~isfield(options,'path')
+    options.path = '';
 end
 
 [path,fname,ext] = fileparts(UPID_file);
@@ -68,10 +74,27 @@ while 1
             options.threads = t-1;
             break
         end
-        uniprot_ids{t} = tline; % Replace with your protein of interest
+        args = split(tline,',');
+        uniprot_ids{t} = args{1}; 
     end
-    parfor t = 1:options.threads 
-        datasets{t} = get_AF(uniprot_ids{t},options);
+    parfor t = 1:options.threads % ### parfor
+        ename = sprintf('%s.mat',uniprot_ids{t});
+        if ~isempty(options.path) %#ok<PFBNS> 
+            ename = fullfile(options.path,ename);
+        end
+        if exist(ename,'file')
+            data = load(ename);
+            dataset = data.entity;
+            dataset.pae = data.pae;
+            dataset.pLDDT = data.pLDDT;
+            dataset.AF_info.fractionPlddtVeryLow = sum(data.pLDDT < 50)/length(data.pLDDT);
+            dataset.AF_info.fractionPlddtLow = sum((data.pLDDT >= 50) & (data.pLDDT < 70))/length(data.pLDDT);
+            dataset.AF_info.fractionPlddtConfident = sum((data.pLDDT >= 70) & (data.pLDDT < 90))/length(data.pLDDT);
+            dataset.AF_info.fractionPlddtVeryHigh = sum(data.pLDDT >= 90)/length(data.pLDDT);
+            datasets{t} = dataset;
+        else
+            datasets{t} = get_AF(uniprot_ids{t},options);
+        end
     end
     for t = 1:options.threads
         entity = datasets{t};
@@ -79,7 +102,7 @@ while 1
             continue
         end
         proteins = proteins + 1;
-        psize = length(entity.AF_info.uniprotSequence);
+        psize = length(entity.pLDDT);
         if psize > length(all_sizes)
             n_oversized = n_oversized + 1;
             oversized(n_oversized) = psize;

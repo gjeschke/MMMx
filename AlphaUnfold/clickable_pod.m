@@ -10,6 +10,7 @@ data = get_csv(fullpath,'data.cell');
 all_fIDR = zeros(1,proteins);
 all_ffuzzy = zeros(1,proteins);
 all_fresidual = zeros(1,proteins);
+all_psize = zeros(1,proteins);
 
 
 figure; hold on
@@ -24,6 +25,7 @@ for p = 1:proteins
     z = str2double(data{p,4});
     all_fresidual(p) = z;
     psize = str2double(data{p,5});
+    all_psize(p) = psize; 
     nd = str2double(data{p,6});
     xyz = [x,y,1 - z];
     radius = 0.001*psize^(1/3);
@@ -48,4 +50,8 @@ material shiny
 xlabel('f_{IDR}');
 ylabel('f_{fuzzy}');
 zlabel('1 - f_{residual}');
+
+fprintf(1,'Mean f(IDR): %6.3f\n',sum(all_psize.*all_fIDR)/sum(all_psize));
+fprintf(1,'Mean f(fuzzy): %6.3f\n',sum(all_psize.*all_ffuzzy)/sum(all_psize));
+fprintf(1,'Mean f(residual): %6.3f\n',sum(all_psize.*all_fresidual)/sum(all_psize));
 

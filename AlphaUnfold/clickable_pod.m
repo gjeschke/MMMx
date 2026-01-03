@@ -42,6 +42,7 @@ for p = 1:proteins
 end
 
 axis equal
+grid on;
 axis([0,1,0,1,0,1]);
 view(35,30);
 lighting gouraud 

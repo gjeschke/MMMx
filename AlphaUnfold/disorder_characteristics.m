@@ -56,7 +56,7 @@ ofid = fopen(oname,'w');
 
 proteins = 0;
 options.structure = false;
-options.pLDDT = false;
+options.pLDDT = true;
 
 k = 0;
 tic,

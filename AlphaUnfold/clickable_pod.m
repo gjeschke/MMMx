@@ -1,3 +1,9 @@
+function clickable_pod(options)
+
+if ~exist('options','var') || ~isfield(options,'opaqueness')
+    options.opaqueness = [];
+end
+
 [filename, pathname] = uigetfile('_disorder_characteristics.csv', 'Select file');
 if isequal(filename,0)
     disp('User selected Cancel');
@@ -38,7 +44,12 @@ for p = 1:proteins
         end
         rgb = C(nIFR,:);
     end
-    plot_pod_sphere(xyz,radius,rgb,UniProtID);
+    if isempty(options.opaqueness)
+        opaqueness = 1;
+    else
+        opaqueness = str2double(data{p,options.opaqueness});
+    end
+    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),all_ffuzzy(p),1 - all_fresidual(p)]);
 end
 
 axis equal

@@ -1219,7 +1219,7 @@ for kent = first_conformer:nent
     tpm = NaN;
     
     for res = 1:length(restrain)
-        % checke whetehr there are beacon restraints
+        % check whether there are beacon restraints
         if isfield(restrain(res),'r_beacon')
             % loop over all beacon restraints of this residue
             for kr = 1:length(restrain(res).r_beacon)

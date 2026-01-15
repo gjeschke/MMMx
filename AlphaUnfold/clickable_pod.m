@@ -49,7 +49,7 @@ for p = 1:proteins
     else
         opaqueness = str2double(data{p,options.opaqueness});
     end
-    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),all_ffuzzy(p),1 - all_fresidual(p)]);
+    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),all_ffuzzy(p),1 - all_fresidual(p)],data{p,7});
 end
 
 axis equal

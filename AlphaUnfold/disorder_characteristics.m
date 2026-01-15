@@ -42,6 +42,7 @@ oname = fullfile(path,sprintf('%s_disorder_characteristics.csv',fname));
 
 infopoint = 1000;
 uniprot_ids = cell(options.threads,1);
+uniprot_info = cell(options.threads,1);
 
 all = zeros(1,101);
 fuzziness = zeros(1,101);
@@ -78,6 +79,11 @@ while 1
         uniprot_ids{t} = args{1}; 
     end
     parfor t = 1:options.threads % ### parfor
+        if ~strcmpi(uniprot_ids{t},'xxx')
+            uniprot_info{t} = getInfoFromUniProt(uniprot_ids{t});
+        else
+            uniprot_info{t} = '';
+        end
         ename = sprintf('%s.mat',uniprot_ids{t});
         if ~isempty(options.path) %#ok<PFBNS> 
             ename = fullfile(options.path,ename);
@@ -97,6 +103,7 @@ while 1
         end
     end
     for t = 1:options.threads
+        info = uniprot_info{t};
         entity = datasets{t};
         if isempty(entity) || isempty(entity.AF_info) || isempty(entity.pae)
             continue
@@ -128,7 +135,35 @@ while 1
         end
         domains = get_domains(entity.pae);
         [nd,~] = size(domains);
-        fprintf(ofid,'%s,%5.3f,%6.3f,%6.3f,%i,%i\n',uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd);
+        go_ids = '';
+        if isfield(info,'uniProtKBCrossReferences')
+            for k = 1:length(info.uniProtKBCrossReferences)
+                clear('go_info');
+                if iscell(info.uniProtKBCrossReferences)
+                    if strcmpi(info.uniProtKBCrossReferences{k}.database,'GO')
+                        go_info = split(info.uniProtKBCrossReferences{k}.id,':');   
+                    end
+                else
+                    if strcmpi(info.uniProtKBCrossReferences(k).database,'GO')
+                        go_info = split(info.uniProtKBCrossReferences(k).id,':');   
+                    end
+                end
+                if exist('go_info','var')
+                    goname = sprintf('GO_%s.csv',go_info{2});
+                    go_ids = sprintf('%s;%s',go_ids,go_info{2});
+                    taxonomy = strjoin(info.organism.lineage, ';');
+                    gfid = fopen(goname,'a');
+                    fprintf(gfid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s\n',...
+            uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,taxonomy);
+                    fclose(gfid);
+                end
+            end
+        end
+        if ~isempty(go_ids) % remove leading semicolon
+            go_ids = go_ids(2:end);
+        end
+        fprintf(ofid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s\n',...
+            uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,go_ids);
     end
     k = k + options.threads;
     if mod(k,infopoint) == 0

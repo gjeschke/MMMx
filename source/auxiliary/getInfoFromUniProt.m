@@ -8,7 +8,7 @@ function info = getInfoFromUniProt(uniprot_id)
     info = '';
     
     % Construct the URL (as in your working code)
-    url = sprintf('https://rest.uniprot.org/uniprotkb/search?query=accession:%s&fields=organism_name&format=json', uniprot_id);
+    url = sprintf('https://rest.uniprot.org/uniprotkb/search?query=accession:%s&fields=organism_name,go_id&format=json', uniprot_id);
     
     try
         % 1. Fetch the raw JSON text

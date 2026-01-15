@@ -1,4 +1,4 @@
-function plot_pod_sphere(xyz,radius,rgb,tag,alpha,characteristics)
+function plot_pod_sphere(xyz,radius,rgb,tag,alpha,characteristics,GO_ids)
 
 if ~exist('tag','var')
     tag = 'tag';
@@ -11,6 +11,11 @@ end
 if ~exist('alpha','var')
     alpha = 1;
 end
+
+if ~exist('GO_ids','var')
+    GO_ids = '';
+end
+
 
 n = 1;
 
@@ -27,6 +32,7 @@ set(obj, 'FaceColor', rgb, 'EdgeColor', 'none', 'FaceAlpha',alpha,'FaceLighting'
 set(obj, 'CDataMapping','direct','AlphaDataMapping','none');
 obj.UserData.tag = tag;
 obj.UserData.characteristics = characteristics;
+obj.UserData.GO_ids = GO_ids;
 obj.ButtonDownFcn = @protein_clicked;
 
 end

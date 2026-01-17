@@ -9,6 +9,12 @@ function characteristics = disorder_characteristics(UPID_file,options)
 %               .threads    number of parallel threads, defaults to 50
 %               .path       path to AF3 predictions, defaults to current
 %                           directory
+%               .lineage    if true, the entries are distributed into a
+%                           directory tree according to lineage, with the
+%                           file names derived from species name, defaults
+%                           to true
+%               .reviewed   if true, only reviewed entries are considered, 
+%                           defaults to true 
 %
 % Output:
 % characteristics   disorder characteristics, struct with fields
@@ -19,7 +25,7 @@ function characteristics = disorder_characteristics(UPID_file,options)
 %                   .nIFR                   histogram of the number of IFRs
 %                   .proteins               number of proteins
 %                   .oversized              number of proteins with more
-%                                           than 3000 residues, not 
+%                                           than 5000 residues, not 
 %                                           contained in .sequence_lengths
 %
 % G. Jeschke, 2025
@@ -31,6 +37,14 @@ end
 
 if ~isfield(options,'path')
     options.path = '';
+end
+
+if ~isfield(options,'lineage') || isempty(options.lineage)
+    options.lineage = true;
+end
+
+if ~isfield(options,'reviewed') || isempty(options.reviewed)
+    options.reviewed = true;
 end
 
 [path,fname,ext] = fileparts(UPID_file);
@@ -47,17 +61,20 @@ uniprot_info = cell(options.threads,1);
 all = zeros(1,101);
 fuzziness = zeros(1,101);
 residual_structure = zeros(1,101);
-all_sizes = zeros(1,3000);
+all_sizes = zeros(1,5000);
 nIFR = zeros(1,100);
 oversized = zeros(1,50000);
 n_oversized = 0;
-
 fid = fopen(iname);
-ofid = fopen(oname,'w');
+if ~options.lineage
+    ofid = fopen(oname,'w');
+end
 
 proteins = 0;
 options.structure = false;
 options.pLDDT = true;
+
+orphans = fopen('orphans.csv','w');
 
 k = 0;
 tic,
@@ -108,6 +125,16 @@ while 1
         if isempty(entity) || isempty(entity.AF_info) || isempty(entity.pae)
             continue
         end
+        if ~isfield(info,'organism')
+            continue
+        end
+        if length(info.organism.lineage) < 5
+            fprintf(orphans,'%s,%s\n',uniprot_ids{t},strjoin(info.organism.lineage, ','));
+            continue
+        end
+        if options.reviewed && ~contains(info.entryType,'Swiss-Prot')
+            continue
+        end
         proteins = proteins + 1;
         psize = length(entity.pLDDT);
         if psize > length(all_sizes)
@@ -135,26 +162,26 @@ while 1
         end
         domains = get_domains(entity.pae);
         [nd,~] = size(domains);
+        taxonomy = strjoin(info.organism.lineage, ';');
         go_ids = '';
         if isfield(info,'uniProtKBCrossReferences')
-            for k = 1:length(info.uniProtKBCrossReferences)
+            for kg = 1:length(info.uniProtKBCrossReferences)
                 clear('go_info');
                 if iscell(info.uniProtKBCrossReferences)
-                    if strcmpi(info.uniProtKBCrossReferences{k}.database,'GO')
-                        go_info = split(info.uniProtKBCrossReferences{k}.id,':');   
+                    if strcmpi(info.uniProtKBCrossReferences{kg}.database,'GO')
+                        go_info = split(info.uniProtKBCrossReferences{kg}.id,':');   
                     end
                 else
-                    if strcmpi(info.uniProtKBCrossReferences(k).database,'GO')
-                        go_info = split(info.uniProtKBCrossReferences(k).id,':');   
+                    if strcmpi(info.uniProtKBCrossReferences(kg).database,'GO')
+                        go_info = split(info.uniProtKBCrossReferences(kg).id,':');   
                     end
                 end
                 if exist('go_info','var')
                     goname = sprintf('GO_%s.csv',go_info{2});
                     go_ids = sprintf('%s;%s',go_ids,go_info{2});
-                    taxonomy = strjoin(info.organism.lineage, ';');
                     gfid = fopen(goname,'a');
-                    fprintf(gfid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s\n',...
-            uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,taxonomy);
+                    fprintf(gfid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s,%s\n',...
+            uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,go_info{2},taxonomy);
                     fclose(gfid);
                 end
             end
@@ -162,12 +189,28 @@ while 1
         if ~isempty(go_ids) % remove leading semicolon
             go_ids = go_ids(2:end);
         end
-        fprintf(ofid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s\n',...
-            uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,go_ids);
+        if options.lineage
+            go_home = pwd;
+            for tax = 1:4
+                tax_term = unblank(info.organism.lineage{tax});
+                if ~exist(tax_term,'dir')
+                    mkdir(tax_term);
+                end
+                cd(tax_term)
+            end
+            lineage5 = unblank(info.organism.lineage{5});
+            sfid = fopen(sprintf('%s_disorder_characteristics.csv',lineage5),'a');
+            fprintf(sfid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s,%s\n',...
+                uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,go_ids,taxonomy);            fclose(sfid);
+            cd(go_home);
+        else
+            fprintf(ofid,'%s,%5.3f,%6.3f,%6.3f,%i,%i,%s,%s\n',...
+                uniprot_ids{t},fraction,ffuzzy,fresidual,psize,nd,go_ids,taxonomy);
+        end
     end
     k = k + options.threads;
     if mod(k,infopoint) == 0
-        fprintf(1,'%5.1f%% of proteins read in %i attempts\n',100*proteins/k,k);
+        fprintf(1,'%6.3f%% of proteins read in %i attempts\n',100*proteins/k,k);
     end
     if ~ischar(tline)
         break
@@ -177,7 +220,10 @@ toc,
 oversized = oversized(1:n_oversized);
 
 fclose(fid);
-fclose(ofid);
+fclose(orphans);
+if ~options.lineage
+    fclose(ofid);
+end
 
 characteristics.fIDR = all;
 characteristics.fuzziness = fuzziness;
@@ -186,3 +232,11 @@ characteristics.sequence_lengths = all_sizes;
 characteristics.nIFR = nIFR;
 characteristics.proteins = proteins;
 characteristics.oversized = oversized;
+
+function term = unblank(term)
+
+for k = 1:length(term)
+    if term(k) == ' '
+        term(k) = '_';
+    end
+end

@@ -1434,7 +1434,14 @@ for kent = first_conformer:nent
                             end
                             entity1 = rmfield(entity1,C_anchor_chain);
                         end
-                        entity1 = add_OXT(entity1,'A');
+                        if n_anchored
+                            entity1 = remove_OXT(entity1,N_anchor_chain);
+                        end
+                        if n_anchored && ~c_anchored
+                            entity1 = add_OXT(entity1,entity1.(N_anchor_chain));
+                        elseif ~c_anchored
+                            entity1 = add_OXT(entity1,'A');
+                        end
                         put_pdb(entity1,fname_valid,save_options);
                     else
                         put_pdb(m_entity,fname_valid,save_options);
@@ -1943,3 +1950,20 @@ function success = success_forecast(M,samples,target)
 
 scaled_samples = M*samples;
 success = sum(min([scaled_samples';target']))/M; 
+
+function entity = remove_OXT(entity,chain)
+
+residues = fieldnames(entity.(chain));
+for kr = 1:length(residues)
+    residue = residues{kr};
+    if strcmp(residue(1),'R') % these are residue fields
+        resnum = str2double(residue(2:end));
+        next = sprintf('R%i',resnum+1);
+        if isfield(entity.A,next)
+            if isfield(entity.A.(residue),'OXT')
+                entity.A.(residue) = rmfield(entity.(chain).(residue),'OXT');
+            end
+        end
+    end
+end
+

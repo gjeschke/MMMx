@@ -1,0 +1,122 @@
+function my_light = clickable_GO_pod(filename,options)
+
+my_light = [];
+
+if ~exist('options','var') || ~isfield(options,'clear') || isempty(options.clear)
+    options.clear = true;
+end
+
+if ~isfield(options,'mode') || isempty(options.mode)
+    options.mode = 'sphere';
+end
+
+if ~isfield(options,'selection')
+    options.selection.archaea = true;
+    options.selection.bacteria = true;
+    options.selection.eukaryota = true;
+end
+
+if ~isfield(options.selection,'archaea')
+    options.selection.archaea = false;
+end
+
+if ~isfield(options.selection,'bacteria')
+    options.selection.bacteria = false;
+end
+
+if ~isfield(options.selection,'eukaryota')
+    options.selection.eukaryota = false;
+end
+
+if ~isfield(options,'colors')
+    options.color.archaea = [0    0.4470    0.7410];
+    options.color.bacteria = [0.4660    0.6740    0.1880];
+    options.color.eukaryota = [0.8500    0.3250    0.0980];
+end
+
+if ~exist('filename','var')
+    [filename, pathname] = uigetfile('GO_*.csv', 'Select file');
+    if isequal(filename,0)
+        disp('User selected Cancel');
+        return
+    else
+        filename = fullfile(pathname, filename);
+    end
+end
+
+if strcmpi(options.mode,'isosurface')
+if options.selection.archaea
+    archaea_cube = zeros(101,101,101);
+end
+if options.selection.bacteria
+    bacteria_cube = zeros(101,101,101);
+end
+if options.selection.eukaryota
+    eukaryota_cube = zeros(101,101,101);
+end
+end
+na = 0;
+nb = 0;
+ne = 0;
+
+data = get_csv(filename,'data.cell');
+[entries,~] = size(data);
+
+if options.clear
+    figure; hold on
+end
+
+for p = 1:entries
+    taxonomy = data{p,7};
+    x = str2double(data{p,2});
+    y = str2double(data{p,3});
+    z = str2double(data{p,4});
+    px = 1 + round(100*x);
+    py = 1 + round(100*y);
+    pz = 1 + round(100*z);
+    all_taxonomy = split(taxonomy,';');
+    domain = all_taxonomy{1};
+    switch domain
+        case 'Archaea'
+            if options.selection.archaea
+                archaea_cube(px,py,pz) = archaea_cube(px,py,pz) + 1;
+                na = na + 1;
+            end
+        case 'Bacteria'
+            if options.selection.bacteria
+                bacteria_cube(px,py,pz) = bacteria_cube(px,py,pz) + 1;
+                nb = nb + 1;
+            end
+        case 'Eukaryota'
+            if options.selection.eukaryota
+                eukaryota_cube(px,py,pz) = eukaryota_cube(px,py,pz) + 1;
+                ne = ne + 1;
+            end
+    end
+end
+
+if options.selection.archaea
+    plot_pod_isosurface(archaea_cube,options.color.archaea,na,'Archaea');
+end
+if options.selection.bacteria
+    plot_pod_isosurface(bacteria_cube,options.color.bacteria,nb,'Bacteria');
+end
+if options.selection.archaea
+    plot_pod_isosurface(eukaryota_cube,options.color.eukaryota,ne,'Eukaryota');
+end
+
+fprintf(1,'%i entries processed\n',na + nb + ne);
+
+axis equal
+grid on;
+axis([0,1,0,1,0,1]);
+
+view(35,30);
+lighting gouraud 
+material shiny
+
+xlabel('f_{IDR}');
+ylabel('f_{fuzzy}');
+zlabel('f_{conditional}');
+
+my_light = camlight;

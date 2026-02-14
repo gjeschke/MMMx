@@ -14,7 +14,7 @@ function characteristics = disorder_characteristics(UPID_file,options)
 %                           file names derived from species name, defaults
 %                           to true
 %               .reviewed   if true, only reviewed entries are considered, 
-%                           defaults to true 
+%                           defaults to false 
 %
 % Output:
 % characteristics   disorder characteristics, struct with fields
@@ -40,11 +40,11 @@ if ~isfield(options,'path')
 end
 
 if ~isfield(options,'lineage') || isempty(options.lineage)
-    options.lineage = true;
+    options.lineage = false;
 end
 
 if ~isfield(options,'reviewed') || isempty(options.reviewed)
-    options.reviewed = true;
+    options.reviewed = false;
 end
 
 [path,fname,ext] = fileparts(UPID_file);

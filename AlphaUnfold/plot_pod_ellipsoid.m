@@ -1,40 +1,55 @@
-function plot_pod_sphere(xyz,radius,rgb,tag,alpha,characteristics,GO_ids,residues)
+function plot_pod_ellipsoid(xyz,stddev,GO_id,taxonomy,nproteins,filtered,radius)
 
-if ~exist('tag','var')
-    tag = 'tag';
+if ~exist('radius','var')
+    radius = 0.001*nproteins^(1/3);
 end
 
-if ~exist('characteristics','var')
-    characteristics = nan(1,3);
+switch taxonomy
+    case 'Archaea'
+        rgb = [0    0.4470    0.7410];
+    case 'Bacteria'
+        rgb = [0.4660    0.6740    0.1880];
+    case 'Eukaryota'
+        rgb =[0.8500    0.3250    0.0980];
+    case 'unicellular'
+        rgb =[72,61,139]/255;
+    case 'multicellular'
+        rgb =[255 165 0]/255;
+    case 'mixed'
+        rgb =[220 20 60]/255;
+    case 'all'
+        rgb = [0.4940    0.1840    0.5560];
 end
-
-if ~exist('alpha','var')
-    alpha = 1;
-end
-
-if ~exist('GO_ids','var')
-    GO_ids = '';
-end
-
 
 n = 1;
 
 [p,t] = BuildSphere(n);
 
-p = radius*p;
-offset = ones(size(p(:,1)));
-x = p(:,1) + xyz(1)*offset;
-y = p(:,2) + xyz(2)*offset;
-z = p(:,3) + xyz(3)*offset;
+if filtered
+    offset = ones(size(p(:,1)));
+    x = stddev(1)*p(:,1) + xyz(1)*offset;
+    y = stddev(2)*p(:,2) + xyz(2)*offset;
+    z = stddev(3)*p(:,3) + xyz(3)*offset;
+else
+    p = radius*p;
+    offset = ones(size(p(:,1)));
+    x = p(:,1) + xyz(1)*offset;
+    y = p(:,2) + xyz(2)*offset;
+    z = p(:,3) + xyz(3)*offset;
+end
 
 obj=trisurf(t,x,y,z);
-set(obj, 'FaceColor', rgb, 'EdgeColor', 'none', 'FaceAlpha',alpha,'FaceLighting','gouraud','Clipping','off');
+set(obj, 'FaceColor', rgb, 'EdgeColor', 'none', 'FaceAlpha',1,'FaceLighting','gouraud','Clipping','off');
 set(obj, 'CDataMapping','direct','AlphaDataMapping','none');
-obj.UserData.tag = tag;
-obj.UserData.characteristics = characteristics;
-obj.UserData.GO_ids = GO_ids;
-obj.UserData.residues = residues;
-obj.ButtonDownFcn = @protein_clicked;
+obj.UserData.GO_id = GO_id;
+obj.UserData.xyz = xyz;
+obj.UserData.stddev = stddev;
+obj.UserData.selected = false;
+obj.UserData.radius = radius;
+obj.UserData.rgb = rgb;
+obj.UserData.n = nproteins;
+obj.UserData.filtered = filtered;
+obj.ButtonDownFcn = @GO_clicked;
 
 end
 

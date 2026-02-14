@@ -1,42 +1,72 @@
-function plot_pod_sphere(xyz,radius,rgb,tag,alpha,characteristics,GO_ids,residues)
-
-if ~exist('tag','var')
-    tag = 'tag';
-end
-
-if ~exist('characteristics','var')
-    characteristics = nan(1,3);
-end
-
-if ~exist('alpha','var')
-    alpha = 1;
-end
-
-if ~exist('GO_ids','var')
-    GO_ids = '';
-end
-
+function GO_clicked(cb,~)
+% GO_clicked(cb,eventdata)
+%
+% Function executed when a user clicks on a sphere that represents one
+% gene ontology
 
 n = 1;
 
 [p,t] = BuildSphere(n);
 
-p = radius*p;
-offset = ones(size(p(:,1)));
-x = p(:,1) + xyz(1)*offset;
-y = p(:,2) + xyz(2)*offset;
-z = p(:,3) + xyz(3)*offset;
 
-obj=trisurf(t,x,y,z);
-set(obj, 'FaceColor', rgb, 'EdgeColor', 'none', 'FaceAlpha',alpha,'FaceLighting','gouraud','Clipping','off');
-set(obj, 'CDataMapping','direct','AlphaDataMapping','none');
-obj.UserData.tag = tag;
-obj.UserData.characteristics = characteristics;
-obj.UserData.GO_ids = GO_ids;
-obj.UserData.residues = residues;
-obj.ButtonDownFcn = @protein_clicked;
+if ~cb.UserData.selected
+    url = sprintf('http://purl.obolibrary.org/obo/GO_%s',cb.UserData.GO_id);
+    web(url, '-browser');
 
+    goStr = sprintf('GO:%s',cb.UserData.GO_id);
+    baseURL = 'https://www.ebi.ac.uk/QuickGO/services/ontology/go/terms/';
+    url = [baseURL goStr];
+
+    % Call the web API (MATLAB R2016b+)
+    data = webread(url);
+
+    % QuickGO returns a struct; term name is in data.results(1).name
+    fprintf('>>> GO: %s, %s (%i) <<<\n',cb.UserData.GO_id,data.results(1).name,cb.UserData.n);
+
+    fprintf(1,'IDR: %5.3f\n',cb.UserData.xyz(1));
+    fprintf(1,'fuzziness: %5.3f\n',cb.UserData.xyz(2));
+    fprintf(1,'residual: %5.3f\n',cb.UserData.xyz(3));
+
+    rgb = [0.9290    0.6940    0.1250];
+
+    offset = ones(size(p(:,1)));
+    x = cb.UserData.stddev(1)*p(:,1) + cb.UserData.xyz(1)*offset;
+    y = cb.UserData.stddev(2)*p(:,2) + cb.UserData.xyz(2)*offset;
+    z = cb.UserData.stddev(3)*p(:,3) + cb.UserData.xyz(3)*offset;
+
+    obj=trisurf(t,x,y,z);
+    set(obj, 'FaceColor', rgb, 'EdgeColor', 'none', 'FaceAlpha',1,'FaceLighting','gouraud','Clipping','off');
+    set(obj, 'CDataMapping','direct','AlphaDataMapping','none');
+    obj.UserData = cb.UserData;
+    obj.UserData.selected = true;
+    obj.ButtonDownFcn = @GO_clicked;
+
+else
+
+    rgb = cb.UserData.rgb;
+
+    if cb.UserData.filtered
+        offset = ones(size(p(:,1)));
+        x = cb.UserData.stddev(1)*p(:,1) + cb.UserData.xyz(1)*offset;
+        y = cb.UserData.stddev(2)*p(:,2) + cb.UserData.xyz(2)*offset;
+        z = cb.UserData.stddev(3)*p(:,3) + cb.UserData.xyz(3)*offset;
+    else
+        p = cb.UserData.radius*p;
+        offset = ones(size(p(:,1)));
+        x = p(:,1) + cb.UserData.xyz(1)*offset;
+        y = p(:,2) + cb.UserData.xyz(2)*offset;
+        z = p(:,3) + cb.UserData.xyz(3)*offset;
+    end
+
+    obj=trisurf(t,x,y,z);
+    set(obj, 'FaceColor', rgb, 'EdgeColor', 'none', 'FaceAlpha',1,'FaceLighting','gouraud','Clipping','off');
+    set(obj, 'CDataMapping','direct','AlphaDataMapping','none');
+    obj.UserData = cb.UserData;
+    obj.UserData.selected = false;
+    obj.ButtonDownFcn = @GO_clicked;
 end
+
+delete(cb);
 
 function [p,t]=BuildSphere(n)
 %BUILDSPHERE: Returns the triangulated model of a sphere using the
@@ -288,5 +318,3 @@ for i=1:n
     nt=ct-1;
     
 end
-
-end            

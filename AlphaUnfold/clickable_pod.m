@@ -1,4 +1,4 @@
-function clickable_pod(options)
+function my_light = clickable_pod(options)
 
 if ~exist('options','var') || ~isfield(options,'opaqueness')
     options.opaqueness = [];
@@ -49,7 +49,7 @@ for p = 1:proteins
     else
         opaqueness = str2double(data{p,options.opaqueness});
     end
-    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),all_ffuzzy(p),1 - all_fresidual(p)],data{p,7});
+    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),all_ffuzzy(p),1 - all_fresidual(p)],data{p,7},psize);
 end
 
 axis equal
@@ -58,10 +58,11 @@ axis([0,1,0,1,0,1]);
 view(35,30);
 lighting gouraud 
 material shiny
+my_light = camlight;
 
 xlabel('f_{IDR}');
 ylabel('f_{fuzzy}');
-zlabel('1 - f_{residual}');
+zlabel('1 - f_{conditional}');
 
 fprintf(1,'Mean f(IDR): %6.3f\n',sum(all_psize.*all_fIDR)/sum(all_psize));
 fprintf(1,'Mean f(fuzzy): %6.3f\n',sum(all_psize.*all_ffuzzy)/sum(all_psize));

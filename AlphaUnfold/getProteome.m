@@ -6,7 +6,7 @@ function UniProtIDs = getProteome(proteomeID,is_reference)
 % proteome_id   identifier, such as UP000000625 for the E. coli reference
 %               proteome
 % is_reference  flag that suppresses query for reviewed UniProt entries and
-%               removal of unreviwed entries, defaults to false
+%               removal of unreviewed entries, defaults to false
 %
 % OUTPUT:
 % UniProtIDs    cell string of UniProt identifiers of the proteins in this

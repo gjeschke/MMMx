@@ -9,6 +9,8 @@ function characteristics = disorder_characteristics(UPID_file,options)
 %               .threads    number of parallel threads, defaults to 50
 %               .path       path to AF3 predictions, defaults to current
 %                           directory
+%               .jpath      path to viro3D json scores files, defaults to
+%                           current directory
 %               .lineage    if true, the entries are distributed into a
 %                           directory tree according to lineage, with the
 %                           file names derived from species name, defaults
@@ -37,6 +39,10 @@ end
 
 if ~isfield(options,'path')
     options.path = '';
+end
+
+if ~isfield(options,'jpath')
+    options.jpath = '';
 end
 
 if ~isfield(options,'lineage') || isempty(options.lineage)
@@ -105,6 +111,7 @@ while 1
         if ~isempty(options.path) %#ok<PFBNS> 
             ename = fullfile(options.path,ename);
         end
+        my_list = dir(sprintf('%s%s*.json',options.jpath,uniprot_ids{t}));
         if exist(ename,'file')
             data = load(ename);
             dataset = data.entity;
@@ -114,6 +121,15 @@ while 1
             dataset.AF_info.fractionPlddtLow = sum((data.pLDDT >= 50) & (data.pLDDT < 70))/length(data.pLDDT);
             dataset.AF_info.fractionPlddtConfident = sum((data.pLDDT >= 70) & (data.pLDDT < 90))/length(data.pLDDT);
             dataset.AF_info.fractionPlddtVeryHigh = sum(data.pLDDT >= 90)/length(data.pLDDT);
+            datasets{t} = dataset;
+        elseif length(my_list) == 1
+            data = jsondecode(fileread(fullfile(my_list.folder,my_list.name)));
+            dataset.pae = data.pae;
+            dataset.pLDDT = data.plddt;
+            dataset.AF_info.fractionPlddtVeryLow = sum(data.plddt < 50)/length(data.plddt);
+            dataset.AF_info.fractionPlddtLow = sum((data.plddt >= 50) & (data.plddt < 70))/length(data.plddt);
+            dataset.AF_info.fractionPlddtConfident = sum((data.plddt >= 70) & (data.plddt < 90))/length(data.plddt);
+            dataset.AF_info.fractionPlddtVeryHigh = sum(data.plddt >= 90)/length(data.plddt);
             datasets{t} = dataset;
         else
             datasets{t} = get_AF(uniprot_ids{t},options);

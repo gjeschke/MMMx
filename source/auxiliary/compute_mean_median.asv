@@ -1,0 +1,27 @@
+function [mean_val, median_val] = compute_mean_median(x, px)
+% Compute mean and median from probability density function
+% x: vector of axis values
+% px: vector of probability density values
+
+px = px/sum(px);
+
+% % Normalize the probability density to ensure it integrates to 1
+% total_prob = trapz(x, px);
+% px_normalized = px / total_prob;
+
+% Compute mean using numerical integration: ∫x·p(x)dx
+mean_val = sum(x .* px);
+
+% Compute cumulative distribution function (CDF)
+cdf = cumtrapz(x, px_normalized);
+
+[~,idx] = min(abs(cdf-0.5));
+range = idx - 1 : idx+1;
+dx = (x(idx+1)-x(idx-1))/2;
+x0 = x(range);
+xf = x(idx-1):dx/10:x(idx+1);
+cdff = interp1(x0,cdf(range),xf,"linear",'extrap');
+[~,idx] = min(abs(cdff-0.5));
+median_val = xf(idx);
+
+end

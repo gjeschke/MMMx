@@ -63,6 +63,7 @@ oname = fullfile(path,sprintf('%s_disorder_characteristics.csv',fname));
 infopoint = 1000;
 uniprot_ids = cell(options.threads,1);
 uniprot_info = cell(options.threads,1);
+viro3d_ids = cell(options.threads,1);
 
 all = zeros(1,101);
 fuzziness = zeros(1,101);
@@ -100,8 +101,13 @@ while 1
         end
         args = split(tline,',');
         uniprot_ids{t} = args{1}; 
+        if length(args) >= 2
+            viro3d_ids{t} = args{2};
+        else
+            viro3d_ids{t} = 'xxx';
+        end
     end
-    parfor t = 1:options.threads % ### parfor
+    for t = 1:options.threads % ### parfor
         if ~strcmpi(uniprot_ids{t},'xxx')
             uniprot_info{t} = getInfoFromUniProt(uniprot_ids{t});
         else
@@ -111,7 +117,9 @@ while 1
         if ~isempty(options.path) %#ok<PFBNS> 
             ename = fullfile(options.path,ename);
         end
-        my_list = dir(sprintf('%s%s*.json',options.jpath,uniprot_ids{t}));
+        jname = sprintf('%s*.json',viro3d_ids{t});
+        jname = fullfile(options.jpath,jname);
+        my_list = dir(jname);
         if exist(ename,'file')
             data = load(ename);
             dataset = data.entity;

@@ -1,4 +1,4 @@
-function plot_octahedron(xyz, a, b, c, color)
+function obj = plot_octahedron(xyz, a, b, c, color)
 % PLOT_OCTAHEDRON Plots an octahedron with opposite vertices along x, y, z axes
 %   plot_octahedron(a, b, c, color) plots an octahedron where:
 %       xyz = coordinate of the center

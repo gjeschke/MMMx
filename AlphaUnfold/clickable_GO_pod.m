@@ -14,6 +14,7 @@ if ~isfield(options,'selection')
     options.selection.archaea = true;
     options.selection.bacteria = true;
     options.selection.eukaryota = true;
+    options.selection.viruses = true;
 end
 
 if ~isfield(options.selection,'archaea')
@@ -28,10 +29,15 @@ if ~isfield(options.selection,'eukaryota')
     options.selection.eukaryota = false;
 end
 
-if ~isfield(options,'colors')
+if ~isfield(options.selection,'viruses')
+    options.selection.viruses = false;
+end
+
+if ~isfield(options,'color')
     options.color.archaea = [0    0.4470    0.7410];
     options.color.bacteria = [0.4660    0.6740    0.1880];
     options.color.eukaryota = [0.8500    0.3250    0.0980];
+    options.color.viruses = [0.500    0.50    0.5];
 end
 
 if ~exist('filename','var')
@@ -54,6 +60,9 @@ if strcmpi(options.mode,'isosurface')
     if options.selection.eukaryota
         eukaryota_cube = zeros(101,101,101);
     end
+    if options.selection.viruses
+        virus_cube = zeros(101,101,101);
+    end
 end
 
 na = 0;
@@ -68,7 +77,7 @@ if options.clear
 end
 
 for p = 1:entries
-    taxonomy = data{p,7};
+    taxonomy = data{p,8};
     x = str2double(data{p,2});
     y = str2double(data{p,3});
     z = str2double(data{p,4});
@@ -94,6 +103,11 @@ for p = 1:entries
                     eukaryota_cube(px,py,pz) = eukaryota_cube(px,py,pz) + 1;
                     ne = ne + 1;
                 end
+            case 'Viruses'
+                if options.selection.viruses
+                    virus_cube(px,py,pz) = virus_cube(px,py,pz) + 1;
+                    ne = ne + 1;
+                end
         end
     else
         n = str2double(data{p,5});
@@ -102,17 +116,22 @@ for p = 1:entries
         switch domain
             case 'Archaea'
                 if options.selection.archaea
-                    plot_pod_sphere([x,y,z],radius,options.color.archaea,data{p,1},1,characteristics,data{p,6},n);
+                    plot_object([x,y,z],radius,options.color.archaea,data{p,1},1,characteristics,data{p,7},n,options);
                     na = na + 1;
                 end
             case 'Bacteria'
                 if options.selection.bacteria
-                    plot_pod_sphere([x,y,z],radius,options.color.bacteria,data{p,1},1,characteristics,data{p,6},n);
+                    plot_object([x,y,z],radius,options.color.bacteria,data{p,1},1,characteristics,data{p,7},n,options);
                     nb = nb + 1;
                 end
             case 'Eukaryota'
                 if options.selection.eukaryota
-                    plot_pod_sphere([x,y,z],radius,options.color.eukaryota,data{p,1},1,characteristics,data{p,6},n);
+                    plot_object([x,y,z],radius,options.color.eukaryota,data{p,1},1,characteristics,data{p,7},n,options);
+                    ne = ne + 1;
+                end
+            case 'Viruses'
+                if options.selection.viruses
+                    plot_object([x,y,z],radius,options.color.viruses,data{p,1},1,characteristics,data{p,7},n,options);
                     ne = ne + 1;
                 end
         end
@@ -146,3 +165,12 @@ ylabel('f_{fuzzy}');
 zlabel('f_{conditional}');
 
 my_light = camlight;
+
+function plot_object(xyz,radius,rgb,tag,alpha,characteristics,GO_ids,residues,options)
+
+switch options.mode
+    case 'sphere'
+        plot_pod_sphere(xyz,radius,rgb,tag,alpha,characteristics,GO_ids,residues);
+    case 'octahedron'
+        plot_pod_octahedron(xyz,radius,rgb,tag,alpha,characteristics,GO_ids,residues);
+end

@@ -29,6 +29,7 @@ function [entity,exceptions] = get_AF(UniProtID,options)
 %              .pLDDT           predicted local-distance difference test,
 %                               a residue-wise confidence predictor
 %              .pae             AlphaFold predicted aligned error matrix
+%              .AF_info         AlphaFold metadata
 % exceptions   error message if something went wrong, entity is empty for
 %              errors but not for warnings, for warnings, only the last one
 %              is reported, cell containing an empty array, if no exception
@@ -84,7 +85,11 @@ if options.structure
 end
 entity.name = AF_info.uniprotAccession(1:4);
 entity.uniprot = AF_info.uniprotAccession;
-entity.uniprotname = AF_info.uniprotId;
+if isfield(AF_info,'uniprotId')
+    entity.uniprotname = AF_info.uniprotId;
+else
+    entity.uniprotname = AF_info.uniprotAccession;
+end
 entity.sequence = AF_info.uniprotSequence;
 entity.origin = sprintf('AlphaFold v%i',AF_info.latestVersion);
 entity.organism = AF_info.organismScientificName;

@@ -128,7 +128,7 @@ if ~isfield(options,'local') || isempty(options.local)
 end
 
 if ~isfield(options,'minterm') || isempty(options.minterm)
-    options.minterminal = 10;
+    options.minterm = 10;
 end
 
 if ~isfield(options,'figname')

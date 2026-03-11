@@ -65,6 +65,10 @@ if strcmpi(options.mode,'isosurface')
     end
 end
 
+if ~isfield(options,'alpha')
+    options.alpha = 1;
+end
+
 na = 0;
 nb = 0;
 ne = 0;
@@ -77,7 +81,7 @@ if options.clear
 end
 
 for p = 1:entries
-    taxonomy = data{p,8};
+    taxonomy = data{p,7};
     x = str2double(data{p,2});
     y = str2double(data{p,3});
     z = str2double(data{p,4});
@@ -87,23 +91,23 @@ for p = 1:entries
         px = 1 + round(100*x);
         py = 1 + round(100*y);
         pz = 1 + round(100*z);
-        switch domain
-            case 'Archaea'
+        switch lower(domain)
+            case 'archaea'
                 if options.selection.archaea
                     archaea_cube(px,py,pz) = archaea_cube(px,py,pz) + 1;
                     na = na + 1;
                 end
-            case 'Bacteria'
+            case 'bacteria'
                 if options.selection.bacteria
                     bacteria_cube(px,py,pz) = bacteria_cube(px,py,pz) + 1;
                     nb = nb + 1;
                 end
-            case 'Eukaryota'
+            case 'eukaryota'
                 if options.selection.eukaryota
                     eukaryota_cube(px,py,pz) = eukaryota_cube(px,py,pz) + 1;
                     ne = ne + 1;
                 end
-            case 'Viruses'
+            case 'viruses'
                 if options.selection.viruses
                     virus_cube(px,py,pz) = virus_cube(px,py,pz) + 1;
                     ne = ne + 1;
@@ -113,23 +117,23 @@ for p = 1:entries
         n = str2double(data{p,5});
         radius = 0.0025*n^(1/3);
         characteristics = [x,y,1-z];
-        switch domain
-            case 'Archaea'
+        switch lower(domain)
+            case 'archaea'
                 if options.selection.archaea
-                    plot_object([x,y,z],radius,options.color.archaea,data{p,1},1,characteristics,data{p,7},n,options);
+                    plot_object([x,y,z],radius,options.color.archaea,data{p,1},options.alpha,characteristics,data{p,7},n,options);
                     na = na + 1;
                 end
-            case 'Bacteria'
+            case 'bacteria'
                 if options.selection.bacteria
-                    plot_object([x,y,z],radius,options.color.bacteria,data{p,1},1,characteristics,data{p,7},n,options);
+                    plot_object([x,y,z],radius,options.color.bacteria,data{p,1},options.alpha,characteristics,data{p,7},n,options);
                     nb = nb + 1;
                 end
-            case 'Eukaryota'
+            case 'eukaryota'
                 if options.selection.eukaryota
-                    plot_object([x,y,z],radius,options.color.eukaryota,data{p,1},1,characteristics,data{p,7},n,options);
+                    plot_object([x,y,z],radius,options.color.eukaryota,data{p,1},options.alpha,characteristics,data{p,7},n,options);
                     ne = ne + 1;
                 end
-            case 'Viruses'
+            case 'viruses'
                 if options.selection.viruses
                     plot_object([x,y,z],radius,options.color.viruses,data{p,1},1,characteristics,data{p,7},n,options);
                     ne = ne + 1;

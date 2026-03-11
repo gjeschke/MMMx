@@ -84,6 +84,7 @@ all_sizes = zeros(1,5000);
 oversized = zeros(1,50000);
 n_oversized = 0;
 fid = fopen(iname);
+fgetl(fid);
 ofid = fopen(oname,'w');
 
 proteins = 0;

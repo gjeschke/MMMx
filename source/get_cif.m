@@ -1,4 +1,4 @@
-function entity = get_cif(fname)
+function entity = get_cif(fname,missing_comments)
 %
 % GET_CIF Generate entity from a local mmcif file
 %
@@ -7,6 +7,8 @@ function entity = get_cif(fname)
 %
 % INPUT
 % fname     name of a local MMCIF file, extension .cif is appended if none
+% missing_comments indicates a non-standrad format without comment lines
+%                  for sections, defauts to false
 %
 % OUTPUT
 % entity       entity structure in MMMx:atomic representation
@@ -24,6 +26,10 @@ function entity = get_cif(fname)
 % this number is too small and is memory-intensive, if it is too large
 maxwater = 1000000;
 
+if ~exist('missing_comments','var')
+    missing_comments = false;
+end
+
 % initialize empty output
 entity = [];
 
@@ -35,7 +41,7 @@ if isempty(ext)
 end
 
 % read 3D structure information from file
-info = rd_mmcif(fname);
+info = rd_mmcif(fname,missing_comments);
 atoms = length(info.atomsite);
                                  
 % pre-allocate Cartesian coordinate, element, and index arrays

@@ -47,7 +47,7 @@ for p = 1:GO_ids
     z = str2double(data{p,5});
     n = str2double(data{p,9});
     if options.diffmode
-        xyz = [x,y,-z];
+        xyz = [x,y,z];
     else
         xyz = [x,y,1 - z];
     end
@@ -69,7 +69,7 @@ for p = 1:GO_ids
             top_ten_GO{10,k} = GO_id;
         end
         if xyz(k) < max(bottom_ten(:,k))
-            [bottom_ten(:,k),indices] = sort(bottom_ten(:,k),'ascen');
+            [bottom_ten(:,k),indices] = sort(bottom_ten(:,k),'ascend');
             bottom_ten_GO(:,k) = bottom_ten_GO(indices,k);
             bottom_ten(10,k) = xyz(k);
             bottom_ten_GO{10,k} = GO_id;
@@ -95,11 +95,11 @@ material shiny
 if options.diffmode
     xlabel('\Delta f_{IDR}');
     ylabel('\Delta f_{fuzzy}');
-    zlabel('\Delta f_{residual}');
+    zlabel('\Delta f_{conditional}');
 else
     xlabel('f_{IDR}');
     ylabel('f_{fuzzy}');
-    zlabel('1 - f_{residual}');
+    zlabel('1 - f_{conditional}');
 end
 
 for k = 1:3

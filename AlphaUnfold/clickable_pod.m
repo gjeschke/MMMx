@@ -1,21 +1,33 @@
 function my_light = clickable_pod(options)
 
+my_light = [];
+
 if ~exist('options','var') || ~isfield(options,'opaqueness')
     options.opaqueness = [];
 end
 
-[filename, pathname] = uigetfile('_disorder_characteristics.csv', 'Select file');
+if ~isfield(options,'fluctuations')
+    options.fluctuations = false;
+end
+
+[filename, pathname] = uigetfile('_characteristics.csv', 'Select file');
 if isequal(filename,0)
     disp('User selected Cancel');
+    return
 else
     fullpath = fullfile(pathname, filename);
 end
 
 data = get_csv(fullpath,'data.cell');
-[proteins,~] = size(data);
+[proteins,columns] = size(data);
+if columns < 9
+    options.fluctuations = false;
+end
+
 all_fIDR = zeros(1,proteins);
 all_ffuzzy = zeros(1,proteins);
 all_fresidual = zeros(1,proteins);
+all_ffluct = zeros(1,proteins);
 all_psize = zeros(1,proteins);
 
 
@@ -33,7 +45,14 @@ for p = 1:proteins
     psize = str2double(data{p,5});
     all_psize(p) = psize; 
     nd = str2double(data{p,6});
+    if columns >= 9
+        all_ffluct(p) = str2double(data{p,9});
+        if options.fluctuations
+            y = all_ffluct(p);
+        end
+    end
     xyz = [x,y,1 - z];
+    
     radius = 0.001*psize^(1/3);
     nIFR = nd;
     if nIFR == 0
@@ -49,7 +68,7 @@ for p = 1:proteins
     else
         opaqueness = str2double(data{p,options.opaqueness});
     end
-    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),all_ffuzzy(p),1 - all_fresidual(p)],data{p,7},psize);
+    plot_pod_sphere(xyz,radius,rgb,UniProtID,opaqueness,[all_fIDR(p),y,1 - all_fresidual(p)],data{p,7},psize);
 end
 
 axis equal
@@ -61,10 +80,16 @@ material shiny
 my_light = camlight;
 
 xlabel('f_{IDR}');
-ylabel('f_{fuzzy}');
+if options.fluctuations
+    ylabel('f_{fluct}');
+else
+    ylabel('f_{fuzzy}');
+end
 zlabel('1 - f_{conditional}');
 
 fprintf(1,'Mean f(IDR): %6.3f\n',sum(all_psize.*all_fIDR)/sum(all_psize));
 fprintf(1,'Mean f(fuzzy): %6.3f\n',sum(all_psize.*all_ffuzzy)/sum(all_psize));
 fprintf(1,'Mean f(residual): %6.3f\n',sum(all_psize.*all_fresidual)/sum(all_psize));
-
+if columns >= 9
+    fprintf(1,'Mean f(fluct): %6.3f\n',sum(all_psize.*all_ffluct)/sum(all_psize));
+end

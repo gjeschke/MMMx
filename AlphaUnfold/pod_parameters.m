@@ -168,7 +168,11 @@ while 1
     query_part = strjoin(strcat('accession:', uniprot_ids), ' OR ');
     encoded_query = urlencode(query_part);
     url = sprintf('https://rest.uniprot.org/uniprotkb/search?query=%s&fields=organism_name,go_id&format=json&size=500', encoded_query);
-    results = urlread(url); %#ok<URLRD>
+    try
+        results = urlread(url); %#ok<URLRD>
+    catch
+        continue
+    end
     info = jsondecode(results);
     % info = request(url);
     if isempty(info)

@@ -1438,7 +1438,7 @@ for kent = first_conformer:nent
                             entity1 = remove_OXT(entity1,N_anchor_chain);
                         end
                         if n_anchored && ~c_anchored
-                            entity1 = add_OXT(entity1,entity1.(N_anchor_chain));
+                            entity1 = add_OXT(entity1,N_anchor_chain);
                         elseif ~c_anchored
                             entity1 = add_OXT(entity1,'A');
                         end

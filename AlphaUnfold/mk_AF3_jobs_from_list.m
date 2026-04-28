@@ -1,4 +1,8 @@
-function mk_AF3_jobs_from_list(shortlist,domain)
+function mk_AF3_jobs_from_list(shortlist,domain,skip)
+
+if ~exist('skip','var')
+    skip = 0;
+end
 
 number = 50000;
 UPID = cell(1,number);
@@ -7,12 +11,17 @@ fid = fopen(shortlist);
 fgetl(fid);
 
 matches = 0;
+skip0 = skip;
 while 1
     tline = fgetl(fid);
     if ~ischar(tline), break, end
-    matches = matches + 1;
-    args = split(tline,',');
-    UPID{matches} = args{1};
+    if skip > 0
+        skip = skip - 1;
+    else
+        matches = matches + 1;
+        args = split(tline,',');
+        UPID{matches} = args{1};
+    end
 end
 
 fclose(fid);
@@ -26,7 +35,7 @@ cd(domain);
 
 done = 0;
 for n = 1:matches
-    mk_job(UPID{n},n);
+    mk_job(UPID{n},n+skip0);
     done = done + 1;
     if mod(done,100) == 0
         fprintf(1,'%i of %i AF3 jobs prepared\n',done,matches);

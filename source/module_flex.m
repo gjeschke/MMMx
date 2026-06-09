@@ -678,6 +678,23 @@ for kent = first_conformer:nent
     else
         n_anchored = false;
     end
+
+        free_standing = true;
+    reverse = false;
+    
+    if n_anchored || c_anchored
+        free_standing = false;
+    end
+    
+    if c_anchored && ~n_anchored
+        reverse = true;
+    end
+    
+    if c_anchored && n_anchored
+        closed_loop = true;
+    else
+        closed_loop = false;
+    end
     
     if failed
         warnings = warnings + 1;
@@ -860,9 +877,16 @@ for kent = first_conformer:nent
                 end
                 kres = kres1;
                 site = kres2;
-                if site > kres
-                    kres = kres2;
-                    site = kres1;
+                if reverse
+                    if site < kres
+                        kres = kres2;
+                        site = kres1;
+                    end
+                else
+                    if site > kres
+                        kres = kres2;
+                        site = kres1;
+                    end
                 end
                 if ~isfield(restrain(kres),'r_intern') % this residue does not yet have an internal restraint
                     restrain(kres).r_intern(1).site = site;
@@ -1167,23 +1191,6 @@ for kent = first_conformer:nent
     
     ntrials = 20000000; % number of Monte Carlo trials
     max_seconds = 3600*max_time; % maximum runtime in seconds
-    
-    free_standing = true;
-    reverse = false;
-    
-    if n_anchored || c_anchored
-        free_standing = false;
-    end
-    
-    if c_anchored && ~n_anchored
-        reverse = true;
-    end
-    
-    if c_anchored && n_anchored
-        closed_loop = true;
-    else
-        closed_loop = false;
-    end
     
     res1 = restraints.initial;
     resend = restraints.final;

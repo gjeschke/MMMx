@@ -15,9 +15,9 @@ function name = mk_AF3_input(UniProtID,nseeds,options)
 %               .copies     number of protomers in a multimer, default: 1
 %               .RNA        an RNA sequence
 %               .RNA_copies number of copies of the RNA, defaults to 1
-%               .ligands    struct with a list of ligands with fields
-%                           .ID     identifier, suchs as 'ATP'
-%                           .copies number of copies
+%               .ligands    array of struct with a list of ligands with fields
+%                           .ID     identifier, suchs as 'K1'
+%                           .CCD    CCD code, such as 'K' for potassium ion
 %               .sequence   sequence in single-letter format, used only if
 %                           UniProtID is empty
 %               .name       
@@ -53,9 +53,26 @@ mkdir(options.name);
 cd(options.name);
 
 if isempty(UniProtID)
-    seq = options.sequence;
+        sequence{1} = options.sequence;
+        type{1} = 'proteinChain'; % can also be rnaSequence
+        copies{1} = options.copies;
+        id{1} = '';
 else
-    seq = get_sequence(UniProtID);
+    if ~iscell(UniProtID)
+        seq = get_sequence(UniProtID);
+        sequence{1} = seq;
+        type{1} = 'proteinChain'; % can also be rnaSequence
+        copies{1} = options.copies;
+        id{1} = '';
+    else
+        for p = 1:length(UniProtID)
+            seq = get_sequence(UniProtID{p});
+            sequence{p} = seq; %#ok<*AGROW> 
+            type{p} = 'proteinChain'; % can also be rnaSequence
+            copies{p} = options.copies(p);
+            id{p} = '';
+        end
+    end
 end
 
 seeds = zeros(nseeds,1);
@@ -68,32 +85,31 @@ for s = 2:nseeds
     end
     seeds(s) = seed;
 end
-sequence{1} = seq;
-type{1} = 'proteinChain'; % can also be rnaSequence
-copies{1} = options.copies;
-bas = 1;
+
+bas = length(sequence);
 
 if isfield(options,'RNA') && ~isempty(options.RNA)
-    sequence{2} = options.RNA;
-    type{2} = 'rnaSequence';
-    copies{2} = options.RNA_copies;
+    sequence{bas+1} = options.RNA;
+    type{bas+1} = 'rnaSequence';
+    copies{bas+1} = options.RNA_copies;
     bas = bas + 1;
 end
 
 if isfield(options,'ligands') && ~isempty(options.ligands)
     for k = 1:length(options.ligands)
-        sequence{bas+k} = options.ligands(k).ID; %#ok<AGROW> 
-        type{bas+k} = 'ligand'; %#ok<AGROW> 
-        copies{bas+k} = options.ligands(k).copies; %#ok<AGROW> 
+        sequence{bas+k} = options.ligands(k).CCD; 
+        type{bas+k} = 'ligand'; 
+        copies{bas+k} = options.ligands(k).copies; 
+        id{bas+k} = options.ligands(k).ID;
     end
     bas = bas + length(options.ligands);
 end
 
 if isfield(options,'ions') && ~isempty(options.ions)
     for k = 1:length(options.ions)
-        sequence{bas+k} = options.ions(k).ID; %#ok<AGROW> 
-        type{bas+k} = 'ion'; %#ok<AGROW> 
-        copies{bas+k} = options.ions(k).copies; %#ok<AGROW> 
+        sequence{bas+k} = options.ions(k).ID; 
+        type{bas+k} = 'ion'; 
+        copies{bas+k} = options.ions(k).copies; 
     end
 end
 

@@ -1,4 +1,4 @@
-function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses,options)
+function [coor,coor_3D,measures,D,h] = abstract_conformer_space(entities,addresses,options)
 % ABSTRACT_CONFORMER_SPACE  Determines the abstract conformer space and its 
 %                           3D approximation for a set of ensemble structures
 %
@@ -30,6 +30,8 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 %                               clustering)
 %               .colors         colors assigned to the entities, defaults
 %                               to colors from the turbo color scale
+%               .clustering     can be 'k-medoid' or 'hierarchical',
+%                               defaults to k-medoid
 %
 % OUTPUT
 % coor          double (C,n) coordinates for C conformers in n-dimensional
@@ -68,6 +70,7 @@ function [coor,coor_3D,measures,D] = abstract_conformer_space(entities,addresses
 %                               subensembles, empty if no clustering was
 %                               requested
 % D             dRMSD matrix between the conformers
+% h             figure handles of the plotted figures
 %
 % This file is a part of MMMx. License is MIT (see LICENSE.md). 
 % (c) G. Jeschke, 2023-2024
@@ -109,6 +112,11 @@ if ~isfield(options,'colors') || isempty(options.colors)
     options.colors = colors(2:end-1,:);
 end
 
+if ~isfield(options,'clustering') || isempty(options.clustering)
+    options.clustering = 'k-medoid';
+end
+
+
 description{1,1} = 'Conformer';
 description{1,2} = 'Weight';
 description{1,3} = 'x';
@@ -118,6 +126,8 @@ description{1,6} = 'Uncertainty';
 description{1,7} = 'State';
 description{1,8} = 'Cluster';
 description{1,9} = 'Cluster type';
+
+h = zeros(1,3);
 
 
 [D,pop,all_Rg,assignment] = drms_matrix(entities,addresses);
@@ -142,9 +152,9 @@ if options.sorting
     conformer_order = indices;
     pop = pop(indices);
 	if max(assignment) > 1
-		plot_sorted_distance_matrix(D,assignment(conformer_order),options.colors);
+		h(1) = plot_sorted_distance_matrix(D,assignment(conformer_order),options.colors);
 	else
-		plot_sorted_distance_matrix(D);
+		h(1) = plot_sorted_distance_matrix(D);
 	end
 else
     indices = [];
@@ -164,15 +174,17 @@ colors = turbo(C);
 [~,score,~,~,explained] = pca(coor);
 
 if ~isempty(options.subensembles) && options.subensembles > 1
-    % compute linkage
-    Z = linkage(D,'complete');
-    % cluster
-    indices = cluster(Z,'maxclust',options.subensembles);
-    measures.subensembles = indices;
+    if strcmpi(options.clustering,'hierarchical')
+        Z = linkage(D,'complete');
+        idx = cluster(Z,'maxclust',options.subensembles);
+    else
+        idx = kmedoids((1:C)', options.subensembles, 'Distance', @(ZI, ZJ) D(ZJ, ZI));
+    end
+    measures.subensembles = idx(indices);
     colors0 = turbo(options.subensembles+2);
     colors0 = 0.75*colors0(2:end-1,:);
     for c = 1:C
-        colors(c,:) = colors0(indices(c),:);
+        colors(c,:) = colors0(idx(c),:);
     end
 else
     measures.subensembles = [];
@@ -187,7 +199,7 @@ else
     end
 end
 
-figure; hold on;
+h(2) = figure; hold on;
 for c = 1:C
     plot(score(c,1),score(c,2),'.','MarkerSize',14,'Color',colors(c,:));
 end
@@ -197,7 +209,7 @@ ylabel('y [Å]');
 title(sprintf('PCA 2 analysis (%4.1f%% of variance)',sum(explained(1:2))));
 set(gca,'FontSize',12);
 
-figure; hold on;
+h(3) = figure; hold on;
 for c = 1:C
     plot3(score(c,1),score(c,2),score(c,3),'.','MarkerSize',14,'Color',colors(c,:));
 end
@@ -534,9 +546,9 @@ for kc = 1:length(indices)
 end
 fclose(fid);
 
-function plot_sorted_distance_matrix(D,assignment,colors)
+function h = plot_sorted_distance_matrix(D,assignment,colors)
 
-figure; hold on;
+h = figure; hold on;
 
 image(D,'CDataMapping','scaled');
 
@@ -559,8 +571,7 @@ if exist('assignment','var') && ~isempty(assignment)
         msize = 8;
     end
     for c = 1:length(assignment)
- 	   plot(c,-round(msize/20),'.','MarkerSize',msize,'Color',colors(assignment(c),:));
- 	   plot(-round(msize/20),c,'.','MarkerSize',msize,'Color',colors(assignment(c),:));
+ 	   plot(c,c,'.','MarkerSize',msize,'Color',colors(assignment(c),:));
     end
 end
 

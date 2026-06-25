@@ -12,7 +12,7 @@ function [lineage,organism] = get_taxonomy_lineage(taxon_id)
 
 options = weboptions("ContentType","json","Timeout",30);
 url = sprintf('https://api.ncbi.nlm.nih.gov/datasets/v2/taxonomy/taxon/%i',taxon_id);
-trials = 10;
+trials = 100;
 result = '';
 while trials > 0
     try

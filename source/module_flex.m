@@ -1544,8 +1544,8 @@ for kent = first_conformer:nent
                             M = M0;
                         end
                         if report_update
-                            fprintf(logfid,'Sampling factor for %i-%i updated to M = %6.3f (%s)\n',...
-                                res,kr,M,M_mode);
+                            fprintf(logfid,'Sampling factor for %i-%i updated to M = %6.3f\n',...
+                                res,kr,M);
                             fprintf(logfid,'Sampling distribution for %i-%i updated by %6.3f%% new samples\n',...
                                 res,kr,100*f);
                         end

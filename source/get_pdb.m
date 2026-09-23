@@ -26,6 +26,11 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 %           .atoff  atom offset, atom offset for indexing, defaults to 0
 %           .fast   Boolean flag, refrain from element assignment, defaults
 %                   to false
+%           .resoff residue number offset, defaults to 0
+%           .exclude    cell strimng, residue types that are excluded, e.g.
+%                       options.exclude = {'HOH'}; skips reading of water,
+%                       defaults to no exclusion;
+% 
 % entity    optional, if present, models from the PDB file are added as
 %           conformers to an existing entity, the caller is responsible for
 %           consistency of primary structure of the conformers
@@ -74,8 +79,14 @@ end
 if ~isfield(options,'atoff') || isempty(options.atoff)
     options.atoff = 0;
 end
+if ~isfield(options,'resoff') || isempty(options.resoff)
+    options.resoff = 0;
+end
 if ~isfield(options,'fast') || isempty(options.fast)
     options.fast = false;
+end
+if ~isfield(options,'exclude') || isempty(options.exclude)
+    options.exclude = cell(0,0);
 end
 
 % placeholder for downloaded file later to be deleted
@@ -290,6 +301,16 @@ while 1
                 elm_num = 0;
             end
             resname = strtrim(tline(18:20));
+            exclusion = false;
+            for ex = 1:length(options.exclude)
+                if strcmpi(resname,options.exclude{ex})
+                    exclusion = true;
+                    break
+                end
+            end
+            if exclusion
+                continue
+            end
             if options.stripH && elm_num == 1
                 canonical = find_proton(resname,atname,min_atoms);
                 if ~canonical
@@ -307,6 +328,7 @@ while 1
                 chainfield = chain;
             end
             trial_resnum = str2double(tline(23:26));
+            trial_resnum = trial_resnum + options.resoff;
             if trial_resnum < 1 && offset ==0
                 offset = 1 - trial_resnum;
             end

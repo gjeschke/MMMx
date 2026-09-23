@@ -446,6 +446,7 @@ for d = 1:length(control.directives)
             commands{cmd_poi} = cmd;    
         case 'asphericity'
             cmd_poi = cmd_poi + 1;
+            cmd.plot_options = 'plain';
             if ~isempty(control.directives(d).options) % a selected entity is analyzed
                 cmd.entity = control.directives(d).options{1};
             else
@@ -454,6 +455,9 @@ for d = 1:length(control.directives)
             cmd.address = '';
             if length(control.directives(d).options) > 1 % chain and possibly range given
                 cmd.address = control.directives(d).options{2};
+            end
+            if length(control.directives(d).options) > 2 % chain and possibly range given
+                cmd.plot_options = control.directives(d).options{3};
             end
             commands{cmd_poi} = cmd;    
         otherwise
@@ -1546,7 +1550,7 @@ for c = 1:cmd_poi
             c_entity = asphericity(c_entity,selected);
             fprintf(logfid,'\nMean asphericity for ensemble %s: %5.3f\n',cmd.entity,c_entity.asphericity);
             pop = c_entity.populations;
-            h = plot_asphericity(c_entity.rg_c,c_entity.asphericity_c,pop);
+            h = plot_asphericity(c_entity.rg_c,c_entity.asphericity_c,pop,cmd.plot_options);
             ha = h.CurrentAxes;
             ha.Title.String = sprintf('Mean asphericity %5.3f',c_entity.asphericity);
             ha.XLabel.String = sprintf('R_g (%c)',char(197));
@@ -1828,9 +1832,9 @@ ylabel(sprintf('<R^{2}>^{1/2} [%s]',char(197)));
 legend([h1,h2,h3],'segment length distribution','mean value',sprintf('random coil %5.3f k^{%5.3f}',segments.R0_seglen,segments.nu_seglen),'Location','southeast');
 axis([min(kaxis)-1,max(kaxis)+1,0,1.05*max(segments.max_R2)]);
 
-function h = plot_asphericity(Rg,asph,pop)
+function h = plot_asphericity(Rg,asph,pop,plot_options)
 
-h = figure;
+h = figure; hold on;
 min_Rg = floor(min(Rg));
 max_Rg = ceil(max(Rg));
 Rg_ax = min_Rg:max_Rg; % 1 Angstroem resolution
@@ -1854,6 +1858,21 @@ c.FontSize = 12;
 set(gca,'FontSize',12);
 xlabel(sprintf('R_g (%c)',char(197)));
 ylabel('asphericity');
+
+msize1 = 20;
+colors = lines(2);
+reddish = colors(2,:);
+switch plot_options
+    case 'detailed'
+        for k = 1:length(pop)
+            obj = plot(Rg(k),asph(k),'.','MarkerSize',msize1*pop(k),'Color',reddish);
+            obj.UserData.conformer = k;
+            obj.UserData.Rg = Rg(k);
+            obj.UserData.asphericity = asph(k);
+            obj.UserData.population = pop(k)/sum(pop);
+            obj.ButtonDownFcn = @conformer_clicked;
+        end
+end
 
 
 function h = plot_interaction(pairs,interaction,resnums,maxscale)

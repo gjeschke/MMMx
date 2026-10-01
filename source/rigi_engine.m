@@ -73,7 +73,7 @@ if ~exist('options','var') || isempty(options) ...
 end
 
 if ~isfield(options,'max_clust') || isempty(options.max_clust)
-    options.max_clust = 50000;
+    options.max_clust = 20000;
 end
 
 if ~isfield(restraints,'core')

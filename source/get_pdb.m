@@ -27,7 +27,7 @@ function [entity,exceptions] = get_pdb(ident,options,entity)
 %           .fast   Boolean flag, refrain from element assignment, defaults
 %                   to false
 %           .resoff residue number offset, defaults to 0
-%           .exclude    cell strimng, residue types that are excluded, e.g.
+%           .exclude    cell string, residue types that are excluded, e.g.
 %                       options.exclude = {'HOH'}; skips reading of water,
 %                       defaults to no exclusion;
 % 
@@ -309,6 +309,7 @@ while 1
                 end
             end
             if exclusion
+                atoms = atoms - 1;
                 continue
             end
             if options.stripH && elm_num == 1

@@ -135,6 +135,8 @@ for d = 1:length(control.directives)
             options.max_time = str2double(control.directives(d).options{1});
         case 'maxtrials'
             options.max_trials = round(str2double(control.directives(d).options{1}));
+        case 'maxclust'
+            options.max_clust = round(str2double(control.directives(d).options{1}));
         case 'rigid'
             rb_poi = rb_poi + 1;
             chains = '';

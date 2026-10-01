@@ -229,10 +229,15 @@ switch err
 end
 
 [trials,res,trial_pattern] = get_restraint_resolution(lb,ub,target_resolution);
+trials0 = trials;
 if options.max_trials > 0
     while trials > options.max_trials
         target_resolution = target_resolution + 0.1;
         [trials,res,trial_pattern] = get_restraint_resolution(lb,ub,target_resolution);
+        if trials ~= trials0
+            fprintf(logfid,'A target resolution of %4.2f Å would require %g trials\n',target_resolution,trials);
+            trials0 = trials;
+        end
     end
 end
 fprintf(logfid,'Sampling resolution for distance geometry is %4.1f %c.\n',res,char(197));
@@ -309,7 +314,7 @@ while bask < trials && runtime <= 3600*max_time && success < options.max_clust
         else
             err = 1; % report a metrization error for surplus trials
         end
-        if err == 1% metrization failed (restraints inconsistent), next trial, increment error counter
+        if err == 1 % metrization failed (restraints inconsistent), next trial, increment error counter
             merr_vec(kt) = 1;
         else
             if cres > res_vec(kt)
@@ -482,8 +487,8 @@ while bask < trials && runtime <= 3600*max_time && success < options.max_clust
                 bpoints = ref_points(1+baspoi3:3+baspoi3,:);
                 tref_points(1+baspoi3:3+baspoi3,:) = affine_coor_set(bpoints,transmats{kr});
             end
-            success = success + 1;
-            if success <= options.max_clust
+            if success < options.max_clust
+                success = success + 1;
                 probabilities(success) = model_prob(k-bask)^(1/(naux+ncore));
                 transvecs = zeros(1,6*length(rb));
                 all_ref_points{success} = tref_points;
@@ -541,13 +546,24 @@ if success > max_models
     dmat = zeros(success);
     for k1 = 1:success-1
         coor1 = all_ref_points{k1};
-        for k2 = k1+1:success
+        [n_atoms,~] = size(coor1);
+        N2 = n_atoms*(n_atoms-1)/2;
+        parfor k2 = k1+1:success
             coor2 = all_ref_points{k2};
-            rms = rmsd_superimpose(coor1,coor2);
-            dmat(k1,k2) = rms;
-            dmat(k2,k1) = rms;
+            dmat1 = coor2dmat(coor1); % distance matrix for first conformer
+            dmat2 = coor2dmat(coor2); % distance matrix for second conformer
+            drms = sum(sum((dmat1-dmat2).^2)); % distance mean-square deviation for this conformer pair
+            dmat(k1,k2) = drms;
         end
     end
+    % the following is necessary as an extra loop because Matlab does not
+    % understand that the assignment dmat(k2,k1) = drms; in parfor would be innocent 
+    for k1 = 1:success-1
+        for k2 = k1+1:success
+            dmat(k2,k1) = dmat(k1,k2);
+        end
+    end
+    dmat = sqrt(dmat/N2);
     % compute linkage
     Z = linkage(dmat,'average');
     % cluster

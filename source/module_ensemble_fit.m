@@ -471,10 +471,18 @@ end
 [initial_files,pop] = rd_ensemble_definition(initial_ensemble);
 pop = pop';
 [~,~,ext] = fileparts(added_conformers);
-if isempty(ext)
-    added_conformers = strcat(added_conformers,'.pdb');
+if ~strcmpi(ext,'.zip')
+    if isempty(ext)
+        added_conformers = strcat(added_conformers,'.pdb');
+    end
+    added_files = dir(added_conformers); % find all files that match the pattern
+else % handle zipped lists
+    added_file_names = unzip(added_conformers);
+    added_files(length(added_file_names)).name = '';
+    for af = 1:length(added_file_names)
+        added_files(af).name = added_file_names{af};
+    end
 end
-added_files = dir(added_conformers); % find all files that match the pattern
 
 if ~expand_rba
     % make file list of conformers
@@ -596,7 +604,7 @@ if ~isempty(restraints.deer) && isfield(restraints.deer(1),'site1')
         for kr = 1:length(restraints.deer(deer_poi).site1)
             kft = kft + 1;
             if ~isempty(restraints.deer(deer_poi).file{kr})
-                exp_data = load(restraints.deer(deer_poi).file{kr});
+                exp_data = load_primary_deer(restraints.deer(deer_poi).file{kr});
                 time = exp_data(:,1)';
                 deer = exp_data(:,2)';
                 ff = (exp_data(:,2)-exp_data(:,4))/(1-exp_data(1,4)); % experimental form factor

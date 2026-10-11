@@ -278,6 +278,7 @@ worst_res = 0;
 parblocks = 0; 
 bask = parblocks*options.granule;
 
+
 probabilities = zeros(1,options.max_clust);
 transforms = zeros(options.max_clust,6*length(rb));
 all_ref_points = cell(1,options.max_clust);
@@ -289,7 +290,8 @@ for kb = 1:length(rb)
 end
 
 tic,
-
+rng('shuffle');
+trial_indices = randperm(trials);
 while bask < trials && runtime <= 3600*max_time && success < options.max_clust
     % initialize diagnostic variable vectors for one parallel block
     merr_vec = zeros(1,options.granule);
@@ -305,11 +307,15 @@ while bask < trials && runtime <= 3600*max_time && success < options.max_clust
     tmats = cell(options.granule,1);
     parblocks = parblocks + 1;
     res_vec = res*ones(1,options.granule);
+    max_index = options.granule;
+    if bask + max_index > trials
+        max_index = trials-bask;
+    end
     % profile on
-    parfor kt = 1:options.granule % ### edit to 'for' if you want to debug
+    parfor kt = 1:max_index % ### edit to 'for' if you want to debug
         fulfill = true;
         if bask + kt <= prod(intervals)
-            fractions = get_restraint_fractions(bask+kt,intervals,digitbase);
+            fractions = get_restraint_fractions(trial_indices(bask+kt),intervals,digitbase);
             [dmatr,err,cres] = metrize_exhaustive(lb,ub,irbr,fractions,intervals);
         else
             err = 1; % report a metrization error for surplus trials
@@ -476,7 +482,7 @@ while bask < trials && runtime <= 3600*max_time && success < options.max_clust
         worst_res = max(res_vec);
     end
     % process all results from this parallel block
-    for k = bask+1:bask+options.granule
+    for k = bask+1:bask+max_index
         if fail_vec(k-bask) == 0 % this is a successfully refined RBA
             atransmat = tmats{k-bask};
             tref_points = zeros(3*length(rb),3);

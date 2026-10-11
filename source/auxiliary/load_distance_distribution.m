@@ -32,6 +32,9 @@ while 1
         continue
     end
     args = split(tline,',');
+    if isnan(str2double(args{1})) % skip header line of DeerAnalysis 2026
+        continue
+    end
     dpoi = dpoi + 1;
     for k = 1:4
         data(dpoi,k) = str2double(args{k});

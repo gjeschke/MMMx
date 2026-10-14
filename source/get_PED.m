@@ -53,7 +53,7 @@ if ~isfield(options,'max_models') || isempty(options.fast)
     options.max_models = 100000;
 end
 
-query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s',pedID);
+query = sprintf('https://deposition.proteinensemble.org/v1/entries/%s',pedID);
 try
     PED_info = webread(query);
 catch exception
@@ -80,7 +80,7 @@ for ens = 1:length(eIDs)
         continue
     end
     ensembleID = eIDs{ens};
-    query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s/ensembles/%s/ensemble-pdb',pedID,ensembleID);
+    query = sprintf('https://deposition.proteinensemble.org/v1/entries/%s/ensembles/%s/ensemble-pdb',pedID,ensembleID);
     fname = sprintf('%s_%s.tar.gz',pedID,ensembleID);
     tarname = sprintf('%s_%s.tar',pedID,ensembleID);
     try
@@ -104,7 +104,7 @@ for ens = 1:length(eIDs)
     end
     
     
-    query = sprintf('https://deposition.proteinensemble.org/api/v1/entries/%s/ensembles/%s/weights',pedID,ensembleID);
+    query = sprintf('https://deposition.proteinensemble.org/v1/entries/%s/ensembles/%s/weights',pedID,ensembleID);
     fname = sprintf('%s_%s_weights.dat',pedID,ensembleID);
     try
         websave(fname,query);

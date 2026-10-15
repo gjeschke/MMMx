@@ -59,7 +59,7 @@ if maxresnum > 0 % entity is changed only if the chain has at least one residue
         stau = sin(pi);
         A2 = [-cfi,-sfi,0;sfi*ctau,-cfi*ctau,-stau;sfi*stau,-cfi*stau,ctau];
         A = A*A2;
-        OXT = C + A*bvec'; % coordinates of OXT
+        OXT = C + bvec*A; % coordinates of OXT
         xyz = entity.xyz;
         [n,~] = size(xyz);
         xyz = [xyz;OXT];
@@ -81,5 +81,6 @@ if maxresnum > 0 % entity is changed only if the chain has at least one residue
         end
         entity.(chain).(restag).OXT.index = atindex + 1;
         entity.occupancies = [entity.occupancies;100];
+        entity.elements = [entity.elements,8];
     end
 end

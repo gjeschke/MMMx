@@ -1430,6 +1430,7 @@ for kent = first_conformer:nent
                         if ~isempty(N_anchor_chain) && ~isempty(C_anchor_chain)...
                                 && ~strcmp(N_anchor_chain,C_anchor_chain) % chain must be stitched
                             residues = fieldnames(entity1.(C_anchor_chain));
+                            entity1 = remove_OXT(entity1,N_anchor_chain);
                             % the following does not produce a consistent
                             % MMMx entity, but entity1 can be correctly
                             % saved as PDB file
@@ -1440,9 +1441,6 @@ for kent = first_conformer:nent
                                 end
                             end
                             entity1 = rmfield(entity1,C_anchor_chain);
-                        end
-                        if n_anchored
-                            entity1 = remove_OXT(entity1,N_anchor_chain);
                         end
                         if n_anchored && ~c_anchored
                             entity1 = add_OXT(entity1,N_anchor_chain);

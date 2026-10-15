@@ -746,6 +746,13 @@ for c = 1:cmd_poi
             fprintf(logfid,'\nGenerating new entity %s by merging parts\n',cmd.entity);
             [c_entity,failed] = merge_parts(entities,cmd.parts,logfid);
             if ~failed
+                chains = fieldnames(c_entity);
+                for kc = 1:length(chains)
+                    chain = chains{kc};
+                    if isstrprop(chain(1),'upper') % chain fields start with a capital
+                        c_entity = add_OXT(c_entity,chain);
+                    end
+                end
                 entity_descriptor.name = cmd.entity; 
                 entity_descriptor.entity = c_entity; 
                 entity_descriptor.conformer = 1;

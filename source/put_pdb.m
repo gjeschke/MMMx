@@ -256,10 +256,13 @@ for kconf = 1:length(conformer_order)
     for kc = 1:length(chains)
         chain = chains{kc};
         if isstrprop(chain(1),'upper') % chain fields start with a capital
+            entity = add_OXT(entity,chain);
+        end
+    end
+    for kc = 1:length(chains)
+        chain = chains{kc};
+        if isstrprop(chain(1),'upper') % chain fields start with a capital
             selected = entity.(chain).selected | select_all;
-%             if conformer_selected
-%                 selected = true;
-%             end
             indices(1) = entity.(chain).index;
             residues = fieldnames(entity.(chain));
             residue_sorting = sort_residues(residues);

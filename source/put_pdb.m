@@ -262,7 +262,11 @@ for kconf = 1:length(conformer_order)
     for kc = 1:length(chains)
         chain = chains{kc};
         if isstrprop(chain(1),'upper') % chain fields start with a capital
-            selected = entity.(chain).selected | select_all;
+            if select_all
+                selected = true;
+            else
+                selected = entity.(chain).selected;
+            end
             indices(1) = entity.(chain).index;
             residues = fieldnames(entity.(chain));
             residue_sorting = sort_residues(residues);

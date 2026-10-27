@@ -108,7 +108,7 @@ else % multiple PDB files, assume uniform populations
     entity.xyz = xyz;
     entity.occupancies = occupancies;
     entity.index_array = index_array;
-    entity.elements = repmat(entity.elements,length(filenames),1);
+    entity.elements = repmat(entity.elements,1,length(filenames));
 end
 
 if exist('name','var')

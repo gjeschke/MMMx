@@ -62,13 +62,14 @@ for d = 1:length(control.directives)
                     end
                 end
             end
-            entity = get_ensemble(cmd.input);
-            args = split(control.directives(d).options{1},'.');
-            fname = args{1};
-            svname = sprintf('MMMx_visualize_%s.pdb',fname);
-            put_pdb(entity,svname);
-            all_pdb(1).name = svname;
-            pop = entity.populations;
+            [all_pdb,pop] = rd_ensemble_definition(cmd.input);
+%             entity = get_ensemble(cmd.input);
+%             args = split(control.directives(d).options{1},'.');
+%             fname = args{1};
+%             svname = sprintf('MMMx_visualize_%s.pdb',fname);
+%             put_pdb(entity,svname);
+%             all_pdb(1).name = svname;
+%             pop = entity.populations;
         case {'getpdb','import'}
             entity = get_pdb(control.directives(d).options{1});
             fname = sprintf('MMMx_visualize_%s.pdb',control.directives(d).options{1});

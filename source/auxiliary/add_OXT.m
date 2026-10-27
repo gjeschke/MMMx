@@ -81,6 +81,11 @@ if maxresnum > 0 % entity is changed only if the chain has at least one residue
         end
         entity.(chain).(restag).OXT.index = atindex + 1;
         entity.occupancies = [entity.occupancies;100];
-        entity.elements = [entity.elements,8];
+        [m,n] = size(entity.elements);
+        if m == 1 && n > m
+            entity.elements = [entity.elements,8];
+        else
+            entity.elements = [entity.elements;8];
+        end
     end
 end

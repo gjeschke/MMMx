@@ -53,6 +53,8 @@ end
 resnums = resmin:resmax;
 eau = zeros(length(resnums));
 
+w = entity.populations;
+
 for refres = resnums
     selected = sprintf('(%s)%i',chain,refres);
     centity = superimpose_ensemble(entity,selected);
@@ -60,9 +62,23 @@ for refres = resnums
         residue = sprintf('R%i',distributed);
         indices = centity.(chain).(residue).CA.tab_indices;
         coor = centity.xyz(indices,:);
-        coor = coor - repmat(mean(coor),length(indices),1);
-        rmsd = sqrt(sum(sum(coor.^2))/length(indices));
-        eau(refres,distributed) = 2*rmsd;
+        
+        % --- weighted centroid ----------------------------------------------
+        W  = sum(w);
+        xm = sum(w.*coor(:,1))/W;
+        ym = sum(w.*coor(:,2))/W;
+        zm = sum(w.*coor(:,3))/W;
+        
+        % --- distances from centroid ----------------------------------------
+        d = sqrt((coor(:,1)-xm).^2 + (coor(:,2)-ym).^2 + (coor(:,3)-zm).^2);
+
+        % --- weighted mean distance -----------------------------------------
+        dbar = sum(w.*d)/W;
+
+        % --- weighted variance of distances ---------------------------------
+        varD = sum(w.*(d-dbar).^2)/W;          % population (divide by Σwᵢ)
+
+        eau(refres,distributed) = 2.795*sqrt(varD); % 95% CI in 3D space
     end
 end
 

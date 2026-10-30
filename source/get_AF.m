@@ -93,7 +93,7 @@ end
 entity.sequence = AF_info.uniprotSequence;
 entity.origin = sprintf('AlphaFold v%i',AF_info.latestVersion);
 entity.organism = AF_info.organismScientificName;
-entity.AF_info = AF_info;
+entity.af_info = AF_info;
 
 wroptions = weboptions('ContentType','json');
 if options.pae

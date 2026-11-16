@@ -1320,6 +1320,7 @@ for c = 1:cmd_poi
                             writematrix(pair_corr,datname);
                             datname = sprintf('distance_matrix_%s_%s.csv',basname,part);
                             writematrix(dmat,datname);
+                            minmat = correlations.(part).minmat;
                             datname = sprintf('minimum_distances_%s_%s.csv',basname,part);
                             writematrix(minmat,datname);
                         end

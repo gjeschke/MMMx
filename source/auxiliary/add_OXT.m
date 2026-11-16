@@ -36,7 +36,7 @@ for kr = 1:length(residues)
 end
 
 if maxresnum > 0 % entity is changed only if the chain has at least one residue
-    if ~isfield(entity.(chain).(restag),'OXT')
+    if ~isfield(entity.(chain).(restag),'OXT') && isfield(entity.(chain).(restag),'CA')
         % local frame of Calpha of the C-terminal residue
         CA_index = entity.(chain).(restag).CA.tab_indices(1);
         N_index = entity.(chain).(restag).N.tab_indices(1);

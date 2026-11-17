@@ -1,4 +1,4 @@
-function annotation = annotate_protein_set_by_gene_ontology(UPID_file)
+function annotation = annotate_protein_set_by_gene_ontology(UPID_file,options)
 % Distributes UniProt identifiers into separate files named by the
 % corresponding gene ontology identifiers, one protein can have several GO
 % identifiers
@@ -7,17 +7,27 @@ function annotation = annotate_protein_set_by_gene_ontology(UPID_file)
 % UPID_file     file with UniProt identifiers for the whole proteome, must
 %               be a .csv file and the UniProt identifier must be in the
 %               first column
+% options       .annotate   if true, generate annotation in memory,
+%                           defaults to false
 %
 % G. Jeschke, 2026
 
-annotation(250000).upid = '';
-annotation(250000).goid = 0;
-annotation(250000).taxonid = 0;
-annotation(250000).hostid = 0;
+if ~exist("options",'var') || ~isfield(options,'annotate')
+    options.annotate = false;
+end
+
+if options.annotate
+    annotation(250000).upid = '';
+    annotation(250000).goid = 0;
+    annotation(250000).taxonid = 0;
+    annotation(250000).hostid = 0;
+else
+    annotation = [];
+end
 
 annotated = 0;
 
-batch_size = 50;
+batch_size = 1;
 
 [path,fname,ext] = fileparts(UPID_file);
 if isempty(ext)
@@ -37,6 +47,9 @@ fid = fopen(iname);
 proteins = 0;
 
 batch = 0;
+
+processed = 0;
+failed = 0;
 
 while 1
     for t = 1:batch_size
@@ -59,7 +72,14 @@ while 1
     query_part = strjoin(strcat('accession:', uniprot_ids), ' OR ');
     encoded_query = urlencode(query_part);
     url = sprintf('https://rest.uniprot.org/uniprotkb/search?query=%s&fields=organism_name,go_id&format=json&size=500', encoded_query);
-    data = urlread(url); %#ok<URLRD> 
+    try
+        data = urlread(url); %#ok<URLRD>
+        processed = processed + batch_size;
+    catch
+        fprintf(1,'Batch %i failed\n',batch);
+        failed = failed + batch_size;
+        continue
+    end
     info = jsondecode(data);
     %info = request(url);
     if isempty(info)
@@ -68,7 +88,11 @@ while 1
     end
     uniprot_info = info.results;
     for u = 1:length(uniprot_info)
-        info = uniprot_info(u);
+        if iscell(uniprot_info)
+            info = uniprot_info{u};
+        else
+            info = uniprot_info(u);
+        end
         upid = info.primaryAccession;
         t = 0;
         for tu = 1:batch_size
@@ -108,10 +132,12 @@ while 1
                         uniprot_ids{t},go_info{2},taxonomy);
                     fclose(gfid);
                     annotated = annotated + 1;
-                    annotation(annotated).upid = uniprot_ids{t};
-                    annotation(annotated).goid = str2double(go_info{2});
-                    annotation(annotated).taxonid = taxonomy_ids(t);
-                    annotation(annotated).hostid = host_ids(t);                
+                    if options.annotate
+                        annotation(annotated).upid = uniprot_ids{t};
+                        annotation(annotated).goid = str2double(go_info{2});
+                        annotation(annotated).taxonid = taxonomy_ids(t);
+                        annotation(annotated).hostid = host_ids(t);
+                    end
                 end
             end
         end
@@ -137,6 +163,10 @@ fclose(ofid);
 
 fprintf(1,'Finished. %i proteins were read\n',proteins);
 fprintf(1,'%i annotations were made\n',annotated);
+fprintf(1,'For %i proteins, UniProt batch failed\n',failed);
+fprintf(1,'For %i proteins, UniProt batch could be processed\n',processed);
 
-annotation = annotation(1:annotated);
+if options.annotate
+    annotation = annotation(1:annotated);
+end
 
